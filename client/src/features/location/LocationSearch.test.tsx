@@ -1,0 +1,194 @@
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import pune from '../../../../server/src/services/location/fixtures/open-meteo-geocoding-pune.json' with { type: 'json' };
+import { expectNoAxeViolations } from '../../test/axe.ts';
+import { LocationSearch } from './LocationSearch.tsx';
+
+function queryOf(input: unknown): string | null {
+  return new URL(String(input), 'http://localhost').searchParams.get('q');
+}
+
+function respondWith(body: unknown, status = 200) {
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(() => Promise.resolve(Response.json(body, { status })));
+}
+
+async function type(value: string) {
+  fireEvent.change(screen.getByRole('combobox'), { target: { value } });
+}
+
+async function pause(ms = 300) {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+}
+
+describe('LocationSearch', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('does not search for fewer than 2 characters', async () => {
+    const fetchSpy = respondWith({ data: pune.results });
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('P');
+    await pause(400);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('searches once after typing pauses and announces the count', async () => {
+    const fetchSpy = respondWith({ data: pune.results });
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('Pu');
+    await type('Pun');
+    await type('Pune');
+    await pause();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(queryOf(fetchSpy.mock.calls[0]?.[0])).toBe('Pune');
+    expect(screen.getAllByRole('option')).toHaveLength(5);
+    expect(screen.getByRole('status').textContent).toBe('5 places found');
+  });
+
+  it('selects a place with the keyboard', async () => {
+    respondWith({ data: pune.results });
+    const onSelect = vi.fn();
+    render(<LocationSearch onSelect={onSelect} />);
+    await type('Pune');
+    await pause();
+    const input = screen.getByRole('combobox');
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      screen.getAllByRole('option')[0]?.id,
+    );
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(onSelect).toHaveBeenCalledWith({
+      label: 'Pune, Maharashtra',
+      latitude: 18.51957,
+      longitude: 73.85535,
+    });
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect((input as HTMLInputElement).value).toBe('Pune, Maharashtra');
+  });
+
+  it('does not select while an IME composition is in progress', async () => {
+    respondWith({ data: pune.results });
+    const onSelect = vi.fn();
+    render(<LocationSearch onSelect={onSelect} />);
+    await type('Pune');
+    await pause();
+    const input = screen.getByRole('combobox');
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it('closes the list with Escape', async () => {
+    respondWith({ data: pune.results });
+    render(<LocationSearch onSelect={() => {}} />);
+    await type('Pune');
+    await pause();
+    const input = screen.getByRole('combobox');
+
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+  });
+
+  it('ignores a slower response for an older query', async () => {
+    const pending: Array<{
+      query: string | null;
+      signal: AbortSignal | undefined;
+      resolve: (r: Response) => void;
+    }> = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      (input, init) =>
+        new Promise((resolve) => {
+          pending.push({
+            query: queryOf(input),
+            signal: init?.signal ?? undefined,
+            resolve,
+          });
+        }),
+    );
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('Pun');
+    await pause();
+    await type('Pune');
+    await pause();
+    await act(async () => {
+      pending[1]?.resolve(Response.json({ data: pune.results.slice(0, 1) }));
+    });
+    await act(async () => {
+      pending[0]?.resolve(Response.json({ data: pune.results.slice(1) }));
+    });
+
+    expect(pending.map((p) => p.query)).toEqual(['Pun', 'Pune']);
+    expect(pending[0]?.signal?.aborted).toBe(true);
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(1);
+    expect(options[0]?.textContent).toContain('Pune');
+  });
+
+  it('says when nothing matches', async () => {
+    respondWith({ data: [] });
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('zzqxw');
+    await pause();
+
+    expect(screen.getByRole('status').textContent).toBe('No places found');
+  });
+
+  it('shows the server message when rate limited', async () => {
+    respondWith(
+      {
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many requests. Try again in a minute.',
+        },
+      },
+      429,
+    );
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('Pune');
+    await pause();
+
+    expect(screen.getByRole('status').textContent).toBe(
+      'Too many requests. Try again in a minute.',
+    );
+  });
+
+  it('has no axe violations with results open', async () => {
+    respondWith({ data: pune.results });
+    const { container } = render(<LocationSearch onSelect={() => {}} />);
+    await type('Pune');
+    await pause();
+
+    vi.useRealTimers();
+    await expectNoAxeViolations(container);
+  });
+});
