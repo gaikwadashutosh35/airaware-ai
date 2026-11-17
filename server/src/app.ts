@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import pkg from '../package.json' with { type: 'json' };
+import { errorHandler } from './errors.ts';
 
 export function createApp(): express.Express {
   const app = express();
@@ -15,6 +16,8 @@ export function createApp(): express.Express {
       .status(404)
       .json({ error: { code: 'NOT_FOUND', message: 'Route not found.' } });
   });
+
+  app.use(errorHandler);
 
   return app;
 }
