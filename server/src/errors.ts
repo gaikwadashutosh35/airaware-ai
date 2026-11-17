@@ -1,13 +1,6 @@
 import type { ErrorRequestHandler } from 'express';
 import type { z } from 'zod';
-
-export type ErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'NOT_FOUND'
-  | 'RATE_LIMITED'
-  | 'PROVIDER_ERROR'
-  | 'DATA_UNAVAILABLE'
-  | 'INTERNAL_ERROR';
+import type { ErrorCode } from '../../shared/contracts.ts';
 
 export class HttpError extends Error {
   readonly status: number;

@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import type { SourceInfo } from '../../../shared/contracts.ts';
 import { HttpError, parseQuery } from '../errors.ts';
 import { createTtlCache } from '../services/air-data/cache.ts';
 import {
   fetchForecast,
   LIMITATIONS,
   SOURCE_URL,
-  type ForecastSeries,
+  type ModelForecast,
 } from '../services/air-data/openMeteo.ts';
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -27,7 +28,7 @@ const coordinatesQuery = z.object({
   longitude: coordinate(-180, 180),
 });
 
-const SOURCES = [
+const SOURCES: SourceInfo[] = [
   {
     id: 'open-meteo',
     name: 'Open-Meteo Air Quality API',
@@ -53,7 +54,7 @@ const SOURCES = [
 
 export function airQualityRouter(): Router {
   const router = Router();
-  const cache = createTtlCache<ForecastSeries>(CACHE_TTL_MS, CACHE_MAX_ENTRIES);
+  const cache = createTtlCache<ModelForecast>(CACHE_TTL_MS, CACHE_MAX_ENTRIES);
 
   router.get('/forecast', async (req, res) => {
     const { latitude, longitude } = parseQuery(coordinatesQuery, req.query);

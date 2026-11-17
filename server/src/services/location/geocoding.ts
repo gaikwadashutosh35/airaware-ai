@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import type { LocationResult } from '../../../../shared/contracts.ts';
 import { fetchJson } from '../fetchJson.ts';
 
 const BASE_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
 // z.object strips every raw field not listed here.
-const locationResult = z.object({
+const locationResult: z.ZodType<LocationResult> = z.object({
   id: z.number().int(),
   name: z.string(),
   admin1: z.string().optional(),
@@ -13,7 +14,6 @@ const locationResult = z.object({
   longitude: z.number().min(-180).max(180),
   timezone: z.string(),
 });
-export type LocationResult = z.infer<typeof locationResult>;
 
 // Open-Meteo omits `results` entirely when nothing matches.
 const rawSearch = z.object({ results: z.array(locationResult).optional() });

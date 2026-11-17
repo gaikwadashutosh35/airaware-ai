@@ -1,21 +1,12 @@
 import { z } from 'zod';
+import type {
+  ForecastSeries,
+  Pollutant,
+} from '../../../../shared/contracts.ts';
 import { fetchJson } from '../fetchJson.ts';
 
-export type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
-
-export interface ForecastSeries {
-  provider: 'Open-Meteo';
-  sourceUrl: string;
-  dataKind: 'model_forecast';
-  modelResolution: string;
-  retrievedAt: string;
-  units: Partial<Record<Pollutant, string>>;
-  hours: Array<{
-    time: string;
-    values: Partial<Record<Pollutant, number | null>>;
-  }>;
-  limitations: string[];
-}
+// The route adds `freshness` when it serves the series.
+export type ModelForecast = Omit<ForecastSeries, 'freshness'>;
 
 const BASE_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 export const SOURCE_URL = 'https://open-meteo.com/en/docs/air-quality-api';
@@ -68,7 +59,7 @@ export async function fetchForecast(
   latitude: number,
   longitude: number,
   now: Date,
-): Promise<ForecastSeries> {
+): Promise<ModelForecast> {
   const url = new URL(BASE_URL);
   url.searchParams.set('latitude', String(latitude));
   url.searchParams.set('longitude', String(longitude));
