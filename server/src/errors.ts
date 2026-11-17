@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
+import type { z } from 'zod';
 
 export type ErrorCode =
   | 'VALIDATION_ERROR'
@@ -24,6 +25,23 @@ export class HttpError extends Error {
     this.code = code;
     this.details = details;
   }
+}
+
+export function parseQuery<T>(schema: z.ZodType<T>, query: unknown): T {
+  const result = schema.safeParse(query);
+  if (!result.success) {
+    const issues = result.error.issues.map((issue) => ({
+      path: issue.path.join('.'),
+      message: issue.message,
+    }));
+    throw new HttpError(
+      400,
+      'VALIDATION_ERROR',
+      'Invalid query parameters.',
+      issues,
+    );
+  }
+  return result.data;
 }
 
 // Last middleware in the app: every error leaves as the API.md envelope.

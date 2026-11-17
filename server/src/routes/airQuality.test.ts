@@ -1,0 +1,173 @@
+import request from 'supertest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createApp } from '../app.ts';
+import pune from '../services/air-data/fixtures/open-meteo-pune.json' with { type: 'json' };
+
+function stubFetch() {
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(() => Promise.resolve(Response.json(pune)));
+}
+
+describe('air-quality routes', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('GET /api/v1/air-quality/forecast', () => {
+    it('returns a fresh, labelled model forecast', async () => {
+      stubFetch();
+
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.dataKind).toBe('model_forecast');
+      expect(res.body.data.freshness).toBe('fresh');
+      expect(res.body.data.units.PM2_5).toBe('μg/m³');
+      expect(res.body.data.hours[0].values.PM2_5).toBe(48);
+    });
+
+    it('sends only rounded coordinates to the provider', async () => {
+      const fetchSpy = stubFetch();
+
+      await request(createApp()).get(
+        '/api/v1/air-quality/forecast?latitude=18.519571&longitude=73.855347',
+      );
+
+      const url = fetchSpy.mock.calls[0]?.[0] as URL;
+      expect(url.searchParams.get('latitude')).toBe('18.52');
+      expect(url.searchParams.get('longitude')).toBe('73.86');
+    });
+
+    it('serves repeat and nearby requests from the cache', async () => {
+      const fetchSpy = stubFetch();
+      const app = createApp();
+
+      await request(app).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+      await request(app).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+      const res = await request(app).get(
+        '/api/v1/air-quality/forecast?latitude=18.5201&longitude=73.86',
+      );
+
+      expect(res.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      'latitude=&longitude=73.86',
+      'latitude=abc&longitude=73.86',
+      'latitude=1e2&longitude=73.86',
+      'latitude=91&longitude=73.86',
+      'latitude=18.5&latitude=18.6&longitude=73.86',
+      'latitude=18.52',
+    ])('rejects %s with 400 VALIDATION_ERROR', async (query) => {
+      const fetchSpy = stubFetch();
+
+      const res = await request(createApp()).get(
+        `/api/v1/air-quality/forecast?${query}`,
+      );
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns 502 with no data on provider failure and does not cache it', async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockRejectedValue(new TypeError('fetch failed'));
+      const app = createApp();
+
+      const res = await request(app).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+      await request(app).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+
+      expect(res.status).toBe(502);
+      expect(res.body.error.code).toBe('PROVIDER_ERROR');
+      expect(res.body).not.toHaveProperty('data');
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('GET /api/v1/air-quality/current', () => {
+    it('reports official observations as unavailable', async () => {
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/current?latitude=18.52&longitude=73.86',
+      );
+
+      expect(res.status).toBe(503);
+      expect(res.body).toEqual({
+        error: {
+          code: 'DATA_UNAVAILABLE',
+          message: 'Official CPCB observations are not connected yet.',
+        },
+      });
+    });
+
+    it('still validates coordinates', async () => {
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/current?latitude=abc&longitude=73.86',
+      );
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
+
+  describe('GET /api/v1/air-quality/sources', () => {
+    it('lists Open-Meteo as available and CPCB as unavailable', async () => {
+      const res = await request(createApp()).get('/api/v1/air-quality/sources');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(2);
+      const [openMeteo, cpcb] = res.body.data;
+      expect(openMeteo).toMatchObject({
+        id: 'open-meteo',
+        dataKind: 'model_forecast',
+        status: 'available',
+        licence: 'CC BY 4.0',
+      });
+      expect(openMeteo.attribution).toContain('Open-Meteo.com');
+      expect(openMeteo.attribution).toContain('CAMS');
+      expect(cpcb).toMatchObject({
+        id: 'cpcb',
+        dataKind: 'official_observation',
+        status: 'unavailable',
+        url: 'https://app.cpcbccr.com/AQIIndia',
+      });
+    });
+  });
+
+  describe('rate limit', () => {
+    it('answers the 61st request in a minute with 429 RATE_LIMITED', async () => {
+      const app = createApp();
+      for (let i = 0; i < 60; i++) {
+        const ok = await request(app).get('/api/v1/air-quality/sources');
+        expect(ok.status).toBe(200);
+      }
+
+      const res = await request(app).get('/api/v1/air-quality/sources');
+
+      expect(res.status).toBe(429);
+      expect(res.body).toEqual({
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many requests. Try again in a minute.',
+        },
+      });
+    });
+  });
+});

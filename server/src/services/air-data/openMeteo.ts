@@ -18,11 +18,11 @@ export interface ForecastSeries {
 }
 
 const BASE_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
-const SOURCE_URL = 'https://open-meteo.com/en/docs/air-quality-api';
+export const SOURCE_URL = 'https://open-meteo.com/en/docs/air-quality-api';
 // Fixed by `domains=cams_global` (Open-Meteo docs, checked 2026-11-17).
 const MODEL_RESOLUTION =
   'CAMS global atmospheric composition forecast, 0.4° (~45 km) grid';
-const LIMITATIONS = [
+export const LIMITATIONS = [
   'Model forecast, not a station observation.',
   'Not the CPCB National AQI.',
   'Grid cell is about 45 km wide; conditions near roads or local sources can differ.',
