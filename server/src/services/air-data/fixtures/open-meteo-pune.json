@@ -1,0 +1,27 @@
+{
+  "latitude": 18.5,
+  "longitude": 73.90001,
+  "generationtime_ms": 0.1455545425415039,
+  "utc_offset_seconds": 0,
+  "timezone": "GMT",
+  "timezone_abbreviation": "GMT",
+  "elevation": 562.0,
+  "hourly_units": {
+    "time": "unixtime",
+    "pm2_5": "μg/m³",
+    "pm10": "μg/m³",
+    "nitrogen_dioxide": "μg/m³",
+    "sulphur_dioxide": "μg/m³",
+    "ozone": "μg/m³",
+    "carbon_monoxide": "μg/m³"
+  },
+  "hourly": {
+    "time": [1794934800, 1794938400, 1794942000],
+    "pm2_5": [48.0, 45.6, 43.1],
+    "pm10": [52.4, 49.7, 46.8],
+    "nitrogen_dioxide": [25.1, 21.5, 17.6],
+    "sulphur_dioxide": [13.7, 13.1, 12.2],
+    "ozone": [76.0, 76.0, 77.0],
+    "carbon_monoxide": [575.0, 527.0, 519.0]
+  }
+}
