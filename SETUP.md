@@ -72,16 +72,12 @@ SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 GEMINI_API_KEY=
 GEMINI_MODEL=
-OPEN_METEO_BASE_URL=https://air-quality-api.open-meteo.com/v1/air-quality
-AIR_QUALITY_PROVIDER=demo
-CPCB_PROVIDER_ENABLED=false
-CPCB_PROVIDER_BASE_URL=
-RATE_LIMIT_WINDOW_MS=60000
-RATE_LIMIT_MAX_REQUESTS=10
-AIR_DATA_CACHE_TTL_SECONDS=600
+DATA_GOV_IN_API_KEY=
 ```
 
-`CPCB_PROVIDER_BASE_URL` is a placeholder; do not enable a scraper or undocumented endpoint. Activate CPCB integration only after verifying supported access and terms.
+Open-Meteo base URLs, the forecast cache TTL (10 min) and the rate limit (60/min per IP) are code constants in `server/src`, not environment variables. Fixed base URLs keep the outbound-host allowlist out of configuration.
+
+`DATA_GOV_IN_API_KEY` is only needed for the CPCB follow-up (see `docs/IMPLEMENTATION_PLAN.md` §5.2). Do not enable a scraper or undocumented endpoint. Activate CPCB integration only after verifying supported access, terms and units.
 
 ## 7. Supabase setup
 

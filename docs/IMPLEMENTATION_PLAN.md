@@ -62,7 +62,7 @@ Proposal: create `DEPLOYMENT.md` in Phase 9 once the host is chosen. Point `STAR
 ### 3.2 Contract inconsistencies found (fix in docs during the phase that implements them)
 
 1. **Health path:** `API.md` says `/api/v1/health`; `OBSERVABILITY_RUNBOOK.md` says `/api/health`. → Use `/api/v1/health`.
-2. **Error envelope:** `API.md` codes (`PROVIDER_ERROR`, `DATA_UNAVAILABLE`) vs runbook (`AIR_PROVIDER_UNAVAILABLE` + `retryable`). → Keep `API.md` codes, add `retryable: boolean`.
+2. **Error envelope:** `API.md` codes (`PROVIDER_ERROR`, `DATA_UNAVAILABLE`) vs runbook (`AIR_PROVIDER_UNAVAILABLE` + `retryable`). → Keep `API.md` codes. (`retryable` dropped in Phase 2: the client derives it from `code`.)
 3. **`AirQualityForecast` is used but never defined.** A forecast is an hourly series, not one `forecastFor` timestamp. → Define `ForecastSeries { provider, sourceUrl, dataKind:'model_forecast', retrievedAt, modelResolution, hours: [{ time, pollutants[] }], freshness, limitations }`.
 4. **Forecast example lacks `sourceUrl`** although the type requires it.
 5. **`snapshotIds` in the daily-plan request** implies a server-side snapshot store that is not designed anywhere. → Request carries a transient location `{ label, latitude, longitude }`; the server fetches (cached) data itself. Client never supplies pollutant values. Coordinates are not persisted or logged.
@@ -136,7 +136,7 @@ Not relevant to this project (leave unused): claude-seo, openseo, posthog, egm, 
 
 | Source | Status | Finding | Plan |
 |---|---|---|---|
-| **CPCB official observations** | ⚠️ Unverified | The CPCB dashboard is not a documented API — do not scrape. Candidate: data.gov.in OGD dataset "Real time Air Quality Index from various locations" (resource `3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69`; fields include `station`, `last_update`, `pollutant_id`, `min/max/avg_value`). The data.gov.in page returned **HTTP 503** during this check; licence, update cadence, units and whether values are concentrations or sub-indices are **not confirmed**. Needs a free API key. | Phase 2 time-boxed spike (1 h). Until verified, the UI shows "Official observation unavailable". **Never compute National AQI.** |
+| **CPCB official observations** | ❌ Not usable yet (Phase 2 spike, 2026-11-17) | The CPCB dashboard is not a documented API, so do not scrape it. The candidate is the data.gov.in OGD dataset "Real time Air Quality Index from various locations" (resource `3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69`). **Spike findings:** (1) owner CPCB/MoEFCC, licence **GODL-India**, updated **hourly** (per the AIKosh mirror of the catalogue entry); (2) pollutants SO2, NO2, PM10, PM2.5, CO and O3, with **no NH3 or Pb**, so the dataset can never supply all of CPCB's AQI inputs; (3) `api.data.gov.in` without a key → `400 "Authorization field missing"`; (4) data.gov.in pages returned **HTTP 503** again, so field semantics are **still unverified**: whether `min/max/avg_value` are concentrations or sub-indices, their units, and whether any AQI value is published. | `/current` returns `503 DATA_UNAVAILABLE` and `/sources` lists CPCB as unavailable. Re-check only with `DATA_GOV_IN_API_KEY` (D4): fetch one record and compare it against the CPCB dashboard (~30 min). Show values only if the units are confirmed. **Never compute National AQI.** |
 | **Open-Meteo Air Quality** | ✅ Usable with conditions | Terms (checked 2026-11-17): free tier is **non-commercial only**; 600/min, 5 000/h, 10 000/day, 300 000/month; **CC BY 4.0 attribution required**. Model data (CAMS); exact resolution over India to be confirmed from the docs in Phase 2. | Primary `model_forecast` source. Visible attribution. Server cache (10 min TTL) keeps volume tiny. |
 | **Open-Meteo Geocoding** | ✅ Recommended | Same terms. Avoids Nominatim's usage policy limits (no autocomplete, 1 req/s). | Manual city search provider. |
 | **Gemini** | ⚠️ Key + model ID unverified | Model ID and free-tier quota must be checked at Phase 5. Free-tier prompts may be used by Google to improve products → send minimal context only. | Behind `AIProvider`; deterministic fallback labelled "rules-only". |
@@ -209,6 +209,18 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Acceptance | Every value carries provider, sourceUrl, dataKind, timestamps, unit, limitations; `european_aqi`/`us_aqi` never populate `nationalAqi`; provider failure → 502/503, never demo |
 | Tests | Fixture contract tests; missing variable; bad unit; stale timestamp; timezone parse; CPCB boundaries 0/50/51/100/101/200/201/300/301/400/401/500 + −1, 501, 50.5, null; PM2.5-only → no AQI |
 
+**As built (2026-11-17):**
+- Live endpoints:
+  - `GET /api/v1/air-quality/forecast`
+  - `/current`, which always returns `503 DATA_UNAVAILABLE`
+  - `/sources`
+  - `GET /api/v1/locations/search`, India only
+  - All are rate-limited to 60/min per IP.
+- Forecasts come from Open-Meteo with `domains=cams_global` (0.4° grid), `timeformat=unixtime` and 48 hours, cached for 10 min. Coordinates are rounded to 2 decimals before they leave the server.
+- Deferred until a CPCB feed exists: the `shared/` workspace (moves to Phase 3), the demo adapter, the CPCB category mapper and its boundary tests, and `AirQualitySnapshot`.
+- Not added: `retryable`. TTL, rate limit and base URLs are code constants, not env vars.
+- Task plan: `docs/superpowers/plans/2026-11-17-phase2-data-layer.md`.
+
 ### Phase 3 — Design system + app shell (≈3–4 h)
 
 | | |
@@ -267,7 +279,7 @@ Estimates = my build time per phase, excluding your review and account setup.
 
 ### Phase 9 — Production deployment (≈1–2 h + your account setup)
 
-Option B: Dockerfile (multi-stage, client built into server static dir) → Cloud Run; secrets in Secret Manager; Supabase auth redirect URLs; verify real provider responses and timestamps in production; fresh-session and two-user checks; write `DEPLOYMENT.md`.
+Option B: Dockerfile (multi-stage, client built into server static dir) → Cloud Run; `app.set('trust proxy', 1)` so the rate limiter keys on client IPs, not the Google front end (test with two clients); secrets in Secret Manager; Supabase auth redirect URLs; verify real provider responses and timestamps in production; fresh-session and two-user checks; write `DEPLOYMENT.md`.
 
 ### Phase 10 — Submission audit (≈30 min + narrative)
 
@@ -286,9 +298,9 @@ Saved locations, plan history, plan feedback, share card, Hindi/Marathi, reminde
 | Variable | Where | Phase | Secret? |
 |---|---|---|---|
 | `NODE_ENV`, `PORT` | server | 1 | no |
-| `OPEN_METEO_AQ_BASE_URL`, `OPEN_METEO_GEOCODING_BASE_URL` | server | 2 | no (fixed allowlist) |
-| `DATA_GOV_IN_API_KEY` | server | 2 (only if CPCB spike succeeds) | **yes** |
-| `AIR_DATA_CACHE_TTL_SECONDS`, `RATE_LIMIT_*` | server | 2 | no |
+| `DATA_GOV_IN_API_KEY` | server | CPCB follow-up (spike was blocked on it) | **yes** |
+
+Open-Meteo base URLs, cache TTL and rate limits are code constants (Phase 2), not env vars.
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | server | 5 | key: **yes** |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | server + client (`VITE_`) | 6 | no (RLS protects) |
 | `SUPABASE_SERVICE_ROLE_KEY` | server only | 6 (account deletion only) | **yes** |

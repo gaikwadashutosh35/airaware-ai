@@ -70,7 +70,9 @@ Do not return secrets, connection strings, or detailed infrastructure topology.
 
 Returns available current observation data. The endpoint must not quietly return a forecast while labelling it current official observation.
 
-Response:
+**Current status:** no verified CPCB feed is connected, so after coordinate validation this endpoint always returns `503 DATA_UNAVAILABLE` ("Official CPCB observations are not connected yet."). The shape below is the target once a feed is verified.
+
+Target response:
 ```json
 {
   "data": {
@@ -92,28 +94,71 @@ Example values are illustrative only; production must not return fabricated data
 
 ### `GET /api/v1/air-quality/forecast?latitude=...&longitude=...`
 
-Returns model-based forecast and the provider/model metadata.
+Returns an hourly model forecast (48 hours from the current hour) and the provider/model metadata.
 
-Response:
+**Request handling:**
+- `latitude` and `longitude` must be plain decimals in range. Anything else returns `400 VALIDATION_ERROR`.
+- The server rounds coordinates to 2 decimals (~1.1 km) before calling Open-Meteo and keying its 10-minute cache.
+
+**Response shape:**
+- `units` comes from the provider response.
+- A pollutant the model does not return is omitted and named in `limitations`.
+- Missing hourly values are `null`.
+- There is never an AQI field.
+
+```ts
+type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
+
+interface ForecastSeries {
+  provider: 'Open-Meteo';
+  sourceUrl: string;
+  dataKind: 'model_forecast';
+  modelResolution: string;
+  retrievedAt: string;
+  freshness: 'fresh' | 'stale' | 'unknown'; // stale after 12 h (model update cycle)
+  units: Partial<Record<Pollutant, string>>;
+  hours: Array<{ time: string; values: Partial<Record<Pollutant, number | null>> }>;
+  limitations: string[];
+}
+```
+
+Response (illustrative values):
 ```json
 {
   "data": {
-    "locationLabel": "Example area",
     "provider": "Open-Meteo",
+    "sourceUrl": "https://open-meteo.com/en/docs/air-quality-api",
     "dataKind": "model_forecast",
-    "retrievedAt": "2026-11-17T08:30:00Z",
-    "forecastFor": "2026-11-17T12:00:00Z",
-    "modelResolution": "Provider-documented resolution for selected domain",
-    "pollutants": [],
-    "freshness": "fresh",
-    "limitations": ["Model forecast; not a station observation"]
+    "modelResolution": "CAMS global atmospheric composition forecast, 0.4° (~45 km) grid",
+    "retrievedAt": "2026-11-17T17:05:00.000Z",
+    "units": { "PM2_5": "μg/m³", "PM10": "μg/m³" },
+    "hours": [{ "time": "2026-11-17T17:00:00.000Z", "values": { "PM2_5": 48, "PM10": 52.4 } }],
+    "limitations": ["Model forecast, not a station observation.", "Not the CPCB National AQI."],
+    "freshness": "fresh"
   }
 }
 ```
 
+Provider failure (network, timeout, non-2xx, malformed response) returns `502 PROVIDER_ERROR` with no `data`. It never falls back to demo or stale data.
+
 ### `GET /api/v1/air-quality/sources`
 
-Returns configured provider names, source descriptions, and limitations. Do not expose secret configuration.
+Returns configured provider names, source descriptions, licence/attribution, and limitations. Do not expose secret configuration.
+
+Response: `{ "data": [{ "id", "name", "dataKind", "status": "available" | "unavailable", "url", "licence"?, "attribution"?, "limitations" }] }`. It currently lists:
+- Open-Meteo (`available`, CC BY 4.0, with the Open-Meteo + CAMS attribution)
+- CPCB (`unavailable`)
+
+### `GET /api/v1/locations/search?q=...`
+
+Searches places in India (Open-Meteo Geocoding, `countryCode=IN`, up to 5 results). `q` is trimmed and must be 2–80 characters. No match returns `{ "data": [] }`.
+
+Response (illustrative):
+```json
+{ "data": [{ "id": 1259229, "name": "Pune", "admin1": "Maharashtra", "country": "India", "latitude": 18.51957, "longitude": 73.85535, "timezone": "Asia/Kolkata" }] }
+```
+
+All `/api/v1` routes share a rate limit of 60 requests per minute per IP. Requests over the limit get `429 RATE_LIMITED`.
 
 ### `POST /api/v1/recommendations/daily-plan`
 

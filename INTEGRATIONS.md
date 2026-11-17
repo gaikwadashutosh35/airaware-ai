@@ -80,6 +80,12 @@ Potential provider references to evaluate:
 
 Do not assume a public/free geocoder allows high-volume use.
 
+**Selected (Phase 2): Open-Meteo Geocoding API.** Endpoint: `https://geocoding-api.open-meteo.com/v1/search`.
+- Settings: `countryCode=IN` (PRD audience is India) and `count=5`.
+- Terms are the same as Open-Meteo: non-commercial free tier and CC BY 4.0.
+- Only the typed place name is sent, never user coordinates.
+- All `/api/v1` calls are rate-limited to 60/min per IP.
+
 ## 7. GitHub CodeQL
 
 Reference: https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql
