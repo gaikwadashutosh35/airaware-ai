@@ -1,0 +1,260 @@
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import pune from '../../../server/src/services/location/fixtures/open-meteo-geocoding-pune.json' with { type: 'json' };
+import type { ForecastSeries } from '../../../shared/contracts.ts';
+import { formatTime } from '../features/air-quality/forecast.ts';
+import { expectNoAxeViolations } from '../test/axe.ts';
+import { forecastFixture, sourcesFixture } from '../test/fixtures.ts';
+import Dashboard from './Dashboard.tsx';
+
+type ForecastResponder = (latitude: string | null) => Promise<Response>;
+
+function urlOf(input: RequestInfo | URL): URL {
+  const href =
+    typeof input === 'string'
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
+  return new URL(href, 'http://localhost');
+}
+
+function routeFetch(forecast: ForecastResponder) {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = urlOf(input);
+    if (url.pathname === '/api/v1/locations/search') {
+      return Promise.resolve(Response.json({ data: pune.results }));
+    }
+    if (url.pathname === '/api/v1/air-quality/sources') {
+      return Promise.resolve(Response.json({ data: sourcesFixture }));
+    }
+    return forecast(url.searchParams.get('latitude'));
+  });
+}
+
+function ok(series: ForecastSeries = forecastFixture) {
+  return () => Promise.resolve(Response.json({ data: series }));
+}
+
+function forecastCalls(fetchSpy: ReturnType<typeof routeFetch>) {
+  return fetchSpy.mock.calls.filter(
+    ([input]) => urlOf(input).pathname === '/api/v1/air-quality/forecast',
+  );
+}
+
+async function choosePlace(optionIndex = 0) {
+  const input = screen.getByRole('combobox');
+  fireEvent.change(input, { target: { value: 'Pune' } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(300);
+  });
+  for (let i = 0; i <= optionIndex; i++) {
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+  }
+  fireEvent.keyDown(input, { key: 'Enter' });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+}
+
+describe('Dashboard', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-17T17:30:00Z'));
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('asks for a place before loading any forecast', async () => {
+    const fetchSpy = routeFetch(ok());
+    const { container } = render(<Dashboard />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(
+      screen.getByText(
+        'Search for a place or use your location to see its air-quality forecast.',
+      ),
+    ).toBeDefined();
+    expect(forecastCalls(fetchSpy)).toHaveLength(0);
+    vi.useRealTimers();
+    await expectNoAxeViolations(container);
+  });
+
+  it('shows the labelled model forecast for the chosen place', async () => {
+    routeFetch(ok());
+    const { container } = render(<Dashboard />);
+
+    await choosePlace();
+
+    const heading = screen.getByRole('heading', {
+      level: 2,
+      name: 'Air quality: Pune, Maharashtra',
+    });
+    expect(document.activeElement).toBe(heading);
+    expect(screen.getAllByText('Model forecast').length).toBeGreaterThan(0);
+    const pm25 = screen.getByTestId('metric-PM2_5');
+    expect(pm25.textContent).toContain('48');
+    expect(pm25.textContent).toContain('μg/m³');
+    expect(
+      screen.getByText(`Values for ${formatTime('2026-11-17T17:00:00.000Z')}`),
+    ).toBeDefined();
+    expect(
+      screen.getByText('Official CPCB observation unavailable'),
+    ).toBeDefined();
+    expect(
+      screen.getByText(
+        `Model run time not reported by the provider. Retrieved ${formatTime(forecastFixture.retrievedAt)}.`,
+      ),
+    ).toBeDefined();
+    expect(container.textContent).toContain('Open-Meteo.com');
+    vi.useRealTimers();
+    await expectNoAxeViolations(container);
+  });
+
+  it('prints "No value" for a missing hourly value', async () => {
+    const series = structuredClone(forecastFixture);
+    series.hours[0]!.values.PM10 = null;
+    routeFetch(ok(series));
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    expect(screen.getByTestId('metric-PM10').textContent).toContain('No value');
+  });
+
+  it('lists every hour in the forecast table', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    const table = screen.getByRole('table');
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent),
+    ).toEqual([
+      'Time',
+      'PM2.5 (μg/m³)',
+      'PM10 (μg/m³)',
+      'NO₂ (μg/m³)',
+      'SO₂ (μg/m³)',
+      'O₃ (μg/m³)',
+      'CO (μg/m³)',
+    ]);
+    expect(within(table).getAllByRole('rowheader')).toHaveLength(3);
+  });
+
+  it('never shows an AQI number', async () => {
+    routeFetch(ok());
+    const { container } = render(<Dashboard />);
+
+    await choosePlace();
+
+    const text = (container.textContent ?? '').replaceAll(
+      'Not the CPCB National AQI',
+      '',
+    );
+    expect(text).not.toMatch(/\bAQI\b/);
+  });
+
+  it('offers a retry when the provider fails', async () => {
+    let fail = true;
+    routeFetch(() =>
+      Promise.resolve(
+        fail
+          ? Response.json(
+              {
+                error: {
+                  code: 'PROVIDER_ERROR',
+                  message: 'Data provider unavailable.',
+                },
+              },
+              { status: 502 },
+            )
+          : Response.json({ data: forecastFixture }),
+      ),
+    );
+    const { container } = render(<Dashboard />);
+
+    await choosePlace();
+    expect(screen.getByText('Forecast provider unavailable.')).toBeDefined();
+    vi.useRealTimers();
+    await expectNoAxeViolations(container);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-17T17:30:00Z'));
+
+    fail = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(screen.getByTestId('metric-PM2_5').textContent).toContain('48');
+  });
+
+  it('explains a rate limit', async () => {
+    routeFetch(() =>
+      Promise.resolve(
+        Response.json(
+          {
+            error: {
+              code: 'RATE_LIMITED',
+              message: 'Too many requests. Try again in a minute.',
+            },
+          },
+          { status: 429 },
+        ),
+      ),
+    );
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    expect(
+      screen.getByText('Too many requests. Try again in a minute.'),
+    ).toBeDefined();
+  });
+
+  it('never shows an old place forecast under a new place', async () => {
+    let resolveFirst: (response: Response) => void = () => {};
+    const other = structuredClone(forecastFixture);
+    other.hours[0]!.values.PM2_5 = 99;
+    routeFetch((latitude) =>
+      latitude === '18.52'
+        ? new Promise((resolve) => {
+            resolveFirst = resolve;
+          })
+        : Promise.resolve(Response.json({ data: other })),
+    );
+    render(<Dashboard />);
+
+    await choosePlace(0);
+    await choosePlace(1);
+    await act(async () => {
+      resolveFirst(Response.json({ data: forecastFixture }));
+    });
+
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Puneta, Rajasthan',
+      }),
+    ).toBeDefined();
+    expect(screen.getByTestId('metric-PM2_5').textContent).toContain('99');
+    expect(screen.getByTestId('metric-PM2_5').textContent).not.toContain('48');
+  });
+});
