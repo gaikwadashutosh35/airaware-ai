@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/* DESIGN.md §3 tokens. Tailwind's default palette and fonts are cleared so
+   only these tokens exist as utilities. `static` always emits every token at
+   :root, so SVG and inline `var(--color-*)` uses resolve too. */
+@theme static {
+  --color-*: initial;
+  --color-bg: #080f1c;
+  --color-surface: #101c2b;
+  --color-surface-light: #f5f8fa;
+  --color-primary: #39d5c2;
+  --color-secondary: #64a9ff;
+  --color-text: #f4f7fa;
+  --color-text-dark: #182435;
+  --color-warning: #f5b84b;
+  --color-danger: #f06b72;
+  --color-success: #3baa82;
+
+  --font-*: initial;
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: var(--color-surface-light);
+    color: var(--color-text-dark);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+}

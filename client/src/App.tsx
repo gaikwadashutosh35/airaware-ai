@@ -1,10 +1,9 @@
+import Dashboard from './pages/Dashboard.tsx';
+import Landing from './pages/Landing.tsx';
+
+// Two pages, plain links between them: no router needed.
 function App() {
-  return (
-    <main>
-      <h1>AirAware AI</h1>
-      <p>Breathe smarter. Make informed daily choices.</p>
-    </main>
-  );
+  return window.location.pathname === '/app' ? <Dashboard /> : <Landing />;
 }
 
 export default App;
