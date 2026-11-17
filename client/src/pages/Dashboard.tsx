@@ -34,46 +34,59 @@ function Dashboard() {
       : undefined;
 
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
-      <h1 className="text-2xl font-semibold">Air quality near you</h1>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="flex-1">
+    <>
+      <title>Air-quality dashboard | AirAware AI</title>
+      <header className="border-b border-rule">
+        <div className="mx-auto flex min-h-16 max-w-5xl items-center px-4 sm:px-6">
+          <a href="/" className="text-lg font-semibold">
+            AirAware AI
+          </a>
+        </div>
+      </header>
+      <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Air quality near you
+        </h1>
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
           <LocationSearch onSelect={setPlace} />
+          <UseMyLocation onLocate={setPlace} />
         </div>
-        <UseMyLocation onLocate={setPlace} />
-      </div>
 
-      {place ? (
-        <div className="flex flex-col gap-6">
-          <h2
-            ref={headingRef}
-            tabIndex={-1}
-            className="text-xl font-semibold break-words"
-          >
-            Air quality: {place.label}
-          </h2>
-          <ObservationPanel note={cpcb?.limitations[0]} />
-          {forecast.state.status === 'ready' ? (
-            <ForecastPanel
-              series={forecast.state.data.series}
-              now={forecast.state.data.loadedAt}
-            />
-          ) : forecast.state.status === 'error' ? (
-            <ErrorState error={forecast.state.error} onRetry={forecast.retry} />
-          ) : (
-            <Loading label="Loading forecast" />
-          )}
-          {sources.state.status === 'ready' && (
-            <SourcesPanel sources={sources.state.data} />
-          )}
-        </div>
-      ) : (
-        <p>
-          Search for a place or use your location to see its air-quality
-          forecast.
-        </p>
-      )}
-    </main>
+        {place ? (
+          <div className="flex flex-col gap-6">
+            <h2
+              ref={headingRef}
+              tabIndex={-1}
+              className="text-2xl font-semibold tracking-tight"
+            >
+              Air quality: {place.label}
+            </h2>
+            <ObservationPanel note={cpcb?.limitations[0]} />
+            {forecast.state.status === 'ready' ? (
+              <ForecastPanel
+                series={forecast.state.data.series}
+                now={forecast.state.data.loadedAt}
+              />
+            ) : forecast.state.status === 'error' ? (
+              <ErrorState
+                error={forecast.state.error}
+                onRetry={forecast.retry}
+              />
+            ) : (
+              <Loading label="Loading forecast" />
+            )}
+            {sources.state.status === 'ready' && (
+              <SourcesPanel sources={sources.state.data} />
+            )}
+          </div>
+        ) : (
+          <p className="max-w-prose text-text-dark-muted">
+            Search for a place or use your location to see its air-quality
+            forecast.
+          </p>
+        )}
+      </main>
+    </>
   );
 }
 

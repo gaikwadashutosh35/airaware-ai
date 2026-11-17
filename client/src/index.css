@@ -1,7 +1,12 @@
+/* Hallmark · genre: atmospheric (landing) + app screen (/app) · theme: DESIGN.md (locked system, no deal) · shape: Stage hero, Split, Statement band, action band, colophon · hero: Stage · nav: edge-aligned wordmark only · footer: colophon · signature: the real forecast readout with its source line, captured from /app · imagery: screenshots 1 (browser capture, used twice) · posture: Restrained · job: try · v2.0.0
+ * pre-emit critique: P5 H4 E4 S5 R5 V3 · weakest: V, first logged build so nothing to differ from; S earned by leading with the limits statement and the provenance readout
+ * Hallmark · waive 1 · Inter or the system sans carries display · DESIGN.md fixes Inter or a similar legible sans and the CSP blocks third-party font files
+ */
 @import 'tailwindcss';
 
-/* DESIGN.md §3 tokens. Tailwind's default palette and fonts are cleared so
-   only these tokens exist as utilities. `static` always emits every token at
+/* DESIGN.md §3 tokens, plus the neutrals, rules and focus colours the
+   system needs for contrast. Tailwind's default palette and fonts are
+   cleared so only these exist as utilities. `static` emits every token at
    :root, so SVG and inline `var(--color-*)` uses resolve too. */
 @theme static {
   --color-*: initial;
@@ -15,6 +20,11 @@
   --color-warning: #f5b84b;
   --color-danger: #f06b72;
   --color-success: #3baa82;
+  --color-text-muted: #a9b7c8;
+  --color-text-dark-muted: #4a5a6e;
+  --color-rule: #d3dce6;
+  --color-rule-dark: #22344a;
+  --color-focus: #1f6fd6;
 
   --font-*: initial;
   --font-sans:
@@ -32,10 +42,47 @@
     background-color: var(--color-surface-light);
     color: var(--color-text-dark);
     font-family: var(--font-sans);
+    font-synthesis: none;
+    line-height: 1.55;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-secondary);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
+  }
+
+  /* Programmatic focus targets (tabindex -1 headings) are not controls. */
+  [tabindex='-1']:focus {
+    outline: none;
+  }
+
+  /* Dark surfaces take the lighter ring, still 3:1 or better. */
+  .on-dark :focus-visible {
+    outline-color: var(--color-secondary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
