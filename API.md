@@ -97,8 +97,9 @@ Example values are illustrative only; production must not return fabricated data
 Returns an hourly model forecast (48 hours from the current hour) and the provider/model metadata.
 
 **Request handling:**
-- `latitude` and `longitude` must be plain decimals in range. Anything else returns `400 VALIDATION_ERROR`.
-- The server rounds coordinates to 2 decimals (~1.1 km) before calling Open-Meteo and keying its 10-minute cache.
+- `latitude` and `longitude` must be in range and be plain decimals with **at most 2 decimal places** (~1.1 km; the model grid is ~45 km). Anything else returns `400 VALIDATION_ERROR`.
+- Clients round before sending, so a precise location never appears in request logs or reaches Open-Meteo.
+- The server keeps forecasts in a 10-minute cache.
 
 **Response shape:**
 - `units` comes from the provider response.
@@ -115,7 +116,7 @@ interface ForecastSeries {
   dataKind: 'model_forecast';
   modelResolution: string;
   retrievedAt: string;
-  freshness: 'fresh' | 'stale' | 'unknown'; // stale after 12 h (model update cycle)
+  freshness: 'unknown'; // Open-Meteo does not report the model run time; see retrievedAt
   units: Partial<Record<Pollutant, string>>;
   hours: Array<{ time: string; values: Partial<Record<Pollutant, number | null>> }>;
   limitations: string[];
@@ -134,7 +135,7 @@ Response (illustrative values):
     "units": { "PM2_5": "μg/m³", "PM10": "μg/m³" },
     "hours": [{ "time": "2026-11-17T17:00:00.000Z", "values": { "PM2_5": 48, "PM10": 52.4 } }],
     "limitations": ["Model forecast, not a station observation.", "Not the CPCB National AQI."],
-    "freshness": "fresh"
+    "freshness": "unknown"
   }
 }
 ```

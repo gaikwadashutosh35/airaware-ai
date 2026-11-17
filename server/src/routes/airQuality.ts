@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { HttpError, parseQuery } from '../errors.ts';
 import { createTtlCache } from '../services/air-data/cache.ts';
-import { freshness } from '../services/air-data/freshness.ts';
 import {
   fetchForecast,
   LIMITATIONS,
@@ -12,14 +11,14 @@ import {
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const CACHE_MAX_ENTRIES = 500;
-// CAMS global forecasts update every 12 hours (Open-Meteo docs).
-const FORECAST_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
-// Plain decimals only: rejects '', 'abc', '1e2', hex, and repeated params.
+// Plain decimals with at most 2 places (~1.1 km; the model grid is ~45 km).
+// Clients round before sending, so a precise location never reaches request
+// logs or Open-Meteo. Also rejects '', 'abc', '1e2', hex and repeated params.
 function coordinate(min: number, max: number) {
   return z
     .string()
-    .regex(/^-?\d{1,3}(\.\d{1,10})?$/)
+    .regex(/^-?\d{1,3}(\.\d{1,2})?$/)
     .transform(Number)
     .pipe(z.number().min(min).max(max));
 }
@@ -27,11 +26,6 @@ const coordinatesQuery = z.object({
   latitude: coordinate(-90, 90),
   longitude: coordinate(-180, 180),
 });
-
-// ~1.1 km: what leaves the server and keys the cache. The model grid is ~45 km.
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
-}
 
 const SOURCES = [
   {
@@ -62,9 +56,7 @@ export function airQualityRouter(): Router {
   const cache = createTtlCache<ForecastSeries>(CACHE_TTL_MS, CACHE_MAX_ENTRIES);
 
   router.get('/forecast', async (req, res) => {
-    const query = parseQuery(coordinatesQuery, req.query);
-    const latitude = round2(query.latitude);
-    const longitude = round2(query.longitude);
+    const { latitude, longitude } = parseQuery(coordinatesQuery, req.query);
     const key = `${latitude},${longitude}`;
     const now = new Date();
 
@@ -73,12 +65,9 @@ export function airQualityRouter(): Router {
       series = await fetchForecast(latitude, longitude, now);
       cache.set(key, series, now.getTime());
     }
-    res.json({
-      data: {
-        ...series,
-        freshness: freshness(series.retrievedAt, now, FORECAST_MAX_AGE_MS),
-      },
-    });
+    // Open-Meteo does not report the model run time, so the forecast's age is
+    // unknown; `retrievedAt` says when the server fetched it.
+    res.json({ data: { ...series, freshness: 'unknown' } });
   });
 
   router.get('/current', (req) => {

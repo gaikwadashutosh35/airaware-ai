@@ -24,7 +24,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Not yet applicable.
 
 ### Security
-- Coordinates are rounded to 2 decimals before they reach Open-Meteo and are never logged.
+- Coordinates with more than 2 decimals (~1.1 km) are rejected, so precise locations never reach request logs or Open-Meteo. The app never logs coordinates.
 - Outbound hosts are fixed constants.
 - Queries are Zod-validated.
 - Provider failures return `502` and never fall back to demo data.

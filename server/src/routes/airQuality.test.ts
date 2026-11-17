@@ -19,7 +19,7 @@ describe('air-quality routes', () => {
   });
 
   describe('GET /api/v1/air-quality/forecast', () => {
-    it('returns a fresh, labelled model forecast', async () => {
+    it('returns a labelled model forecast whose run age is unknown', async () => {
       stubFetch();
 
       const res = await request(createApp()).get(
@@ -28,35 +28,24 @@ describe('air-quality routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.dataKind).toBe('model_forecast');
-      expect(res.body.data.freshness).toBe('fresh');
+      // Open-Meteo does not report the model run time, so age is unknown.
+      expect(res.body.data.freshness).toBe('unknown');
       expect(res.body.data.units.PM2_5).toBe('μg/m³');
       expect(res.body.data.hours[0].values.PM2_5).toBe(48);
     });
 
-    it('sends only rounded coordinates to the provider', async () => {
-      const fetchSpy = stubFetch();
-
-      await request(createApp()).get(
-        '/api/v1/air-quality/forecast?latitude=18.519571&longitude=73.855347',
-      );
-
-      const url = fetchSpy.mock.calls[0]?.[0] as URL;
-      expect(url.searchParams.get('latitude')).toBe('18.52');
-      expect(url.searchParams.get('longitude')).toBe('73.86');
-    });
-
-    it('serves repeat and nearby requests from the cache', async () => {
+    it('serves repeat and equivalent requests from the cache', async () => {
       const fetchSpy = stubFetch();
       const app = createApp();
 
       await request(app).get(
-        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+        '/api/v1/air-quality/forecast?latitude=18.5&longitude=73.86',
       );
       await request(app).get(
-        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+        '/api/v1/air-quality/forecast?latitude=18.5&longitude=73.86',
       );
       const res = await request(app).get(
-        '/api/v1/air-quality/forecast?latitude=18.5201&longitude=73.86',
+        '/api/v1/air-quality/forecast?latitude=18.50&longitude=73.86',
       );
 
       expect(res.status).toBe(200);
@@ -64,6 +53,10 @@ describe('air-quality routes', () => {
     });
 
     it.each([
+      // More than 2 decimals (~1.1 km) would put a precise location in
+      // request logs; clients must round before sending.
+      'latitude=18.519571&longitude=73.86',
+      'latitude=18.52&longitude=73.855',
       'latitude=&longitude=73.86',
       'latitude=abc&longitude=73.86',
       'latitude=1e2&longitude=73.86',

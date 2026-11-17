@@ -63,7 +63,7 @@ Proposal: create `DEPLOYMENT.md` in Phase 9 once the host is chosen. Point `STAR
 
 1. **Health path:** `API.md` says `/api/v1/health`; `OBSERVABILITY_RUNBOOK.md` says `/api/health`. → Use `/api/v1/health`.
 2. **Error envelope:** `API.md` codes (`PROVIDER_ERROR`, `DATA_UNAVAILABLE`) vs runbook (`AIR_PROVIDER_UNAVAILABLE` + `retryable`). → Keep `API.md` codes. (`retryable` dropped in Phase 2: the client derives it from `code`.)
-3. **`AirQualityForecast` is used but never defined.** A forecast is an hourly series, not one `forecastFor` timestamp. → Define `ForecastSeries { provider, sourceUrl, dataKind:'model_forecast', retrievedAt, modelResolution, hours: [{ time, pollutants[] }], freshness, limitations }`.
+3. **`AirQualityForecast` is used but never defined.** A forecast is an hourly series, not one `forecastFor` timestamp. → Define `ForecastSeries { provider, sourceUrl, dataKind:'model_forecast', retrievedAt, modelResolution, units, hours: [{ time, values }], freshness, limitations }` (as built in Phase 2; see `API.md`).
 4. **Forecast example lacks `sourceUrl`** although the type requires it.
 5. **`snapshotIds` in the daily-plan request** implies a server-side snapshot store that is not designed anywhere. → Request carries a transient location `{ label, latitude, longitude }`; the server fetches (cached) data itself. Client never supplies pollutant values. Coordinates are not persisted or logged.
 6. **Pollutant enum lacks `NH3` (and `Pb`).** CPCB National AQI uses 8 pollutants incl. NH3. → Add `NH3` only if a CPCB feed is adopted.
@@ -137,7 +137,7 @@ Not relevant to this project (leave unused): claude-seo, openseo, posthog, egm, 
 | Source | Status | Finding | Plan |
 |---|---|---|---|
 | **CPCB official observations** | ❌ Not usable yet (Phase 2 spike, 2026-11-17) | The CPCB dashboard is not a documented API, so do not scrape it. The candidate is the data.gov.in OGD dataset "Real time Air Quality Index from various locations" (resource `3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69`). **Spike findings:** (1) owner CPCB/MoEFCC, licence **GODL-India**, updated **hourly** (per the AIKosh mirror of the catalogue entry); (2) pollutants SO2, NO2, PM10, PM2.5, CO and O3, with **no NH3 or Pb**, so the dataset can never supply all of CPCB's AQI inputs; (3) `api.data.gov.in` without a key → `400 "Authorization field missing"`; (4) data.gov.in pages returned **HTTP 503** again, so field semantics are **still unverified**: whether `min/max/avg_value` are concentrations or sub-indices, their units, and whether any AQI value is published. | `/current` returns `503 DATA_UNAVAILABLE` and `/sources` lists CPCB as unavailable. Re-check only with `DATA_GOV_IN_API_KEY` (D4): fetch one record and compare it against the CPCB dashboard (~30 min). Show values only if the units are confirmed. **Never compute National AQI.** |
-| **Open-Meteo Air Quality** | ✅ Usable with conditions | Terms (checked 2026-11-17): free tier is **non-commercial only**; 600/min, 5 000/h, 10 000/day, 300 000/month; **CC BY 4.0 attribution required**. Model data (CAMS); exact resolution over India to be confirmed from the docs in Phase 2. | Primary `model_forecast` source. Visible attribution. Server cache (10 min TTL) keeps volume tiny. |
+| **Open-Meteo Air Quality** | ✅ Usable with conditions | Terms (checked 2026-11-17): free tier is **non-commercial only**; 600/min, 5 000/h, 10 000/day, 300 000/month; **CC BY 4.0 attribution required**. Model data: over India, CAMS global (requested with `domains=cams_global`), 0.4° (~45 km) grid, 3-hourly source resolution, updated every 12 h. Confirmed from the docs in Phase 2. The API does not report the model run time. | Primary `model_forecast` source. Visible attribution. Server cache (10 min TTL) keeps volume tiny. |
 | **Open-Meteo Geocoding** | ✅ Recommended | Same terms. Avoids Nominatim's usage policy limits (no autocomplete, 1 req/s). | Manual city search provider. |
 | **Gemini** | ⚠️ Key + model ID unverified | Model ID and free-tier quota must be checked at Phase 5. Free-tier prompts may be used by Google to improve products → send minimal context only. | Behind `AIProvider`; deterministic fallback labelled "rules-only". |
 | **Demo fixtures** | ✅ | — | Tests and local dev only. Visible **DEMO** label. Never a silent fallback in production. |
@@ -150,6 +150,7 @@ Not relevant to this project (leave unused): claude-seo, openseo, posthog, egm, 
 | Split hosting (Vercel + Render) needs CORS + two URLs | Option B serves client and API from one origin — no CORS |
 | RLS tests need two real users | Local Supabase via Docker (`npx supabase start`, ~2–3 GB images — will ask first) or a dev project |
 | Scope vs deadline | P0 only; every P1 item deferred (§7 "Deferred") |
+| Open-Meteo daily quota (10 000) | The 60/min per-IP limit does not cap total upstream calls: one persistent client, or many IPs, can exhaust the quota, and then every user gets `502` until it resets. **Accepted for the demo** (Phase 2 review). Add a global upstream budget if abuse appears. |
 
 ---
 
@@ -216,7 +217,9 @@ Estimates = my build time per phase, excluding your review and account setup.
   - `/sources`
   - `GET /api/v1/locations/search`, India only
   - All are rate-limited to 60/min per IP.
-- Forecasts come from Open-Meteo with `domains=cams_global` (0.4° grid), `timeformat=unixtime` and 48 hours, cached for 10 min. Coordinates are rounded to 2 decimals before they leave the server.
+- Forecasts come from Open-Meteo with `domains=cams_global` (0.4° grid), `timeformat=unixtime` and 48 hours, cached for 10 min.
+- Coordinates must have at most 2 decimals, or the API returns 400. This keeps precise locations out of request logs and away from Open-Meteo.
+- `freshness` is `unknown`, because Open-Meteo does not report the model run time.
 - Deferred until a CPCB feed exists: the `shared/` workspace (moves to Phase 3), the demo adapter, the CPCB category mapper and its boundary tests, and `AirQualitySnapshot`.
 - Not added: `retryable`. TTL, rate limit and base URLs are code constants, not env vars.
 - Task plan: `docs/superpowers/plans/2026-11-17-phase2-data-layer.md`.
@@ -225,7 +228,7 @@ Estimates = my build time per phase, excluding your review and account setup.
 
 | | |
 |---|---|
-| Tasks | Hallmark visual direction (one pass, reviewed with you); Tailwind v4 tokens from DESIGN.md; landing page (7 chapters, original visuals, no fake data); dashboard layout; `LocationSearch` (keyboard combobox, live-region announcements); opt-in `useGeolocation`; provenance/freshness badges; loading/empty/error/stale/unavailable/demo states; reduced motion; **walking-skeleton deploy** |
+| Tasks | Hallmark visual direction (one pass, reviewed with you); Tailwind v4 tokens from DESIGN.md; landing page (7 chapters, original visuals, no fake data); dashboard layout; `LocationSearch` (keyboard combobox, live-region announcements); opt-in `useGeolocation` (round to 2 decimals before any request; the API rejects more); provenance/freshness badges; loading/empty/error/stale/unavailable/demo states; reduced motion; **walking-skeleton deploy** with `app.set('trust proxy', 1)`, so the rate limiter keys on client IPs and not the Google front end (verify with two clients) |
 | Files | `client/src/app/*`, `client/src/styles/tokens.css`, `client/src/pages/{Landing,Dashboard}.tsx`, `client/src/features/location/*`, `client/src/features/air-quality/{ForecastSummary,PollutantMetric}.tsx`, `client/src/components/{DataProvenanceBadge,FreshnessIndicator,States}.tsx`, `client/src/services/api.ts` |
 | Deps | tailwindcss, @tailwindcss/vite, react-router, lucide-react |
 | Acceptance | Search Pune/Delhi → real Open-Meteo values with source/time/unit/"Model forecast" label; GPS denial keeps search usable; no dead controls; 320/768/1280 px reviewed in a browser; axe: 0 critical |
@@ -245,7 +248,7 @@ Estimates = my build time per phase, excluding your review and account setup.
 
 | | |
 |---|---|
-| Tasks | `AIProvider` interface; Gemini adapter (`@google/genai`, server-only key, timeout, token caps, structured JSON output); prompts from AI_PROMPTS.md versioned in code; output Zod validation + allowlist checks (source IDs, no numbers not present in input, no medical/safety-guarantee phrases); one retry max; rules-only fallback labelled; `POST /recommendations/daily-plan`, `POST /assistant/chat` (bounded length, rate-limited) |
+| Tasks | `AIProvider` interface; Gemini adapter (`@google/genai`, server-only key, timeout, token caps, structured JSON output); prompts from AI_PROMPTS.md versioned in code; output Zod validation + allowlist checks (source IDs, no numbers not present in input, no medical/safety-guarantee phrases); one retry max; rules-only fallback labelled; `POST /recommendations/daily-plan`, `POST /assistant/chat` (bounded length, rate-limited); `express.json()` with a size limit, with its 400/413 errors mapped to `VALIDATION_ERROR`/`PAYLOAD_TOO_LARGE` in `errorHandler` and **no request body in logs** (Phase 2 review) |
 | Files | `server/src/services/ai/{provider,gemini,prompts,validate}.ts` + tests, `server/src/routes/{recommendations,assistant}.ts` + tests |
 | Acceptance | Invented pollutant value → rejected; unknown source ID → rejected; prompt-injection fixtures keep constraints; AI down → labelled rules-only plan |
 | Tests | Mock provider for all logic; one opt-in live test (skipped without key) |
@@ -279,7 +282,7 @@ Estimates = my build time per phase, excluding your review and account setup.
 
 ### Phase 9 — Production deployment (≈1–2 h + your account setup)
 
-Option B: Dockerfile (multi-stage, client built into server static dir) → Cloud Run; `app.set('trust proxy', 1)` so the rate limiter keys on client IPs, not the Google front end (test with two clients); secrets in Secret Manager; Supabase auth redirect URLs; verify real provider responses and timestamps in production; fresh-session and two-user checks; write `DEPLOYMENT.md`.
+Option B: Dockerfile (multi-stage, client built into server static dir) → Cloud Run; secrets in Secret Manager; Supabase auth redirect URLs; verify real provider responses and timestamps in production; fresh-session and two-user checks; write `DEPLOYMENT.md`.
 
 ### Phase 10 — Submission audit (≈30 min + narrative)
 
@@ -299,13 +302,13 @@ Saved locations, plan history, plan feedback, share card, Hindi/Marathi, reminde
 |---|---|---|---|
 | `NODE_ENV`, `PORT` | server | 1 | no |
 | `DATA_GOV_IN_API_KEY` | server | CPCB follow-up (spike was blocked on it) | **yes** |
-
-Open-Meteo base URLs, cache TTL and rate limits are code constants (Phase 2), not env vars.
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | server | 5 | key: **yes** |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | server + client (`VITE_`) | 6 | no (RLS protects) |
 | `SUPABASE_SERVICE_ROLE_KEY` | server only | 6 (account deletion only) | **yes** |
 | `CLIENT_URL` | server | Option A only (CORS) | no |
 | `SONAR_TOKEN` | GitHub Actions secret | 8 | **yes** |
+
+Open-Meteo base URLs, cache TTL and rate limits are code constants (Phase 2), not env vars.
 
 Accounts: GitHub (have), Gemini/AI Studio, Supabase, GCP with billing (B/C), data.gov.in (optional), SonarQube Cloud.
 

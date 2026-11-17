@@ -9,7 +9,8 @@ import { locationsRouter } from './routes/locations.ts';
 export function createApp(): express.Express {
   const app = express();
   app.use(helmet());
-  // Protects the shared Open-Meteo quota (10 000 calls/day).
+  // Per-client limit. It does not cap total Open-Meteo calls (10 000/day);
+  // that residual risk is accepted in docs/IMPLEMENTATION_PLAN.md §5.3.
   app.use(
     '/api/v1',
     rateLimit({
