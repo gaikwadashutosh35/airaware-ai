@@ -123,3 +123,30 @@ export interface RecommendationCandidate {
 }
 
 export type PlanPeriod = 'morning' | 'commute' | 'daytime' | 'evening' | 'home';
+
+export interface DailyPlan {
+  generatedBy: 'ai' | 'rules';
+  model: string | null;
+  promptVersion: string | null;
+  summary: string | null;
+  place: { label: string };
+  air: AirAssessment;
+  forecast: Pick<
+    ForecastSeries,
+    | 'provider'
+    | 'sourceUrl'
+    | 'dataKind'
+    | 'modelResolution'
+    | 'retrievedAt'
+    | 'limitations'
+  > | null;
+  notices: RecommendationCandidate[];
+  featured: Array<{
+    candidate: RecommendationCandidate;
+    period: PlanPeriod | null;
+    forYou: string | null;
+  }>;
+  more: RecommendationCandidate[];
+  sources: Array<{ id: SourceReferenceId; name: string; url: string }>;
+  safetyNote: string;
+}
