@@ -2,7 +2,11 @@ import type {
   ApiErrorBody,
   ErrorCode,
   ForecastSeries,
+  HouseholdContext,
   LocationResult,
+  SavedPlan,
+  SavedPlanSummary,
+  SavedPreferences,
   SourceInfo,
 } from '../../../shared/contracts.ts';
 
@@ -30,10 +34,30 @@ function isErrorBody(body: unknown): body is ApiErrorBody {
   );
 }
 
-async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
+interface RequestOptions {
+  method?: string;
+  // Sent as JSON.
+  body?: unknown;
+  // Supabase access token for saved-data routes.
+  token?: string;
+}
+
+async function request<T>(
+  path: string,
+  signal?: AbortSignal,
+  { method, body, token }: RequestOptions = {},
+): Promise<T> {
+  const headers = new Headers();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (body !== undefined) headers.set('Content-Type', 'application/json');
   let res: Response;
   try {
-    res = await fetch(path, { signal });
+    res = await fetch(path, {
+      signal,
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
   } catch (error) {
     // An abort is the caller's decision, not a failure: pass it through.
     if (signal?.aborted) throw error;
@@ -43,12 +67,19 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
       'Could not reach AirAware. Check your connection.',
     );
   }
-  const body: unknown = await res.json().catch(() => undefined);
-  if (res.ok && typeof body === 'object' && body !== null && 'data' in body) {
-    return (body as { data: T }).data;
+  // Deletes answer 204 with no body.
+  if (res.status === 204) return undefined as T;
+  const reply: unknown = await res.json().catch(() => undefined);
+  if (
+    res.ok &&
+    typeof reply === 'object' &&
+    reply !== null &&
+    'data' in reply
+  ) {
+    return (reply as { data: T }).data;
   }
-  if (!res.ok && isErrorBody(body)) {
-    throw new ApiError(res.status, body.error.code, body.error.message);
+  if (!res.ok && isErrorBody(reply)) {
+    throw new ApiError(res.status, reply.error.code, reply.error.message);
   }
   throw new ApiError(
     res.status,
@@ -83,4 +114,56 @@ export function searchLocations(
 
 export function getSources(signal?: AbortSignal): Promise<SourceInfo[]> {
   return request('/api/v1/air-quality/sources', signal);
+}
+
+// Saved data (Phase 6). Each call needs the Supabase access token from
+// lib/supabase.ts; the server derives the user from it.
+export function getPreferences(
+  token: string,
+  signal?: AbortSignal,
+): Promise<SavedPreferences | null> {
+  return request('/api/v1/profile/preferences', signal, { token });
+}
+
+export function savePreferences(
+  token: string,
+  context: HouseholdContext,
+): Promise<SavedPreferences> {
+  return request('/api/v1/profile/preferences', undefined, {
+    method: 'PUT',
+    body: context,
+    token,
+  });
+}
+
+export function listPlans(token: string): Promise<SavedPlanSummary[]> {
+  return request('/api/v1/plans', undefined, { token });
+}
+
+export function getPlan(token: string, id: string): Promise<SavedPlan> {
+  return request(`/api/v1/plans/${encodeURIComponent(id)}`, undefined, {
+    token,
+  });
+}
+
+// The server builds and saves the plan for this request.
+export function savePlan(
+  token: string,
+  body: {
+    place: { label: string; latitude: number; longitude: number };
+    householdContext?: HouseholdContext;
+  },
+): Promise<SavedPlan> {
+  return request('/api/v1/plans', undefined, { method: 'POST', body, token });
+}
+
+export function deletePlan(token: string, id: string): Promise<void> {
+  return request(`/api/v1/plans/${encodeURIComponent(id)}`, undefined, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export function deleteAccount(token: string): Promise<void> {
+  return request('/api/v1/account', undefined, { method: 'DELETE', token });
 }

@@ -53,7 +53,9 @@ function forecastCalls(fetchSpy: ReturnType<typeof routeFetch>) {
 }
 
 async function choosePlace(optionIndex = 0) {
-  const input = screen.getByRole('combobox');
+  const input = screen.getByRole('combobox', {
+    name: 'Search for a city or area in India',
+  });
   fireEvent.change(input, { target: { value: 'Pune' } });
   await act(async () => {
     await vi.advanceTimersByTimeAsync(300);

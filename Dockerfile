@@ -9,6 +9,10 @@ COPY client/package.json client/
 RUN npm ci
 COPY shared shared
 COPY client client
+# Public Supabase settings, baked into the client (both optional: without
+# them the client says saving isn't set up). Passed as build args in Phase 9.
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_PUBLISHABLE_KEY
 RUN npm run build -w client
 
 # Run the server. Node runs the TypeScript directly (type stripping).

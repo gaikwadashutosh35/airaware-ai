@@ -5,6 +5,7 @@ import { ForecastPanel } from '../features/air-quality/ForecastPanel.tsx';
 import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
 import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
+import { HouseholdPreferencesForm } from '../features/daily-plan/HouseholdPreferencesForm.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import {
   placeFromSearch,
@@ -125,6 +126,7 @@ function Dashboard() {
             forecast.
           </p>
         )}
+        <HouseholdPreferencesForm />
       </main>
       <footer className="border-t border-rule">
         <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-text-dark-muted sm:px-6">

@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getForecast, getSources, searchLocations } from './api.ts';
+import {
+  ApiError,
+  deletePlan,
+  getForecast,
+  getSources,
+  savePreferences,
+  searchLocations,
+} from './api.ts';
 
 function respondWith(body: unknown, status = 200) {
   return vi
@@ -91,5 +98,46 @@ describe('api client', () => {
     respondWith({ data: [{ id: 'cpcb', status: 'unavailable' }] });
 
     expect(await getSources()).toEqual([{ id: 'cpcb', status: 'unavailable' }]);
+  });
+
+  it('saved-data calls send the bearer token', async () => {
+    const fetchSpy = respondWith({
+      data: { context: {}, updatedAt: '2026-11-18T10:00:00.000Z' },
+    });
+
+    await savePreferences('tok', {});
+
+    const [path, init] = fetchSpy.mock.calls[0]!;
+    expect(path).toBe('/api/v1/profile/preferences');
+    expect(init?.method).toBe('PUT');
+    expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer tok');
+    expect(new Headers(init?.headers).get('Content-Type')).toBe(
+      'application/json',
+    );
+    expect(init?.body).toBe('{}');
+  });
+
+  it('a 204 reply resolves undefined', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(null, { status: 204 }),
+    );
+
+    await expect(deletePlan('tok', 'p1')).resolves.toBeUndefined();
+  });
+
+  it('a 503 becomes ApiError SAVE_UNAVAILABLE', async () => {
+    respondWith(
+      {
+        error: {
+          code: 'SAVE_UNAVAILABLE',
+          message: 'Saving is not available right now.',
+        },
+      },
+      503,
+    );
+
+    const error = await savePreferences('tok', {}).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).code).toBe('SAVE_UNAVAILABLE');
   });
 });
