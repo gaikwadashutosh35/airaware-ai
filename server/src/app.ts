@@ -3,12 +3,16 @@ import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import pkg from '../package.json' with { type: 'json' };
 import { errorHandler } from './errors.ts';
+import { accountRouter } from './routes/account.ts';
 import { airQualityRouter } from './routes/airQuality.ts';
 import { locationsRouter } from './routes/locations.ts';
+import { plansRouter } from './routes/plans.ts';
+import { preferencesRouter } from './routes/preferences.ts';
 import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
 import type { GeneratePlan } from './services/ai/personalize.ts';
 import { createDailyPlanner } from './services/recommendations/dailyPlan.ts';
+import type { SavedStore } from './services/saved/store.ts';
 
 export interface AppOptions {
   // Folder holding the built client (index.html + assets), served same-origin.
@@ -19,12 +23,24 @@ export interface AppOptions {
   // Gemini for the daily plan; without both, plans are rules-only.
   generatePlan?: GeneratePlan;
   aiModel?: string;
+  // Supabase-backed saved data; without it every saved-data route answers
+  // 503 SAVE_UNAVAILABLE.
+  saved?: SavedStore;
 }
 
 export function createApp(options: AppOptions = {}): express.Express {
   const app = express();
   if (options.trustProxy) app.set('trust proxy', 1);
-  app.use(helmet());
+  // The browser talks to Supabase directly only for sign-in.
+  app.use(
+    options.saved
+      ? helmet({
+          contentSecurityPolicy: {
+            directives: { connectSrc: ["'self'", options.saved.origin] },
+          },
+        })
+      : helmet(),
+  );
   // Per-client limit. It does not cap total Open-Meteo calls (10 000/day);
   // that residual risk is accepted in docs/IMPLEMENTATION_PLAN.md §5.3.
   app.use(
@@ -71,6 +87,10 @@ export function createApp(options: AppOptions = {}): express.Express {
     '/api/v1/recommendations',
     recommendationsRouter({ planner, planLimit }),
   );
+  const saved = options.saved ?? null;
+  app.use('/api/v1/profile/preferences', preferencesRouter(saved));
+  app.use('/api/v1/plans', plansRouter({ store: saved, planner, planLimit }));
+  app.use('/api/v1/account', accountRouter(saved));
 
   const { clientDir } = options;
   if (clientDir) {

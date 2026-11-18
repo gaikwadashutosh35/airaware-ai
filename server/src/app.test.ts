@@ -3,6 +3,7 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import pkg from '../package.json' with { type: 'json' };
 import { createApp } from './app.ts';
+import { createFakeStore } from './test-fixtures/fakeStore.ts';
 
 describe('GET /api/v1/health', () => {
   it('returns exactly status and version', async () => {
@@ -17,6 +18,23 @@ describe('GET /api/v1/health', () => {
 
     expect(res.headers['x-powered-by']).toBeUndefined();
     expect(res.headers['x-content-type-options']).toBe('nosniff');
+  });
+});
+
+describe('content security policy', () => {
+  it('with saving on, the CSP allows the Supabase origin', async () => {
+    const res = await request(
+      createApp({ saved: createFakeStore().store }),
+    ).get('/api/v1/health');
+    expect(res.headers['content-security-policy']).toContain(
+      "connect-src 'self' https://test.supabase.co",
+    );
+  });
+
+  it('with saving off, the CSP is unchanged', async () => {
+    const res = await request(createApp()).get('/api/v1/health');
+    expect(res.headers['content-security-policy']).toBeDefined();
+    expect(res.headers['content-security-policy']).not.toContain('supabase');
   });
 });
 
