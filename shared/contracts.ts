@@ -12,6 +12,9 @@ export type ErrorCode =
   | 'PROVIDER_ERROR'
   | 'DATA_UNAVAILABLE'
   | 'PAYLOAD_TOO_LARGE'
+  | 'UNAUTHENTICATED'
+  | 'SAVE_UNAVAILABLE'
+  | 'LIMIT_REACHED'
   | 'INTERNAL_ERROR';
 
 export interface ForecastSeries {
@@ -150,4 +153,23 @@ export interface DailyPlan {
   more: RecommendationCandidate[];
   sources: Array<{ id: SourceReferenceId; name: string; url: string }>;
   safetyNote: string;
+}
+
+// Saved data (Phase 6). Stored per anonymous Supabase user; a saved plan is
+// a snapshot from `savedAt`, never current air information.
+export interface SavedPreferences {
+  context: HouseholdContext;
+  updatedAt: string;
+}
+
+export interface SavedPlanSummary {
+  id: string;
+  savedAt: string;
+  placeLabel: string;
+}
+
+export interface SavedPlan {
+  id: string;
+  savedAt: string;
+  plan: DailyPlan;
 }

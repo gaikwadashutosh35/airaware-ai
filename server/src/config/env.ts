@@ -20,6 +20,20 @@ const envSchema = z.object({
     .regex(/^[a-z0-9.-]*$/)
     .optional()
     .transform((model) => model || 'gemini-3.8-flash'),
+  // Optional: without both, saving is off. Empty lines count as unset.
+  SUPABASE_URL: z
+    .string()
+    .trim()
+    .optional()
+    .transform((url) => url || undefined)
+    .pipe(z.url({ protocol: /^https$/ }).optional()),
+  // Only the publishable key: a secret key here would be a misconfiguration.
+  SUPABASE_PUBLISHABLE_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((key) => key || undefined)
+    .pipe(z.string().startsWith('sb_publishable_').optional()),
 });
 
 export type Env = z.infer<typeof envSchema>;
