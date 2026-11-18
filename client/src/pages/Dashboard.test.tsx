@@ -7,11 +7,14 @@ import {
   within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import pune from '../../../server/src/services/location/fixtures/open-meteo-geocoding-pune.json' with { type: 'json' };
 import type { ForecastSeries } from '../../../shared/contracts.ts';
 import { formatTime } from '../features/air-quality/forecast.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
-import { forecastFixture, sourcesFixture } from '../test/fixtures.ts';
+import {
+  forecastFixture,
+  searchFixture,
+  sourcesFixture,
+} from '../test/fixtures.ts';
 import Dashboard from './Dashboard.tsx';
 
 type ForecastResponder = (latitude: string | null) => Promise<Response>;
@@ -30,7 +33,7 @@ function routeFetch(forecast: ForecastResponder) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = urlOf(input);
     if (url.pathname === '/api/v1/locations/search') {
-      return Promise.resolve(Response.json({ data: pune.results }));
+      return Promise.resolve(Response.json({ data: searchFixture }));
     }
     if (url.pathname === '/api/v1/air-quality/sources') {
       return Promise.resolve(Response.json({ data: sourcesFixture }));

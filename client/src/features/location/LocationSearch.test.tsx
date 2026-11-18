@@ -6,7 +6,7 @@ import {
   screen,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import pune from '../../../../server/src/services/location/fixtures/open-meteo-geocoding-pune.json' with { type: 'json' };
+import { searchFixture } from '../../test/fixtures.ts';
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { LocationSearch } from './LocationSearch.tsx';
 
@@ -42,7 +42,7 @@ describe('LocationSearch', () => {
   });
 
   it('does not search for fewer than 2 characters', async () => {
-    const fetchSpy = respondWith({ data: pune.results });
+    const fetchSpy = respondWith({ data: searchFixture });
     render(<LocationSearch onSelect={() => {}} />);
 
     await type('P');
@@ -52,7 +52,7 @@ describe('LocationSearch', () => {
   });
 
   it('searches once after typing pauses and announces the count', async () => {
-    const fetchSpy = respondWith({ data: pune.results });
+    const fetchSpy = respondWith({ data: searchFixture });
     render(<LocationSearch onSelect={() => {}} />);
 
     await type('Pu');
@@ -67,7 +67,7 @@ describe('LocationSearch', () => {
   });
 
   it('selects a place with the keyboard', async () => {
-    respondWith({ data: pune.results });
+    respondWith({ data: searchFixture });
     const onSelect = vi.fn();
     render(<LocationSearch onSelect={onSelect} />);
     await type('Pune');
@@ -90,7 +90,7 @@ describe('LocationSearch', () => {
   });
 
   it('does not select while an IME composition is in progress', async () => {
-    respondWith({ data: pune.results });
+    respondWith({ data: searchFixture });
     const onSelect = vi.fn();
     render(<LocationSearch onSelect={onSelect} />);
     await type('Pune');
@@ -104,7 +104,7 @@ describe('LocationSearch', () => {
   });
 
   it('closes the list with Escape', async () => {
-    respondWith({ data: pune.results });
+    respondWith({ data: searchFixture });
     render(<LocationSearch onSelect={() => {}} />);
     await type('Pune');
     await pause();
@@ -139,10 +139,10 @@ describe('LocationSearch', () => {
     await type('Pune');
     await pause();
     await act(async () => {
-      pending[1]?.resolve(Response.json({ data: pune.results.slice(0, 1) }));
+      pending[1]?.resolve(Response.json({ data: searchFixture.slice(0, 1) }));
     });
     await act(async () => {
-      pending[0]?.resolve(Response.json({ data: pune.results.slice(1) }));
+      pending[0]?.resolve(Response.json({ data: searchFixture.slice(1) }));
     });
 
     expect(pending.map((p) => p.query)).toEqual(['Pun', 'Pune']);
@@ -183,7 +183,7 @@ describe('LocationSearch', () => {
   });
 
   it('has no axe violations with results open', async () => {
-    respondWith({ data: pune.results });
+    respondWith({ data: searchFixture });
     const { container } = render(<LocationSearch onSelect={() => {}} />);
     await type('Pune');
     await pause();
