@@ -52,7 +52,8 @@ These would be a failure even if the code works:
 
 ## Constraints
 - **Air-data and privacy rules** (`AGENTS.md` §5 and §7) apply in full.
-- **Coordinates:** they leave the browser rounded to 2 decimals, because the API rejects more. They are never put in the page URL or in storage.
+- **Coordinates:** they leave the browser rounded to 2 decimals, because the API rejects more. They are never put in storage.
+- **Place in the URL (owner decision, 2026-11-18):** a *searched* place goes in the dashboard URL as `?place=<label>&lat=<2 dp>&lon=<2 dp>`, so links can be shared and reloaded. A device location never goes in the URL; choosing it clears the query.
 - **Third-party requests:** no third-party font, script or analytics call from the browser. Everything is same-origin under Helmet's default CSP.
 - **Repo size:** under 10 MB. At most one landing screenshot is committed, as WebP of about 150 KB or less.
 - **Live deploy:** needs your Google Cloud project with billing (D4) and installing the `gcloud` CLI on this machine. Both need your yes at that step. Everything before it runs locally.
@@ -65,7 +66,7 @@ These would be a failure even if the code works:
 | Routing | `location.pathname` switch between `/` and `/app`, plain `<a href>` links. Express serves `index.html` for both. | react-router | Two pages, no nested state. A router later costs one small change. |
 | Shared types | Root `shared/contracts.ts`, **type-only** imports from server and client | Separate workspace package; duplicated types | Type-only imports are erased at build time. No package, no runtime coupling, no drift. |
 | Data fetching | A typed `services/api.ts` plus small hooks using `fetch` with `AbortController` | TanStack Query | Three GET calls with no mutations. A cache library is not needed yet. |
-| Selected place | In-memory React state only | URL query; localStorage | Privacy: no location in history, logs or storage. A refresh means choosing the place again (acceptable for the MVP). |
+| Selected place | Searched place in the URL query (2 decimals); device location in memory only | Memory only; localStorage | **Owner decision 2026-11-18** (Awwwards-inspired landing search). A public city in the URL is shareable; a device location never leaves memory. |
 | Icons | `lucide-react` 1.66.0 (ISC licence) | Hand-copied SVGs | Consistent and accessible (`aria-hidden`), and tree-shaken. Status is never carried by an icon alone. |
 | Fonts | Self-hosted or system stack, at most 2 families, chosen in the Hallmark pass | Google Fonts | CSP and privacy: no third-party request. |
 | A11y tests | `axe-core` 4.14.0 inside Vitest (structure), plus a manual keyboard walk and a contrast check in the browser | Playwright E2E now | Playwright needs a browser download and CI setup. Its full E2E journey is Phase 7. |
@@ -122,3 +123,11 @@ These would be a failure even if the code works:
 
 ## Estimate
 About 4–5 h of build time, plus your screenshot review. The live deploy takes about 30 min once your Google Cloud project and the `gcloud` install are ready.
+
+## Revision 2026-11-18 (owner feedback: Awwwards references)
+
+The owner pointed at awwwards.com as the reference catalogue. The winners studied were FromEarth 2050, Deferred Damage, ZeroPact, Greenlock and WhereNext (social responsibility and data visualisation). The owner approved three changes:
+
+- **A:** place search in the landing hero opens `/app?place=…`.
+- **B:** "Where every number comes from" is a four-step diagram of the real data path, replacing the fact rows.
+- **C:** PM2.5 is the dashboard's headline figure, with the other five pollutants in a quieter row. Still no AQI.

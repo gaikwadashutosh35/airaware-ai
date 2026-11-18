@@ -129,7 +129,7 @@ export function LocationSearch({
           }}
           onKeyDown={onKeyDown}
           onBlur={() => setOpen(false)}
-          className="w-full min-h-11 rounded-md border border-text-dark px-3"
+          className="w-full min-h-12 rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
         />
         <ul
           id={listId}
@@ -137,7 +137,7 @@ export function LocationSearch({
           role="listbox"
           aria-label="Matching places"
           hidden={!open}
-          className="absolute inset-x-0 z-10 mt-1 rounded-md border border-text-dark bg-surface-light"
+          className="absolute inset-x-0 z-10 mt-1 rounded-md border border-text-dark bg-surface-light text-text-dark"
         >
           {open &&
             results.map((result, index) => (

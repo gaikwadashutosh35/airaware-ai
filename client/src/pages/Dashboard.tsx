@@ -5,13 +5,22 @@ import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
 import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
-import type { Place } from '../features/location/place.ts';
+import {
+  placeFromSearch,
+  placeToSearch,
+  type Place,
+} from '../features/location/place.ts';
 import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
 import { getForecast, getSources } from '../services/api.ts';
 
 function Dashboard() {
-  const [place, setPlace] = useState<Place | null>(null);
+  // A searched place may arrive in the address (from the landing page or a
+  // shared link).
+  const [place, setPlace] = useState<Place | null>(() =>
+    placeFromSearch(window.location.search),
+  );
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const focusResult = useRef(false);
   const sources = useRequest('sources', (signal) => getSources(signal));
   // Keyed by the coordinates actually sent (2 decimals).
   const forecastKey = place
@@ -23,10 +32,25 @@ function Dashboard() {
     loadedAt: new Date(),
   }));
 
-  // Move focus to the result so keyboard and screen-reader users land on it.
+  // After the user picks a place, move focus to the result so keyboard and
+  // screen-reader users land on it; a place from the address keeps focus put.
   useEffect(() => {
-    if (place) headingRef.current?.focus();
+    if (place && focusResult.current) {
+      focusResult.current = false;
+      headingRef.current?.focus();
+    }
   }, [place]);
+
+  // Searched places go in the address; a device location never does.
+  function choose(next: Place, inAddress: boolean) {
+    focusResult.current = true;
+    setPlace(next);
+    window.history.replaceState(
+      null,
+      '',
+      inAddress ? `/app?${placeToSearch(next)}` : '/app',
+    );
+  }
 
   const cpcb =
     sources.state.status === 'ready'
@@ -48,8 +72,8 @@ function Dashboard() {
           Air quality near you
         </h1>
         <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-          <LocationSearch onSelect={setPlace} />
-          <UseMyLocation onLocate={setPlace} />
+          <LocationSearch onSelect={(next) => choose(next, true)} />
+          <UseMyLocation onLocate={(next) => choose(next, false)} />
         </div>
 
         {place ? (

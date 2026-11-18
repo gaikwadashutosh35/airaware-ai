@@ -7,22 +7,60 @@ const ACTION = "Check your area's air quality";
 const HERO_ALT =
   'AirAware dashboard showing a model forecast for Pune with pollutant values, units, times and sources';
 // Documented facts the page may state; any other digit would be invented.
-const REAL_FIGURES = ['PM2.5', 'PM10', '45 km', '48 hours'];
+const REAL_FIGURES = [
+  'PM2.5',
+  'PM10',
+  '45 km',
+  '48 hours',
+  '2 letters',
+  '12 hours',
+  '1 km',
+  '10 minutes',
+];
 
 describe('Landing', () => {
   afterEach(() => {
     cleanup();
   });
 
-  it('has one main heading and the action twice', () => {
+  it('has one main heading and the action once', () => {
     render(<Landing />);
 
     const h1s = screen.getAllByRole('heading', { level: 1 });
     expect(h1s).toHaveLength(1);
     expect(h1s[0]?.textContent).toBe('The air around you matters.');
     const actions = screen.getAllByRole('link', { name: ACTION });
-    expect(actions).toHaveLength(2);
+    expect(actions).toHaveLength(1);
     for (const link of actions) expect(link.getAttribute('href')).toBe('/app');
+  });
+
+  it('puts the place search in the hero', () => {
+    render(<Landing />);
+
+    expect(
+      screen.getByRole('combobox', {
+        name: 'Search for a city or area in India',
+      }),
+    ).toBeDefined();
+  });
+
+  it('explains where every number comes from, in order', () => {
+    render(<Landing />);
+
+    const steps = screen.getByRole('list', {
+      name: 'How a forecast reaches you',
+    });
+    expect(steps.tagName).toBe('OL');
+    expect(
+      within(steps)
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent),
+    ).toEqual([
+      'CAMS global model',
+      'Open-Meteo',
+      'AirAware server',
+      'Your screen',
+    ]);
   });
 
   it('shows the real dashboard', () => {

@@ -74,6 +74,8 @@ describe('Dashboard', () => {
     cleanup();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    window.history.replaceState(null, '', '/');
+    Reflect.deleteProperty(navigator, 'geolocation');
   });
 
   it('asks for a place before loading any forecast', async () => {
@@ -282,5 +284,70 @@ describe('Dashboard', () => {
     ).toBeDefined();
     expect(screen.getByTestId('metric-PM2_5').textContent).toContain('99');
     expect(screen.getByTestId('metric-PM2_5').textContent).not.toContain('48');
+  });
+
+  it('opens the place given in the address without moving focus', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C+Maharashtra&lat=18.52&lon=73.86',
+    );
+    const fetchSpy = routeFetch(ok());
+    render(<Dashboard />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    const heading = screen.getByRole('heading', {
+      level: 2,
+      name: 'Air quality: Pune, Maharashtra',
+    });
+    expect(document.activeElement).not.toBe(heading);
+    const call = forecastCalls(fetchSpy)[0];
+    expect(urlOf(call![0]).searchParams.get('latitude')).toBe('18.52');
+  });
+
+  it('puts a searched place in the address', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    expect(window.location.search).toBe(
+      '?place=Pune%2C+Maharashtra&lat=18.52&lon=73.86',
+    );
+  });
+
+  it('keeps a device location out of the address', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C+Maharashtra&lat=18.52&lon=73.86',
+    );
+    Object.defineProperty(navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: (
+          success: (p: {
+            coords: { latitude: number; longitude: number };
+          }) => void,
+        ) => success({ coords: { latitude: 18.519571, longitude: 73.855347 } }),
+      },
+      configurable: true,
+    });
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(window.location.search).toBe('');
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Near you (approximate)',
+      }),
+    ).toBeDefined();
   });
 });

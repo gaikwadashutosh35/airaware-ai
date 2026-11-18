@@ -1,26 +1,32 @@
 import dashboardShot from '../assets/dashboard.webp';
+import { LocationSearch } from '../features/location/LocationSearch.tsx';
+import { placeToSearch, type Place } from '../features/location/place.ts';
+
+// The hero's search opens the dashboard for the chosen place.
+function openDashboard(place: Place) {
+  window.location.assign(`/app?${placeToSearch(place)}`);
+}
 
 const ACTION = "Check your area's air quality";
 
-const FACTS = [
+// The real path of a forecast value (a diagram of the actual system).
+const STEPS = [
   {
-    term: 'Pollutants',
-    detail:
-      'PM2.5, PM10, nitrogen dioxide, sulphur dioxide, ozone and carbon monoxide.',
+    title: 'CAMS global model',
+    detail: 'Copernicus runs it every 12 hours on a grid about 45 km wide.',
   },
   {
-    term: 'Units and hours',
-    detail:
-      'Every value carries its unit and the hour it is for, in your time zone.',
+    title: 'Open-Meteo',
+    detail: 'Serves its hourly PM2.5, PM10 and four gases, each with a unit.',
   },
   {
-    term: 'Data kind',
-    detail: 'Labelled model forecast, never presented as a station reading.',
+    title: 'AirAware server',
+    detail:
+      'Asks only for a location rounded to about 1 km and reuses each answer for 10 minutes.',
   },
   {
-    term: 'Source',
-    detail:
-      'Open-Meteo, from the CAMS global model on a grid about 45 km wide.',
+    title: 'Your screen',
+    detail: 'Every value with its unit, its hour and the label Model forecast.',
   },
 ];
 
@@ -57,7 +63,9 @@ function Landing() {
               Hourly pollution forecasts for Indian cities, with every source
               shown.
             </p>
-            <ActionLink />
+            <div className="max-w-md">
+              <LocationSearch onSelect={openDashboard} />
+            </div>
           </div>
           <figure
             data-slot="hero"
@@ -67,7 +75,7 @@ function Landing() {
             <img
               src={dashboardShot}
               width={977}
-              height={554}
+              height={598}
               fetchPriority="high"
               alt="AirAware dashboard showing a model forecast for Pune with pollutant values, units, times and sources"
               className="h-auto w-full rounded-xl outline-1 -outline-offset-1 outline-rule-dark"
@@ -82,28 +90,31 @@ function Landing() {
         <section className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-24 sm:px-8 lg:py-36">
           <div className="flex flex-col gap-4">
             <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              Every number shows its source
+              Where every number comes from
             </h2>
             <p className="text-xl text-text-muted">
               Forecasts for the next 48 hours, hour by hour.
             </p>
           </div>
-          <dl className="border-t border-rule-dark">
-            {FACTS.map((fact) => (
-              <div
-                key={fact.term}
-                className="grid gap-2 border-b border-rule-dark py-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8"
+          <ol
+            aria-label="How a forecast reaches you"
+            className="grid gap-10 [counter-reset:step] md:grid-cols-2 lg:grid-cols-4 lg:gap-8"
+          >
+            {STEPS.map((step) => (
+              <li
+                key={step.title}
+                className="flex flex-col gap-3 border-t-2 border-primary pt-6 [counter-increment:step] before:text-sm before:font-semibold before:text-primary before:content-[counter(step)]"
               >
-                <dt className="text-2xl font-semibold">{fact.term}</dt>
-                <dd className="text-lg text-text-muted">{fact.detail}</dd>
-              </div>
+                <h3 className="text-2xl font-semibold">{step.title}</h3>
+                <p className="text-lg text-text-muted">{step.detail}</p>
+              </li>
             ))}
-          </dl>
+          </ol>
         </section>
 
         <section className="bg-surface">
           <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-24 sm:px-8 lg:py-32">
-            <p className="max-w-[24ch] text-3xl leading-tight font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+            <p className="max-w-[28ch] text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl">
               Forecasts are model estimates, not station measurements, and not
               the CPCB National AQI.
             </p>
