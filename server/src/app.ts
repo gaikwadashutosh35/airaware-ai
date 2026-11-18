@@ -5,6 +5,9 @@ import pkg from '../package.json' with { type: 'json' };
 import { errorHandler } from './errors.ts';
 import { airQualityRouter } from './routes/airQuality.ts';
 import { locationsRouter } from './routes/locations.ts';
+import { recommendationsRouter } from './routes/recommendations.ts';
+import { createCachedForecast } from './services/air-data/cachedForecast.ts';
+import type { GeneratePlan } from './services/ai/personalize.ts';
 
 export interface AppOptions {
   // Folder holding the built client (index.html + assets), served same-origin.
@@ -12,6 +15,9 @@ export interface AppOptions {
   // Cloud Run sits behind one Google front end; only then trust its
   // X-Forwarded-For, or clients could spoof their IP past the rate limit.
   trustProxy?: boolean;
+  // Gemini for the daily plan; without both, plans are rules-only.
+  generatePlan?: GeneratePlan;
+  aiModel?: string;
 }
 
 export function createApp(options: AppOptions = {}): express.Express {
@@ -39,8 +45,17 @@ export function createApp(options: AppOptions = {}): express.Express {
   app.get('/api/v1/health', (_req, res) => {
     res.json({ status: 'ok', version: pkg.version });
   });
-  app.use('/api/v1/air-quality', airQualityRouter());
+  const forecast = createCachedForecast();
+  app.use('/api/v1/air-quality', airQualityRouter(forecast));
   app.use('/api/v1/locations', locationsRouter());
+  app.use(
+    '/api/v1/recommendations',
+    recommendationsRouter({
+      forecast,
+      generate: options.generatePlan ?? null,
+      model: options.aiModel ?? null,
+    }),
+  );
 
   const { clientDir } = options;
   if (clientDir) {

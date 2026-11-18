@@ -63,7 +63,7 @@ In production the client calls the API on the same origin (`/api/v1`), so no API
 
 ## 6. Backend variables
 
-`server/.env.example` currently holds only `NODE_ENV` and `PORT`. The full set expected by the end of the project is below; each variable is added in the phase that first needs it (`docs/IMPLEMENTATION_PLAN.md` §8):
+`server/.env.example` currently holds `NODE_ENV`, `PORT`, `GEMINI_API_KEY` and a commented `GEMINI_MODEL`. The full set expected by the end of the project is below; each variable is added in the phase that first needs it (`docs/IMPLEMENTATION_PLAN.md` §8):
 ```env
 NODE_ENV=development
 PORT=8080
@@ -75,7 +75,10 @@ GEMINI_MODEL=
 DATA_GOV_IN_API_KEY=
 ```
 
-Open-Meteo base URLs, the forecast cache TTL (10 min) and the rate limit (60/min per IP) are code constants in `server/src`, not environment variables. Fixed base URLs keep the outbound-host allowlist out of configuration.
+- `GEMINI_API_KEY` (optional, server-only): a Gemini API key from Google AI Studio. Empty or missing → every daily plan is rules-only, and startup logs "Gemini not configured; plans are rules-only." Never put it in a `VITE_` variable or commit it.
+- `GEMINI_MODEL` (optional): defaults to `gemini-3.8-flash`. Lowercase letters, digits, `.` and `-` only.
+
+Open-Meteo base URLs, the Gemini endpoint and 10-second timeout, the forecast and plan cache TTLs (10 min), the rate limits (60/min per IP; 10/min for daily plans) and the 4 KB daily-plan body limit are code constants in `server/src`, not environment variables. Fixed base URLs keep the outbound-host allowlist out of configuration.
 
 `DATA_GOV_IN_API_KEY` is only needed for the CPCB follow-up (see `docs/IMPLEMENTATION_PLAN.md` §5.2). Do not enable a scraper or undocumented endpoint. Activate CPCB integration only after verifying supported access, terms and units.
 

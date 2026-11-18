@@ -21,6 +21,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Dashboard:** keyboard-accessible place search, opt-in approximate location, PM2.5 headline figure, the six pollutants with units and hours, a 48-hour table, the CPCB-unavailable panel, sources, and loading/error/rate-limit states.
 - Production container: one Express process serves the API and the built client (Dockerfile).
 - Phase 4 recommendation rules engine: household details schema, a 24-hour forecast check against India's NAAQS PM2.5/PM10 limits, and 17 explainable rules (server-only; no endpoint yet).
+- Phase 5 `POST /api/v1/recommendations/daily-plan`: Gemini (`gemini-3.8-flash`, prompt `daily-plan-v1`) features, orders and times the rules' actions and adds a summary and "for you" lines; every answer is checked, and any failure returns a labelled rules-only plan. The advice text stays the rules' own wording.
 
 ### Changed
 - Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.
@@ -33,5 +34,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Outbound hosts are fixed constants.
 - Queries are Zod-validated.
 - Provider failures return `502` and never fall back to demo data.
+- Daily-plan requests: 4 KB body limit (`413 PAYLOAD_TOO_LARGE`), 10 per minute per IP, unknown fields rejected; malformed JSON is answered with `400` and never logged.
+- Gemini gets no place name, coordinates, raw household answers or user text. The key travels only in a request header. Failures log a category only, never the key, prompts, answers or request bodies.
 
 Do not list features as completed until they are implemented and verified.

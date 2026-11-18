@@ -11,6 +11,7 @@ export type ErrorCode =
   | 'RATE_LIMITED'
   | 'PROVIDER_ERROR'
   | 'DATA_UNAVAILABLE'
+  | 'PAYLOAD_TOO_LARGE'
   | 'INTERNAL_ERROR';
 
 export interface ForecastSeries {

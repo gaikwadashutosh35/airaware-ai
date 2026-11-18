@@ -2,16 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { SourceInfo } from '../../../shared/contracts.ts';
 import { HttpError, parseQuery } from '../errors.ts';
-import { createTtlCache } from '../services/air-data/cache.ts';
-import {
-  fetchForecast,
-  LIMITATIONS,
-  SOURCE_URL,
-  type ModelForecast,
-} from '../services/air-data/openMeteo.ts';
-
-const CACHE_TTL_MS = 10 * 60 * 1000;
-const CACHE_MAX_ENTRIES = 500;
+import type { CachedForecast } from '../services/air-data/cachedForecast.ts';
+import { LIMITATIONS, SOURCE_URL } from '../services/air-data/openMeteo.ts';
 
 // Plain decimals with at most 2 places (~1.1 km; the model grid is ~45 km).
 // Clients round before sending, so a precise location never reaches request
@@ -52,20 +44,12 @@ const SOURCES: SourceInfo[] = [
   },
 ];
 
-export function airQualityRouter(): Router {
+export function airQualityRouter(forecast: CachedForecast): Router {
   const router = Router();
-  const cache = createTtlCache<ModelForecast>(CACHE_TTL_MS, CACHE_MAX_ENTRIES);
 
   router.get('/forecast', async (req, res) => {
     const { latitude, longitude } = parseQuery(coordinatesQuery, req.query);
-    const key = `${latitude},${longitude}`;
-    const now = new Date();
-
-    let series = cache.get(key, now.getTime());
-    if (!series) {
-      series = await fetchForecast(latitude, longitude, now);
-      cache.set(key, series, now.getTime());
-    }
+    const series = await forecast(latitude, longitude, new Date());
     // Open-Meteo does not report the model run time, so the forecast's age is
     // unknown; `retrievedAt` says when the server fetched it.
     res.json({ data: { ...series, freshness: 'unknown' } });

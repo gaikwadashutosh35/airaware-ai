@@ -163,43 +163,52 @@ All `/api/v1` routes share a rate limit of 60 requests per minute per IP. Reques
 
 ### `POST /api/v1/recommendations/daily-plan`
 
-Authenticated or rate-limited demo endpoint.
+Public, rate-limited endpoint (no sign-in until Phase 6). Returns a daily plan for one place and optional household details. Gemini picks, orders and times the rules' recommendation candidates and adds a summary and one "for you" line per featured action; every advice text, reason, caveat and source stays the rules' own wording. Without Gemini, or when Gemini fails or its answer fails a check, the same request returns a complete rules-only plan.
 
-Request:
+Request (illustrative):
 ```json
 {
-  "locationLabel": "Pune",
-  "householdContext": {
-    "routine": { "commuteMode": "two_wheeler", "outdoorExercise": true },
-    "home": { "nearBusyRoad": true, "kitchenExhaust": true },
-    "householdNeeds": { "includesChildren": true },
-    "language": "en"
-  },
-  "snapshotIds": ["server-side-reference-id"]
+  "place": { "label": "Pune, Maharashtra", "latitude": 18.52, "longitude": 73.86 },
+  "householdContext": { "routine": { "commuteMode": "two_wheeler" } }
 }
 ```
 
-Do not accept an arbitrary client-supplied pollutant value as authoritative context. Prefer server-resolved snapshot IDs or retrieve data server-side.
+**Request handling:**
+- `place.label`: trimmed, 1–120 characters. Echoed back in `place.label`; never sent to Gemini.
+- `latitude`/`longitude`: JSON numbers in range with **at most 2 decimal places**, the same privacy rule as the forecast endpoint. More decimals → `400 VALIDATION_ERROR`.
+- `householdContext`: optional; every field optional (see `HouseholdContext` in `shared/contracts.ts`). Missing → `{}`.
+- Unknown fields → `400 VALIDATION_ERROR`. Malformed JSON → `400 VALIDATION_ERROR` "Malformed JSON body.". A body over 4 KB → `413 PAYLOAD_TOO_LARGE`.
+- Rate limit: 10 requests per minute per IP on this route, on top of the 60 per minute on all of `/api/v1`. Over the limit → `429 RATE_LIMITED`.
+- The client never sends pollutant values: the server fetches the forecast itself (through the same 10-minute cache as the forecast endpoint).
 
-Response:
+**Behaviour:**
+- Returns 200 for every valid request, whatever happens to Gemini or Open-Meteo.
+- An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Live air information unavailable" notice. It never falls back to demo or stale data.
+- AI plans and full rules-only plans (Gemini not configured) are cached for 10 minutes by coordinates, label, household details and the forecast window. Fallback plans (Gemini or the forecast failed) are not cached, so the next request tries again.
+
+Response (illustrative, shortened):
 ```json
 {
   "data": {
-    "summary": "Review today's local conditions before strenuous outdoor activity.",
-    "dataContext": {
-      "provider": "provider-name",
-      "dataKind": "model_forecast",
-      "timestamp": "2026-11-17T08:00:00Z",
-      "limitations": []
-    },
-    "actions": [],
-    "indoorSuggestions": [],
-    "sustainableSwaps": [],
-    "assumptions": [],
-    "safetyNote": "General information only; follow local advisories."
+    "generatedBy": "ai",
+    "model": "gemini-3.8-flash",
+    "promptVersion": "daily-plan-v1",
+    "summary": "Particle levels are forecast above the national limit, so plan indoor exercise and a quieter commute.",
+    "place": { "label": "Pune, Maharashtra" },
+    "air": { "level": "elevated", "windowStart": "2026-11-18T10:00:00.000Z", "checks": [] },
+    "forecast": { "provider": "Open-Meteo", "sourceUrl": "https://open-meteo.com/en/docs/air-quality-api", "dataKind": "model_forecast", "modelResolution": "…", "retrievedAt": "2026-11-18T10:05:00.000Z", "limitations": [] },
+    "notices": [{ "id": "air.elevated", "section": "notice", "priority": "high", "title": "…", "text": "…", "reason": "…", "evidenceType": "data_driven_rule", "sourceIds": ["open-meteo", "cpcb-naaqs-2009"], "inputsUsed": [], "caveat": "…" }],
+    "featured": [{ "candidate": { "id": "commute.lower-traffic", "…": "…" }, "period": "commute", "forYou": "…" }],
+    "more": [],
+    "sources": [{ "id": "open-meteo", "name": "Open-Meteo Air Quality API", "url": "https://open-meteo.com/en/docs/air-quality-api" }],
+    "safetyNote": "General information only, not medical advice. Follow local public-health advisories."
   }
 }
 ```
+
+- AI plan: `featured` in Gemini's order with its `period` and `forYou`; `more` lists the other actions in rules order.
+- Rules-only plan: `generatedBy` `"rules"`; `model`, `promptVersion` and `summary` are `null`; `featured` lists every action in rules order with `period` and `forYou` `null`; `more` is empty.
+- `notices` always holds every notice; the air notice carries the model-forecast caveat.
 
 ### `POST /api/v1/assistant/chat`
 
@@ -236,28 +245,52 @@ Deletes a plan only if it belongs to the authenticated user.
 
 ## 4. Daily plan schema
 
+The source of truth is `shared/contracts.ts` (`DailyPlan`, `RecommendationCandidate`, `AirAssessment`).
+
 ```ts
-interface DailyActionPlan {
-  summary: string;
-  dataContext: {
-    provider: string;
-    dataKind: DataKind;
-    timestamp: string;
-    limitations: string[];
+type PlanPeriod = 'morning' | 'commute' | 'daytime' | 'evening' | 'home';
+
+interface RecommendationCandidate {
+  id: string;
+  section: 'notice' | 'action' | 'indoor' | 'swap';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  text: string;
+  reason: string;
+  evidenceType: 'data_driven_rule' | 'general_suggestion';
+  sourceIds: Array<'open-meteo' | 'cpcb-naaqs-2009'>;
+  inputsUsed: string[];
+  caveat?: string;
+}
+
+interface DailyPlan {
+  generatedBy: 'ai' | 'rules';
+  model: string | null;
+  promptVersion: string | null;
+  summary: string | null;
+  place: { label: string };
+  air: {
+    level: 'elevated' | 'not_elevated' | 'unknown';
+    windowStart: string | null; // UTC start of the 24-hour window checked
+    checks: Array<{
+      pollutant: 'PM2_5' | 'PM10';
+      status: 'above_limit' | 'within_limit' | 'unknown';
+      average24h: number | null;
+      limit: number; // India's NAAQS 24-hour limit, μg/m³
+    }>;
   };
-  actions: Array<{
-    period: 'morning' | 'commute' | 'daytime' | 'evening' | 'home';
-    title: string;
-    action: string;
-    reason: string;
-    priority: 'high' | 'medium' | 'low';
-    evidenceType: 'official_guidance' | 'data_driven_rule' | 'general_suggestion';
-    sourceReferences: string[];
-    confidence: 'high' | 'medium' | 'low';
-  }>;
-  indoorSuggestions: Array<{ title: string; action: string; reason: string; caveat?: string }>;
-  sustainableSwaps: Array<{ currentHabit: string; alternative: string; practicalBenefit: string }>;
-  assumptions: string[];
+  forecast: {
+    provider: 'Open-Meteo';
+    sourceUrl: string;
+    dataKind: 'model_forecast';
+    modelResolution: string;
+    retrievedAt: string;
+    limitations: string[];
+  } | null;
+  notices: RecommendationCandidate[];
+  featured: Array<{ candidate: RecommendationCandidate; period: PlanPeriod | null; forYou: string | null }>;
+  more: RecommendationCandidate[];
+  sources: Array<{ id: 'open-meteo' | 'cpcb-naaqs-2009'; name: string; url: string }>;
   safetyNote: string;
 }
 ```

@@ -64,4 +64,31 @@ describe('errorHandler', () => {
     expect(res.text).not.toContain('password');
     expect(res.text).not.toContain('at ');
   });
+
+  it('body-parser errors map to the envelope', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const tooLarge = Object.assign(new Error('request entity too large'), {
+      type: 'entity.too.large',
+      status: 413,
+    });
+    const malformed = Object.assign(new Error('Unexpected token'), {
+      type: 'entity.parse.failed',
+      status: 400,
+      body: '{secret',
+    });
+
+    const big = await request(appThatThrows(tooLarge)).get('/throw');
+    const bad = await request(appThatThrows(malformed)).get('/throw');
+
+    expect(big.status).toBe(413);
+    expect(big.body).toEqual({
+      error: { code: 'PAYLOAD_TOO_LARGE', message: 'Request body too large.' },
+    });
+    expect(bad.status).toBe(400);
+    expect(bad.body).toEqual({
+      error: { code: 'VALIDATION_ERROR', message: 'Malformed JSON body.' },
+    });
+    expect(bad.text).not.toContain('secret');
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
 });

@@ -283,6 +283,17 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Tests | Mock provider for all logic; one opt-in live test (skipped without key) |
 | Needs from you | `GEMINI_API_KEY` |
 
+**As built (2026-11-18):**
+- **Scope (owner decisions):** daily plan only; the chat endpoint is deferred until after Phase 8. Option 2, "Gemini adds, your wording stays": Gemini picks, orders and times the rules' candidates and writes a summary and "for you" lines; the advice text, reasons, caveats and sources stay the rules' own.
+- **Gemini call:** REST `generateContent` with `fetch`, not `@google/genai` (no new dependency, full control over logging). `GeneratePlan` is the provider-neutral seam. Details: `INTEGRATIONS.md` §4.
+- **Code:**
+  - `server/src/services/ai/`: `planOutput.ts` (contract and checks), `personalize.ts` (one retry), `prompts.ts` (`daily-plan-v1`), `gemini.ts` (adapter)
+  - `server/src/services/recommendations/plan.ts`: `buildPlan`
+  - `server/src/services/air-data/cachedForecast.ts`: one forecast cache for both routes
+  - `server/src/routes/recommendations.ts`: the endpoint; contract in `API.md`
+- **Live check:** pending (Task 5 needs the owner's key in `server/.env`).
+- **Plan files:** `docs/superpowers/specs/2026-11-18-phase5-ai-daily-plan-design.md`, `docs/superpowers/plans/2026-11-18-phase5-ai-daily-plan.md`.
+
 ### Phase 6 — Auth + persistence (≈3 h)
 
 | | |
