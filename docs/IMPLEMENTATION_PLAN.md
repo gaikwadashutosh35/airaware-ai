@@ -291,7 +291,16 @@ Estimates = my build time per phase, excluding your review and account setup.
   - `server/src/services/recommendations/plan.ts`: `buildPlan`
   - `server/src/services/air-data/cachedForecast.ts`: one forecast cache for both routes
   - `server/src/routes/recommendations.ts`: the endpoint; contract in `API.md`
-- **Live check:** pending (Task 5 needs the owner's key in `server/.env`).
+- **Live check (2026-11-18): blocked by the Gemini account, not the code.**
+  - The key in `server/.env` reaches Gemini, which answers `HTTP 402 RESOURCE_EXHAUSTED`, "Your prepayment credits are depleted", for any request, even a one-line prompt.
+  - The AI Studio project ("Default Gemini Project") uses prepaid billing with no credits left.
+  - Not yet verified live: the request fields (`systemInstruction`, `responseJsonSchema`) and a passing Gemini answer.
+  - To finish: top up that project's credits, or use a key from a project on the free tier. Then run `GEMINI_LIVE=1 npm test -w server -- src/services/ai/gemini.live.test.ts`.
+- **End-to-end check (2026-11-18):**
+  - Request: `POST /api/v1/recommendations/daily-plan` for Delhi (28.65, 77.23), against the real Open-Meteo forecast.
+  - Result: `200` with `generatedBy` `"rules"`. Air is `elevated` (24-hour PM2.5 average 71 against the limit of 60; PM10 71.9, within its limit of 100).
+  - The `air.elevated` notice was present and 6 actions were featured.
+  - The server logged only `Gemini plan failed: http 402`.
 - **Plan files:** `docs/superpowers/specs/2026-11-18-phase5-ai-daily-plan-design.md`, `docs/superpowers/plans/2026-11-18-phase5-ai-daily-plan.md`.
 
 ### Phase 6 — Auth + persistence (≈3 h)
