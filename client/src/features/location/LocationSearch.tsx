@@ -151,7 +151,7 @@ export function LocationSearch({
                 // Keep focus in the input so the list does not close first.
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => select(result)}
-                className="min-h-11 cursor-pointer px-3 py-2 aria-selected:bg-secondary"
+                className="min-h-11 cursor-pointer px-3 py-2 aria-selected:bg-text-dark aria-selected:text-surface-light"
               >
                 {placeFromResult(result).label}
               </li>

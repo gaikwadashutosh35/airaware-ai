@@ -258,6 +258,82 @@ describe('Dashboard', () => {
     expect(
       screen.getByText('Too many requests. Try again in a minute.'),
     ).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeDefined();
+  });
+
+  it('blames the connection, not the provider, when offline', async () => {
+    routeFetch(() => Promise.reject(new TypeError('Failed to fetch')));
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    expect(
+      screen.getByText('Could not reach AirAware. Check your connection.'),
+    ).toBeDefined();
+  });
+
+  it('shows the coordinates the forecast is for', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Delhi&lat=19.08&lon=72.88',
+    );
+    routeFetch(ok());
+    render(<Dashboard />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(screen.getByText('Forecast location: 19.08, 72.88')).toBeDefined();
+  });
+
+  it('credits Open-Meteo even when the source list fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json(
+        { error: { code: 'INTERNAL_ERROR', message: 'x' } },
+        {
+          status: 500,
+        },
+      ),
+    );
+    render(<Dashboard />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    const footer = screen.getByRole('contentinfo');
+    expect(footer.textContent).toContain('Open-Meteo.com');
+    expect(footer.textContent).toContain('CC BY 4.0');
+  });
+
+  it('ignores a late device location after the user picked a place', async () => {
+    let succeed: (p: {
+      coords: { latitude: number; longitude: number };
+    }) => void = () => {};
+    Object.defineProperty(navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: (success: typeof succeed) => {
+          succeed = success;
+        },
+      },
+      configurable: true,
+    });
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
+    await choosePlace();
+    await act(async () => {
+      succeed({ coords: { latitude: 18.519571, longitude: 73.855347 } });
+    });
+
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Pune, Maharashtra',
+      }),
+    ).toBeDefined();
+    expect(window.location.search).toContain('place=Pune');
   });
 
   it('never shows an old place forecast under a new place', async () => {

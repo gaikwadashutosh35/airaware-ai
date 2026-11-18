@@ -3,8 +3,8 @@ node_modules
 client/dist
 coverage
 .git
-.env
-.env.*
+**/.env
+**/.env.*
 *.log
 .superpowers
 .playwright-mcp

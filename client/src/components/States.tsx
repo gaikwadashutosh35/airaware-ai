@@ -13,8 +13,9 @@ export function Loading({ label }: { label: string }) {
 function errorMessage(error: ApiError): string {
   switch (error.code) {
     case 'PROVIDER_ERROR':
-    case 'NETWORK_ERROR':
       return 'Forecast provider unavailable.';
+    case 'NETWORK_ERROR':
+      return 'Could not reach AirAware. Check your connection.';
     case 'RATE_LIMITED':
       return 'Too many requests. Try again in a minute.';
     default:
@@ -32,15 +33,13 @@ export function ErrorState({
   return (
     <div role="alert" className="flex flex-col items-start gap-2">
       <p>{errorMessage(error)}</p>
-      {error.code !== 'RATE_LIMITED' && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="min-h-11 rounded-md border border-text-dark px-4"
-        >
-          Try again
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onRetry}
+        className="min-h-11 rounded-md border border-text-dark px-4"
+      >
+        Try again
+      </button>
     </div>
   );
 }

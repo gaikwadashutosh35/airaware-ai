@@ -8,8 +8,11 @@ const NOT_FOUND =
 // Geolocation is requested only from this explicit click (PRD US-02).
 export function UseMyLocation({
   onLocate,
+  onLocateStart,
 }: {
   onLocate: (place: Place) => void;
+  // Lets the page tell a late answer apart from a request still wanted.
+  onLocateStart?: () => void;
 }) {
   const hintId = useId();
   const [locating, setLocating] = useState(false);
@@ -21,6 +24,7 @@ export function UseMyLocation({
     if (locating) return;
     setLocating(true);
     setStatus('');
+    onLocateStart?.();
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false);
@@ -51,8 +55,8 @@ export function UseMyLocation({
         {locating ? 'Finding your location…' : 'Use my location'}
       </button>
       <p id={hintId} className="text-sm">
-        Your browser asks first. We use an approximate location (about 1 km) and
-        never store it.
+        Your browser asks first. Your location is rounded to about 1 km before
+        it leaves your browser.
       </p>
       <output className="block min-h-6 text-sm">{status}</output>
     </div>

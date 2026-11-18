@@ -1,4 +1,5 @@
 import dashboardShot from '../assets/dashboard.webp';
+import { Attribution } from '../components/Attribution.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import { placeToSearch, type Place } from '../features/location/place.ts';
 
@@ -135,14 +136,7 @@ function Landing() {
       <footer className="border-t border-rule-dark">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-12 text-sm text-text-muted sm:px-8">
           <p className="text-base font-semibold text-text">AirAware AI</p>
-          <p className="max-w-[70ch]">
-            Air-quality forecasts from{' '}
-            <a href="https://open-meteo.com/" className="underline">
-              Open-Meteo.com
-            </a>{' '}
-            (CC BY 4.0), based on CAMS global forecasts from the Copernicus
-            Atmosphere Monitoring Service.
-          </p>
+          <Attribution />
         </div>
       </footer>
     </div>

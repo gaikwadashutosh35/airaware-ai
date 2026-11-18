@@ -89,6 +89,19 @@ describe('UseMyLocation', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it('says plainly what happens to the location', () => {
+    stubGeolocation();
+    render(<UseMyLocation onLocate={() => {}} />);
+
+    const button = screen.getByRole('button', { name: 'Use my location' });
+    const hint = document.getElementById(
+      button.getAttribute('aria-describedby') ?? '',
+    );
+    expect(hint?.textContent).toBe(
+      'Your browser asks first. Your location is rounded to about 1 km before it leaves your browser.',
+    );
+  });
+
   it('has no axe violations', async () => {
     stubGeolocation();
     const { container } = render(<UseMyLocation onLocate={() => {}} />);

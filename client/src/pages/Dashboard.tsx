@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
 import { ForecastPanel } from '../features/air-quality/ForecastPanel.tsx';
 import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
@@ -21,6 +22,8 @@ function Dashboard() {
   );
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
+  // True only while a device-location request is still wanted.
+  const awaitingLocation = useRef(false);
   const sources = useRequest('sources', (signal) => getSources(signal));
   // Keyed by the coordinates actually sent (2 decimals).
   const forecastKey = place
@@ -43,6 +46,7 @@ function Dashboard() {
 
   // Searched places go in the address; a device location never does.
   function choose(next: Place, inAddress: boolean) {
+    awaitingLocation.current = false;
     focusResult.current = true;
     setPlace(next);
     window.history.replaceState(
@@ -73,7 +77,15 @@ function Dashboard() {
         </h1>
         <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
           <LocationSearch onSelect={(next) => choose(next, true)} />
-          <UseMyLocation onLocate={(next) => choose(next, false)} />
+          <UseMyLocation
+            onLocateStart={() => {
+              awaitingLocation.current = true;
+            }}
+            onLocate={(next) => {
+              // A place picked since the click wins over a late answer.
+              if (awaitingLocation.current) choose(next, false);
+            }}
+          />
         </div>
 
         {place ? (
@@ -85,6 +97,10 @@ function Dashboard() {
             >
               Air quality: {place.label}
             </h2>
+            <p className="text-sm text-text-dark-muted">
+              Forecast location: {place.latitude.toFixed(2)},{' '}
+              {place.longitude.toFixed(2)}
+            </p>
             <ObservationPanel note={cpcb?.limitations[0]} />
             {forecast.state.status === 'ready' ? (
               <ForecastPanel
@@ -110,6 +126,11 @@ function Dashboard() {
           </p>
         )}
       </main>
+      <footer className="border-t border-rule">
+        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-text-dark-muted sm:px-6">
+          <Attribution />
+        </div>
+      </footer>
     </>
   );
 }
