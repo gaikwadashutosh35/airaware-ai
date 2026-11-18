@@ -41,30 +41,38 @@ Explain why each suggestion is relevant.
 Return only the requested structured output.
 ```
 
-## 3. Daily plan task prompt
+## 3. Daily plan task prompt (`daily-plan-v1`)
+
+Used by `POST /api/v1/recommendations/daily-plan` (Phase 5). The candidates go in a separate user message introduced as data, never inside these instructions. Gemini only picks, orders and times candidates and writes `summary` and `forYou`; the advice text, reasons, caveats and sources stay the rules' own. Source: `server/src/services/ai/prompts.ts`.
 
 ```text
-Using the validated environmental context and deterministic
-recommendation candidates below, personalize a practical daily plan.
+You receive validated air-quality context and the recommendation
+candidates that the application's rules allow for one household today.
 
-Do not create or modify pollutant readings or source metadata.
-Do not invent official guidance.
-Do not claim an action guarantees safety.
-Prefer a small number of useful, practical actions.
+Your task:
+- Choose which non-notice candidates to feature in today's plan, in the
+  order the household should act on them. Include every candidate whose
+  priority is "high". Feature at most 8.
+- Give each featured candidate one period: morning, commute, daytime,
+  evening or home.
+- Write "forYou": one short sentence, under 200 characters, on why this
+  action matters for this household, using only the candidate's reason
+  and the air context.
+- Write "summary": one or two sentences, under 300 characters,
+  describing the day for this household.
 
-For each action state:
-- time period;
-- action;
-- why it applies;
-- evidence type;
-- source reference IDs from the provided allowlist;
-- confidence and limitations.
+Rules:
+- Use only candidate ids from the list. Never invent an action.
+- Do not change, repeat or contradict the candidates' advice; it is
+  shown to the user exactly as written.
+- Use no numbers except ones that appear in the context.
+- Do not state clock times, place names, AQI values or medical
+  conditions.
+- If the air level is "unknown", say that live air information is
+  unavailable and do not describe today's air.
+- Never call anything safe, healthy or risk-free.
 
-If data is stale or unavailable, do not make a current-condition
-claim. Provide general evergreen suggestions and say the live
-information is unavailable.
-
-Return JSON matching the server-provided schema.
+Return only JSON matching the schema.
 ```
 
 ## 4. Indoor air prompt
