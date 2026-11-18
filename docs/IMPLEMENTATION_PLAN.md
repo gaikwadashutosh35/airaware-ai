@@ -8,9 +8,9 @@
 
 | # | Decision | My default if you don't choose |
 |---|---|---|
-| D1 | Is a Claude Code–built submission allowed? The official FAQ says Google Antigravity is **required** (see §5.1). | Cannot default. You must confirm with the organisers. |
+| D1 | Is a Claude Code–built submission allowed? The official FAQ says Google Antigravity is **required** (see §5.1). | ✅ **Decided 2026-11-18: allowed** (owner decision) — continue building with Claude Code |
 | D2 | Hosting/stack: Option A, B or C (see §6). | ✅ **Decided 2026-11-17: Option B** — Cloud Run (one service) + Gemini + Supabase |
-| D3 | Challenge 06 submission deadline. | Plan sized for ~25 hours of build work. |
+| D3 | Challenge 06 submission deadline. | ✅ **Decided 2026-11-18: 2026-11-29** (time of day and timezone not stated) — target attempt 1 by 2026-11-27, leaving two days for attempts 2–3 |
 | D4 | Which accounts/keys exist today (Gemini, Supabase, GCP billing, data.gov.in, SonarQube Cloud)? | Build Phases 1–4 without any keys. |
 | D5 | MVP language. | English only; Hindi/Marathi stay P1. |
 
@@ -127,7 +127,7 @@ Not relevant to this project (leave unused): claude-seo, openseo, posthog, egm, 
 
 ### 5.1 Challenge-rule risks (highest)
 
-1. **Google Antigravity requirement.** promptwars.in FAQ (checked 2026-11-17): "using Google Antigravity is a requirement for all submissions." The same page elsewhere says "Google Antigravity **or other AI tools**." Contradictory. A Claude Code–built entry may be invalid. → **D1, you must confirm.**
+1. **Google Antigravity requirement.** promptwars.in FAQ (checked 2026-11-17): "using Google Antigravity is a requirement for all submissions." The same page elsewhere says "Google Antigravity **or other AI tools**." Contradictory. A Claude Code–built entry may be invalid. → **D1 decided 2026-11-18: the owner allows Claude Code.**
 2. **Submission = code + live preview + narrative** (LinkedIn post and/or technical blog). The narrative is not in any project doc. → Add to Phase 10.
 3. **Evaluation rubric (unofficial).** A past PromptWars Virtual entrant's public README lists: Code Quality, Security, Efficiency, Testing, Accessibility, **Google Services**, Problem Statement Alignment, deployed on **Cloud Run**. Not verified against an official Challenge 06 brief. Current docs use Vercel + Render + Supabase, so only Gemini counts as a Google service. → Drives D2.
 4. **10 MB / one branch:** Low risk if `.gitignore` is in place before the first commit and no screenshots/reports are committed.
@@ -346,10 +346,8 @@ Remote actions (`gh repo create airaware-ai --public`, `git push`) wait for a se
 
 ## 10. Blocking questions
 
-1. **D1:** Have you confirmed with Hack2Skill that a Claude Code–built Challenge 06 entry is valid, given the FAQ's Antigravity requirement?
-2. **D3:** What is the Challenge 06 submission deadline?
-3. **D4:** Which of these do you already have: Gemini API key, Supabase project, GCP project with billing, data.gov.in key, SonarQube Cloud account?
+1. **D4:** Which of these do you already have: Gemini API key, Supabase project, GCP project with billing, data.gov.in key, SonarQube Cloud account?
 
-(D2 resolved: Option B.)
+(D1 resolved: Claude Code allowed. D2 resolved: Option B. D3 resolved: deadline 2026-11-29.)
 
 Everything else uses the defaults stated above and can be changed later.
