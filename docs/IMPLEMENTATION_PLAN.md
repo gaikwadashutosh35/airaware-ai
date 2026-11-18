@@ -260,6 +260,19 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Tests | One test per rule + TESTING_QA §6 scenarios 1–8 |
 | Open item | Any threshold needs a cited public source (CPCB health statements per category). Without one, rules key off **CPCB category only** (when available) or "data available/unavailable" — never raw µg/m³ cut-offs. |
 
+**As built (2026-11-18):**
+- **Air signal (owner decision):** India's NAAQS 24-hour limits (CPCB, 2009): PM2.5 60 μg/m³, PM10 100 μg/m³. The engine compares them with the 24-hour average of the Open-Meteo forecast, starting at the current hour. No CPCB AQI or category is computed. Source and method: `INTEGRATIONS.md` §12.
+- **Code:** `server/src/services/recommendations/`:
+  - `householdContext.ts`: Zod schema; unknown fields rejected
+  - `airCheck.ts`: `assessAir`
+  - `rules.ts`: 17 rules and `buildCandidates`
+  - Types in `shared/contracts.ts`.
+- **Deferred:**
+  - TESTING_QA §6 scenario 7 (observation vs forecast), until a CPCB feed exists
+  - the endpoint and the AI wording, in Phase 5
+  - the screen, in Phase 7
+- **Plan files:** `docs/superpowers/specs/2026-11-18-phase4-rules-engine-design.md`, `docs/superpowers/plans/2026-11-18-phase4-rules-engine.md`.
+
 ### Phase 5 — AI explanation layer (≈2–3 h)
 
 | | |

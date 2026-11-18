@@ -20,6 +20,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Landing page:** hero place search, a real dashboard screenshot, the "Where every number comes from" diagram, a limits statement, and Open-Meteo attribution.
   - **Dashboard:** keyboard-accessible place search, opt-in approximate location, PM2.5 headline figure, the six pollutants with units and hours, a 48-hour table, the CPCB-unavailable panel, sources, and loading/error/rate-limit states.
 - Production container: one Express process serves the API and the built client (Dockerfile).
+- Phase 4 recommendation rules engine: household details schema, a 24-hour forecast check against India's NAAQS PM2.5/PM10 limits, and 17 explainable rules (server-only; no endpoint yet).
 
 ### Changed
 - Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.

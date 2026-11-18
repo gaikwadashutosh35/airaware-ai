@@ -100,3 +100,21 @@ export interface AirAssessment {
   // Always [PM2_5, PM10].
   checks: PollutantCheck[];
 }
+
+export type SourceReferenceId = 'open-meteo' | 'cpcb-naaqs-2009';
+
+// One piece of advice the rules engine allows. Phase 5's AI may reword or
+// order these; it may not add any.
+export interface RecommendationCandidate {
+  id: string;
+  section: 'notice' | 'action' | 'indoor' | 'swap';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  text: string;
+  reason: string;
+  evidenceType: 'data_driven_rule' | 'general_suggestion';
+  sourceIds: SourceReferenceId[];
+  // Field paths such as 'routine.outdoorExercise' or 'air.level'.
+  inputsUsed: string[];
+  caveat?: string;
+}
