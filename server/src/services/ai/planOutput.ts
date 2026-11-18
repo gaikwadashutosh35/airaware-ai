@@ -78,12 +78,33 @@ export function toWriterInput(
   };
 }
 
-const NUMBER = /\d+(?:\.\d+)?/g;
+// A number (digits or a number word), with any time, distance or clock
+// unit that follows it, so "60 minutes" is not accepted just because the
+// limit 60 appears in the input. "24-hour" and "24 hours" compare equal.
+const NUMBER =
+  /(?:\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|twice|double|triple|thrice|half|quarter|dozen)\b|\d+(?:\.\d+)?)(?:[\s-]*(?:minutes?|mins?|hours?|hrs?|seconds?|secs?|days?|km|kilomet(?:re|er)s?|met(?:re|er)s?|am|pm)\b)?/gi;
+const UNITS: Array<[RegExp, string]> = [
+  [/(minute|min)s?$/, 'min'],
+  [/(hour|hr)s?$/, 'h'],
+  [/(second|sec)s?$/, 's'],
+  [/days?$/, 'd'],
+  [/(kilomet(re|er)s?|km)$/, 'km'],
+  [/met(re|er)s?$/, 'm'],
+];
+
+function numberTokens(text: string): string[] {
+  return (text.match(NUMBER) ?? []).map((raw) =>
+    UNITS.reduce(
+      (token, [unit, short]) => token.replace(unit, short),
+      raw.toLowerCase().replace(/[\s-]/g, ''),
+    ),
+  );
+}
 
 const BANNED = [
-  /\bsafe(ly|ty)?\b/i,
+  /\b(un)?safe(r|st|ly|ty)?\b/i,
   /guarantee/i,
-  /healthy/i,
+  /health(y|ier|iest|ful)/i,
   /risk[- ]free/i,
   /\bno risk\b/i,
   /diagnos/i,
@@ -96,6 +117,13 @@ const BANNED = [
   /\bcopd\b/i,
   /inhaler/i,
   /\baqi\b/i,
+  /air quality index/i,
+  // Named conditions ("conditions" alone stays: "Check local conditions").
+  /\b(lung|heart|respirat|allerg|bronch|pregnan|disease|illness)/i,
+  /breathing (problem|difficult|trouble)|trouble breathing/i,
+  // Reassurance: within the limit is not clean or free of risk.
+  /\b(low|little|minimal) risk\b|\bclean air\b|\bair is clean\b/i,
+  /\bgood (day|air)\b|air quality is good/i,
   /https?:|www\./i,
   /always (open|close)/i,
   /(open|close) all (the )?windows/i,
@@ -133,8 +161,8 @@ export function checkPlanOutput(
     return 'ids';
   }
 
-  const known = new Set(JSON.stringify(input).match(NUMBER));
-  if (texts.some((t) => (t.match(NUMBER) ?? []).some((n) => !known.has(n)))) {
+  const known = new Set(numberTokens(JSON.stringify(input)));
+  if (texts.some((t) => numberTokens(t).some((n) => !known.has(n)))) {
     return 'numbers';
   }
 

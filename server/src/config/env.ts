@@ -12,11 +12,14 @@ const envSchema = z.object({
     .trim()
     .optional()
     .transform((key) => key || undefined),
-  // Goes into the request path, so only plain model-name characters.
+  // Goes into the request path, so only plain model-name characters. An
+  // empty `GEMINI_MODEL=` line counts as unset.
   GEMINI_MODEL: z
     .string()
-    .regex(/^[a-z0-9.-]+$/)
-    .default('gemini-3.8-flash'),
+    .trim()
+    .regex(/^[a-z0-9.-]*$/)
+    .optional()
+    .transform((model) => model || 'gemini-3.8-flash'),
 });
 
 export type Env = z.infer<typeof envSchema>;

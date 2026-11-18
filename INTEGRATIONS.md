@@ -56,12 +56,12 @@ Rules:
 **As built (Phase 5, daily plan only):**
 - **Model:** `gemini-3.8-flash` (stable, released 2026-09-02, no shutdown date announced; checked 2026-11-18). Override with `GEMINI_MODEL`. The 2.5 models shut down on 2026-12-01.
 - **Key:** `GEMINI_API_KEY`, optional. Without it every daily plan is rules-only.
-- **Call:** REST `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` with `fetch` (no SDK dependency). The key goes in the `x-goog-api-key` header, never the URL. JSON mode with a JSON Schema generated from the Zod output schema; temperature 0.4; `maxOutputTokens` 2048; 10-second timeout.
+- **Call:** REST `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` with `fetch` (no SDK dependency). The key goes in the `x-goog-api-key` header, never the URL. JSON mode with a JSON Schema generated from the Zod output schema; `thinkingConfig.thinkingLevel` `low`; `maxOutputTokens` 8192 (thinking tokens count toward it); no `temperature` (deprecated for Gemini 3 models); 10-second timeout.
 - **Provider-neutral seam:** routes depend on `GeneratePlan` (`(input) => Promise<string>`), so another model can replace `server/src/services/ai/gemini.ts`.
 - **What is sent:** the air check (level; PM2.5/PM10 status, 24-hour average and limit) and the rules' candidates (id, section, priority, title, text, reason). The prompts are `AI_PROMPTS.md` §2 and §3 (`daily-plan-v1`); the data goes in a separate message introduced as data.
 - **Not sent:** the place label, coordinates, raw household answers, the forecast window time, or anything a user typed.
 - **Free tier:** Google may use free-tier prompts and responses to improve its products, and people may review them. The input above holds only the app's own fixed text and model-forecast numbers.
-- **Checks:** schema, lengths, candidate ids (exact match, every high-priority action included), numbers only from the input, banned wording. Invalid JSON or schema → one retry. Any other failure → a labelled rules-only plan.
+- **Checks:** schema, lengths, candidate ids (exact match, every high-priority action included), numbers only from the input (number words and number-plus-unit pairs included), banned wording (safety and health claims, named conditions, AQI, reassurance such as "the air is clean"). The full list is in the Phase 5 spec, check 5. Invalid JSON or schema → one retry. Any other failure → a labelled rules-only plan.
 - **Logging:** one line, `Gemini plan failed: <category>` (`timeout`, `http <status>`, `network`, `empty response`, `invalid json`, `schema`, `length`, `ids`, `numbers`, `wording`). Never the key, prompts, Gemini's text, household details, labels, coordinates or request bodies.
 - **Not built:** the chat endpoint (`/assistant/chat`), deferred until after Phase 8.
 

@@ -67,14 +67,16 @@ describe('createGeminiGenerator', () => {
     );
   });
 
+  // Final review I4: Gemini 3 deprecates temperature, and thinking tokens
+  // count toward maxOutputTokens, so think little and leave room for JSON.
   it('asks for JSON in the plan schema', async () => {
     respond(answer);
     await generate(input);
     expect(sent().body.generationConfig).toEqual({
       responseMimeType: 'application/json',
       responseJsonSchema: PLAN_OUTPUT_JSON_SCHEMA,
-      temperature: 0.4,
-      maxOutputTokens: 2048,
+      thinkingConfig: { thinkingLevel: 'low' },
+      maxOutputTokens: 8192,
     });
   });
 

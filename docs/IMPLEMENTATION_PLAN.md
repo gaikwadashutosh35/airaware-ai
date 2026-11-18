@@ -294,7 +294,7 @@ Estimates = my build time per phase, excluding your review and account setup.
 - **Live check (2026-11-18): blocked by the Gemini account, not the code.**
   - The key in `server/.env` reaches Gemini, which answers `HTTP 402 RESOURCE_EXHAUSTED`, "Your prepayment credits are depleted", for any request, even a one-line prompt.
   - The AI Studio project ("Default Gemini Project") uses prepaid billing with no credits left.
-  - Not yet verified live: the request fields (`systemInstruction`, `responseJsonSchema`) and a passing Gemini answer.
+  - Not yet verified live: the request fields (`systemInstruction`, `responseJsonSchema`, `thinkingConfig`) and a passing Gemini answer.
   - To finish: top up that project's credits, or use a key from a project on the free tier. Then run `GEMINI_LIVE=1 npm test -w server -- src/services/ai/gemini.live.test.ts`.
 - **End-to-end check (2026-11-18):**
   - Request: `POST /api/v1/recommendations/daily-plan` for Delhi (28.65, 77.23), against the real Open-Meteo forecast.

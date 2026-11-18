@@ -45,8 +45,10 @@ export function createGeminiGenerator(options: {
       generationConfig: {
         responseMimeType: 'application/json',
         responseJsonSchema: PLAN_OUTPUT_JSON_SCHEMA,
-        temperature: 0.4,
-        maxOutputTokens: 2048,
+        // Gemini 3 deprecates temperature; thinking tokens count toward
+        // maxOutputTokens, so think little and leave room for the answer.
+        thinkingConfig: { thinkingLevel: 'low' },
+        maxOutputTokens: 8192,
       },
     });
 

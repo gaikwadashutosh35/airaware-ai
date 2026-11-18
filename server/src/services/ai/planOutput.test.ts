@@ -127,6 +127,81 @@ describe('checkPlanOutput', () => {
       ).toBe('wording');
     }
   });
+
+  // Final review I1: safety, health and condition wording the first list missed.
+  it('banned wording covers comparatives, conditions and the AQI name', () => {
+    const banned = [
+      'Indoor exercise is the safer choice.',
+      'Home is the safest place.',
+      'Outdoor air is unsafe.',
+      'A healthier day starts indoors.',
+      'Children with breathing problems should stay in.',
+      'Anyone with trouble breathing should rest.',
+      'Anyone with lung or heart conditions should rest.',
+      'This matters for respiratory comfort.',
+      'People with allergies should take care.',
+      'Bronchitis can flare up.',
+      'Pregnant members should rest.',
+      'Heart disease is a concern.',
+      'Avoid illness today.',
+      'Above the air quality index limit.',
+    ];
+    for (const sentence of banned) {
+      expect(
+        checkPlanOutput(withSummary(`${valid().summary} ${sentence}`), input),
+        sentence,
+      ).toBe('wording');
+    }
+  });
+
+  // Final review I2: a within-limit day is not clean or free of risk.
+  it('banned wording covers reassurance about the air', () => {
+    const banned = [
+      'Risk is low risk today.',
+      'There is little risk today.',
+      'Minimal risk for outdoor plans.',
+      'Enjoy the clean air.',
+      'The air is clean today.',
+      'It is a good day for a run.',
+      'Good air all day.',
+      'Air quality is good today.',
+    ];
+    for (const sentence of banned) {
+      expect(
+        checkPlanOutput(withSummary(`${valid().summary} ${sentence}`), input),
+        sentence,
+      ).toBe('wording');
+    }
+  });
+
+  it('legitimate echoes of the rules still pass', () => {
+    expect(
+      checkPlanOutput(
+        withSummary(
+          'Check local conditions and follow local public-health advisories over the next 24 hours.',
+        ),
+        input,
+      ),
+    ).toBeNull();
+  });
+
+  // Final review I3: numbers written as words, or reused with a new unit.
+  it('number words and units must come from the input', () => {
+    const summaries = [
+      `${valid().summary} PM2.5 is nearly twice the national limit.`,
+      `${valid().summary} Keep outdoor time under 60 minutes.`,
+      `${valid().summary} Go out before 10am.`,
+      `${valid().summary} Stay within 5 km of home.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBe(
+        'numbers',
+      );
+    }
+    const twoHours = valid();
+    twoHours.featured[0]!.forYou = 'Keep outdoor time to about two hours.';
+    expect(checkPlanOutput(twoHours, input)).toBe('numbers');
+  });
 });
 
 describe('PLAN_OUTPUT_JSON_SCHEMA', () => {

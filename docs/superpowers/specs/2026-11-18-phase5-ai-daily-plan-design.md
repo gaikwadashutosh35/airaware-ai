@@ -85,8 +85,8 @@ Free-tier note: Google may use free-tier prompts and responses to improve its pr
 1. Valid JSON matching the schema above (parse or schema failure → one retry, then rules-only).
 2. `summary` 20–300 characters; each `forYou` 10–200 characters.
 3. `featured`: 1–8 items, no duplicate ids, every id is a non-notice candidate id, and every `high`-priority non-notice candidate is included.
-4. Numbers: every number in `summary` and `forYou` must also appear in the input sent to Gemini (so "PM2.5", "24-hour" and the averages pass; a new figure fails).
-5. Banned wording in `summary` and `forYou` (case-insensitive): safe/safely/safety, guarantee, healthy, risk-free, "no risk", diagnos-, treat-, cure, medic- (medical, medicine, medication), prescri-, symptom, asthma, COPD, inhaler, AQI, `http`/`www.`, "always open"/"always close", "open/close all windows", `%`.
+4. Numbers: every number in `summary` and `forYou` must also appear in the input sent to Gemini (so "PM2.5", "24-hour" and the averages pass; a new figure fails). Number words ("twice", "two") count as numbers, and a number with a time, distance or clock unit must appear with that unit ("24 hours" passes because of "24-hour"; "60 minutes" fails). *(Final review I3, 2026-11-18.)*
+5. Banned wording in `summary` and `forYou` (case-insensitive): safe/safer/safest/unsafe/safely/safety, guarantee, healthy/healthier, risk-free, "no risk", "low/little/minimal risk", "clean air", "air is clean", "good day/air", "air quality is good", diagnos-, treat-, cure, medic- (medical, medicine, medication), prescri-, symptom, asthma, COPD, inhaler, lung, heart, respirat-, allerg-, bronch-, pregnan-, disease, illness, "breathing problems/difficulty", AQI, "air quality index", `http`/`www.`, "always open"/"always close", "open/close all windows", `%`. *(Comparatives, conditions and reassurance added after the final review, I1–I2.)*
 
 A content failure (checks 2–5) does not retry: it falls back at once.
 
@@ -116,7 +116,7 @@ A content failure (checks 2–5) does not retry: it falls back at once.
 ## Gemini call
 
 - Model `gemini-3.8-flash` (stable, released 2026-09-02, no shutdown date; checked 2026-11-18), overridable with `GEMINI_MODEL`. The 2.5 models shut down on 2026-12-01.
-- **My call:** call the REST `generateContent` endpoint with `fetch` instead of adding `@google/genai`: a few lines, no new dependency, and full control over what is logged. JSON mode with a JSON Schema generated from the Zod output schema (`z.toJSONSchema`). Timeout 10 s, temperature 0.4, bounded output tokens. The exact field names are confirmed by the live call before Phase 5 is committed.
+- **My call:** call the REST `generateContent` endpoint with `fetch` instead of adding `@google/genai`: a few lines, no new dependency, and full control over what is logged. JSON mode with a JSON Schema generated from the Zod output schema (`z.toJSONSchema`). Timeout 10 s, bounded output tokens (8192, which includes thinking tokens), thinking level `low`, no temperature (deprecated for Gemini 3 models; changed from 0.4 after the final review, I4). The exact field names are confirmed by the live call before Phase 5 is committed.
 - Prompts: the `AI_PROMPTS.md` §2 system prompt verbatim, plus a daily-plan task prompt rewritten for option 2, versioned `daily-plan-v1`. The candidates go in as data, introduced as data, never inside the instructions.
 - `GEMINI_API_KEY` is optional: without it, every plan is rules-only and startup logs "Gemini not configured; plans are rules-only." The key is never logged.
 

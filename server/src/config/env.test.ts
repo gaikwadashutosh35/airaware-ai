@@ -41,6 +41,11 @@ describe('loadEnv', () => {
     );
   });
 
+  // Final review I5: SETUP.md lists `GEMINI_MODEL=` with no value.
+  it('an empty model counts as unset', () => {
+    expect(loadEnv({ GEMINI_MODEL: '' }).GEMINI_MODEL).toBe('gemini-3.8-flash');
+  });
+
   it('an unsafe model name is rejected', () => {
     expect(() => loadEnv({ GEMINI_MODEL: 'models/../x' })).toThrow(
       /GEMINI_MODEL/,
