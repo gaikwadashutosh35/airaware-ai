@@ -10,6 +10,8 @@ Use Supabase Auth for signup, login, logout, recovery, and session lifecycle. Th
 
 Do not trust a `user_id` passed in a request body or query string.
 
+**As built (Phase 6):** sign-in is Supabase anonymous sign-in, created only when a person first clicks a save button. It needs no email, password or name. Email sign-in was ruled out because the free plan's built-in email sender only reaches the project's own Supabase organization (2 emails per hour). The session lives in that browser's `localStorage`. Clearing browser data or switching devices loses access, and there is no recovery. The server verifies every bearer token with `getClaims`, requires the `authenticated` role, and takes the user id from `sub` only. A token that can't be checked because Supabase is unreachable gets `503`, not `401`. The secret (service-role) key is not used anywhere. "Delete my saved data" calls a database function that deletes only the calling user.
+
 ## 3. Authorization
 
 - Every saved plan belongs to one authenticated user.

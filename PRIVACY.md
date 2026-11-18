@@ -31,6 +31,16 @@ Do not ask for diagnoses. Avoid inferring a condition from preferences. Give use
 - Never put raw user prompts or profile data into public analytics.
 - Apply access controls to all stored records.
 
+**What is stored (as built, Phase 6).**
+- **Where:** in Supabase (Postgres, South Asia (Mumbai) region), only after the person clicks a save button.
+- **The account:** an anonymous one, with no email, name or password.
+- **Saved household answers:** commute mode, outdoor exercise, school travel, busy road, cooking fuel, kitchen exhaust, air purifier, children, older adults, and "may be more sensitive". There is no health information.
+- **Saved daily plans:** the plan the server built, including the place label the person chose, the model-forecast check and the sources. There are no coordinates.
+- **Not stored:** coordinates, email, name, IP address and chat.
+- **Who can read it:** only that browser's session. Database row-level security and a server token check both enforce this.
+- **Retention:** kept until the person uses "Delete my saved data", which deletes the account and every row. Clearing browser data loses access to the account, but does not delete the rows. A cleanup of accounts unused for 30 days is a Phase 9 follow-up, until which such rows remain.
+- **Logs:** server logs never contain tokens, user ids, household answers, labels or plan contents.
+
 ## 5. Logs and analytics
 Allowed operational metadata should be minimal: request ID, route name, latency, provider status, and error code. Avoid full coordinates, tokens, API keys, household flags, and raw prompt contents.
 

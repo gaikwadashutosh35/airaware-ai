@@ -223,25 +223,28 @@ Request:
 
 Bound message length and conversation context. AI must not invent readings or give diagnosis/medication advice.
 
-### `GET /api/v1/profile`
+### Saved data (as built, Phase 6)
 
-Returns current authenticated user's profile and saved preferences.
+Every route below needs `Authorization: Bearer <Supabase access token>`. The token comes from a one-click anonymous Supabase sign-in in the browser (no email). The server verifies it (`getClaims`), takes the user from its `sub` claim, and queries Supabase as that user, so Postgres row-level security applies as well. No route reads a user id from the body, query or path. JSON bodies are limited to 4 KB.
 
-### `PUT /api/v1/profile/preferences`
+| Route | Body / params | Success |
+|---|---|---|
+| `GET /api/v1/profile/preferences` | none | `200 { data: { context: HouseholdContext, updatedAt } \| null }` |
+| `PUT /api/v1/profile/preferences` | `HouseholdContext` (unknown fields → 400) | `200 { data: { context, updatedAt } }` |
+| `GET /api/v1/plans` | none | `200 { data: [{ id, savedAt, placeLabel }] }`, newest first |
+| `GET /api/v1/plans/:id` | `id` uuid | `200 { data: { id, savedAt, plan: DailyPlan } }` |
+| `POST /api/v1/plans` | the daily-plan request body | `201 { data: { id, savedAt, plan } }` |
+| `DELETE /api/v1/plans/:id` | `id` uuid | `204` |
+| `DELETE /api/v1/account` | none | `204`; deletes the user and all their rows |
 
-Updates only the current user's optional household preferences. Reject unknown fields and coordinate persistence unless explicit saved-location consent exists.
+- `POST /api/v1/plans` takes the same `{ place, householdContext? }` body as `POST /api/v1/recommendations/daily-plan`. The server builds the plan itself, using the same 10-minute cache, and saves that plan; it never accepts a plan from the client. It shares the daily plan's 10-per-minute limit, because it can call Gemini.
+- A saved plan is a snapshot from `savedAt`. It is never current air information.
+- At most 20 plans per user (the database enforces it) → `409 LIMIT_REACHED`.
+- A missing plan and another user's plan both get `404 NOT_FOUND` "Saved plan not found." A non-uuid `id` gets 400.
+- A missing or invalid token → `401 UNAUTHENTICATED`. Saving not configured, or Supabase unreachable → `503 SAVE_UNAVAILABLE`.
+- A stored preferences row that no longer matches the household schema reads back as `null`.
 
-### `GET /api/v1/plans`
-
-Lists current user's saved plans, paginated.
-
-### `POST /api/v1/plans`
-
-Saves a validated plan and the environmental data context used to create it.
-
-### `DELETE /api/v1/plans/:id`
-
-Deletes a plan only if it belongs to the authenticated user.
+Not built: profiles, saved locations and plan feedback (P1).
 
 ## 4. Daily plan schema
 
@@ -303,10 +306,12 @@ interface DailyPlan {
 | 401 | `UNAUTHENTICATED` | Missing/invalid token |
 | 403 | `FORBIDDEN` | Authenticated but not authorized |
 | 404 | `NOT_FOUND` | Resource not found or not accessible |
+| 409 | `LIMIT_REACHED` | 20 saved plans already; delete one first |
 | 413 | `PAYLOAD_TOO_LARGE` | Request limit exceeded |
 | 429 | `RATE_LIMITED` | Request limit reached |
 | 502 | `PROVIDER_ERROR` | External provider failed |
 | 503 | `DATA_UNAVAILABLE` | No valid source data available |
+| 503 | `SAVE_UNAVAILABLE` | Saving is not configured, or Supabase could not be reached |
 | 500 | `INTERNAL_ERROR` | Unexpected error |
 
 Do not return stack traces or provider secrets.

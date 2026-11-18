@@ -168,3 +168,27 @@ Do not store user-linked precise coordinates in a global cache. Do not allow cac
 - Document retention of operational logs and provider caches.
 - When a user deletes their account, define a deletion workflow for associated records.
 - Never claim complete deletion from external provider logs unless that behavior is controlled and verified.
+
+## 9. As built (Phase 6, 2026-11-18)
+
+Migration: `supabase/migrations/20261118120000_saved_data.sql`. Design: `docs/superpowers/specs/2026-11-18-phase6-saved-data-design.md`.
+
+Built tables:
+- `household_preferences`: `user_id` (primary key, → `auth.users`, `on delete cascade`), `context` jsonb (an object of at most 2048 bytes as text), `created_at`, `updated_at` (kept current by a trigger).
+- `daily_plans`: `id`, `user_id` (→ `auth.users`, `on delete cascade`), `location_label` (1–120 characters), `plan_json` (an object of at most 65536 bytes as text), `created_at`; index on `(user_id, created_at desc)`. A `before insert` trigger allows at most 20 plans per user, under a per-user lock.
+
+RLS is enabled on both tables, `to authenticated`, with `(select auth.uid()) = user_id`:
+- `household_preferences`: select, insert, update (USING and WITH CHECK), delete.
+- `daily_plans`: select, insert, delete. There is no update policy, because a saved plan never changes.
+
+`public.delete_my_account()` (`security definer`, `search_path = ''`) deletes only the calling user from `auth.users`, and their rows go with them. Only `authenticated` may execute it.
+
+Changes from §3:
+1. One `context` column mirrors `HouseholdContext` instead of three jsonb columns.
+2. No `location_label` in preferences: saved locations are P1, and coordinates are not stored.
+3. `user_id` is the primary key of `household_preferences` (one row per user).
+4. `daily_plans` has no `data_context` or `updated_at`. The stored `DailyPlan` carries its own forecast provenance, air check, sources and safety note, and it is never edited.
+
+`profiles`, `saved_locations` and `plan_feedback` are not built (P1).
+
+Retention: rows are kept until the person deletes them ("Delete my saved data" or `DELETE /api/v1/account`). Supabase does not clean up anonymous users automatically; a cleanup of accounts unused for 30 days is a Phase 9 follow-up.

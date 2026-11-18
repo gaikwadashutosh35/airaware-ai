@@ -53,11 +53,13 @@ The server runs TypeScript directly on Node ≥24 (built-in type stripping), so 
 
 ## 5. Frontend variables
 
-Phase 6 (Supabase) adds `client/.env.example`:
+Phase 6 (Supabase) adds `client/.env.example`. Copy it to `client/.env`:
 ```env
 VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PUBLISHABLE_KEY=
 ```
+
+Both are optional. Without them the household form says "Saving isn't set up on this site." The key must be the publishable key (`sb_publishable_…`); the client ignores anything else. For the production image, pass both as Docker build args (`--build-arg VITE_SUPABASE_URL=… --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=…`), because `.dockerignore` keeps `.env` files out. Client tests always run with saving off (`client/vite.config.ts`).
 
 In production the client calls the API on the same origin (`/api/v1`), so no API base URL variable is needed (ADR-005). In development Vite runs on port 5173 and the API on 8080; `client/vite.config.ts` proxies `/api` to the API. Only public browser-safe values belong in `VITE_` variables. These values are bundled into frontend assets. Never put Gemini keys or Supabase service-role credentials here.
 
@@ -68,8 +70,7 @@ In production the client calls the API on the same origin (`/api/v1`), so no API
 NODE_ENV=development
 PORT=8080
 SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_PUBLISHABLE_KEY=
 GEMINI_API_KEY=
 GEMINI_MODEL=
 DATA_GOV_IN_API_KEY=
@@ -77,6 +78,7 @@ DATA_GOV_IN_API_KEY=
 
 - `GEMINI_API_KEY` (optional, server-only): a Gemini API key from Google AI Studio. Empty or missing → every daily plan is rules-only, and startup logs "Gemini not configured; plans are rules-only." Never put it in a `VITE_` variable or commit it.
 - `GEMINI_MODEL` (optional): defaults to `gemini-3.8-flash`. Lowercase letters, digits, `.` and `-` only.
+- `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (optional, Phase 6): the project URL (https) and its publishable key (`sb_publishable_…`). Without both, every saved-data route returns `503 SAVE_UNAVAILABLE`, and startup logs "Supabase not configured; saving is off." Startup fails if the key is not a publishable key. The secret (service-role) key is not used.
 
 Open-Meteo base URLs, the Gemini endpoint and 10-second timeout, the forecast and plan cache TTLs (10 min), the rate limits (60/min per IP; 10/min for daily plans) and the 4 KB daily-plan body limit are code constants in `server/src`, not environment variables. Fixed base URLs keep the outbound-host allowlist out of configuration.
 
@@ -84,12 +86,12 @@ Open-Meteo base URLs, the Gemini endpoint and 10-second timeout, the forecast an
 
 ## 7. Supabase setup
 
-1. Create project.
-2. Configure Auth providers and redirect URLs.
-3. Apply migrations under `supabase/migrations/`.
-4. Enable RLS on every user-owned table.
-5. Test with at least two separate users.
-6. Keep service-role key on backend only.
+1. Create a free project. Choose the South Asia (Mumbai) region and keep the database password in a password manager.
+2. **Authentication → Sign In / Providers:** turn on **Allow anonymous sign-ins**. No redirect URLs are needed, because no email links are sent.
+3. Read `supabase/migrations/20261118120000_saved_data.sql`, then run it in the dashboard's **SQL Editor**. It creates both tables, enables RLS, and adds the 20-plan limit and `delete_my_account()`.
+4. Copy the project URL and publishable key into `server/.env` and `client/.env` (§5–6).
+5. Run the two-user check: `SUPABASE_LIVE=1 npm test -w server -- src/services/saved/supabase.live.test.ts`.
+6. Never use the secret (service-role) key in this app.
 
 ## 8. Local run
 

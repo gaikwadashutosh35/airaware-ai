@@ -58,4 +58,11 @@
 - Are MCP servers trusted and least-privileged?
 
 ## Residual risks
+
+Accepted in Phase 6 (saved data):
+- **Anonymous-account abuse.** Accounts need no email and there is no CAPTCHA, so a script could create many. Limits: Supabase allows 30 anonymous sign-ins per hour per IP, and the database caps each account at 1 preferences row (≤ 2 KB) and 20 plans (≤ 64 KB each). These limits also hold for direct writes.
+- **Direct writes to one's own rows.** A person can call Supabase's API with the publishable key and their own token, which is the same access the server uses on their behalf. They can then store a plan the server did not build. It stays within the limits above, RLS keeps it visible only to them, and React renders its text as text. Stopping this fully would need a server-only key, which the design rules out.
+- **Abandoned anonymous accounts** stay until cleaned up; the cleanup is a Phase 9 follow-up.
+- **Free project pausing** after 7 days of low activity makes saving unavailable (503) until the project is restored.
+
 This threat model is a project baseline. Reassess it when adding maps, notifications, external integrations, uploads, user-generated sharing, analytics, or new AI tools.

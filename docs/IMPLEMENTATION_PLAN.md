@@ -312,6 +312,21 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Acceptance | Two-user isolation tests pass via direct API calls and direct DB calls with each user's JWT; deletion removes all user rows |
 | Needs from you | Supabase project (or approval to run local Supabase in Docker) |
 
+**As built (2026-11-18):**
+- **Scope:** owner-chosen: a free Supabase cloud project, "one-click, this device" sign-in, and saving through our server. Email magic links were dropped, because the free plan's email sender only reaches the project's own organization.
+- **Server:**
+  - `services/saved/` holds the `SavedStore` interface, the Supabase adapter (`getClaims` token check; queries run as the user, so RLS applies) and `userFrom`, the single auth gate.
+  - Routes: `routes/{preferences,plans,account}.ts`.
+  - `services/recommendations/dailyPlan.ts` is shared by the plan route and the save route, so saved plans are always server-built.
+- **Database:** `supabase/migrations/20261118120000_saved_data.sql`. It has both tables and RLS (3 policies on `daily_plans`, none for update), the 20-plan trigger, and `delete_my_account()`. The secret (service-role) key is not used.
+- **Client:**
+  - `lib/supabase.ts` creates the anonymous session only inside a save action.
+  - `features/daily-plan/HouseholdPreferencesForm.tsx` is on the dashboard.
+  - The Dockerfile takes the two `VITE_` settings as build args.
+- **Tests:** server 186 passed + 1 skipped, client 76/76. The route tests use an in-memory fake store.
+- **Live checks:** pending until the owner creates the project, turns on anonymous sign-ins and runs the migration. These are the two-user isolation test, the 20-plan limit, deletion, and a browser check.
+- **Plan files:** `docs/superpowers/specs/2026-11-18-phase6-saved-data-design.md`, `docs/superpowers/plans/2026-11-18-phase6-saved-data.md`.
+
 ### Phase 7 — Complete feature experience (≈3–4 h)
 
 | | |
@@ -352,8 +367,8 @@ Saved locations, plan history, plan feedback, share card, Hindi/Marathi, reminde
 | `NODE_ENV`, `PORT` | server | 1 | no |
 | `DATA_GOV_IN_API_KEY` | server | CPCB follow-up (spike was blocked on it) | **yes** |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | server | 5 | key: **yes** |
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | server + client (`VITE_`) | 6 | no (RLS protects) |
-| `SUPABASE_SERVICE_ROLE_KEY` | server only | 6 (account deletion only) | **yes** |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | server + client (`VITE_`) | 6 | no (RLS protects; publishable key only) |
+| `SUPABASE_SERVICE_ROLE_KEY` | not used (Phase 6 deletes accounts with a database function) | — | **yes** |
 | `CLIENT_URL` | server | Option A only (CORS) | no |
 | `SONAR_TOKEN` | GitHub Actions secret | 8 | **yes** |
 
