@@ -135,6 +135,32 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('metric-PM10').textContent).toContain('No value');
   });
 
+  it('leads with PM2.5 as the headline figure', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    const lead = document.querySelector('[data-lead]');
+    expect(lead).toBe(screen.getByTestId('metric-PM2_5'));
+    expect(lead?.textContent).toContain('PM2.5');
+    expect(lead?.textContent).toContain('48');
+    expect(lead?.textContent).toContain('μg/m³');
+  });
+
+  it('has no headline figure when the model has no PM2.5', async () => {
+    const series = structuredClone(forecastFixture);
+    delete series.units.PM2_5;
+    for (const hour of series.hours) delete hour.values.PM2_5;
+    routeFetch(ok(series));
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    expect(document.querySelector('[data-lead]')).toBeNull();
+    expect(screen.getByTestId('metric-PM10').textContent).toContain('52.4');
+  });
+
   it('lists every hour in the forecast table', async () => {
     routeFetch(ok());
     render(<Dashboard />);

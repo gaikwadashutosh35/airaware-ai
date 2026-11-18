@@ -32,19 +32,32 @@ export function ForecastPanel({
       {hour ? (
         <div className="flex flex-col gap-3">
           <p className="font-medium">Values for {formatTime(hour.time)}</p>
-          <dl className="grid grid-cols-2 border-t border-rule sm:grid-cols-3">
+          <dl className="grid grid-cols-2 border-t border-rule sm:grid-cols-5">
             {shown.map((pollutant) => {
               const value = hour.values[pollutant.key];
+              // PM2.5 leads: the headline figure, never an AQI.
+              const lead = pollutant.key === 'PM2_5';
               return (
                 <div
                   key={pollutant.key}
                   data-testid={`metric-${pollutant.key}`}
-                  className="flex flex-col gap-1 border-b border-rule py-4 pr-4"
+                  data-lead={lead || undefined}
+                  className={
+                    lead
+                      ? 'col-span-full flex flex-col gap-1 border-b border-rule py-6'
+                      : 'flex flex-col gap-1 border-b border-rule py-4 pr-4'
+                  }
                 >
                   <dt className="text-sm text-text-dark-muted">
                     {pollutant.short} ({pollutant.name})
                   </dt>
-                  <dd className="text-2xl font-semibold tabular-nums">
+                  <dd
+                    className={
+                      lead
+                        ? 'text-6xl font-semibold tracking-tight tabular-nums'
+                        : 'text-2xl font-semibold tabular-nums'
+                    }
+                  >
                     {value == null ? (
                       NO_VALUE
                     ) : (
