@@ -12,10 +12,14 @@ const client =
 
 export const savingAvailable = client !== null;
 
-// The existing session's token, or null. Never creates an account.
+// The existing session's token, or null. Never creates an account. Throws
+// when the session can't be checked (e.g. an expired token that Supabase
+// can't refresh right now): that is never "no session", or a delete could
+// claim success and a save could replace the account.
 export async function currentToken(): Promise<string | null> {
   if (!client) return null;
-  const { data } = await client.auth.getSession();
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
   return data.session?.access_token ?? null;
 }
 

@@ -13,6 +13,8 @@ import {
 
 // Raised by the enforce_plan_limit trigger (supabase/migrations).
 const PLAN_LIMIT_MESSAGE = 'plan_limit_reached';
+// The same bound as the Open-Meteo and Gemini calls.
+const REQUEST_TIMEOUT_MS = 10_000;
 
 interface Result<T> {
   data: T | null;
@@ -39,8 +41,23 @@ export function createSupabaseStore(options: {
   publishableKey: string;
   // Injectable for tests.
   fetch?: typeof fetch;
+  timeoutMs?: number;
 }): SavedStore {
-  const global = options.fetch ? { fetch: options.fetch } : undefined;
+  const baseFetch = options.fetch ?? fetch;
+  const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  // Every Supabase request (token keys, Auth, database) gives up after the
+  // timeout; a hang then becomes SAVE_UNAVAILABLE like any other failure.
+  const global = {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      const timeout = AbortSignal.timeout(timeoutMs);
+      return baseFetch(input, {
+        ...init,
+        signal: init?.signal
+          ? AbortSignal.any([init.signal, timeout])
+          : timeout,
+      });
+    },
+  };
   // Only checks tokens; holds no session of its own.
   const checker = createClient(options.url, options.publishableKey, {
     auth: {
@@ -57,7 +74,15 @@ export function createSupabaseStore(options: {
     async verify(token) {
       // Verifies the signature (JWKS, or the Auth server for legacy keys)
       // and the expiry.
-      const { data, error } = await checker.auth.getClaims(token);
+      let result: Awaited<ReturnType<typeof checker.auth.getClaims>>;
+      try {
+        result = await checker.auth.getClaims(token);
+      } catch {
+        // auth-js throws plain errors for some malformed tokens (bad JSON or
+        // UTF-8, unsupported alg): those are invalid tokens, not failures.
+        return null;
+      }
+      const { data, error } = result;
       if (error) {
         if (isAuthRetryableFetchError(error)) fail('auth');
         return null;

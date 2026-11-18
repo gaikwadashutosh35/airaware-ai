@@ -54,6 +54,12 @@ create trigger daily_plans_limit
 alter table public.household_preferences enable row level security;
 alter table public.daily_plans enable row level security;
 
+-- Explicit grants, so access never depends on project defaults: signed-in
+-- users only, and a saved plan can't be updated by anyone.
+revoke all on public.household_preferences, public.daily_plans from anon, authenticated;
+grant select, insert, update, delete on public.household_preferences to authenticated;
+grant select, insert, delete on public.daily_plans to authenticated;
+
 create policy "own preferences: select" on public.household_preferences
   for select to authenticated using ((select auth.uid()) = user_id);
 create policy "own preferences: insert" on public.household_preferences

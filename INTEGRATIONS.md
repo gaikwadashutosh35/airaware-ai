@@ -85,7 +85,7 @@ Use public browser-safe keys with RLS. Keep service-role credentials server-side
 **As built (Phase 6, saved preferences and plans):**
 - **Sign-in:** anonymous sign-in only, created on the first save click. No email, password or name. The built-in email sender only reaches members of the project's own Supabase organization, at 2 emails per hour, so email sign-in is not usable on the free plan (checked 2026-11-18). Anonymous sign-ins are limited to 30 per hour per IP by default.
 - **Keys:** the publishable key (`sb_publishable_…`) only, in the browser and on the server. The secret key is not used. The server refuses to start with any other key in `SUPABASE_PUBLISHABLE_KEY`.
-- **Token check:** the server verifies each bearer token with `supabase.auth.getClaims` (the project JWKS, or the Auth server for legacy keys), then queries as that user so RLS applies. PostgREST retries are off, so a failure becomes `503 SAVE_UNAVAILABLE` at once.
+- **Token check:** the server verifies each bearer token with `supabase.auth.getClaims` (the project JWKS, or the Auth server for legacy keys), then queries as that user so RLS applies. Every Supabase request times out after 10 seconds, and PostgREST retries are off, so a failure or a hang becomes `503 SAVE_UNAVAILABLE` within 10 seconds. A token that is malformed in any way gets `401`, never `500`.
 - **Region:** South Asia (Mumbai).
 - **Free-plan limits:** a free project pauses after 7 days of low activity. While paused, saving returns `SAVE_UNAVAILABLE`; a keep-alive is a Phase 9 task.
 - **Not built:** email or Google sign-in, linking an email to an anonymous account, CAPTCHA.

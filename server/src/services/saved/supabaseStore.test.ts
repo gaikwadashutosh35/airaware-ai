@@ -75,3 +75,26 @@ describe('createSupabaseStore', () => {
     expect(await store().forUser('tok', 'u1').deletePlan('p1')).toBe(true);
   });
 });
+
+// Final review #3.
+describe('timeouts', () => {
+  it('a hanging database request times out as unavailable', async () => {
+    fetchMock.mockImplementation(
+      (_input, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(init.signal?.reason as Error),
+          );
+        }),
+    );
+    const slow = createSupabaseStore({
+      url: 'https://test.supabase.co',
+      publishableKey: 'sb_publishable_test',
+      fetch: fetchMock,
+      timeoutMs: 20,
+    });
+    await expect(slow.forUser('tok', 'u1').listPlans()).rejects.toBeInstanceOf(
+      StoreUnavailableError,
+    );
+  });
+});

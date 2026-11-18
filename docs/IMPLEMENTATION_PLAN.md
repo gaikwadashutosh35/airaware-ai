@@ -323,7 +323,8 @@ Estimates = my build time per phase, excluding your review and account setup.
   - `lib/supabase.ts` creates the anonymous session only inside a save action.
   - `features/daily-plan/HouseholdPreferencesForm.tsx` is on the dashboard.
   - The Dockerfile takes the two `VITE_` settings as build args.
-- **Tests:** server 186 passed + 1 skipped, client 76/76. The route tests use an in-memory fake store.
+- **Tests:** server 194 passed + 5 skipped (4 live Supabase + 1 live Gemini), client 79/79. The route tests use an in-memory fake store. The real token check is tested offline against a local ES256 key set.
+- **Final review (Opus):** 1 Critical, 5 Important and 8 Minor findings. The Critical and Important ones were fixed test-first, plus #11 (explicit grants), which was raised from Minor to Important. Critical: an expired session that couldn't be refreshed read as "no session", so "Delete my saved data" could claim success. Important: malformed tokens returned 500; Supabase calls had no timeout; the token check was untested; the live test could pass while failing; PRIVACY.md over-promised; the migration relied on default grants.
 - **Live checks:** pending until the owner creates the project, turns on anonymous sign-ins and runs the migration. These are the two-user isolation test, the 20-plan limit, deletion, and a browser check.
 - **Plan files:** `docs/superpowers/specs/2026-11-18-phase6-saved-data-design.md`, `docs/superpowers/plans/2026-11-18-phase6-saved-data.md`.
 

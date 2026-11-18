@@ -177,6 +177,8 @@ Built tables:
 - `household_preferences`: `user_id` (primary key, → `auth.users`, `on delete cascade`), `context` jsonb (an object of at most 2048 bytes as text), `created_at`, `updated_at` (kept current by a trigger).
 - `daily_plans`: `id`, `user_id` (→ `auth.users`, `on delete cascade`), `location_label` (1–120 characters), `plan_json` (an object of at most 65536 bytes as text), `created_at`; index on `(user_id, created_at desc)`. A `before insert` trigger allows at most 20 plans per user, under a per-user lock.
 
+Grants are explicit, so access never depends on project defaults. `anon` gets nothing. `authenticated` gets select, insert, update and delete on `household_preferences`, and select, insert and delete on `daily_plans`.
+
 RLS is enabled on both tables, `to authenticated`, with `(select auth.uid()) = user_id`:
 - `household_preferences`: select, insert, update (USING and WITH CHECK), delete.
 - `daily_plans`: select, insert, delete. There is no update policy, because a saved plan never changes.

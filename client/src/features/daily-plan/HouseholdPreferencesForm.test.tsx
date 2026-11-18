@@ -162,6 +162,28 @@ describe('HouseholdPreferencesForm', () => {
     expect(purifier.value).toBe('');
   });
 
+  // Final review #1: a session that can't be checked is never "nothing saved".
+  it('a delete that cannot check the session claims nothing', async () => {
+    session.currentToken.mockRejectedValue(new Error('refresh failed'));
+    routeFetch(() => new Response(null, { status: 204 }));
+    render(<HouseholdPreferencesForm />);
+    // The page's own load fails the same way first.
+    expect(
+      await screen.findByText(
+        "Your saved answers couldn't be loaded right now.",
+      ),
+    ).toBeDefined();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Delete my saved data' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    expect(
+      await screen.findByText('Nothing was deleted. Try again in a moment.'),
+    ).toBeDefined();
+    expect(session.forgetSession).not.toHaveBeenCalled();
+    expect(screen.queryByText('Deleted. Nothing is saved now.')).toBeNull();
+  });
+
   it('saving not set up disables the buttons', () => {
     session.available = false;
     routeFetch(() => ok(null));
