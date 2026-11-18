@@ -53,7 +53,7 @@ Method (`assessAir(series, now)`):
 3. Average the 24 values, round to 1 decimal, then compare: `> limit` → `above_limit`, else `within_limit`. Rounding first keeps the shown number and the status consistent.
 4. Level: `elevated` if any pollutant is `above_limit`; `not_elevated` if both are `within_limit`; else `unknown`. No series → `unknown`.
 
-Known limit of the method: NAAQS compliance is about measured station values over a year; a 24-hour mean of a gridded model forecast is an approximation. Every air candidate says so in its caveat.
+Known limit of the method: NAAQS compliance is about measured station values over a year; a 24-hour mean of a gridded model forecast is an approximation. The `air.elevated` / `air.within-limit` notice carries the model-forecast caveat and appears whenever any air candidate does; every air candidate cites Open-Meteo and the NAAQS as its sources. (Corrected 2026-11-18 after the final review: the earlier sentence said every air candidate's own caveat says so, which the wording table never did.)
 
 ## Household details (all optional; unknown fields rejected)
 

@@ -97,6 +97,9 @@ export interface PollutantCheck {
 
 export interface AirAssessment {
   level: 'elevated' | 'not_elevated' | 'unknown';
+  // UTC ISO time of the first of the 24 forecast hours averaged; null when
+  // no complete window exists.
+  windowStart: string | null;
   // Always [PM2_5, PM10].
   checks: PollutantCheck[];
 }

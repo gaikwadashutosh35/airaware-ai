@@ -157,6 +157,16 @@ describe('assessAir', () => {
     };
 
     expect(assessAir(gapped, now).level).toBe('unknown');
+    expect(assessAir(gapped, now).windowStart).toBeNull();
+  });
+
+  it('records the first hour it averaged', () => {
+    const result = assessAir(
+      series('2026-11-18T09:00:00Z', fill(25, 10), fill(25, 10)),
+      now,
+    );
+
+    expect(result.windowStart).toBe('2026-11-18T10:00:00.000Z');
   });
 
   it('half-hour timestamps are unknown', () => {
@@ -193,6 +203,7 @@ describe('assessAir', () => {
   it('no series is unknown', () => {
     expect(assessAir(null, now)).toEqual({
       level: 'unknown',
+      windowStart: null,
       checks: [
         { pollutant: 'PM2_5', status: 'unknown', average24h: null, limit: 60 },
         { pollutant: 'PM10', status: 'unknown', average24h: null, limit: 100 },

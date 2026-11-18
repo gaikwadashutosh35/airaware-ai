@@ -63,5 +63,5 @@ export function assessAir(series: Series | null, now: Date): AirAssessment {
     : statuses.every((status) => status === 'within_limit')
       ? 'not_elevated'
       : 'unknown';
-  return { level, checks };
+  return { level, windowStart: hours[0]?.time ?? null, checks };
 }

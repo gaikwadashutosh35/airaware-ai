@@ -8,6 +8,7 @@ import { SOURCE_REFERENCES, buildCandidates } from './rules.ts';
 
 const elevated: AirAssessment = {
   level: 'elevated',
+  windowStart: '2026-11-18T10:00:00.000Z',
   checks: [
     { pollutant: 'PM2_5', status: 'above_limit', average24h: 72.4, limit: 60 },
     { pollutant: 'PM10', status: 'within_limit', average24h: 80, limit: 100 },
@@ -15,6 +16,7 @@ const elevated: AirAssessment = {
 };
 const within: AirAssessment = {
   level: 'not_elevated',
+  windowStart: '2026-11-18T10:00:00.000Z',
   checks: [
     { pollutant: 'PM2_5', status: 'within_limit', average24h: 41.2, limit: 60 },
     { pollutant: 'PM10', status: 'within_limit', average24h: 63.5, limit: 100 },
@@ -22,6 +24,7 @@ const within: AirAssessment = {
 };
 const unknown: AirAssessment = {
   level: 'unknown',
+  windowStart: null,
   checks: [
     { pollutant: 'PM2_5', status: 'unknown', average24h: null, limit: 60 },
     { pollutant: 'PM10', status: 'unknown', average24h: null, limit: 100 },
@@ -67,7 +70,7 @@ const byId = (list: RecommendationCandidate[], id: string) =>
 const withChecks = (
   pm25: AirAssessment['checks'][number],
   pm10: AirAssessment['checks'][number],
-): AirAssessment => ({ level: 'elevated', checks: [pm25, pm10] });
+): AirAssessment => ({ ...elevated, checks: [pm25, pm10] });
 const allRuns = () =>
   [full, {}].flatMap((context) =>
     [elevated, within, unknown].flatMap((air) => buildCandidates(context, air)),
@@ -286,7 +289,17 @@ describe('buildCandidates', () => {
     expect(list).toContain('exercise.check-conditions');
   });
 
-  it('forecast caveat on every air candidate', () => {
+  it('air candidates cite the forecast and come with the caveated notice', () => {
+    for (const context of [full, {}]) {
+      for (const air of [elevated, within]) {
+        const list = buildCandidates(context, air);
+        const notice = list.find((c) => c.id.startsWith('air.'));
+        expect(notice?.caveat).toContain(
+          'This is a model forecast for an area about 45 km wide',
+        );
+        expect(notice?.caveat).toContain('not the CPCB National AQI');
+      }
+    }
     for (const air of [elevated, within]) {
       for (const candidate of buildCandidates(full, air)) {
         if (candidate.sourceIds.includes('open-meteo')) {
@@ -295,9 +308,6 @@ describe('buildCandidates', () => {
             'open-meteo',
             'cpcb-naaqs-2009',
           ]);
-          if (candidate.id.startsWith('air.')) {
-            expect(candidate.caveat).toContain('not the CPCB National AQI');
-          }
         } else {
           expect(candidate.evidenceType).toBe('general_suggestion');
           expect(candidate.sourceIds).toEqual([]);

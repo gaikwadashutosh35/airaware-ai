@@ -134,6 +134,7 @@ The rules engine (`server/src/services/recommendations/`) needs one signal for "
   2. Per pollutant, the unit must be `μg/m³` and all 24 values present; otherwise that pollutant is unknown.
   3. Average, round to 1 decimal, then compare: above the limit only if greater than it.
   4. Elevated if either pollutant is above; not elevated if both are within; otherwise unknown.
-- **Known limit:** NAAQS compliance is judged on measured station values over a year ("complied with 98% of the time in a year"). A 24-hour mean of a ~45 km model grid is an approximation, and every air-based recommendation says it is a model forecast.
+- **Known limit:** NAAQS compliance is judged on measured station values over a year ("complied with 98% of the time in a year"). A 24-hour mean of a ~45 km model grid is an approximation. Whenever an air-based recommendation appears, the air notice appears too, with the caveat that this is a model forecast for an area about 45 km wide, not a station measurement and not the CPCB National AQI. Every air-based recommendation cites Open-Meteo and the NAAQS as sources. Phase 5 must never drop that notice.
+- **Time range:** the result records the first of the 24 hours averaged (`windowStart`, UTC), so the page can show which hours the averages cover.
 - **Not done:** no CPCB National AQI and no CPCB category is computed from these values.
 - **Change control:** changing a limit or the method needs the steps in `DATA_GOVERNANCE.md` §8.
