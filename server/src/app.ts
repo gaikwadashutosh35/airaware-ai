@@ -8,6 +8,7 @@ import { locationsRouter } from './routes/locations.ts';
 import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
 import type { GeneratePlan } from './services/ai/personalize.ts';
+import { createDailyPlanner } from './services/recommendations/dailyPlan.ts';
 
 export interface AppOptions {
   // Folder holding the built client (index.html + assets), served same-origin.
@@ -46,15 +47,29 @@ export function createApp(options: AppOptions = {}): express.Express {
     res.json({ status: 'ok', version: pkg.version });
   });
   const forecast = createCachedForecast();
+  const planner = createDailyPlanner({
+    forecast,
+    generate: options.generatePlan ?? null,
+    model: options.aiModel ?? null,
+  });
+  // One counter for every route that can call Gemini.
+  const planLimit = rateLimit({
+    windowMs: 60_000,
+    limit: 10,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: {
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many requests. Try again in a minute.',
+      },
+    },
+  });
   app.use('/api/v1/air-quality', airQualityRouter(forecast));
   app.use('/api/v1/locations', locationsRouter());
   app.use(
     '/api/v1/recommendations',
-    recommendationsRouter({
-      forecast,
-      generate: options.generatePlan ?? null,
-      model: options.aiModel ?? null,
-    }),
+    recommendationsRouter({ planner, planLimit }),
   );
 
   const { clientDir } = options;
