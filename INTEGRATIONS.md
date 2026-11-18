@@ -122,3 +122,18 @@ Check current pricing, plan limits, region, build commands, cold-start behavior,
 | Supabase unavailable | Preserve safe UI state and show save unavailable; do not claim persistence |
 | Geocoder unavailable | Permit manual location entry with limits explained |
 | Location permission denied | Continue with manual search |
+
+## 12. Recommendation thresholds
+
+The rules engine (`server/src/services/recommendations/`) needs one signal for "the air is worse than usual today". It uses India's national 24-hour limits, not an AQI.
+
+- **Source:** CPCB, National Ambient Air Quality Standards, notification No. B-29016/20/90/PCI-L, 18 November 2009 (`http://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf`). Values verified 2026-11-18 against a copy of the notification.
+- **Limits (24-hour average):** PM2.5 60 μg/m³, PM10 100 μg/m³.
+- **Method:**
+  1. Take the 24 Open-Meteo forecast hours starting at the UTC hour that contains now. Each must be exactly one hour after the previous.
+  2. Per pollutant, the unit must be `μg/m³` and all 24 values present; otherwise that pollutant is unknown.
+  3. Average, round to 1 decimal, then compare: above the limit only if greater than it.
+  4. Elevated if either pollutant is above; not elevated if both are within; otherwise unknown.
+- **Known limit:** NAAQS compliance is judged on measured station values over a year ("complied with 98% of the time in a year"). A 24-hour mean of a ~45 km model grid is an approximation, and every air-based recommendation says it is a model forecast.
+- **Not done:** no CPCB National AQI and no CPCB category is computed from these values.
+- **Change control:** changing a limit or the method needs the steps in `DATA_GOVERNANCE.md` §8.

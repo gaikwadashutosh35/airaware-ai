@@ -81,3 +81,22 @@ export interface HouseholdContext {
     mayBeMoreSensitive?: boolean;
   };
 }
+
+export type LimitStatus = 'above_limit' | 'within_limit' | 'unknown';
+
+// A model-forecast 24-hour average compared with India's NAAQS 24-hour
+// limit. Not an AQI and not a CPCB category.
+export interface PollutantCheck {
+  pollutant: 'PM2_5' | 'PM10';
+  status: LimitStatus;
+  // Rounded to 1 decimal; null when unknown.
+  average24h: number | null;
+  // μg/m³
+  limit: number;
+}
+
+export interface AirAssessment {
+  level: 'elevated' | 'not_elevated' | 'unknown';
+  // Always [PM2_5, PM10].
+  checks: PollutantCheck[];
+}
