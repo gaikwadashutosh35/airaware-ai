@@ -90,7 +90,9 @@ Open-Meteo base URLs, the Gemini endpoint and 10-second timeout, the forecast an
 2. **Authentication → Sign In / Providers:** turn on **Allow anonymous sign-ins**. No redirect URLs are needed, because no email links are sent.
 3. Read `supabase/migrations/20261118120000_saved_data.sql`, then run it in the dashboard's **SQL Editor**. It creates both tables, enables RLS, and adds the 20-plan limit and `delete_my_account()`.
 4. Copy the project URL and publishable key into `server/.env` and `client/.env` (§5–6).
-5. Run the two-user check: `SUPABASE_LIVE=1 npm test -w server -- src/services/saved/supabase.live.test.ts`.
+5. Run the two-user check: `SUPABASE_LIVE=1 npm test -w server -- src/services/saved/supabase.live.test.ts`. It creates two anonymous users and deletes them again.
+
+The project used for development also has "Grant API access to new tables automatically" turned off, as Supabase recommends. The migration grants access explicitly, so it works either way.
 6. Never use the secret (service-role) key in this app.
 
 ## 8. Local run

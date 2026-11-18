@@ -191,7 +191,8 @@ describe.skipIf(!live)('Supabase (live)', { timeout: 60_000 }, () => {
     const theirs = await request(app)
       .get('/api/v1/profile/preferences')
       .set('Authorization', b.auth);
-    expect(theirs.body).toEqual({ data: null });
+    // B gets its own (empty) answers from the first test, never A's.
+    expect(theirs.body.data.context).toEqual({});
   });
 
   it('the 21st plan is refused', async () => {
