@@ -16,6 +16,10 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - `GET /api/v1/air-quality/sources`: licence and attribution.
   - `GET /api/v1/locations/search`: India-only place search.
 - Central JSON error handler (`API.md` envelope, no stack traces); 10-minute forecast cache; 60/min per-IP rate limit.
+- Phase 3 client:
+  - **Landing page:** hero place search, a real dashboard screenshot, the "Where every number comes from" diagram, a limits statement, and Open-Meteo attribution.
+  - **Dashboard:** keyboard-accessible place search, opt-in approximate location, PM2.5 headline figure, the six pollutants with units and hours, a 48-hour table, the CPCB-unavailable panel, sources, and loading/error/rate-limit states.
+- Production container: one Express process serves the API and the built client (Dockerfile).
 
 ### Changed
 - Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.

@@ -59,6 +59,24 @@ airaware-ai/
 - `TESTING_QA.md` — verification and scripts.
 - `DEBUGGING.md` — logs, diagnosis, edge cases.
 
+## Run locally
+
+Needs Node 24 or newer. From the repository root:
+
+```bash
+npm ci
+```
+
+```bash
+npm run dev -w server
+```
+
+```bash
+npm run dev -w client
+```
+
+Open `http://localhost:5173`, search an Indian city and see its hourly model forecast from Open-Meteo. No API keys are needed yet. The production Docker image and checks are in `SETUP.md` §8. No live URL is listed until a deployment is verified.
+
 ## Quick start
 
 1. Read `AGENTS.md` and `PRD.md`.

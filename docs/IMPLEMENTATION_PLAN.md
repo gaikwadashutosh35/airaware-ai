@@ -234,6 +234,22 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Acceptance | Search Pune/Delhi → real Open-Meteo values with source/time/unit/"Model forecast" label; GPS denial keeps search usable; no dead controls; 320/768/1280 px reviewed in a browser; axe: 0 critical |
 | Tests | RTL: search keyboard flow, denied geolocation, badge text; Playwright smoke |
 
+**As built (2026-11-18):**
+- **Pages:** a landing page (`/`) with real chapters only, and a dashboard (`/app`). Both use Tailwind v4 with the DESIGN.md tokens in `@theme`, and a Hallmark pass inside DESIGN.md.
+- **Awwwards-inspired revision** (owner-approved):
+  - search in the landing hero
+  - a searched place carried in `/app?place=&lat=&lon=` (2 decimals; device location never in the URL)
+  - a four-step "Where every number comes from" diagram
+  - PM2.5 as the dashboard's headline figure
+- **Structure:** no router. Types are shared through a type-only `shared/contracts.ts`.
+- **Server:** Express serves `client/dist` and sets `trust proxy` 1 only in production.
+- **Container:** a multi-stage Dockerfile, verified locally.
+- **Deferred:**
+  - Playwright E2E (Phase 7)
+  - a demo state (no demo adapter)
+  - the Cloud Run deploy, waiting on D4 and your yes
+- **Plan files:** `docs/superpowers/specs/2026-11-17-phase3-design-shell-design.md`, `docs/superpowers/plans/2026-11-17-phase3-design-shell.md`.
+
 ### Phase 4 — Recommendation rules engine (≈2 h)
 
 | | |

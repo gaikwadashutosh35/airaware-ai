@@ -59,7 +59,7 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
-In production the client calls the API on the same origin (`/api/v1`), so no API base URL variable is needed (ADR-005). In development Vite runs on port 5173 and the API on 8080; a Vite `server.proxy` for `/api` is added together with the client's first API call (Phase 3). Only public browser-safe values belong in `VITE_` variables. These values are bundled into frontend assets. Never put Gemini keys or Supabase service-role credentials here.
+In production the client calls the API on the same origin (`/api/v1`), so no API base URL variable is needed (ADR-005). In development Vite runs on port 5173 and the API on 8080; `client/vite.config.ts` proxies `/api` to the API. Only public browser-safe values belong in `VITE_` variables. These values are bundled into frontend assets. Never put Gemini keys or Supabase service-role credentials here.
 
 ## 6. Backend variables
 
@@ -90,19 +90,29 @@ Open-Meteo base URLs, the forecast cache TTL (10 min) and the rate limit (60/min
 
 ## 8. Local run
 
-Terminal 1:
+Terminal 1 (API on port 8080):
 ```bash
-cd server
-npm run dev
+npm run dev -w server
 ```
 
-Terminal 2:
+Terminal 2 (client on port 5173, proxying `/api`):
 ```bash
-cd client
-npm run dev
+npm run dev -w client
 ```
 
-The server listens on `PORT` (default 8080; Cloud Run sets it in production). Confirm `GET http://localhost:8080/api/v1/health` responds. Root scripts run every workspace: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+Open `http://localhost:5173`. The server listens on `PORT` (default 8080; Cloud Run sets it in production). `GET http://localhost:8080/api/v1/health` confirms it is up. Root scripts run every workspace: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+
+### Production image (the same one Cloud Run runs)
+
+```bash
+docker build -t airaware:local .
+```
+
+```bash
+docker run --rm -p 8080:8080 airaware:local
+```
+
+Open `http://localhost:8080`. A single Express process serves `/api/v1` and the built client. `NODE_ENV=production` also makes it trust exactly one proxy hop (Cloud Run's front end) for the rate limit.
 
 ## 9. Git discipline and 10 MB rule
 
