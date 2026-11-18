@@ -121,3 +121,5 @@ export interface RecommendationCandidate {
   inputsUsed: string[];
   caveat?: string;
 }
+
+export type PlanPeriod = 'morning' | 'commute' | 'daytime' | 'evening' | 'home';
