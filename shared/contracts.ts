@@ -53,3 +53,31 @@ export interface SourceInfo {
 export interface ApiErrorBody {
   error: { code: ErrorCode; message: string; details?: unknown };
 }
+
+// Optional household details for recommendations (PRD §10). No medical
+// fields by design.
+export interface HouseholdContext {
+  routine?: {
+    commuteMode?:
+      | 'walk'
+      | 'cycle'
+      | 'two_wheeler'
+      | 'car'
+      | 'public_transport'
+      | 'work_from_home';
+    outdoorExercise?: boolean;
+    schoolCommute?: boolean;
+  };
+  home?: {
+    nearBusyRoad?: 'yes' | 'no' | 'unknown';
+    cookingFuel?:
+      'lpg' | 'electric' | 'biomass' | 'other' | 'prefer_not_to_say';
+    kitchenExhaust?: boolean;
+    airPurifier?: boolean;
+  };
+  householdNeeds?: {
+    includesChildren?: boolean;
+    includesOlderAdults?: boolean;
+    mayBeMoreSensitive?: boolean;
+  };
+}
