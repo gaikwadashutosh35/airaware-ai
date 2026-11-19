@@ -47,7 +47,7 @@ test('stale data: both stale messages', async ({ page }) => {
 
   await expect(
     page.getByText(
-      'Retrieved more than an hour ago. Reload for the latest forecast.',
+      'Not current: retrieved more than an hour ago. Reload for the latest forecast.',
     ),
   ).toBeVisible();
   await buildPlan(page);

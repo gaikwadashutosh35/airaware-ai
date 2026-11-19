@@ -103,8 +103,19 @@ export function AirReadout({
         </div>
         {/* Read before the figure: stale data is never shown as current. */}
         {stale && (
-          <p className="font-semibold">
-            Retrieved more than an hour ago. Reload for the latest forecast.
+          <p
+            data-part="stale-banner"
+            className="flex items-start gap-2 rounded-md border border-warning bg-warning/15 px-3 py-2 font-semibold"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              className="mt-0.5 size-5 flex-none fill-text-dark"
+            >
+              <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM9 5h2v4.6l3 1.8-1 1.7-4-2.4z" />
+            </svg>
+            Not current: retrieved more than an hour ago. Reload for the latest
+            forecast.
           </p>
         )}
 

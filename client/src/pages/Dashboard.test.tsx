@@ -21,7 +21,7 @@ import Dashboard from './Dashboard.tsx';
 type ForecastResponder = (latitude: string | null) => Promise<Response>;
 
 const FORECAST_STALE =
-  'Retrieved more than an hour ago. Reload for the latest forecast.';
+  'Not current: retrieved more than an hour ago. Reload for the latest forecast.';
 
 function urlOf(input: RequestInfo | URL): URL {
   const href =
@@ -157,6 +157,31 @@ describe('Dashboard', () => {
     expect(forecastCalls(fetchSpy)).toHaveLength(0);
     vi.useRealTimers();
     await expectNoAxeViolations(container);
+  });
+
+  it('the no-place card focuses the search', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(
+      screen.getByText(
+        'Search for a place or use your location to see its air-quality forecast.',
+      ),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Search for a place' }));
+    expect(document.activeElement).toBe(
+      screen.getByRole('combobox', {
+        name: 'Search for a city or area in India',
+      }),
+    );
+
+    await choosePlace();
+    expect(
+      screen.queryByRole('button', { name: 'Search for a place' }),
+    ).toBeNull();
   });
 
   it('shows the labelled model forecast for the chosen place', async () => {

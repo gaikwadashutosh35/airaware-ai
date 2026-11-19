@@ -118,15 +118,16 @@ describe('AirReadout', () => {
     );
   });
 
-  it('keeps the stale sentence with the skyline', () => {
+  it('the stale banner says not current', () => {
     const { container } = show(forecastFixture, true);
-    const stale = screen.getByText(
-      'Retrieved more than an hour ago. Reload for the latest forecast.',
+    const stale = container.querySelector('[data-part="stale-banner"]');
+    expect(stale?.textContent).toBe(
+      'Not current: retrieved more than an hour ago. Reload for the latest forecast.',
     );
     expect(container.querySelector('svg[data-haze-level]')).not.toBeNull();
     // Final review I5: the "not current" note is read before the figure.
     expect(
-      stale.compareDocumentPosition(screen.getByTestId('readout-pm25')) &
+      stale!.compareDocumentPosition(screen.getByTestId('readout-pm25')) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });

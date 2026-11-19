@@ -14,7 +14,7 @@ Check:
 
 A forecast is not a station measurement. A pollutant concentration is not automatically the overall CPCB National AQI.
 
-The chart shows PM2.5 (solid line) and PM10 (dashed line) for the next 48 hours, with a written summary under it. The dotted "At load" line marks the hour the forecast loaded; the exact hourly values are in the table below it. If the page stays open for more than an hour, it says "Retrieved more than an hour ago. Reload for the latest forecast."
+The chart shows PM2.5 (solid line) and PM10 (dashed line) for the next 48 hours, with a written summary under it. The dotted "At load" line marks the hour the forecast loaded; the exact hourly values are in the table below it. If the page stays open for more than an hour, it says "Not current: retrieved more than an hour ago. Reload for the latest forecast."
 
 ## 3. Set optional preferences
 Choose only the context you want to share:

@@ -169,10 +169,26 @@ function Dashboard() {
                 <ObservationPanel note={cpcb?.limitations[0]} />
               </>
             ) : (
-              <p className="max-w-prose text-text-dark-muted">
-                Search for a place or use your location to see its air-quality
-                forecast.
-              </p>
+              <div className="flex flex-col items-start gap-4 rounded-lg border border-rule p-6">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  className="size-6 fill-text-dark-muted"
+                >
+                  <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm3.5 3.5-2 5-5 2 2-5zM10 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
+                </svg>
+                <p className="max-w-prose text-text-dark-muted">
+                  Search for a place or use your location to see its air-quality
+                  forecast.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => searchRef.current?.focus()}
+                  className="min-h-11 rounded-md border border-text-dark px-4"
+                >
+                  Search for a place
+                </button>
+              </div>
             )}
           </div>
 
