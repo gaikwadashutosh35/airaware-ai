@@ -77,7 +77,7 @@ How will the decision be tested or reviewed?
 
 ## ADR-005: Host client and API as one Google Cloud Run service
 
-**Status:** Accepted (2026-11-17, project owner)
+**Status:** Superseded by ADR-006 (2026-11-19). Accepted 2026-11-17 by the project owner.
 
 **Context:** The original plan used Vercel for the client and Render for the API. That needs two deployments, a CORS allowlist, and Render's free tier spins down when idle, slowing the first request. The challenge is run with Google for Developers, and its rubric is expected to value Google services (unverified against an official Challenge 06 brief).
 
@@ -91,3 +91,36 @@ How will the decision be tested or reviewed?
 **Consequences:** One URL and same-origin requests (no CORS allowlist). Requires a Google Cloud project with billing enabled and the `gcloud` CLI for deployment. Option 3 was rejected because it would replace the specified RLS design.
 
 **Verification:** Production health check and full user journey on the Cloud Run URL (Phase 9); same-origin API calls from the deployed client.
+
+## ADR-006: Host on Netlify: CDN pages and one Function for the API
+
+**Status:** Accepted (2026-11-19, project owner). It supersedes ADR-005.
+
+**Context:**
+- Cloud Run needs a Google Cloud project with billing linked, and the owner wants no Google billing.
+- The owner has a Netlify account with credits.
+- The Express app already builds as one unit (`createApp`).
+
+**Options considered:**
+1. Netlify CDN for the pages, plus one Netlify Function wrapping the Express app (`serverless-http`).
+2. One Function serving the pages as well.
+3. A Render free web service running the Docker image.
+
+**Decision:** Option 1.
+- Option 2 makes every page view a function call, which costs credits and can wait for a cold start.
+- Option 3 sleeps after 15 minutes idle, so a first visit takes about a minute.
+
+**Consequences:**
+- **One origin:** everything stays on one address, so CORS is never needed.
+- **Code unchanged:** the API code and its tests stay the same. `server/src/netlify.ts` adds the wrapper.
+- **Header copies:** page headers live in `client/public/_headers`, and a test keeps them equal to helmet's.
+- **Rate-limit key:** rate limits key on Netlify's `x-nf-client-connection-ip`.
+- **Per-instance limits:** the rate limits and the Gemini day counter are per function instance, so they are weaker under parallel load (see `THREAT_MODEL.md`).
+- **Region:** functions run in Netlify's default US region, away from Supabase in Mumbai.
+- **Rubric:** the unofficial rubric's "deployed on Cloud Run" item is given up; Gemini remains the Google service.
+
+**Verification (2026-11-19):**
+- Health, pages and the live forecast all respond on https://airaware-ai.netlify.app.
+- The CSP on pages equals the API's.
+- A forged client-IP header is overwritten.
+- The full Playwright suite passes against the live site: 16 passed, 0 skipped.

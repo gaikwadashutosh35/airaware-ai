@@ -38,3 +38,17 @@
 
 ## Current values
 Do not hardcode assumed quotas or prices in code. Record verified plan limits and the date checked in a future release note.
+
+**Netlify hosting (credit-based plan, checked 2026-11-19; `DEPLOYMENT.md`).**
+
+| Item | Credits |
+|---|---|
+| Production deploy | 15 each |
+| Bandwidth | 20 per GB |
+| Web requests | 2 per 10 000 |
+| Function compute | 10 per GB-hour |
+
+- At a zero balance Netlify pauses the site.
+- Function limits: 60 s synchronous execution limit; 1024 MB default memory.
+- No Google Cloud billing is used.
+- **Supabase free tier:** the project pauses after 7 days without API activity, which the keep-alive workflow prevents.

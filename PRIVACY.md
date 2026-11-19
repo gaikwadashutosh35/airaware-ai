@@ -39,7 +39,7 @@ Do not ask for diagnoses. Avoid inferring a condition from preferences. Give use
 - **Not stored by the app:** coordinates, email, name and chat.
 - **Stored by Supabase Auth:** the sign-in session, including the IP address and browser user agent. It is deleted with the account. Supabase's own auth audit log and platform logs may also record the IP address, and those entries are not removed when the account is deleted.
 - **Who can read it:** through the app, only that browser's session; database row-level security and a server token check both enforce this. The project owner and Supabase, as the hosting provider, can also access the database.
-- **Retention:** kept until the person uses "Delete my saved data". That deletes the account, the session, the saved answers and the saved plans, but not Supabase's own logs. Clearing browser data loses access to the account but does not delete the rows. A cleanup of accounts unused for 30 days is a Phase 9 follow-up; until then such rows remain.
+- **Retention:** kept until the person uses "Delete my saved data". That deletes the account, the session, the saved answers and the saved plans, but not Supabase's own logs. Clearing browser data loses access to the account but does not delete the rows. A nightly job deletes anonymous accounts that have not been used for 30 days, together with their saved answers and plans.
 - **Logs:** server logs never contain tokens, user ids, household answers, labels or plan contents.
 
 ## 5. Logs and analytics

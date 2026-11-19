@@ -1,6 +1,6 @@
 # Phase 9 — Production deployment (design)
 
-Status: approved by the owner, 2026-11-19 ("Approve, start"). Plan: `docs/superpowers/plans/2026-11-19-phase9-deploy.md`. Owner choices:
+Status: approved by the owner, 2026-11-19 ("Approve, start"). **Hosting superseded** the same day by `2026-11-19-phase9-netlify-design.md` (Netlify, no Google billing). The keep-alive, cleanup and verification parts still apply. Plan: `docs/superpowers/plans/2026-11-19-phase9-deploy.md`. Owner choices:
 - deploy from this machine (build here, push to Artifact Registry, deploy to Cloud Run);
 - a new Google Cloud project, `airaware-ai`.
 

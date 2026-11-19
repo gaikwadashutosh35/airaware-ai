@@ -24,7 +24,7 @@
 | Air data | CPCB adapter only with verified supported access; Open-Meteo forecast adapter; demo adapter |
 | Tests | Vitest, Testing Library, Supertest, Playwright, axe-core |
 | Quality | oxlint (type-aware), Prettier, TypeScript, CodeQL, SonarQube Cloud |
-| Hosting | Google Cloud Run — one service serving the API and the built client (ADR-005) |
+| Hosting | Netlify — CDN for the built client, one Function running the Express API (ADR-006) |
 
 ## 3. Repository structure
 
@@ -176,8 +176,8 @@ Provider selection comes from validated server configuration. A fallback to demo
 
 ## 9. Deployment topology
 
-- Google Cloud Run: one container. Express serves `/api/v1/*` and the built client's static files from the same origin (ADR-005).
-- Secret Manager: server-side secrets injected into Cloud Run.
+- Netlify (ADR-006, `DEPLOYMENT.md`): the CDN serves the built client, and `/api/*` is rewritten to one Function that runs the Express app, all on one origin.
+- Netlify environment variables hold the server settings. A Gemini key, when added, is marked secret.
 - Supabase: Auth/Postgres.
 - External data APIs called from server.
 - AI model called from server.

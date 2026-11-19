@@ -193,4 +193,6 @@ Changes from §3:
 
 `profiles`, `saved_locations` and `plan_feedback` are not built (P1).
 
-Retention: rows are kept until the person deletes them ("Delete my saved data" or `DELETE /api/v1/account`). Supabase does not clean up anonymous users automatically; a cleanup of accounts unused for 30 days is a Phase 9 follow-up.
+Retention: rows are kept until the person deletes them ("Delete my saved data" or `DELETE /api/v1/account`). Supabase does not clean up anonymous users by itself. The `pg_cron` job `delete-idle-anonymous-users` (`supabase/migrations/20261119180000_cleanup_idle_anonymous.sql`) runs nightly at 21:30 UTC.
+- It deletes anonymous users whose user-row, session and refresh-token dates are all older than 30 days. Their rows go with them (`on delete cascade`).
+- Its two functions are `SECURITY DEFINER`, with `EXECUTE` revoked from `public`, `anon` and `authenticated`.

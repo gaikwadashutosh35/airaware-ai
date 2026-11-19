@@ -26,7 +26,7 @@ Urban Air Quality Assistant — personalized low-emission routines, indoor-air i
 
 ## Technology
 
-React, Vite, TypeScript, Tailwind CSS, Node.js, Express, Zod, Gemini provider adapter, Supabase PostgreSQL/Auth, Vitest, Playwright, Google Cloud Run.
+React, Vite, TypeScript, Tailwind CSS, Node.js, Express, Zod, Gemini provider adapter, Supabase PostgreSQL/Auth, Vitest, Playwright, Netlify (live at https://airaware-ai.netlify.app).
 
 ## Repository structure
 

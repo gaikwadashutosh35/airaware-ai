@@ -62,15 +62,20 @@
 Accepted in Phase 6 (saved data):
 - **Anonymous-account abuse.** Accounts need no email and there is no CAPTCHA, so a script could create many. Limits: Supabase allows 30 anonymous sign-ins per hour per IP, and the database caps each account at 1 preferences row (≤ 2 KB) and 20 plans (≤ 64 KB each). These limits also hold for direct writes.
 - **Direct writes to one's own rows.** A person can call Supabase's API with the publishable key and their own token, which is the same access the server uses on their behalf. They can then store a plan the server did not build. It stays within the limits above, RLS keeps it visible only to them, and React renders its text as text. Stopping this fully would need a server-only key, which the design rules out.
-- **Abandoned anonymous accounts** stay until cleaned up; the cleanup is a Phase 9 follow-up.
-- **Free project pausing** after 7 days of low activity makes saving unavailable (503) until the project is restored.
+- **Abandoned anonymous accounts** stay for up to 30 days after last use, then the nightly `pg_cron` job deletes them (Phase 9).
+- **Free project pausing** after 7 days of low activity would make saving unavailable (503). The keep-alive workflow reads the API every 3 days and emails the owner if the project doesn't answer.
 
 Accepted in Phase 8 (audit, 2026-11-19). These are hardening notes, not demonstrated vulnerabilities:
-- **Gemini spend per instance.** The cap is 200 Gemini calls per UTC day per server instance, so total spend is that times Cloud Run's max-instances. Phase 9 sets max-instances, and the Gemini project's own quota or budget cap stays the outer limit. One client that keeps changing its answers can use up the day's 200 calls in about 20 minutes, within the 10-per-minute limit. Everyone then gets rules-only plans, clearly labelled, until 00:00 UTC (05:30 IST). The cap trades availability of AI personalisation for a bounded bill.
+- **Gemini spend per instance.** The cap is 200 Gemini calls per UTC day per function instance. Netlify can run several instances, and each new one starts its own count, so this cap alone does not bound spend. The real limit is the Gemini project's own quota, which the owner lowers before adding the key (`DEPLOYMENT.md`). One client that keeps changing its answers can use up the day's 200 calls in about 20 minutes, within the 10-per-minute limit. Everyone then gets rules-only plans, clearly labelled, until 00:00 UTC (05:30 IST). The cap trades availability of AI personalisation for a bounded bill.
 - **Stored plans are not re-validated on read.** A person's own direct write can break only that person's own view (see direct writes above).
 - **Direct inserts can choose `id` and `created_at`** on their own plans. RLS still binds the row to them.
 - **Tokens stay valid until they expire,** even after sign-out or deletion, because the signature is checked locally. The foreign key to `auth.users` means a deleted user's token reaches no rows. Keep that foreign key on every future user-owned table.
-- **Fixed proxy trust.** Exactly one proxy hop is trusted in production (Cloud Run). Another ingress topology would change the rate-limit key.
+- **Rate-limit key and scope (Phase 9, Netlify).**
+  - On Netlify the limits key on `x-nf-client-connection-ip`, which Netlify overwrites. A forged value was checked live and ignored.
+  - `X-Forwarded-For` is ignored there.
+  - The counts live in each function instance, so parallel instances each allow their own 60 and 10 per minute.
+  - Another host would need its own client-IP source.
+- **Credit exhaustion.** Heavy traffic uses Netlify credits. At zero balance Netlify pauses the whole site until credits are added. The owner controls auto-recharge.
 - **Other upstream calls:**
   - A token with an unknown key id costs two calls to Supabase.
   - The forecast cache has no single-flight, so identical requests at the same moment each call Open-Meteo.

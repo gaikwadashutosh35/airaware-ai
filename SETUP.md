@@ -120,7 +120,7 @@ npm run e2e
 ```
 They need the network and both `.env` files; see `TESTING_QA.md` §7.
 
-### Production image (the same one Cloud Run runs)
+### Production image (local production run; the live site runs on Netlify, see `DEPLOYMENT.md`)
 
 ```bash
 docker build -t airaware:local .
@@ -130,7 +130,7 @@ docker build -t airaware:local .
 docker run --rm -p 8080:8080 airaware:local
 ```
 
-Open `http://localhost:8080`. A single Express process serves `/api/v1` and the built client. `NODE_ENV=production` also makes it trust exactly one proxy hop (Cloud Run's front end) for the rate limit.
+Open `http://localhost:8080`. A single Express process serves `/api/v1` and the built client. `NODE_ENV=production` also makes it trust exactly one proxy hop for the rate limit. On Netlify the limit uses Netlify's client-IP header instead.
 
 ## 9. Git discipline and 10 MB rule
 

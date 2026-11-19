@@ -40,8 +40,16 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Landing chapters 3–6 ("A plan for your day", "Cleaner air at home", "Small swaps, honestly", "See why, every time"). Each shows a real card from our rules, drawn by the app's own card and labelled "Example from our rules". A server test keeps the card text identical to the rules. No new screenshot.
 
 - Phase 8 audit: public GitHub repo; CI adds gitleaks (full history) and a SonarQube Cloud scan with coverage; CodeQL default setup; real-browser axe on the landing and privacy pages.
+- Phase 9 deployment: live at https://airaware-ai.netlify.app.
+  - Netlify serves the client from its CDN, and one Netlify Function runs the Express API (`DEPLOYMENT.md`).
+  - Page security headers match the API's, and a test enforces it.
+  - A Supabase keep-alive workflow runs every 3 days.
+  - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
+  - The Playwright suite runs against any address with `E2E_BASE_URL`.
+
 ### Changed
-- Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.
+- Hosting decision: Netlify (ADR-006), replacing one Google Cloud Run service (ADR-005), which had replaced Vercel + Render.
+- On Netlify, rate limits key on Netlify's client-IP header, and `X-Forwarded-For` is ignored.
 
 ### Fixed
 - Phase 8: Gemini calls are capped at 200 per day per server and reused for identical requests; the Gemini key never follows a redirect; place labels reject control characters; the CPCB standards link uses https; a saved snapshot says "that day"; deleting one saved plan keeps keyboard focus and says so; a slow load no longer overwrites edited answers; the chart no longer assumes a unit.

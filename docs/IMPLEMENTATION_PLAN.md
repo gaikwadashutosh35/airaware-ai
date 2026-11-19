@@ -448,6 +448,39 @@ Four minors are deferred:
 
 Option B: Dockerfile (multi-stage, client built into server static dir) → Cloud Run; secrets in Secret Manager; Supabase auth redirect URLs; verify real provider responses and timestamps in production; fresh-session and two-user checks; write `DEPLOYMENT.md`.
 
+**As built (2026-11-19).**
+
+*Hosting changed.* The owner chose Netlify to avoid Google billing (ADR-006 supersedes ADR-005). The site is live at https://airaware-ai.netlify.app.
+- **Serving:** Netlify's CDN serves the client. `/api/*` goes to one Function: `server/src/netlify.ts` wraps `createApp` with `serverless-http`.
+- **Shared settings:** `appOptionsFromEnv()` gives the local server and the Function the same wiring.
+- **Rate limits** key on `x-nf-client-connection-ip`. A forged value was overwritten in a live check.
+- **Page headers:** `client/public/_headers` matches helmet, and a test enforces it.
+- **Deploys:** Netlify builds from GitHub `main`.
+
+*Verified live:*
+- health, `/`, `/app` and `/privacy` return 200;
+- the Pune forecast is `model_forecast` with a fresh `retrievedAt`;
+- the page and API CSPs are equal;
+- the bundle contains the Supabase host;
+- `E2E_BASE_URL=… npm run e2e` gives 16 passed, 0 skipped;
+- Supabase has 0 users afterwards.
+
+*Also done:*
+- **Keep-alive:** the workflow passed (HTTP 401 means up).
+- **Cleanup:** `pg_cron` job `delete-idle-anonymous-users` at 21:30 UTC. Checks: 0 idle users, `anon` and `authenticated` cannot execute the functions, and the REST rpc returns 401.
+
+*Supabase auth redirect URLs* are not needed: anonymous sign-in has no redirect.
+
+*Google Cloud:* a project `airaware-ai-7341` was created before the switch. Nothing was deployed or pushed there; deleting it is the owner's call.
+
+*Tests now:* server 213 passed + 5 skipped; client 179/179.
+
+**Plan files:**
+- `docs/superpowers/specs/2026-11-19-phase9-deploy-design.md` (Cloud Run; hosting superseded);
+- `docs/superpowers/specs/2026-11-19-phase9-netlify-design.md`;
+- `docs/superpowers/plans/2026-11-19-phase9-deploy.md`;
+- `docs/superpowers/plans/2026-11-19-phase9-netlify.md`.
+
 ### Phase 10 — Submission audit (≈30 min + narrative)
 
 `git branch -a` shows only `main`; `git count-objects -vH` <10 MB; history secret scan; README (vertical, approach, logic, operation, assumptions, verified live URL); final test run with real output; draft LinkedIn/blog narrative for you to post; **you** submit — attempt 1 only after this checklist passes.
