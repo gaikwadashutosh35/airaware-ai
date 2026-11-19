@@ -161,9 +161,10 @@ function Dashboard() {
                   <ErrorState
                     error={forecast.state.error}
                     onRetry={forecast.retry}
+                    title="We couldn't load the forecast"
                   />
                 ) : (
-                  <Loading label="Loading forecast" />
+                  <Loading label="Loading forecast" band />
                 )}
                 <ObservationPanel note={cpcb?.limitations[0]} />
               </>
