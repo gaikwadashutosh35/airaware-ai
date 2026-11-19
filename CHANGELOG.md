@@ -46,6 +46,11 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Readout states (Phase C of the Stitch redesign):
+  - the forecast loads behind a readout-shaped skeleton (still under reduced motion); the plan keeps a plain one;
+  - errors show as a titled card, "We couldn't load the forecast", with the same message and "Try again";
+  - an old forecast shows a "Not current: …" banner before the figure;
+  - with no place chosen, a card offers "Search for a place", which focuses the search.
 - Landing refresh (Phase B of the Stitch redesign):
   - the hero shows a fresh, dated capture of the new readout (skyline, weather line, PM2.5 and the 24-hour check);
   - the chapters and the four pipeline steps get decorative numbers "01"…"04" (hidden from screen readers), and the steps become cards.
