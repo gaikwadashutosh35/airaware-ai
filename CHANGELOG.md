@@ -37,6 +37,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Other pages and panels:** a "Sources and limitations" panel, and a `/privacy` page linked from every footer.
   - **Stale data:** a running clock marks forecasts and plans older than an hour, even in a tab left open.
   - **Tests:** `npm run e2e` (Playwright, Chromium, desktop and phone) runs the full journey against the real services, plus the failure states, with axe in a real browser.
+- Landing chapters 3–6 ("A plan for your day", "Cleaner air at home", "Small swaps, honestly", "See why, every time"). Each shows a real card from our rules, drawn by the app's own card and labelled "Example from our rules". A server test keeps the card text identical to the rules. No new screenshot.
 
 ### Changed
 - Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.

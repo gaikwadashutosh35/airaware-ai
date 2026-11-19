@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import Landing from './Landing.tsx';
+import { LANDING_EXAMPLES } from './landingExamples.ts';
 
 const ACTION = "Check your area's air quality";
 const HERO_ALT =
@@ -16,6 +17,9 @@ const REAL_FIGURES = [
   '12 hours',
   '1 km',
   '10 minutes',
+  // From the real rule cards and their source's date.
+  '24-hour',
+  '18 November 2009',
 ];
 
 describe('Landing', () => {
@@ -32,6 +36,63 @@ describe('Landing', () => {
     const actions = screen.getAllByRole('link', { name: ACTION });
     expect(actions).toHaveLength(1);
     for (const link of actions) expect(link.getAttribute('href')).toBe('/app');
+  });
+
+  it('tells the plan story in four chapters, in order', () => {
+    render(<Landing />);
+
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+    ).toEqual([
+      'Where every number comes from',
+      'A plan for your day',
+      'Cleaner air at home',
+      'Small swaps, honestly',
+      'See why, every time',
+      'Your city, the next two days',
+    ]);
+  });
+
+  it('shows a real rule card in each chapter, labelled as an example', () => {
+    render(<Landing />);
+
+    for (const example of LANDING_EXAMPLES) {
+      const chapter = screen.getByRole('region', { name: example.heading });
+      expect(within(chapter).getByText(example.text)).toBeDefined();
+      expect(
+        within(chapter).getByRole('figure').querySelector('figcaption')
+          ?.textContent,
+      ).toBe(example.caption);
+      expect(
+        within(chapter).getByRole('heading', {
+          level: 3,
+          name: example.candidate.title,
+        }),
+      ).toBeDefined();
+    }
+  });
+
+  it('opens "Why?" on the see-why example, with its sources', () => {
+    render(<Landing />);
+
+    const chapter = screen.getByRole('region', { name: 'See why, every time' });
+    const why = chapter.querySelector('details');
+    expect(why?.open).toBe(true);
+    const example = LANDING_EXAMPLES[3];
+    expect(within(chapter).getByText(example.candidate.reason)).toBeDefined();
+    for (const name of [
+      'Open-Meteo Air Quality API',
+      'National Ambient Air Quality Standards (CPCB, 18 November 2009)',
+    ]) {
+      expect(within(chapter).getByRole('link', { name })).toBeDefined();
+    }
+    // The other examples start closed.
+    for (const heading of LANDING_EXAMPLES.slice(0, 3).map((e) => e.heading)) {
+      expect(
+        screen.getByRole('region', { name: heading }).querySelector('details')
+          ?.open,
+      ).toBe(false);
+    }
   });
 
   it('puts the place search in the hero', () => {

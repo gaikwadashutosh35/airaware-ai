@@ -76,6 +76,12 @@
     outline-color: var(--color-secondary);
   }
 
+  /* A light panel on a dark page (the landing's example cards) takes the
+     light-theme ring again. */
+  .on-dark .on-light :focus-visible {
+    outline-color: var(--color-focus);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

@@ -1,7 +1,14 @@
+import { useId } from 'react';
 import dashboardShot from '../assets/dashboard.webp';
 import { Attribution } from '../components/Attribution.tsx';
+import { PlanCard } from '../features/daily-plan/PlanCard.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import { placeToSearch, type Place } from '../features/location/place.ts';
+import {
+  LANDING_EXAMPLES,
+  LANDING_SOURCES,
+  type LandingExample,
+} from './landingExamples.ts';
 
 // The hero's search opens the dashboard for the chosen place.
 function openDashboard(place: Place) {
@@ -39,6 +46,52 @@ function ActionLink() {
     >
       {ACTION}
     </a>
+  );
+}
+
+// One story chapter: a short claim beside the real card that backs it,
+// drawn by the app's own PlanCard on a light panel, labelled as an example.
+function Chapter({
+  example,
+  flip,
+}: {
+  example: LandingExample;
+  flip: boolean;
+}) {
+  const headingId = useId();
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:py-24"
+    >
+      <div className={`flex flex-col gap-4 ${flip ? 'lg:order-2' : ''}`}>
+        <h2
+          id={headingId}
+          className="text-4xl font-semibold tracking-tight sm:text-5xl"
+        >
+          {example.heading}
+        </h2>
+        <p className="max-w-[38ch] text-xl text-text-muted">{example.text}</p>
+      </div>
+      <figure className="flex min-w-0 flex-col gap-3">
+        <div className="on-light rounded-xl bg-surface-light p-5 text-text-dark sm:p-6 [&>article]:border-t-0 [&>article]:pt-0">
+          <PlanCard
+            item={{
+              candidate: example.candidate,
+              forYou: null,
+              period: null,
+              compact: false,
+            }}
+            sources={LANDING_SOURCES}
+            level={3}
+            openWhy={example.openWhy}
+          />
+        </div>
+        <figcaption className="text-sm text-text-muted">
+          {example.caption}
+        </figcaption>
+      </figure>
+    </section>
   );
 }
 
@@ -112,6 +165,14 @@ function Landing() {
             ))}
           </ol>
         </section>
+
+        {LANDING_EXAMPLES.map((example, i) => (
+          <Chapter
+            key={example.candidate.id}
+            example={example}
+            flip={i % 2 === 1}
+          />
+        ))}
 
         <section className="bg-surface">
           <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-24 sm:px-8 lg:py-32">

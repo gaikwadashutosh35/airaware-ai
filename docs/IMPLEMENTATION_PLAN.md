@@ -370,8 +370,11 @@ Estimates = my build time per phase, excluding your review and account setup.
 - **Stress pass (`break-ui`):** tested with every rule candidate, a 120-character place label, empty topics, missing averages and 20 saved plans, at 320 px and 1280 px.
   - Fixed: cards inside the plan panel became flat ruled cards, and plan text got a prose measure at wide widths.
   - Held up: no horizontal scroll at 320 px.
+- **Landing chapters 3–6 (follow-up, 2026-11-19):** done.
+  - Each chapter shows a real rule card through `PlanCard`, captioned "Example from our rules", with no screenshot.
+  - `server/src/services/recommendations/landingExamples.test.ts` fails if the card text drifts from the rules.
+  - Plan files: `docs/superpowers/specs/2026-11-19-landing-chapters-design.md`, `docs/superpowers/plans/2026-11-19-landing-chapters.md`.
 - **Deferred:**
-  - Landing-page chapters 3–6, as a short follow-up straight after Phase 7.
   - Playwright in CI, which Phase 8 decides.
   - A server-side length cap on Gemini's summary and "For you" text. The UI wraps any length.
 - **Plan files:** `docs/superpowers/specs/2026-11-19-phase7-plan-screen-design.md`, `docs/superpowers/plans/2026-11-19-phase7-plan-screen.md`.
