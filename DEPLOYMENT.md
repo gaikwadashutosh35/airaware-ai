@@ -56,7 +56,7 @@ Netlify → Deploys → pick an earlier published deploy → **Publish deploy**.
 ## Supabase keep-alive
 
 - **What it does:** `.github/workflows/keep-alive.yml` runs every 3 days (03:17 UTC) and on demand. It reads `daily_plans` through the REST API with the publishable key.
-- **What passes:** a 200, 401 or 403 means the project is up; anything else fails the run, and GitHub emails the owner.
+- **What passes:** a 200, or a 401/403 carrying Postgres's `42501` code, means the project is up. Anything else fails the run, and GitHub emails the owner. That includes a gateway "Invalid API key".
 - **Settings:** it uses the repository variables `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, which are public.
 
 ## 30-day cleanup

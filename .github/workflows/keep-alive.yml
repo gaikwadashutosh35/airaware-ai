@@ -28,11 +28,18 @@ jobs:
           code=$(curl -sS -o body.json -w '%{http_code}' --max-time 30 \
             "$URL/rest/v1/daily_plans?select=id&limit=1" -H "apikey: $KEY")
           echo "HTTP $code"
-          # The anon role has no grant on the table, so PostgREST answers 401
-          # or 403: the API (and Postgres behind it) is up. Anything else,
-          # including a paused project, fails the run.
+          # The anon role has no grant on the table, so Postgres itself
+          # answers through PostgREST: 401/403 with code 42501. A gateway 401
+          # (for example "Invalid API key") never reached Postgres and fails,
+          # as does anything else, including a paused project.
           case "$code" in
-            200 | 401 | 403) ;;
+            200) ;;
+            401 | 403)
+              if ! grep -q '"42501"' body.json; then
+                cat body.json
+                exit 1
+              fi
+              ;;
             *)
               cat body.json
               exit 1
