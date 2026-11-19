@@ -50,6 +50,8 @@ Use aggregation or coarse location where analytics truly require it.
 ## 6. Third-party services
 Document each provider, data sent, purpose, retention/terms, and configuration. Do not send unnecessary household context to an AI provider. Only send the minimum validated context needed to generate recommendations.
 
+- **Plan writers (Gemini, then Claude).** Each gets the same minimal context: the air level, the PM2.5/PM10 checks, and the rules' candidate suggestions. It gets no place name, no coordinates, no time window and no raw household answers. Gemini (Google) is asked first. Claude (Anthropic) is asked only when Gemini gives no accepted answer, and only if the owner has added an Anthropic key. Neither answer is logged.
+
 ## 7. User controls
 The product should provide:
 - Location permission status.

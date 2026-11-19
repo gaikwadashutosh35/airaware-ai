@@ -46,6 +46,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Claude as backup plan writer (ADR-007): when Gemini gives no accepted answer, Claude (`claude-haiku-5-5`) is asked once. It uses the same input and the same checks, and has its own daily cap. The plan names the model that wrote it.
 
 ### Changed
 - Hosting decision: Netlify (ADR-006), replacing one Google Cloud Run service (ADR-005), which had replaced Vercel + Render.

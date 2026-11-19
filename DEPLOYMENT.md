@@ -8,7 +8,8 @@ Live site: **https://airaware-ai.netlify.app** (Netlify project `airaware-ai`, o
 - **API:** `/api/*` is rewritten to one Netlify Function, `netlify/functions/api.ts`, which re-exports `server/src/netlify.ts`. It is the same Express app (`createApp`) as the local server, wrapped by `serverless-http`.
 - **Security headers:** the API gets them from helmet. The pages get the same headers from `client/public/_headers`, and `server/src/pageHeaders.test.ts` fails if the two ever differ. On pages, Netlify's own HSTS header (which adds `preload`) replaces ours.
 - **Rate limits** key on `x-nf-client-connection-ip`, which Netlify sets. A forged value is overwritten (checked live, 2026-11-19).
-- **Data:** Supabase (Mumbai) for anonymous sign-in and saved data; Open-Meteo for the forecast. Gemini is wired but off until its key is added.
+- **Data:** Supabase (Mumbai) for anonymous sign-in and saved data; Open-Meteo for the forecast.
+- **AI plan writers:** Gemini first. Claude is the backup, asked only when Gemini gives no accepted answer, and only once its key is added. Each answer passes the same checks; otherwise the plan is rules-only.
 
 ## Deploys
 
@@ -26,8 +27,11 @@ Live site: **https://airaware-ai.netlify.app** (Netlify project `airaware-ai`, o
 |---|---|---|
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | the function | Public values. |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | the client build | Public, and built into the bundle. |
+| `GEMINI_API_KEY` | the function | **Secret**, Functions only, production context. |
+| `ANTHROPIC_API_KEY` | the function | **Secret**, Functions only, production context. Optional: the Claude backup. |
+| `GEMINI_MODEL`, `CLAUDE_MODEL` | the function | Optional model ids (defaults `gemini-3.8-flash`, `claude-haiku-5-5`). |
 
-- **Don't mark these four "secret".** Netlify scans build output for secret values and fails the build, and the bundle contains them by design.
+- **Don't mark the four Supabase values "secret".** Netlify scans build output for secret values and fails the build, and the bundle contains them by design.
 - **Never add `NODE_ENV`.** `npm` would skip the client's build tools.
 - **Never add a Supabase secret key** (`sb_secret_…`).
 
@@ -40,6 +44,14 @@ Netlify → Deploys → pick an earlier published deploy → **Publish deploy**.
 1. **Lower the quota.** In the Google Cloud console for the Gemini project, lower the Generative Language API quota "requests per day". The in-process cap (200 calls per UTC day per function instance) is only a second line, because Netlify can run several instances and each starts its own count.
 2. **Add the key.** Add `GEMINI_API_KEY` in Netlify's environment variables, marked **secret**, scoped to Functions. Optionally add `GEMINI_MODEL`.
 3. **Redeploy.** Use Deploys → Trigger deploy. After that, plans say "Made with AI" when Gemini answers.
+
+## Claude backup (owner only)
+
+1. **Set a spend limit.** In the Anthropic Console, set a monthly spend limit for the workspace that owns the key. The in-process cap (200 Claude calls per UTC day per function instance) is only a second line.
+2. **Add the key.** Add `ANTHROPIC_API_KEY` in Netlify's environment variables, marked **secret**, scoped to Functions. Optionally add `CLAUDE_MODEL`.
+3. **Redeploy.** Use Deploys → Trigger deploy. The function log then says "Claude backup: configured (claude-haiku-5-5)". While Gemini is failing, plans say "Made with AI (claude-haiku-5-5, …)".
+
+To turn it off, delete the variable and redeploy, or revoke the key in the Console.
 
 ## Credits and limits (checked 2026-11-19)
 

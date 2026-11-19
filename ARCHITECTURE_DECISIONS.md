@@ -124,3 +124,23 @@ How will the decision be tested or reviewed?
 - The CSP on pages equals the API's.
 - A forged client-IP header is overwritten.
 - The full Playwright suite passes against the live site: 16 passed, 0 skipped.
+
+## ADR-007: Claude as backup plan writer
+
+**Status:** Accepted (2026-11-19, project owner). Design: `docs/superpowers/specs/2026-11-19-claude-backup-design.md`.
+
+**Context:** Gemini was switched on in production on 2026-11-19, but every Gemini flash model the key can use was overloaded that day (503 "high demand", or no answer within 30 s). So every live plan was rules-only.
+
+**Options considered:**
+1. Ask Claude only when Gemini gives no accepted answer.
+2. Replace Gemini with Claude. This drops the app's only Google service.
+3. Ask both at once and take the first accepted answer. This pays for two calls on every plan.
+
+**Decision:** Option 1, with Claude Haiku 5.5 (`claude-haiku-5-5`), the fastest and cheapest Claude model. The model can be changed with `CLAUDE_MODEL`.
+
+**Consequences:**
+- A new runtime dependency, `@anthropic-ai/sdk` (pinned to `1.8.0`).
+- Claude gets the same minimal context and passes the same checks as Gemini.
+- Each writer has its own daily cap. The real bound on Claude spend is the Anthropic Console spend limit.
+- In the worst case a plan takes about 20 s: Gemini times out after 10 s, then Claude gets 10 s.
+- The SDK sends the key as a bearer token, and the client pins `https://api.anthropic.com`.
