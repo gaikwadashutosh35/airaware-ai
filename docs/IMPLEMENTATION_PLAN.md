@@ -467,7 +467,7 @@ Option B: Dockerfile (multi-stage, client built into server static dir) → Clou
 
 *Also done:*
 - **Keep-alive:** the workflow passed (HTTP 401 means up).
-- **Cleanup:** `pg_cron` job `delete-idle-anonymous-users` at 21:30 UTC. Checks: 0 idle users, `anon` and `authenticated` cannot execute the functions, and the REST rpc returns 401.
+- **Cleanup:** `pg_cron` job `delete-idle-anonymous-users` at 21:30 UTC. Checks: 0 idle users, `anon` and `authenticated` cannot execute the functions, and the REST rpc returns 401. Live proof (2026-11-19): a test user idle for 67 minutes was selected with a 30-minute cutoff; reopening the app refreshed its token, which moved its user, session and refresh-token dates, and it was no longer selected. It was then deleted through the app (0 users).
 
 *Supabase auth redirect URLs* are not needed: anonymous sign-in has no redirect.
 
