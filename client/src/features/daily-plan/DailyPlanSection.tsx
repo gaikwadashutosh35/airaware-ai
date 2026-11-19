@@ -200,7 +200,7 @@ export function DailyPlanSection({
               Back to today
             </button>
           </div>
-          <PlanView plan={opened.plan} />
+          <PlanView plan={opened.plan} snapshot />
         </>
       ) : (
         <>

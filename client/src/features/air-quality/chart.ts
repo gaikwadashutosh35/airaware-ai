@@ -73,7 +73,7 @@ export function summarize(
   const missing = n - present.length;
   const span = `${n} hour${n === 1 ? '' : 's'}`;
   return (
-    `${short} ranges from ${min} to ${max} ${unit} over the next ${span}` +
+    `${short} ranges from ${min} to ${max}${unit ? ` ${unit}` : ''} over the next ${span}` +
     (peak ? `, highest around ${formatDateTime(peak.time)}.` : '.') +
     (missing ? ` No value for ${missing} of ${span}.` : '')
   );

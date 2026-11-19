@@ -81,12 +81,13 @@ export function madeByLine(
     : 'Made by our rules. AI personalisation is unavailable right now.';
 }
 
+// A saved plan speaks of the day it was made for, never "today".
 export function basedOn(
   evidence: RecommendationCandidate['evidenceType'],
+  snapshot = false,
 ): string {
-  return evidence === 'data_driven_rule'
-    ? "today's forecast check"
-    : 'general guidance';
+  if (evidence !== 'data_driven_rule') return 'general guidance';
+  return snapshot ? "that day's forecast check" : "today's forecast check";
 }
 
 const AIR_INPUTS: Record<string, string> = {

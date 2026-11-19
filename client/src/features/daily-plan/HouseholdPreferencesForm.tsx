@@ -42,6 +42,8 @@ export function HouseholdPreferencesForm({
 } = {}) {
   const [answers, setAnswersState] = useState<Answers>({});
   const onChangeRef = useRef(onChange);
+  // Set once the person changes an answer: a slow load must not undo it.
+  const touched = useRef(false);
   useEffect(() => {
     onChangeRef.current = onChange;
   });
@@ -67,7 +69,7 @@ export function HouseholdPreferencesForm({
         token ? getPreferences(token, controller.signal) : null,
       )
       .then((saved) => {
-        if (saved) setAnswers(toAnswers(saved.context));
+        if (saved && !touched.current) setAnswers(toAnswers(saved.context));
       })
       .catch(() => {
         if (!controller.signal.aborted) setStatus(LOAD_FAILED);
@@ -142,12 +144,13 @@ export function HouseholdPreferencesForm({
                   <select
                     id={id}
                     value={answers[fieldId(field)] ?? ''}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      touched.current = true;
                       setAnswers({
                         ...answers,
                         [fieldId(field)]: event.target.value,
-                      })
-                    }
+                      });
+                    }}
                     className="min-h-11 max-w-sm rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
                   >
                     <option value="">Not answered</option>

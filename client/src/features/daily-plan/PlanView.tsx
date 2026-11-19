@@ -7,7 +7,8 @@ import { checkText, groupPlan, madeByLine } from './planDisplay.ts';
 const MODEL_LINE =
   'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB AQI.';
 const NO_AIR = 'Air information is unavailable for this plan.';
-const EMPTY_TOPIC = 'No suggestions in this area for your answers today.';
+const emptyTopic = (day: string) =>
+  `No suggestions in this area for your answers ${day}.`;
 
 function Part({ title, children }: { title: string; children: ReactNode }) {
   const id = useId();
@@ -23,7 +24,14 @@ function Part({ title, children }: { title: string; children: ReactNode }) {
 
 // A daily plan as the server built it: the air notice always first, then
 // the air check, "Your day" (AI plans only) and the three topics.
-export function PlanView({ plan }: { plan: DailyPlan }) {
+export function PlanView({
+  plan,
+  snapshot = false,
+}: {
+  plan: DailyPlan;
+  // A saved plan: its labels say "that day", never "today".
+  snapshot?: boolean;
+}) {
   const { yourDay, topics } = groupPlan(plan);
   const { air, forecast } = plan;
 
@@ -46,6 +54,7 @@ export function PlanView({ plan }: { plan: DailyPlan }) {
               item={{ candidate, forYou: null, period: null, compact: false }}
               sources={plan.sources}
               level={4}
+              snapshot={snapshot}
               notice
             />
           ))}
@@ -87,6 +96,7 @@ export function PlanView({ plan }: { plan: DailyPlan }) {
                   item={item}
                   sources={plan.sources}
                   level={5}
+                  snapshot={snapshot}
                 />
               ))}
             </div>
@@ -103,10 +113,13 @@ export function PlanView({ plan }: { plan: DailyPlan }) {
                 item={item}
                 sources={plan.sources}
                 level={4}
+                snapshot={snapshot}
               />
             ))
           ) : (
-            <p className="text-sm">{EMPTY_TOPIC}</p>
+            <p className="text-sm">
+              {emptyTopic(snapshot ? 'that day' : 'today')}
+            </p>
           )}
         </Part>
       ))}

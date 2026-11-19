@@ -41,9 +41,13 @@ async function deleteLeftoverAccount(page: Page): Promise<void> {
     })
     .catch(() => null);
   if (token) {
-    await page.request.delete('/api/v1/account', {
+    const res = await page.request.delete('/api/v1/account', {
       headers: { Authorization: `Bearer ${token}` },
     });
+    // A failed cleanup leaves an account behind: report it, never silently.
+    expect
+      .soft(res.ok(), `cleanup DELETE /api/v1/account: HTTP ${res.status()}`)
+      .toBe(true);
   }
 }
 

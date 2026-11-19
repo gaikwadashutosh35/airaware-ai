@@ -192,6 +192,30 @@ describe('SavedPlansList', () => {
     expect(del?.[0]).toBe('/api/v1/plans/p-new');
   });
 
+  // Phase 8 review: say it worked, take the row away at once, and keep
+  // keyboard focus in the list.
+  it('confirms a single delete and keeps focus in the list', async () => {
+    let listed = [older, newer];
+    routeFetch((method, path) => {
+      if (method === 'DELETE') {
+        listed = [older];
+        return new Response(null, { status: 204 });
+      }
+      return ok(path === '/api/v1/plans' ? listed : null);
+    });
+    renderList();
+    await screen.findByRole('heading', { name: 'Saved plans' });
+
+    fireEvent.click(within(rows()[0]).getByRole('button', { name: /^Delete/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete plan' }));
+
+    expect(await screen.findByText('Saved plan deleted.')).toBeDefined();
+    expect(rows()).toHaveLength(1);
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Saved plans' }),
+    );
+  });
+
   it('keeps the row when a delete fails', async () => {
     routeFetch((method) =>
       method === 'DELETE' ? failure(503, 'SAVE_UNAVAILABLE') : ok([newer]),

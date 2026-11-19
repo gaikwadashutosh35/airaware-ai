@@ -11,6 +11,7 @@ const EMPTY = 'No saved plans yet.';
 const LOAD_FAILED = "Your saved plans couldn't be loaded right now.";
 const OPEN_FAILED = "This saved plan couldn't be opened right now.";
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
+const DELETED = 'Saved plan deleted.';
 
 type State =
   | { kind: 'hidden' }
@@ -45,6 +46,7 @@ export function SavedPlansList({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const headingId = useId();
 
   useEffect(() => {
@@ -93,6 +95,15 @@ export function SavedPlansList({
     try {
       await deletePlan(await token(), id);
       setConfirming(null);
+      // The row goes at once, and focus stays in the list instead of
+      // falling to the page when its button disappears.
+      setState((current) =>
+        current.kind === 'ready'
+          ? { kind: 'ready', plans: current.plans.filter((p) => p.id !== id) }
+          : current,
+      );
+      setMessage(DELETED);
+      headingRef.current?.focus();
       onDeleted(id);
       setReloads((n) => n + 1);
     } catch {
@@ -109,7 +120,12 @@ export function SavedPlansList({
       aria-labelledby={headingId}
       className="flex flex-col gap-4 rounded-lg border border-rule p-5 sm:p-6"
     >
-      <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
+      <h2
+        id={headingId}
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-2xl font-semibold tracking-tight"
+      >
         Saved plans
       </h2>
       {state.kind === 'error' ? (

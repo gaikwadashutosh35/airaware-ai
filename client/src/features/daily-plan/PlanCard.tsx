@@ -11,6 +11,7 @@ export function PlanCard({
   level,
   notice = false,
   openWhy = false,
+  snapshot = false,
 }: {
   item: PlanItem;
   sources: DailyPlan['sources'];
@@ -18,6 +19,8 @@ export function PlanCard({
   notice?: boolean;
   // Start with "Why?" open (the landing page's see-why example).
   openWhy?: boolean;
+  // A saved plan: "that day", never "today".
+  snapshot?: boolean;
 }) {
   const { candidate, forYou, period, compact } = item;
   const Heading = (['h3', 'h4', 'h5'] as const)[level - 3];
@@ -35,7 +38,9 @@ export function PlanCard({
       ) : (
         <>
           {candidate.priority === 'high' && (
-            <p className="text-sm font-semibold">Important today</p>
+            <p className="text-sm font-semibold">
+              {snapshot ? 'Important that day' : 'Important today'}
+            </p>
           )}
           <p>{candidate.text}</p>
           {forYou && (
@@ -58,7 +63,7 @@ export function PlanCard({
               </div>
               <div>
                 <dt className="font-medium">Based on</dt>
-                <dd>{basedOn(candidate.evidenceType)}</dd>
+                <dd>{basedOn(candidate.evidenceType, snapshot)}</dd>
               </div>
               {candidate.inputsUsed.length > 0 && (
                 <div>

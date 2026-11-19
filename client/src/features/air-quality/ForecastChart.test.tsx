@@ -65,6 +65,33 @@ describe('ForecastChart', () => {
     );
   });
 
+  // Phase 8 review: no empty axes for an empty forecast, and no unit the
+  // provider never sent.
+  it('draws nothing when the forecast has no hours', () => {
+    const { container } = render(
+      <ForecastChart
+        series={{ ...forecastFixture, hours: [] }}
+        loadedAt={loadedAt}
+      />,
+    );
+
+    expect(container.textContent).toBe('');
+  });
+
+  it('never assumes a unit the provider did not send', () => {
+    const { container } = render(
+      <ForecastChart
+        series={{ ...forecastFixture, units: {} }}
+        loadedAt={loadedAt}
+      />,
+    );
+
+    expect(container.textContent).not.toContain('μg/m³');
+    expect(
+      screen.getByText(/^PM2\.5 ranges from 43\.1 to 48 over the next 3 hours/),
+    ).toBeDefined();
+  });
+
   it('passes axe', async () => {
     const { container } = render(
       <ForecastChart series={forecastFixture} loadedAt={loadedAt} />,

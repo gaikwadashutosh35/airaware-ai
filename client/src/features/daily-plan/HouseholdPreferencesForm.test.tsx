@@ -184,6 +184,40 @@ describe('HouseholdPreferencesForm', () => {
     expect(screen.queryByText('Deleted. Nothing is saved now.')).toBeNull();
   });
 
+  // Phase 6 deferred #9 / Phase 8 review: a slow load never overwrites
+  // answers the person already changed.
+  it('keeps answers changed before the saved ones arrive', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    let reply: (response: Response) => void = () => {};
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          reply = resolve;
+        }),
+    );
+    render(<HouseholdPreferencesForm />);
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+    const exercise = screen.getByLabelText<HTMLSelectElement>(
+      'Do you exercise outdoors?',
+    );
+    fireEvent.change(exercise, { target: { value: 'yes' } });
+
+    reply(
+      ok({
+        context: { home: { airPurifier: true } },
+        updatedAt: '2026-11-18T10:00:00.000Z',
+      }),
+    );
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(exercise.value).toBe('yes');
+    expect(
+      screen.getByLabelText<HTMLSelectElement>('Do you have an air purifier?')
+        .value,
+    ).toBe('');
+  });
+
   it('reports answers as they change', () => {
     routeFetch(() => ok(null));
     const onChange = vi.fn();

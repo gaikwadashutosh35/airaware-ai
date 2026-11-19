@@ -46,7 +46,9 @@ export function ForecastChart({
   loadedAt: Date;
 }) {
   const { hours } = series;
-  const unit = series.units.PM2_5 ?? series.units.PM10 ?? 'μg/m³';
+  // Nothing to draw, and never a unit the provider did not send.
+  if (hours.length === 0) return null;
+  const unit = series.units.PM2_5 ?? series.units.PM10 ?? '';
   const yMax = niceCeiling(
     Math.max(
       0,
@@ -68,7 +70,8 @@ export function ForecastChart({
       <div className="flex gap-2">
         <div className="flex shrink-0 flex-col justify-between pb-6 text-xs whitespace-nowrap text-text-dark-muted tabular-nums">
           <span>
-            {yMax} {unit}
+            {yMax}
+            {unit && ` ${unit}`}
           </span>
           <span>0</span>
         </div>

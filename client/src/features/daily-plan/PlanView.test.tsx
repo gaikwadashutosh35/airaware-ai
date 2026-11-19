@@ -191,6 +191,30 @@ describe('PlanView', () => {
     expect(container.querySelector('details')?.open).toBe(true);
   });
 
+  // Phase 8 review: a saved plan must not read as today's air.
+  it('a saved snapshot says "that day", not "today"', () => {
+    const plan: DailyPlan = {
+      ...rulesPlanFixture,
+      featured: rulesPlanFixture.featured.filter(
+        (f) => f.candidate.section !== 'swap',
+      ),
+    };
+    render(<PlanView plan={plan} snapshot />);
+
+    // The rules' own advice text stays unchanged; only our labels change.
+    expect(screen.queryByText('Important today')).toBeNull();
+    expect(screen.queryByText("today's forecast check")).toBeNull();
+    expect(screen.getAllByText('Important that day').length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("that day's forecast check").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        'No suggestions in this area for your answers that day.',
+      ),
+    ).toBeDefined();
+  });
+
   it('passes axe for the rules plan and the AI plan', async () => {
     for (const plan of [rulesPlanFixture, aiPlanFixture]) {
       const { container } = render(<PlanView plan={plan} />);
