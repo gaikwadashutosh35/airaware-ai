@@ -1,0 +1,40 @@
+name: Supabase keep-alive
+
+# A free Supabase project pauses after 7 days without API activity. One read
+# request every 3 days keeps it active. Both values are public repository
+# variables (the publishable key ships in the client bundle).
+on:
+  schedule:
+    - cron: '17 3 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read one row through the REST API
+        env:
+          URL: ${{ vars.SUPABASE_URL }}
+          KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY variable is missing."
+            exit 1
+          fi
+          code=$(curl -sS -o body.json -w '%{http_code}' --max-time 30 \
+            "$URL/rest/v1/daily_plans?select=id&limit=1" -H "apikey: $KEY")
+          echo "HTTP $code"
+          # The anon role has no grant on the table, so PostgREST answers 401
+          # or 403: the API (and Postgres behind it) is up. Anything else,
+          # including a paused project, fails the run.
+          case "$code" in
+            200 | 401 | 403) ;;
+            *)
+              cat body.json
+              exit 1
+              ;;
+          esac
