@@ -1,12 +1,13 @@
 import type { HazeLevel } from './haze.ts';
 
-// Per level 0 (no data) ... 5. Opacity only: no blur filter, no gradient,
+// Per level 0 (no data: flat and faint, no haze, so it never reads as
+// smog) ... 5. Opacity only: no blur filter, no gradient,
 // no animation, so it costs nothing to paint and needs no reduced-motion
 // handling.
 const SKY_TINT = [0, 0, 0.08, 0.16, 0.24, 0.32];
 const SUN = [0, 0.9, 0.7, 0.45, 0.25, 0.12];
-const HAZE_MID = [0.6, 0.15, 0.3, 0.45, 0.6, 0.75];
-const HAZE_FRONT = [0.55, 0.1, 0.22, 0.36, 0.5, 0.64];
+const HAZE_MID = [0, 0.15, 0.3, 0.45, 0.6, 0.75];
+const HAZE_FRONT = [0, 0.1, 0.22, 0.36, 0.5, 0.64];
 
 // [x, width, height] on a 160-high ground line.
 const FAR: Array<[number, number, number]> = [
@@ -79,7 +80,7 @@ export function CitySkyline({ level }: { level: HazeLevel }) {
           opacity={SUN[level]}
         />
       )}
-      <g className="fill-text-dark-muted" opacity="0.55">
+      <g className="fill-text-dark-muted" opacity={level === 0 ? 0.3 : 0.55}>
         {FAR_ALL.map(([x, w, h]) => (
           <rect key={x} x={x} y={160 - h} width={w} height={h} />
         ))}
@@ -94,7 +95,7 @@ export function CitySkyline({ level }: { level: HazeLevel }) {
         className="fill-rule"
         opacity={HAZE_MID[level]}
       />
-      <g className="fill-text-dark" opacity="0.85">
+      <g className="fill-text-dark" opacity={level === 0 ? 0.35 : 0.85}>
         {NEAR_ALL.map(([x, w, h]) => (
           <rect key={x} x={x} y={160 - h} width={w} height={h} />
         ))}

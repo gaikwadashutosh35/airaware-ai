@@ -7,6 +7,7 @@ import type {
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { forecastFixture } from '../../test/fixtures.ts';
 import { AirReadout } from './AirReadout.tsx';
+import { formatDateTime } from './forecast.ts';
 
 afterEach(cleanup);
 
@@ -90,7 +91,7 @@ describe('AirReadout', () => {
       },
     });
     expect(container.textContent).toContain(
-      'PM10: not enough forecast hours for a 24-hour check',
+      'PM10: 24-hour average not available',
     );
     expect(
       container
@@ -119,10 +120,50 @@ describe('AirReadout', () => {
 
   it('keeps the stale sentence with the skyline', () => {
     const { container } = show(forecastFixture, true);
-    expect(container.textContent).toContain(
+    const stale = screen.getByText(
       'Retrieved more than an hour ago. Reload for the latest forecast.',
     );
     expect(container.querySelector('svg[data-haze-level]')).not.toBeNull();
+    // Final review I5: the "not current" note is read before the figure.
+    expect(
+      stale.compareDocumentPosition(screen.getByTestId('readout-pm25')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('names the 24-hour window it checked', () => {
+    const { container } = show({ ...forecastFixture, airCheck: elevated });
+    expect(container.textContent).toContain(
+      `Model forecast for the next 24 hours from ${formatDateTime('2026-11-17T17:00:00.000Z')}`,
+    );
+  });
+
+  it('says air information is unavailable only when both checks are', () => {
+    const { container } = show({
+      ...forecastFixture,
+      airCheck: {
+        level: 'unknown',
+        windowStart: '2026-11-17T17:00:00.000Z',
+        checks: [
+          {
+            pollutant: 'PM2_5',
+            status: 'within_limit',
+            average24h: 36,
+            limit: 60,
+          },
+          {
+            pollutant: 'PM10',
+            status: 'unknown',
+            average24h: null,
+            limit: 100,
+          },
+        ],
+      },
+    });
+    expect(container.textContent).not.toContain('Air information unavailable');
+    expect(container.textContent).toContain(
+      'PM10: 24-hour average not available',
+    );
   });
 
   it('never says AQI, safe or healthy', () => {

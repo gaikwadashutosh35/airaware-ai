@@ -29,6 +29,25 @@ describe('CitySkyline', () => {
     expect(container.querySelector('[data-part="sun"]')).not.toBeNull();
   });
 
+  // Final review I4: "no data" must not look like heavy smog.
+  it('no data draws no haze', () => {
+    const { container } = render(<CitySkyline level={0} />);
+    expect(
+      Number(
+        container
+          .querySelector('[data-part="haze-front"]')
+          ?.getAttribute('opacity'),
+      ),
+    ).toBe(0);
+    expect(
+      Number(
+        container
+          .querySelector('[data-part="haze-mid"]')
+          ?.getAttribute('opacity'),
+      ),
+    ).toBe(0);
+  });
+
   it('gets hazier as the level rises', () => {
     const opacities = ([1, 2, 3, 4, 5] as const).map(frontHaze);
     for (let i = 1; i < opacities.length; i++) {

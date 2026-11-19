@@ -4,7 +4,7 @@ import type {
   PollutantCheck,
 } from '../../../../shared/contracts.ts';
 import { CitySkyline } from './CitySkyline.tsx';
-import { formatTime, hourForNow } from './forecast.ts';
+import { formatDateTime, formatTime, hourForNow } from './forecast.ts';
 import { hazeLevel } from './haze.ts';
 
 const SHORT = { PM2_5: 'PM2.5', PM10: 'PM10' } as const;
@@ -14,7 +14,7 @@ const SHORT = { PM2_5: 'PM2.5', PM10: 'PM10' } as const;
 function checkText(check: PollutantCheck, unit: string): string {
   const name = SHORT[check.pollutant];
   if (check.status === 'unknown' || check.average24h === null) {
-    return `${name}: not enough forecast hours for a 24-hour check`;
+    return `${name}: 24-hour average not available`;
   }
   const side = check.status === 'above_limit' ? 'above' : 'within';
   return `${name} 24-hour average ${check.average24h} ${unit}, ${side} the ${check.limit} ${unit} limit`;
@@ -75,6 +75,12 @@ export function AirReadout({
             </p>
           )}
         </div>
+        {/* Read before the figure: stale data is never shown as current. */}
+        {stale && (
+          <p className="font-semibold">
+            Retrieved more than an hour ago. Reload for the latest forecast.
+          </p>
+        )}
 
         {/* A model without PM2.5 has no headline figure, never a blank one. */}
         {data.units.PM2_5 && (
@@ -97,8 +103,14 @@ export function AirReadout({
           </p>
         )}
 
-        {data.airCheck.level === 'unknown' && (
+        {data.airCheck.checks.every((c) => c.status === 'unknown') && (
           <p className="font-medium">Air information unavailable</p>
+        )}
+        {data.airCheck.windowStart && (
+          <p className="text-sm text-text-dark-muted">
+            Model forecast for the next 24 hours from{' '}
+            {formatDateTime(data.airCheck.windowStart)}
+          </p>
         )}
         <ul className="flex flex-col gap-2">
           {data.airCheck.checks.map((check) => (
@@ -120,11 +132,6 @@ export function AirReadout({
             {formatTime(data.retrievedAt)}.
           </p>
         </div>
-        {stale && (
-          <p className="font-semibold">
-            Retrieved more than an hour ago. Reload for the latest forecast.
-          </p>
-        )}
       </div>
     </section>
   );

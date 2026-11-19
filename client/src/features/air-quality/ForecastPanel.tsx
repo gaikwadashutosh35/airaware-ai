@@ -8,13 +8,18 @@ import { formatTime, hourForNow, POLLUTANTS } from './forecast.ts';
 
 const NO_VALUE = 'No value';
 
-// The 24-hour check as a short status. Only PM2.5 and PM10 have one: India's
-// NAAQS 24-hour limits, compared by the server. Never an AQI category.
-function checkWord(check: PollutantCheck | undefined): string {
+// The 24-hour check as a short status, with the forecast 24-hour average it
+// judged, so an hourly value beside it is never read as the thing compared.
+// Only PM2.5 and PM10 have one: India's NAAQS 24-hour limits, compared by
+// the server. Never an AQI category.
+function checkWord(check: PollutantCheck | undefined, unit: string): string {
   if (!check) return 'Not assessed';
-  if (check.status === 'above_limit') return 'Above the limit';
-  if (check.status === 'within_limit') return 'Within the limit';
-  return 'Not enough data';
+  if (check.status === 'unknown' || check.average24h === null) {
+    return 'Not enough data';
+  }
+  const side =
+    check.status === 'above_limit' ? 'Above the limit' : 'Within the limit';
+  return `${side} (24-hour average ${check.average24h} ${unit})`;
 }
 
 // "Your city, the next two days": the 48-hour chart, this hour's values
@@ -73,7 +78,7 @@ export function ForecastPanel({
                   scope="col"
                   className="py-2 pr-2 sm:pr-4 text-right font-medium whitespace-nowrap"
                 >
-                  This hour
+                  Forecast value
                 </th>
                 <th scope="col" className="py-2 text-right font-medium">
                   24-hour check
@@ -113,7 +118,9 @@ export function ForecastPanel({
                         </>
                       )}
                     </td>
-                    <td className="py-2 text-right">{checkWord(check)}</td>
+                    <td className="py-2 text-right">
+                      {checkWord(check, data.units[pollutant.key] ?? '')}
+                    </td>
                   </tr>
                 );
               })}

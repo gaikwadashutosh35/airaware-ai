@@ -38,12 +38,49 @@ describe('ForecastPanel', () => {
     const pm25 = screen.getByTestId('metric-PM2_5');
     expect(pm25.textContent).toContain('48');
     expect(pm25.textContent).toContain('μg/m³');
-    expect(checkCell('PM2_5')).toBe('Above the limit');
-    expect(checkCell('PM10')).toBe('Within the limit');
+    expect(checkCell('PM2_5')).toBe(
+      'Above the limit (24-hour average 72.4 μg/m³)',
+    );
+    expect(checkCell('PM10')).toBe(
+      'Within the limit (24-hour average 80 μg/m³)',
+    );
+    // Final review I1: values for the load hour are never called "this hour".
+    expect(
+      screen.getByRole('columnheader', { name: 'Forecast value' }),
+    ).toBeDefined();
+    expect(container.textContent).not.toContain('This hour');
     for (const key of ['NO2', 'SO2', 'O3', 'CO']) {
       expect(checkCell(key)).toBe('Not assessed');
     }
     await expectNoAxeViolations(container);
+  });
+
+  it('a high hour beside a within-limit day shows the average it judged', () => {
+    const data = structuredClone(forecastFixture);
+    data.hours[0]!.values.PM2_5 = 95;
+    data.airCheck = {
+      level: 'not_elevated',
+      windowStart: '2026-11-17T17:00:00.000Z',
+      checks: [
+        {
+          pollutant: 'PM2_5',
+          status: 'within_limit',
+          average24h: 36,
+          limit: 60,
+        },
+        {
+          pollutant: 'PM10',
+          status: 'within_limit',
+          average24h: 50,
+          limit: 100,
+        },
+      ],
+    };
+    render(<ForecastPanel data={data} now={NOW} />);
+    expect(screen.getByTestId('metric-PM2_5').textContent).toContain('95');
+    expect(checkCell('PM2_5')).toBe(
+      'Within the limit (24-hour average 36 μg/m³)',
+    );
   });
 
   it('says when a 24-hour check has too little data', () => {

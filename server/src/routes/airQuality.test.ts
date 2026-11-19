@@ -81,11 +81,18 @@ describe('air-quality routes', () => {
     });
 
     it('a forecast too short for a 24-hour window checks as unknown', async () => {
+      // Inside the 3-hour fixture, so only its length makes the check unknown
+      // (final review M6: the real clock was past the fixture).
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-11-17T17:30:00.000Z'));
       stubFetch();
 
       const res = await request(createApp()).get(
         '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
       );
+      vi.useRealTimers();
+
+      expect(res.body.data.airCheck.windowStart).toBeNull();
 
       expect(res.body.data.airCheck.level).toBe('unknown');
       expect(

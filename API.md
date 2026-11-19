@@ -143,10 +143,20 @@ Response (illustrative values):
     "units": { "PM2_5": "μg/m³", "PM10": "μg/m³" },
     "hours": [{ "time": "2026-11-17T17:00:00.000Z", "values": { "PM2_5": 48, "PM10": 52.4 } }],
     "limitations": ["Model forecast, not a station observation.", "Not the CPCB National AQI."],
-    "freshness": "unknown"
+    "freshness": "unknown",
+    "airCheck": {
+      "level": "unknown",
+      "windowStart": null,
+      "checks": [
+        { "pollutant": "PM2_5", "status": "unknown", "average24h": null, "limit": 60 },
+        { "pollutant": "PM10", "status": "unknown", "average24h": null, "limit": 100 }
+      ]
+    }
   }
 }
 ```
+
+(This one-hour example is too short for a 24-hour window, so its check is `unknown`. A full 48-hour forecast gives, for example, `"level": "elevated"` with `"average24h": 72.4` for PM2.5.)
 
 Provider failure (network, timeout, non-2xx, malformed response) returns `502 PROVIDER_ERROR` with no `data`. It never falls back to demo or stale data.
 
