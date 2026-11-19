@@ -29,7 +29,7 @@ export function PlanCard({
   );
 
   return (
-    <article className="flex flex-col gap-2 border-t border-rule pt-4">
+    <article className="flex flex-col gap-2 rounded-lg border border-rule p-4">
       <Heading className="font-semibold">{candidate.title}</Heading>
       {compact ? (
         <p className="text-sm text-text-dark-muted">

@@ -46,6 +46,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Dashboard redesign (Phase A of the Stitch redesign):
+  - a two-column layout from 1024 px, with a place bar and "Change place";
+  - an air readout that leads with this hour's PM2.5 and states the server's 24-hour check in words;
+  - a city skyline whose haze follows that check (decorative, never clear, neutral when there's no data);
+  - "Your city, the next two days", with a pollutant table that has a 24-hour check only for PM2.5 and PM10;
+  - plan cards, period labels and Air notice tags in the new style.
+  - The forecast API now returns `airCheck`.
 - Claude as backup plan writer (ADR-007): when Gemini gives no accepted answer, Claude (`claude-haiku-5-5`) is asked once. It uses the same input and the same checks, and has its own daily cap. The plan names the model that wrote it.
 
 ### Changed

@@ -17,6 +17,40 @@ const follows = (a: Node, b: Node) =>
   Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 describe('PlanView', () => {
+  it('the Air notice carries a word tag', () => {
+    const cases: Array<[DailyPlan['air']['level'], string]> = [
+      ['elevated', 'Above the limit'],
+      ['not_elevated', 'Within the limit'],
+      ['unknown', 'No data'],
+    ];
+    for (const [level, tag] of cases) {
+      const plan = structuredClone(rulesPlanFixture);
+      plan.air.level = level;
+      const { unmount } = render(<PlanView plan={plan} />);
+      const notice = screen.getByRole('region', { name: /Air notice/ });
+      expect(within(notice).getByText(tag)).toBeDefined();
+      unmount();
+    }
+  });
+
+  it('Your day shows each period as its own label', () => {
+    const plan = structuredClone(aiPlanFixture);
+    plan.featured[0]!.period = 'home';
+    render(<PlanView plan={plan} />);
+    const day = screen.getByRole('region', { name: 'Your day' });
+    expect(
+      within(day)
+        .getAllByRole('heading', { level: 4 })
+        .map((h) => h.textContent),
+    ).toContain('At home');
+  });
+
+  it('plan cards show no clock times', () => {
+    render(<PlanView plan={aiPlanFixture} />);
+    const day = screen.getByRole('region', { name: 'Your day' });
+    expect(day.textContent).not.toMatch(/\b\d{1,2}:\d{2}\b/);
+  });
+
   afterEach(cleanup);
 
   it('shows a complete rules plan: made-by, notice first, three topics, no "Your day"', () => {

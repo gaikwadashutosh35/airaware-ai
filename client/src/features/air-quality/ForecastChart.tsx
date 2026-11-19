@@ -30,6 +30,11 @@ const tickFormat = new Intl.DateTimeFormat(undefined, {
   hour: 'numeric',
 });
 
+function tickDensity(i: number): string {
+  if (i % 24 === 0) return '';
+  return i % 12 === 0 ? '@max-md:hidden' : '@max-3xl:hidden';
+}
+
 // Labels at the edges align to the edge instead of hanging off it.
 function labelAlign(x: number): string {
   if (x < 8) return '';
@@ -66,7 +71,9 @@ export function ForecastChart({
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    // A size container: the tick density follows the chart's own width,
+    // which the two-column dashboard narrows on wide screens.
+    <div className="@container flex flex-col gap-3">
       <div className="flex gap-2">
         <div className="flex shrink-0 flex-col justify-between pb-6 text-xs whitespace-nowrap text-text-dark-muted tabular-nums">
           <span>
@@ -171,8 +178,9 @@ export function ForecastChart({
             {tickIndexes(hours.length).map((i) => (
               <span
                 key={i}
-                // Every 24 hours on a phone, every 6 on wider screens.
-                className={`absolute top-1 whitespace-nowrap text-text-dark-muted ${labelAlign(xOf(i))} ${i % 24 ? 'max-sm:hidden' : ''}`}
+                // By the chart's own width: every 24 hours when narrow,
+                // every 12 from 28rem, every 6 from 48rem.
+                className={`absolute top-1 whitespace-nowrap text-text-dark-muted ${labelAlign(xOf(i))} ${tickDensity(i)}`}
                 style={{ left: `${xOf(i)}%` }}
               >
                 {tickFormat.format(new Date(hours[i].time))}

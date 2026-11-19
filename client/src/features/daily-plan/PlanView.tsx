@@ -10,17 +10,40 @@ const NO_AIR = 'Air information is unavailable for this plan.';
 const emptyTopic = (day: string) =>
   `No suggestions in this area for your answers ${day}.`;
 
-function Part({ title, children }: { title: string; children: ReactNode }) {
+function Part({
+  title,
+  tag,
+  children,
+}: {
+  title: string;
+  // A short word label beside the heading (the Air notice's status).
+  tag?: string;
+  children: ReactNode;
+}) {
   const id = useId();
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <h3 id={id} className="text-xl font-semibold">
-        {title}
-      </h3>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h3 id={id} className="text-xl font-semibold">
+          {title}
+        </h3>
+        {tag && (
+          <span className="rounded-md border border-text-dark px-2 py-0.5 text-sm font-medium">
+            {tag}
+          </span>
+        )}
+      </div>
       {children}
     </section>
   );
 }
+
+// Factual words for the air level, never reassurance.
+const LEVEL_TAG = {
+  elevated: 'Above the limit',
+  not_elevated: 'Within the limit',
+  unknown: 'No data',
+} as const;
 
 // A daily plan as the server built it: the air notice always first, then
 // the air check, "Your day" (AI plans only) and the three topics.
@@ -36,18 +59,20 @@ export function PlanView({
   const { air, forecast } = plan;
 
   return (
-    <div className="flex max-w-prose flex-col gap-6">
+    <div className="flex flex-col gap-6">
       {/* A saved plan can be for another place than the one on screen. */}
-      <div className="flex flex-col gap-1">
-        <p className="text-lg font-semibold">Plan for {plan.place.label}</p>
+      <div className="flex flex-col gap-2 rounded-lg border border-rule p-5">
+        <p className="text-lg font-semibold break-words">
+          Plan for {plan.place.label}
+        </p>
+        {plan.generatedBy === 'ai' && plan.summary && (
+          <p className="text-lg">{plan.summary}</p>
+        )}
         <p className="text-sm text-text-dark-muted">{madeByLine(plan)}</p>
       </div>
-      {plan.generatedBy === 'ai' && plan.summary && (
-        <p className="text-lg">{plan.summary}</p>
-      )}
 
       {plan.notices.length > 0 && (
-        <Part title="Air notice">
+        <Part title="Air notice" tag={LEVEL_TAG[plan.air.level]}>
           {plan.notices.map((candidate) => (
             <PlanCard
               key={candidate.id}
@@ -89,7 +114,9 @@ export function PlanView({
         <Part title="Your day">
           {yourDay.map((group) => (
             <div key={group.period} className="flex flex-col gap-3">
-              <h4 className="font-semibold">{group.label}</h4>
+              <h4 className="self-start rounded-full border border-rule px-3 py-1 text-sm font-semibold">
+                {group.label}
+              </h4>
               {group.items.map((item) => (
                 <PlanCard
                   key={item.candidate.id}

@@ -63,19 +63,19 @@ export function ForecastPanel({
             </caption>
             <thead>
               <tr className="border-b border-text-dark">
-                <th scope="col" className="py-2 pr-4 text-left font-medium">
+                <th
+                  scope="col"
+                  className="py-2 pr-2 sm:pr-4 text-left font-medium"
+                >
                   Pollutant
                 </th>
                 <th
                   scope="col"
-                  className="py-2 pr-4 text-right font-medium whitespace-nowrap"
+                  className="py-2 pr-2 sm:pr-4 text-right font-medium whitespace-nowrap"
                 >
                   This hour
                 </th>
-                <th
-                  scope="col"
-                  className="py-2 text-right font-medium whitespace-nowrap"
-                >
+                <th scope="col" className="py-2 text-right font-medium">
                   24-hour check
                 </th>
               </tr>
@@ -92,13 +92,16 @@ export function ForecastPanel({
                     data-testid={`metric-${pollutant.key}`}
                     className="border-b border-rule"
                   >
-                    <th scope="row" className="py-2 pr-4 text-left font-normal">
+                    <th
+                      scope="row"
+                      className="py-2 pr-2 sm:pr-4 text-left font-normal"
+                    >
                       <span className="font-semibold">{pollutant.short}</span>{' '}
                       <span className="text-text-dark-muted">
                         {pollutant.name}
                       </span>
                     </th>
-                    <td className="py-2 pr-4 text-right whitespace-nowrap">
+                    <td className="py-2 pr-2 sm:pr-4 text-right whitespace-nowrap">
                       {value == null ? (
                         NO_VALUE
                       ) : (
@@ -110,9 +113,7 @@ export function ForecastPanel({
                         </>
                       )}
                     </td>
-                    <td className="py-2 text-right whitespace-nowrap">
-                      {checkWord(check)}
-                    </td>
+                    <td className="py-2 text-right">{checkWord(check)}</td>
                   </tr>
                 );
               })}

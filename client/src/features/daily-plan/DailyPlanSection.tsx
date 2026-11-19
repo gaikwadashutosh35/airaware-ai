@@ -45,6 +45,9 @@ type Status =
 
 const buttonClass =
   'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
+// The main action in each state: teal fill, dark text (contrast about 9:1).
+const primaryClass =
+  'min-h-11 rounded-md bg-primary px-4 font-medium text-text-dark disabled:opacity-60';
 
 // "Your daily plan": builds from the chosen place and the answers on screen.
 // Building never creates an account; only "Save plan" does. The dashboard
@@ -212,7 +215,7 @@ export function DailyPlanSection({
               disabled={!place || status.kind === 'building' || saving}
               aria-describedby={place ? undefined : hintId}
               onClick={() => void build()}
-              className={buttonClass}
+              className={primaryClass}
             >
               Build my daily plan
             </button>
@@ -244,7 +247,7 @@ export function DailyPlanSection({
                     disabled={!savingAvailable || saving}
                     aria-describedby={noteId}
                     onClick={() => void save()}
-                    className={buttonClass}
+                    className={primaryClass}
                   >
                     Save plan
                   </button>
