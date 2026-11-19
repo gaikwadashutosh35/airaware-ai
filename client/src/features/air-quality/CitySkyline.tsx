@@ -46,11 +46,12 @@ const shifted = (row: Array<[number, number, number]>, by: number) =>
 const FAR_ALL = [...FAR, ...shifted(FAR, 4)];
 const NEAR_ALL = [...NEAR, ...shifted(NEAR, 3)];
 
-// Upper-sky clouds, filled in this order as cover rises.
+// Upper-sky clouds, filled in this order as cover rises. The first two sit
+// in the middle third, which a phone's crop (about x 225-575) still shows.
 const CLOUDS: Array<[number, number]> = [
-  [120, 30],
-  [640, 24],
-  [360, 38],
+  [300, 30],
+  [480, 22],
+  [180, 36],
 ];
 
 // Slanted streaks on a 24 x 32 grid, one row taller than the band so the
@@ -167,11 +168,11 @@ export function CitySkyline({ scene }: { scene: Scene }) {
         <rect
           data-part="shimmer"
           x="-8"
-          y="128"
+          y="142"
           width="816"
-          height="32"
+          height="18"
           className="fill-warning motion-safe:animate-shimmer"
-          opacity="0.25"
+          opacity="0.14"
         />
       )}
     </svg>

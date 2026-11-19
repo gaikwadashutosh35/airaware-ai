@@ -113,6 +113,8 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 - Avoid scroll-jacking. Normal scrolling must remain predictable.
 - On mobile, prioritize touch targets and reduce heavy visual effects.
 
+- The readout scene's rain and heat shimmer animate `transform` only. They are used as `motion-safe:animate-*`, so they stay still under reduced motion, and at most one moves at a time.
+
 ## 10. Responsive behavior
 
 - Mobile: single-column flow, compact nav, stacked metrics, readable chart summaries.
