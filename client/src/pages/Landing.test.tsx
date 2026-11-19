@@ -6,7 +6,7 @@ import { LANDING_EXAMPLES } from './landingExamples.ts';
 
 const ACTION = "Check your area's air quality";
 const HERO_ALT =
-  "AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, this hour's PM2.5 model forecast, the 24-hour check in words and its sources";
+  'Screenshot of the AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, the PM2.5 model forecast for one hour, the 24-hour check in words and its sources';
 // Documented facts the page may state; any other digit would be invented.
 const REAL_FIGURES = [
   'PM2.5',
@@ -172,10 +172,17 @@ describe('Landing', () => {
   it('the hero screenshot is labelled as past, with its date', () => {
     render(<Landing />);
 
-    const figure = screen.getByAltText(HERO_ALT).closest('figure');
-    expect(figure?.querySelector('figcaption')?.textContent).toBe(
+    const image = screen.getByAltText(HERO_ALT);
+    const caption = image.closest('figure')?.querySelector('figcaption');
+    expect(caption?.textContent).toBe(
       'A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the dashboard for current values.',
     );
+    // Final review B2: the label comes first, so it is never below the fold
+    // while the figure shows.
+    expect(
+      caption!.compareDocumentPosition(image) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('states its limits plainly', () => {

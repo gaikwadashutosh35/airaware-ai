@@ -145,18 +145,20 @@ function Landing() {
             data-kind="product"
             className="flex flex-col gap-3"
           >
+            {/* The label first, so it never sits below the fold while the
+                screenshot is read as today's air. */}
+            <figcaption className="text-sm text-text-muted">
+              A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the
+              dashboard for current values.
+            </figcaption>
             <img
               src={readoutShot}
               width={972}
               height={924}
               fetchPriority="high"
-              alt="AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, this hour's PM2.5 model forecast, the 24-hour check in words and its sources"
+              alt="Screenshot of the AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, the PM2.5 model forecast for one hour, the 24-hour check in words and its sources"
               className="h-auto w-full rounded-xl outline-1 -outline-offset-1 outline-rule-dark"
             />
-            <figcaption className="text-sm text-text-muted">
-              A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the
-              dashboard for current values.
-            </figcaption>
           </figure>
         </section>
 
