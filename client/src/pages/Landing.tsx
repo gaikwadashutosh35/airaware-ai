@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import dashboardShot from '../assets/dashboard.webp';
+import readoutShot from '../assets/readout.jpg';
 import { Attribution } from '../components/Attribution.tsx';
 import { PlanCard } from '../features/daily-plan/PlanCard.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
@@ -146,16 +146,16 @@ function Landing() {
             className="flex flex-col gap-3"
           >
             <img
-              src={dashboardShot}
-              width={977}
-              height={598}
+              src={readoutShot}
+              width={972}
+              height={924}
               fetchPriority="high"
-              alt="AirAware dashboard showing a model forecast for Pune with pollutant values, units, times and sources"
+              alt="AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, this hour's PM2.5 model forecast, the 24-hour check in words and its sources"
               className="h-auto w-full rounded-xl outline-1 -outline-offset-1 outline-rule-dark"
             />
             <figcaption className="text-sm text-text-muted">
-              A past screenshot of the dashboard for Pune. Open the dashboard
-              for current values.
+              A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the
+              dashboard for current values.
             </figcaption>
           </figure>
         </section>

@@ -6,7 +6,7 @@ import { LANDING_EXAMPLES } from './landingExamples.ts';
 
 const ACTION = "Check your area's air quality";
 const HERO_ALT =
-  'AirAware dashboard showing a model forecast for Pune with pollutant values, units, times and sources';
+  "AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, this hour's PM2.5 model forecast, the 24-hour check in words and its sources";
 // Documented facts the page may state; any other digit would be invented.
 const REAL_FIGURES = [
   'PM2.5',
@@ -20,6 +20,8 @@ const REAL_FIGURES = [
   // From the real rule cards and their source's date.
   '24-hour',
   '18 November 2009',
+  // The hero screenshot's capture date.
+  '20 Nov 2026',
 ];
 
 describe('Landing', () => {
@@ -167,10 +169,13 @@ describe('Landing', () => {
     ]);
   });
 
-  it('shows the real dashboard', () => {
+  it('the hero screenshot is labelled as past, with its date', () => {
     render(<Landing />);
 
-    expect(screen.getByAltText(HERO_ALT)).toBeDefined();
+    const figure = screen.getByAltText(HERO_ALT).closest('figure');
+    expect(figure?.querySelector('figcaption')?.textContent).toBe(
+      'A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the dashboard for current values.',
+    );
   });
 
   it('states its limits plainly', () => {
@@ -208,17 +213,14 @@ describe('Landing', () => {
 
   it('invents no numbers', () => {
     const { container } = render(<Landing />);
-    const footer = screen.getByRole('contentinfo');
 
-    let text = (container.textContent ?? '').replace(
-      footer.textContent ?? '',
-      '',
-    );
-    // Chapter and step ordinals ("01"…) are labels, not data; only they are
-    // exempt, by their marker.
-    for (const ordinal of container.querySelectorAll('[data-ordinal]')) {
-      text = text.replace(ordinal.textContent ?? '', '');
+    // The footer, and the chapter and step ordinals ("01"…, labels, not
+    // data), are dropped as elements, so no other text loses a digit.
+    const copy = container.cloneNode(true) as HTMLElement;
+    for (const exempt of copy.querySelectorAll('footer, [data-ordinal]')) {
+      exempt.remove();
     }
+    let text = copy.textContent ?? '';
     for (const figure of REAL_FIGURES) text = text.replaceAll(figure, '');
     expect(text).not.toMatch(/\d/);
   });
