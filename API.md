@@ -109,6 +109,7 @@ Returns an hourly model forecast (48 hours from the current hour) and the provid
 - `airCheck` is the server's own 24-hour check, the same one the daily plan uses (`AirAssessment`, below the daily-plan section). It compares the PM2.5 and PM10 model-forecast averages over the 24 hours from the current UTC hour with India's NAAQS 24-hour limits.
   - Its `level` is `unknown` when the forecast has no complete 24-hour window.
   - Clients show it as given and never derive limits themselves.
+- `weather` is this hour's Open-Meteo weather forecast (`https://api.open-meteo.com/v1/forecast`, the same rounded coordinates, cached for 10 minutes). The server fetches it alongside the air forecast. It is `null` when that call fails or returns no hour containing the request time, and the air forecast never fails because of it.
 
 ```ts
 type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
@@ -125,9 +126,21 @@ interface ForecastSeries {
   limitations: string[];
 }
 
+// Open-Meteo weather forecast for the hour containing the request time.
+interface WeatherNow {
+  time: string;
+  temperatureC: number | null;
+  precipitationMm: number | null;
+  precipitationProbability: number | null;
+  cloudCoverPercent: number | null;
+  visibilityM: number | null;
+  retrievedAt: string;
+}
+
 // What `data` holds.
 interface ForecastData extends ForecastSeries {
   airCheck: AirAssessment;
+  weather: WeatherNow | null; // null when the weather provider fails or has no current hour
 }
 ```
 
@@ -167,6 +180,7 @@ Returns configured provider names, source descriptions, licence/attribution, and
 Response: `{ "data": [{ "id", "name", "dataKind", "status": "available" | "unavailable", "url", "licence"?, "attribution"?, "limitations" }] }`. It currently lists:
 - Open-Meteo (`available`, CC BY 4.0, with the Open-Meteo + CAMS attribution)
 - CPCB (`unavailable`)
+- Open-Meteo weather (`open-meteo-weather`, `available`, CC BY 4.0)
 
 ### `GET /api/v1/locations/search?q=...`
 

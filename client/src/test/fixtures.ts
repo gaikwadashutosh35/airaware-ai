@@ -65,6 +65,16 @@ export const forecastFixture: ForecastData = {
       { pollutant: 'PM10', status: 'unknown', average24h: null, limit: 100 },
     ],
   },
+  // Illustrative test data (not a recording): a dry, partly cloudy hour.
+  weather: {
+    time: '2026-11-17T17:00:00.000Z',
+    temperatureC: 27.5,
+    precipitationMm: 0,
+    precipitationProbability: 10,
+    cloudCoverPercent: 30,
+    visibilityM: 24140,
+    retrievedAt: '2026-11-17T17:05:00.000Z',
+  },
 };
 
 // Same entries the server's /sources route returns.
@@ -88,6 +98,18 @@ export const sourcesFixture: SourceInfo[] = [
     url: 'https://app.cpcbccr.com/AQIIndia',
     limitations: [
       'No verified machine-readable CPCB feed is connected; official observations are not shown.',
+    ],
+  },
+  {
+    id: 'open-meteo-weather',
+    name: 'Open-Meteo Weather Forecast API',
+    dataKind: 'model_forecast',
+    status: 'available',
+    url: 'https://open-meteo.com/en/docs',
+    licence: 'CC BY 4.0',
+    attribution: 'Weather forecasts from Open-Meteo.com.',
+    limitations: [
+      'Weather is a model forecast for the same grid area; local showers can differ.',
     ],
   },
 ];

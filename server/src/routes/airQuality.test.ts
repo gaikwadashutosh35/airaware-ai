@@ -3,6 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.ts';
 import pune from '../services/air-data/fixtures/open-meteo-pune.json' with { type: 'json' };
 
+// The URL a fetch was called with, whatever form it took.
+function urlOf(input: unknown): string {
+  if (input instanceof URL) return input.href;
+  if (input instanceof Request) return input.url;
+  return typeof input === 'string' ? input : '';
+}
+
 function stubFetch() {
   return vi
     .spyOn(globalThis, 'fetch')
@@ -102,6 +109,49 @@ describe('air-quality routes', () => {
       ).toEqual([null, null]);
     });
 
+    it("returns this hour's weather with the forecast", async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-11-17T17:30:00.000Z'));
+      const t = Date.UTC(2026, 10, 17, 17) / 1000;
+      vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
+        Promise.resolve(
+          urlOf(input).includes('air-quality-api')
+            ? Response.json(pune)
+            : Response.json({
+                hourly_units: { time: 'unixtime', temperature_2m: '°C' },
+                hourly: { time: [t, t + 3600], temperature_2m: [27.5, 26.9] },
+              }),
+        ),
+      );
+
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+      vi.useRealTimers();
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.weather.temperatureC).toBe(27.5);
+      expect(res.body.data.weather.time).toBe('2026-11-17T17:00:00.000Z');
+    });
+
+    it('a failed weather call leaves the air forecast intact', async () => {
+      vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
+        Promise.resolve(
+          urlOf(input).includes('air-quality-api')
+            ? Response.json(pune)
+            : Response.json({ error: true }, { status: 500 }),
+        ),
+      );
+
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.weather).toBeNull();
+      expect(res.body.data.hours.length).toBeGreaterThan(0);
+    });
+
     it('serves repeat and equivalent requests from the cache', async () => {
       const fetchSpy = stubFetch();
       const app = createApp();
@@ -117,7 +167,12 @@ describe('air-quality routes', () => {
       );
 
       expect(res.status).toBe(200);
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      // The air forecast's cache (the weather has its own calls and cache).
+      expect(
+        fetchSpy.mock.calls.filter(([url]) =>
+          urlOf(url).includes('air-quality-api'),
+        ),
+      ).toHaveLength(1);
     });
 
     it.each([
@@ -159,7 +214,12 @@ describe('air-quality routes', () => {
       expect(res.status).toBe(502);
       expect(res.body.error.code).toBe('PROVIDER_ERROR');
       expect(res.body).not.toHaveProperty('data');
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      // Both air calls ran: the failure was not cached (weather calls aside).
+      expect(
+        fetchSpy.mock.calls.filter(([url]) =>
+          urlOf(url).includes('air-quality-api'),
+        ),
+      ).toHaveLength(2);
     });
   });
 
@@ -193,8 +253,15 @@ describe('air-quality routes', () => {
       const res = await request(createApp()).get('/api/v1/air-quality/sources');
 
       expect(res.status).toBe(200);
-      expect(res.body.data).toHaveLength(2);
-      const [openMeteo, cpcb] = res.body.data;
+      // Phase A2 adds the weather source (a deliberate contract change).
+      expect(res.body.data).toHaveLength(3);
+      const [openMeteo, cpcb, weather] = res.body.data;
+      expect(weather).toMatchObject({
+        id: 'open-meteo-weather',
+        dataKind: 'model_forecast',
+        status: 'available',
+        licence: 'CC BY 4.0',
+      });
       expect(openMeteo).toMatchObject({
         id: 'open-meteo',
         dataKind: 'model_forecast',

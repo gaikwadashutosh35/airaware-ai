@@ -46,9 +46,13 @@ describe('SourcesPanel', () => {
       }),
     ).toBeDefined();
     expect(screen.getByRole('heading', { name: 'Sources' })).toBeDefined();
-    expect(screen.getByText('Connected')).toBeDefined();
+    // Open-Meteo air and Open-Meteo weather are connected; CPCB is not.
+    expect(screen.getAllByText('Connected')).toHaveLength(2);
     expect(screen.getByText('Not connected')).toBeDefined();
-    expect(screen.getByText('Licence: CC BY 4.0')).toBeDefined();
+    expect(screen.getAllByText('Licence: CC BY 4.0')).toHaveLength(2);
+    expect(
+      screen.getByText('Weather forecasts from Open-Meteo.com.'),
+    ).toBeDefined();
   });
 
   it('leaves out the sources list when sources failed', () => {

@@ -10,6 +10,7 @@ import { plansRouter } from './routes/plans.ts';
 import { preferencesRouter } from './routes/preferences.ts';
 import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
+import { createCachedWeather } from './services/air-data/cachedWeather.ts';
 import type { GeneratePlan } from './services/ai/personalize.ts';
 import { createDailyPlanner } from './services/recommendations/dailyPlan.ts';
 import type { SavedStore } from './services/saved/store.ts';
@@ -100,7 +101,10 @@ export function createApp(options: AppOptions = {}): express.Express {
       },
     },
   });
-  app.use('/api/v1/air-quality', airQualityRouter(forecast));
+  app.use(
+    '/api/v1/air-quality',
+    airQualityRouter(forecast, createCachedWeather()),
+  );
   app.use('/api/v1/locations', locationsRouter());
   app.use(
     '/api/v1/recommendations',

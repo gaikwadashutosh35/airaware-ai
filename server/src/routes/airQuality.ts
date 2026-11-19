@@ -3,7 +3,9 @@ import { z } from 'zod';
 import type { SourceInfo } from '../../../shared/contracts.ts';
 import { HttpError, parseQuery } from '../errors.ts';
 import type { CachedForecast } from '../services/air-data/cachedForecast.ts';
+import type { CachedWeather } from '../services/air-data/cachedWeather.ts';
 import { LIMITATIONS, SOURCE_URL } from '../services/air-data/openMeteo.ts';
+import { WEATHER_SOURCE_URL } from '../services/air-data/openMeteoWeather.ts';
 import { assessAir } from '../services/recommendations/airCheck.ts';
 
 // Plain decimals with at most 2 places (~1.1 km; the model grid is ~45 km).
@@ -43,15 +45,34 @@ const SOURCES: SourceInfo[] = [
       'No verified machine-readable CPCB feed is connected; official observations are not shown.',
     ],
   },
+  {
+    id: 'open-meteo-weather',
+    name: 'Open-Meteo Weather Forecast API',
+    dataKind: 'model_forecast',
+    status: 'available',
+    url: WEATHER_SOURCE_URL,
+    licence: 'CC BY 4.0',
+    attribution: 'Weather forecasts from Open-Meteo.com.',
+    limitations: [
+      'Weather is a model forecast for the same grid area; local showers can differ.',
+    ],
+  },
 ];
 
-export function airQualityRouter(forecast: CachedForecast): Router {
+export function airQualityRouter(
+  forecast: CachedForecast,
+  weather: CachedWeather,
+): Router {
   const router = Router();
 
   router.get('/forecast', async (req, res) => {
     const { latitude, longitude } = parseQuery(coordinatesQuery, req.query);
     const now = new Date();
-    const series = await forecast(latitude, longitude, now);
+    // In parallel; the weather never fails the air forecast (null instead).
+    const [series, weatherNow] = await Promise.all([
+      forecast(latitude, longitude, now),
+      weather(latitude, longitude, now).catch(() => null),
+    ]);
     // Open-Meteo does not report the model run time, so the forecast's age is
     // unknown; `retrievedAt` says when the server fetched it. `airCheck` is
     // the same 24-hour check the daily plan uses, so the client never
@@ -61,6 +82,7 @@ export function airQualityRouter(forecast: CachedForecast): Router {
         ...series,
         freshness: 'unknown',
         airCheck: assessAir(series, now),
+        weather: weatherNow,
       },
     });
   });

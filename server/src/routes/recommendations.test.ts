@@ -205,6 +205,11 @@ describe('POST /api/v1/recommendations/daily-plan', () => {
     );
     const res = await post(app, body);
     expect(res.body.data.air.level).toBe('elevated');
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    // One air call for both routes (the forecast view also asks for weather).
+    expect(
+      fetchSpy.mock.calls.filter((call: unknown[]) =>
+        String(call[0]).includes('air-quality-api'),
+      ),
+    ).toHaveLength(1);
   });
 });

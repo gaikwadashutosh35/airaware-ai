@@ -108,10 +108,24 @@ export interface AirAssessment {
   checks: PollutantCheck[];
 }
 
-// The forecast endpoint's `data`: the series plus the server's 24-hour air
-// check for the same series and time.
+// Open-Meteo's weather forecast for the hour containing the request time.
+// Each field is null when the provider leaves it out.
+export interface WeatherNow {
+  time: string;
+  temperatureC: number | null;
+  precipitationMm: number | null;
+  precipitationProbability: number | null;
+  cloudCoverPercent: number | null;
+  visibilityM: number | null;
+  retrievedAt: string;
+}
+
+// The forecast endpoint's `data`: the series, the server's 24-hour air check
+// for the same series and time, and this hour's weather (null when the
+// weather provider fails; the air forecast never depends on it).
 export interface ForecastData extends ForecastSeries {
   airCheck: AirAssessment;
+  weather: WeatherNow | null;
 }
 
 export type SourceReferenceId = 'open-meteo' | 'cpcb-naaqs-2009';

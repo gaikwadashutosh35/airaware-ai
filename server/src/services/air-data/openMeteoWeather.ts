@@ -1,0 +1,74 @@
+import { z } from 'zod';
+import type { WeatherNow } from '../../../../shared/contracts.ts';
+import { fetchJson } from '../fetchJson.ts';
+
+// Open-Meteo's weather forecast (free, no key). Fixed host, like the air
+// call, so no configuration can redirect it.
+const BASE_URL = 'https://api.open-meteo.com/v1/forecast';
+export const WEATHER_SOURCE_URL = 'https://open-meteo.com/en/docs';
+const HOUR_MS = 3_600_000;
+
+const VARIABLES = [
+  'temperature_2m',
+  'precipitation',
+  'precipitation_probability',
+  'cloud_cover',
+  'visibility',
+] as const;
+
+const column = z.array(z.number().nullable()).optional();
+const rawWeather = z
+  .object({
+    hourly: z.object({
+      time: z.array(z.number().int()).min(1),
+      temperature_2m: column,
+      precipitation: column,
+      precipitation_probability: column,
+      cloud_cover: column,
+      visibility: column,
+    }),
+  })
+  .refine(({ hourly }) =>
+    VARIABLES.every(
+      (name) => !hourly[name] || hourly[name].length === hourly.time.length,
+    ),
+  );
+
+// This hour's weather for coordinates already rounded for privacy, or null
+// when the provider fails or has no hour containing `now`. Never throws:
+// the air forecast must not fail because of the weather.
+export async function fetchWeather(
+  latitude: number,
+  longitude: number,
+  now: Date,
+): Promise<WeatherNow | null> {
+  const url = new URL(BASE_URL);
+  url.searchParams.set('latitude', String(latitude));
+  url.searchParams.set('longitude', String(longitude));
+  url.searchParams.set('hourly', VARIABLES.join(','));
+  url.searchParams.set('timeformat', 'unixtime');
+  url.searchParams.set('forecast_hours', '2');
+  let raw: z.infer<typeof rawWeather>;
+  try {
+    raw = await fetchJson(url, rawWeather);
+  } catch {
+    return null;
+  }
+
+  const t = now.getTime();
+  const i = raw.hourly.time.findIndex(
+    (seconds) => seconds * 1000 <= t && t < seconds * 1000 + HOUR_MS,
+  );
+  if (i === -1) return null;
+  const at = (name: (typeof VARIABLES)[number]) =>
+    raw.hourly[name]?.[i] ?? null;
+  return {
+    time: new Date(raw.hourly.time[i]! * 1000).toISOString(),
+    temperatureC: at('temperature_2m'),
+    precipitationMm: at('precipitation'),
+    precipitationProbability: at('precipitation_probability'),
+    cloudCoverPercent: at('cloud_cover'),
+    visibilityM: at('visibility'),
+    retrievedAt: now.toISOString(),
+  };
+}

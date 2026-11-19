@@ -42,6 +42,14 @@ Rules:
 - Do not relabel European/US AQI fields as CPCB National AQI.
 - Review attribution, license, quota, and commercial-use requirements before production.
 
+### Open-Meteo Weather Forecast API (Phase A2)
+
+- **Endpoint:** `https://api.open-meteo.com/v1/forecast`, a fixed constant. It is called by the server only, never the browser.
+- **Request:** the same 2-decimal coordinates as the air call, with `hourly=temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility`, `timeformat=unixtime` and `forecast_hours=2`.
+- **Use:** only the hour containing the request time. It drives the readout scene (clouds, rain, heat, fog) and one line of words.
+- **Failure:** any failure gives `weather: null`, and the air forecast is unaffected. Logs name the host only, never the coordinates.
+- **Terms:** free tier, no key, CC BY 4.0 attribution ("Weather forecasts from Open-Meteo.com."), the same as the other Open-Meteo APIs.
+
 ## 4. Runtime AI provider — Gemini
 
 - Calls must originate from the backend.
