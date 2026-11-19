@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type Ref } from 'react';
 import type { KeyboardEvent } from 'react';
 import type { LocationResult } from '../../../../shared/contracts.ts';
 import { ApiError, searchLocations } from '../../services/api.ts';
@@ -10,8 +10,11 @@ const MIN_QUERY_LENGTH = 2;
 // ARIA 1.2 combobox with a listbox popup (WAI-ARIA APG "list autocomplete").
 export function LocationSearch({
   onSelect,
+  inputRef,
 }: {
   onSelect: (place: Place) => void;
+  // Lets the page move focus to the search (the place bar's "Change place").
+  inputRef?: Ref<HTMLInputElement>;
 }) {
   const id = useId();
   const inputId = `${id}-input`;
@@ -110,6 +113,7 @@ export function LocationSearch({
       </p>
       <div className="relative">
         <input
+          ref={inputRef}
           id={inputId}
           type="text"
           role="combobox"

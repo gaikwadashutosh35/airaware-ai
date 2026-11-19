@@ -34,6 +34,18 @@ const NEAR: Array<[number, number, number]> = [
   [350, 52, 32],
 ];
 
+// The same rows again on the right half, with heights rotated so the two
+// halves don't repeat exactly. Wide enough that `slice` keeps the sun in
+// view from a 320 px phone to a wide card.
+const shifted = (row: Array<[number, number, number]>, by: number) =>
+  row.map(([x, w], i): [number, number, number] => [
+    x + 400,
+    w,
+    row[(i + by) % row.length]![2],
+  ]);
+const FAR_ALL = [...FAR, ...shifted(FAR, 4)];
+const NEAR_ALL = [...NEAR, ...shifted(NEAR, 3)];
+
 // A decorative city skyline whose haze follows the 24-hour air check. The
 // readout's words carry the meaning; this picture is hidden from assistive
 // technology.
@@ -42,17 +54,17 @@ export function CitySkyline({ level }: { level: HazeLevel }) {
     <svg
       aria-hidden="true"
       data-haze-level={level}
-      viewBox="0 0 400 160"
+      viewBox="0 0 800 160"
       preserveAspectRatio="xMidYMax slice"
       className="block h-24 w-full sm:h-32"
     >
       <rect
-        width="400"
+        width="800"
         height="160"
         className={level === 0 ? 'fill-rule' : 'fill-surface-light'}
       />
       <rect
-        width="400"
+        width="800"
         height="160"
         className="fill-text-dark-muted"
         opacity={SKY_TINT[level]}
@@ -60,15 +72,15 @@ export function CitySkyline({ level }: { level: HazeLevel }) {
       {level > 0 && (
         <circle
           data-part="sun"
-          cx="300"
-          cy="52"
+          cx="560"
+          cy="56"
           r="18"
           className="fill-warning"
           opacity={SUN[level]}
         />
       )}
       <g className="fill-text-dark-muted" opacity="0.55">
-        {FAR.map(([x, w, h]) => (
+        {FAR_ALL.map(([x, w, h]) => (
           <rect key={x} x={x} y={160 - h} width={w} height={h} />
         ))}
         {/* A domed hall. */}
@@ -77,13 +89,13 @@ export function CitySkyline({ level }: { level: HazeLevel }) {
       </g>
       <rect
         data-part="haze-mid"
-        width="400"
+        width="800"
         height="160"
         className="fill-rule"
         opacity={HAZE_MID[level]}
       />
       <g className="fill-text-dark" opacity="0.85">
-        {NEAR.map(([x, w, h]) => (
+        {NEAR_ALL.map(([x, w, h]) => (
           <rect key={x} x={x} y={160 - h} width={w} height={h} />
         ))}
         {/* A memorial arch. */}
@@ -91,7 +103,7 @@ export function CitySkyline({ level }: { level: HazeLevel }) {
       </g>
       <rect
         data-part="haze-front"
-        width="400"
+        width="800"
         height="160"
         className="fill-rule"
         opacity={HAZE_FRONT[level]}

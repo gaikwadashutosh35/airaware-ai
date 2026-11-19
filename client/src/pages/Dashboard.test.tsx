@@ -293,6 +293,40 @@ describe('Dashboard', () => {
     expect(text).not.toMatch(/\bAQI\b/);
   });
 
+  it('the Change button moves focus to the place search', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    await choosePlace();
+    fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('combobox', {
+        name: 'Search for a city or area in India',
+      }),
+    );
+  });
+
+  it('air comes before the plan in reading order', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    const readout = screen.getByRole('heading', { name: 'Model forecast' });
+    const nextDays = screen.getByRole('heading', {
+      name: 'Your city, the next two days',
+    });
+    const plan = screen.getByRole('heading', { name: 'Your daily plan' });
+    expect(
+      readout.compareDocumentPosition(nextDays) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      nextDays.compareDocumentPosition(plan) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('shows the forecast limitations once, in the sources panel', async () => {
     routeFetch(ok());
     render(<Dashboard />);

@@ -40,6 +40,8 @@ function Dashboard() {
   // that plan saved.
   const [deletedPlanId, setDeletedPlanId] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  // The place search, focused by the place bar's "Change place".
+  const searchRef = useRef<HTMLInputElement>(null);
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
@@ -85,18 +87,21 @@ function Dashboard() {
     <>
       <title>Air-quality dashboard | AirAware AI</title>
       <header className="border-b border-rule">
-        <div className="mx-auto flex min-h-16 max-w-5xl items-center px-4 sm:px-6">
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center px-4 sm:px-6">
           <a href="/" className="text-lg font-semibold">
             AirAware AI
           </a>
         </div>
       </header>
-      <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
         <h1 className="text-3xl font-semibold tracking-tight">
           Air quality near you
         </h1>
         <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-          <LocationSearch onSelect={(next) => choose(next, true)} />
+          <LocationSearch
+            inputRef={searchRef}
+            onSelect={(next) => choose(next, true)}
+          />
           <UseMyLocation
             onLocateStart={() => {
               awaitingLocation.current = true;
@@ -108,89 +113,111 @@ function Dashboard() {
           />
         </div>
 
-        {place ? (
-          <div className="flex flex-col gap-6">
-            <h2
-              ref={headingRef}
-              tabIndex={-1}
-              className="text-2xl font-semibold tracking-tight"
-            >
-              Air quality: {place.label}
-            </h2>
-            <p className="text-sm text-text-dark-muted">
-              Forecast location: {place.latitude.toFixed(2)},{' '}
-              {place.longitude.toFixed(2)}
-            </p>
-            <ObservationPanel note={cpcb?.limitations[0]} />
-            {forecast.state.status === 'ready' ? (
+        {/* Air on the left, the plan on the right from lg; one column (air
+            first) below it. */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+          <div className="flex min-w-0 flex-col gap-6">
+            {place ? (
               <>
-                <AirReadout
-                  data={forecast.state.data.series}
-                  now={forecast.state.data.loadedAt}
-                  stale={isOlderThan(
-                    forecast.state.data.series.retrievedAt,
-                    now,
-                    60,
-                  )}
-                />
-                <ForecastPanel
-                  data={forecast.state.data.series}
-                  now={forecast.state.data.loadedAt}
-                />
+                <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule p-4 sm:p-5">
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <h2
+                      ref={headingRef}
+                      tabIndex={-1}
+                      className="text-2xl font-semibold tracking-tight"
+                    >
+                      Air quality: {place.label}
+                    </h2>
+                    <p className="text-sm text-text-dark-muted">
+                      Forecast location: {place.latitude.toFixed(2)},{' '}
+                      {place.longitude.toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => searchRef.current?.focus()}
+                    className="min-h-11 rounded-md border border-text-dark px-4"
+                  >
+                    Change place
+                  </button>
+                </section>
+                {forecast.state.status === 'ready' ? (
+                  <>
+                    <AirReadout
+                      data={forecast.state.data.series}
+                      now={forecast.state.data.loadedAt}
+                      stale={isOlderThan(
+                        forecast.state.data.series.retrievedAt,
+                        now,
+                        60,
+                      )}
+                    />
+                    <ForecastPanel
+                      data={forecast.state.data.series}
+                      now={forecast.state.data.loadedAt}
+                    />
+                  </>
+                ) : forecast.state.status === 'error' ? (
+                  <ErrorState
+                    error={forecast.state.error}
+                    onRetry={forecast.retry}
+                  />
+                ) : (
+                  <Loading label="Loading forecast" />
+                )}
+                <ObservationPanel note={cpcb?.limitations[0]} />
               </>
-            ) : forecast.state.status === 'error' ? (
-              <ErrorState
-                error={forecast.state.error}
-                onRetry={forecast.retry}
-              />
             ) : (
-              <Loading label="Loading forecast" />
+              <p className="max-w-prose text-text-dark-muted">
+                Search for a place or use your location to see its air-quality
+                forecast.
+              </p>
             )}
           </div>
-        ) : (
-          <p className="max-w-prose text-text-dark-muted">
-            Search for a place or use your location to see its air-quality
-            forecast.
-          </p>
-        )}
-        <HouseholdPreferencesForm
-          onChange={setContext}
-          onDeleted={() => {
-            setResets((n) => n + 1);
-            setOpened(null);
-            setListVersion((n) => n + 1);
-          }}
-        />
-        <DailyPlanSection
-          // A new place, or deleting saved data, starts the plan area afresh.
-          key={`${place?.label}|${forecastKey}#${resets}`}
-          place={place}
-          context={context}
-          now={now}
-          onSaved={() => setListVersion((n) => n + 1)}
-          opened={opened}
-          onBackToToday={() => setOpened(null)}
-          deletedPlanId={deletedPlanId}
-        />
-        <SavedPlansList
-          version={listVersion}
-          onOpen={setOpened}
-          onDeleted={(id) => {
-            setDeletedPlanId(id);
-            setOpened((current) => (current?.id === id ? null : current));
-          }}
-        />
-        <SourcesPanel
-          sources={sources.state.status === 'ready' ? sources.state.data : null}
-          forecastLimitations={
-            forecast.state.status === 'ready'
-              ? forecast.state.data.series.limitations
-              : []
-          }
-        />
+
+          <div className="flex min-w-0 flex-col gap-6">
+            <HouseholdPreferencesForm
+              onChange={setContext}
+              onDeleted={() => {
+                setResets((n) => n + 1);
+                setOpened(null);
+                setListVersion((n) => n + 1);
+              }}
+            />
+            <DailyPlanSection
+              // A new place, or deleting saved data, starts the plan area afresh.
+              key={`${place?.label}|${forecastKey}#${resets}`}
+              place={place}
+              context={context}
+              now={now}
+              onSaved={() => setListVersion((n) => n + 1)}
+              opened={opened}
+              onBackToToday={() => setOpened(null)}
+              deletedPlanId={deletedPlanId}
+            />
+            <SavedPlansList
+              version={listVersion}
+              onOpen={setOpened}
+              onDeleted={(id) => {
+                setDeletedPlanId(id);
+                setOpened((current) => (current?.id === id ? null : current));
+              }}
+            />
+            <SourcesPanel
+              sources={
+                sources.state.status === 'ready' ? sources.state.data : null
+              }
+              forecastLimitations={
+                forecast.state.status === 'ready'
+                  ? forecast.state.data.series.limitations
+                  : []
+              }
+            />
+          </div>
+        </div>
       </main>
       <footer className="border-t border-rule">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
           <Attribution />
           <a href="/privacy" className="underline">
             Privacy
