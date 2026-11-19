@@ -11,6 +11,7 @@
     "test:coverage": "vitest run --coverage --coverage.reporter=lcov --coverage.reporter=text-summary"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0",
     "@supabase/supabase-js": "^2.119.1",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.2",
