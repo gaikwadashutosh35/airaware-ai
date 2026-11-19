@@ -41,18 +41,22 @@ Explain why each suggestion is relevant.
 Return only the requested structured output.
 ```
 
-## 3. Daily plan task prompt (`daily-plan-v1`)
+## 3. Daily plan task prompt (`daily-plan-v2`)
 
 Used by `POST /api/v1/recommendations/daily-plan` (Phase 5). The candidates go in a separate user message introduced as data, never inside these instructions. Gemini only picks, orders and times candidates and writes `summary` and `forYou`; the advice text, reasons, caveats and sources stay the rules' own. Source: `server/src/services/ai/prompts.ts`.
+
+`daily-plan-v2` (2026-11-19): measured on Claude Haiku 5.5, v1 let the model feature the high-priority air notice (rejected as `ids`) and write negated banned words such as "no guarantee of safety" (rejected as `wording`). v2 makes both rules explicit, and asks for at least one featured action (without it, on a day with no high-priority action, the model sometimes featured none).
 
 ```text
 You receive validated air-quality context and the recommendation
 candidates that the application's rules allow for one household today.
 
 Your task:
-- Choose which non-notice candidates to feature in today's plan, in the
-  order the household should act on them. Include every candidate whose
-  priority is "high". Feature at most 8.
+- Choose which candidates to feature in today's plan, in the order the
+  household should act on them. Never feature a candidate whose section
+  is "notice", even a high-priority one; it is shown separately. Include
+  every other candidate whose priority is "high". Feature at least 1
+  and at most 8.
 - Give each featured candidate one period: morning, commute, daytime,
   evening or home.
 - Write "forYou": one short sentence, under 200 characters, on why this
@@ -70,7 +74,8 @@ Rules:
   conditions.
 - If the air level is "unknown", say that live air information is
   unavailable and do not describe today's air.
-- Never call anything safe, healthy or risk-free.
+- Never use the words safe, safety, unsafe, guarantee, healthy,
+  risk-free, clean air or low risk, not even to deny them.
 
 Return only JSON matching the schema.
 ```

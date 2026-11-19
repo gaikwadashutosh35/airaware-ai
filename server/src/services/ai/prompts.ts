@@ -1,6 +1,6 @@
 // Daily-plan prompts. SYSTEM_PROMPT is AI_PROMPTS.md §2 verbatim;
-// TASK_PROMPT is AI_PROMPTS.md §3 (daily-plan-v1).
-export const PROMPT_VERSION = 'daily-plan-v1';
+// TASK_PROMPT is AI_PROMPTS.md §3 (daily-plan-v2).
+export const PROMPT_VERSION = 'daily-plan-v2';
 
 export const SYSTEM_PROMPT = `You are AirAware AI, a general air-quality information and household
 action assistant.
@@ -34,9 +34,11 @@ export const TASK_PROMPT = `You receive validated air-quality context and the re
 candidates that the application's rules allow for one household today.
 
 Your task:
-- Choose which non-notice candidates to feature in today's plan, in the
-  order the household should act on them. Include every candidate whose
-  priority is "high". Feature at most 8.
+- Choose which candidates to feature in today's plan, in the order the
+  household should act on them. Never feature a candidate whose section
+  is "notice", even a high-priority one; it is shown separately. Include
+  every other candidate whose priority is "high". Feature at least 1
+  and at most 8.
 - Give each featured candidate one period: morning, commute, daytime,
   evening or home.
 - Write "forYou": one short sentence, under 200 characters, on why this
@@ -54,6 +56,7 @@ Rules:
   conditions.
 - If the air level is "unknown", say that live air information is
   unavailable and do not describe today's air.
-- Never call anything safe, healthy or risk-free.
+- Never use the words safe, safety, unsafe, guarantee, healthy,
+  risk-free, clean air or low risk, not even to deny them.
 
 Return only JSON matching the schema.`;

@@ -51,6 +51,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 ### Changed
 - Hosting decision: Netlify (ADR-006), replacing one Google Cloud Run service (ADR-005), which had replaced Vercel + Render.
 - On Netlify, rate limits key on Netlify's client-IP header, and `X-Forwarded-For` is ignored.
+- Daily plan prompt `daily-plan-v2`: it never features the air notice, always features at least one action, and bans the unsafe words even when they are negated. Measured on Claude Haiku 5.5, 29 of 30 answers passed the checks, up from 14 of 41 with v1.
 
 ### Fixed
 - Phase 8: Gemini calls are capped at 200 per day per server and reused for identical requests; the Gemini key never follows a redirect; place labels reject control characters; the CPCB standards link uses https; a saved snapshot says "that day"; deleting one saved plan keeps keyboard focus and says so; a slow load no longer overwrites edited answers; the chart no longer assumes a unit.

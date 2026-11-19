@@ -69,7 +69,7 @@ describe('POST /api/v1/recommendations/daily-plan', () => {
     const plan = res.body.data;
     expect(plan.generatedBy).toBe('ai');
     expect(plan.model).toBe('gemini-test');
-    expect(plan.promptVersion).toBe('daily-plan-v1');
+    expect(plan.promptVersion).toBe('daily-plan-v2');
     expect(plan.summary).toBe(SUMMARY);
     expect(plan.air.level).toBe('elevated');
     expect(plan.notices[0].id).toBe('air.elevated');
