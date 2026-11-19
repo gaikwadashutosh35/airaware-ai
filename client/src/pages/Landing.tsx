@@ -51,11 +51,27 @@ function ActionLink() {
 
 // One story chapter: a short claim beside the real card that backs it,
 // drawn by the app's own PlanCard on a light panel, labelled as an example.
+// "01"…: a decorative chapter or step number, hidden from screen readers so
+// headings read cleanly.
+function Number({ n }: { n: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      data-ordinal
+      className="text-sm font-semibold tracking-wide text-primary tabular-nums"
+    >
+      {String(n).padStart(2, '0')}
+    </span>
+  );
+}
+
 function Chapter({
   example,
+  number,
   flip,
 }: {
   example: LandingExample;
+  number: number;
   flip: boolean;
 }) {
   const headingId = useId();
@@ -65,6 +81,7 @@ function Chapter({
       className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:py-24"
     >
       <div className={`flex flex-col gap-4 ${flip ? 'lg:order-2' : ''}`}>
+        <Number n={number} />
         <h2
           id={headingId}
           className="text-4xl font-semibold tracking-tight sm:text-5xl"
@@ -154,13 +171,14 @@ function Landing() {
           </div>
           <ol
             aria-label="How a forecast reaches you"
-            className="grid gap-10 [counter-reset:step] md:grid-cols-2 lg:grid-cols-4 lg:gap-8"
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
           >
-            {STEPS.map((step) => (
+            {STEPS.map((step, i) => (
               <li
                 key={step.title}
-                className="flex flex-col gap-3 border-t-2 border-primary pt-6 [counter-increment:step] before:text-sm before:font-semibold before:text-primary before:content-[counter(step)]"
+                className="flex flex-col gap-3 rounded-xl border border-rule-dark bg-surface p-6"
               >
+                <Number n={i + 1} />
                 <h3 className="text-2xl font-semibold">{step.title}</h3>
                 <p className="text-lg text-text-muted">{step.detail}</p>
               </li>
@@ -172,6 +190,7 @@ function Landing() {
           <Chapter
             key={example.candidate.id}
             example={example}
+            number={i + 1}
             flip={i % 2 === 1}
           />
         ))}

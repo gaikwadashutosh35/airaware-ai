@@ -124,6 +124,30 @@ describe('Landing', () => {
     ).toBeDefined();
   });
 
+  it('chapter numbers are decorative', () => {
+    render(<Landing />);
+
+    LANDING_EXAMPLES.forEach((example, i) => {
+      const chapter = screen.getByRole('region', { name: example.heading });
+      const number = within(chapter).getByText(String(i + 1).padStart(2, '0'));
+      expect(number.closest('[aria-hidden="true"]')).not.toBeNull();
+    });
+  });
+
+  it('the pipeline steps are numbered cards', () => {
+    render(<Landing />);
+
+    const steps = screen.getByRole('list', {
+      name: 'How a forecast reaches you',
+    });
+    within(steps)
+      .getAllByRole('listitem')
+      .forEach((item, i) => {
+        const number = within(item).getByText(String(i + 1).padStart(2, '0'));
+        expect(number.closest('[aria-hidden="true"]')).not.toBeNull();
+      });
+  });
+
   it('explains where every number comes from, in order', () => {
     render(<Landing />);
 
@@ -190,6 +214,11 @@ describe('Landing', () => {
       footer.textContent ?? '',
       '',
     );
+    // Chapter and step ordinals ("01"…) are labels, not data; only they are
+    // exempt, by their marker.
+    for (const ordinal of container.querySelectorAll('[data-ordinal]')) {
+      text = text.replace(ordinal.textContent ?? '', '');
+    }
     for (const figure of REAL_FIGURES) text = text.replaceAll(figure, '');
     expect(text).not.toMatch(/\d/);
   });
