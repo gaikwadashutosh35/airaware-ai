@@ -166,6 +166,53 @@ describe('AirReadout', () => {
     );
   });
 
+  it('the weather line names only known values', () => {
+    const { container } = show({
+      ...forecastFixture,
+      weather: {
+        ...forecastFixture.weather!,
+        temperatureC: 31,
+        precipitationProbability: 70,
+        precipitationMm: 0.4,
+        cloudCoverPercent: 85,
+        visibilityM: null,
+      },
+    });
+    expect(container.textContent).toContain(
+      'Weather this hour: 31 °C, rain (0.4 mm), 85 % cloud cover. Open-Meteo weather forecast.',
+    );
+    expect(container.textContent).not.toMatch(/visibility/i);
+  });
+
+  it('says rain is likely when only the chance is high', () => {
+    const { container } = show({
+      ...forecastFixture,
+      weather: {
+        ...forecastFixture.weather!,
+        temperatureC: 29,
+        precipitationMm: 0,
+        precipitationProbability: 70,
+        cloudCoverPercent: null,
+      },
+    });
+    expect(container.textContent).toContain(
+      'Weather this hour: 29 °C, rain likely (70 %). Open-Meteo weather forecast.',
+    );
+  });
+
+  it('says when weather is unavailable', () => {
+    const { container } = show({ ...forecastFixture, weather: null });
+    expect(container.textContent).toContain('Weather unavailable');
+  });
+
+  it('the scene follows the weather', () => {
+    const { container } = show({
+      ...forecastFixture,
+      weather: { ...forecastFixture.weather!, precipitationMm: 1.2 },
+    });
+    expect(container.querySelector('[data-part="rain"]')).not.toBeNull();
+  });
+
   it('never says AQI, safe or healthy', () => {
     for (const airCheck of [elevated, forecastFixture.airCheck]) {
       const { container, unmount } = show({ ...forecastFixture, airCheck });

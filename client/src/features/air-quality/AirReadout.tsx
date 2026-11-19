@@ -2,10 +2,11 @@ import { useId } from 'react';
 import type {
   ForecastData,
   PollutantCheck,
+  WeatherNow,
 } from '../../../../shared/contracts.ts';
 import { CitySkyline } from './CitySkyline.tsx';
 import { formatDateTime, formatTime, hourForNow } from './forecast.ts';
-import { hazeLevel } from './haze.ts';
+import { sceneFromConditions } from './scene.ts';
 
 const SHORT = { PM2_5: 'PM2.5', PM10: 'PM10' } as const;
 
@@ -18,6 +19,28 @@ function checkText(check: PollutantCheck, unit: string): string {
   }
   const side = check.status === 'above_limit' ? 'above' : 'within';
   return `${name} 24-hour average ${check.average24h} ${unit}, ${side} the ${check.limit} ${unit} limit`;
+}
+
+// This hour's weather in words, from known values only. The scene above
+// draws the same facts; this line is what a screen reader hears.
+function weatherLine(weather: WeatherNow | null): string {
+  if (!weather) return 'Weather unavailable';
+  const parts: string[] = [];
+  if (weather.temperatureC !== null) parts.push(`${weather.temperatureC} °C`);
+  if ((weather.precipitationMm ?? 0) >= 0.2) {
+    parts.push(`rain (${weather.precipitationMm} mm)`);
+  } else if ((weather.precipitationProbability ?? 0) >= 60) {
+    parts.push(`rain likely (${weather.precipitationProbability} %)`);
+  }
+  if (weather.cloudCoverPercent !== null) {
+    parts.push(`${weather.cloudCoverPercent} % cloud cover`);
+  }
+  if (weather.visibilityM !== null && weather.visibilityM < 1000) {
+    parts.push('visibility under 1 km');
+  }
+  return parts.length
+    ? `Weather this hour: ${parts.join(', ')}. Open-Meteo weather forecast.`
+    : 'Weather this hour: no values reported. Open-Meteo weather forecast.';
 }
 
 function Marker({ above }: { above: boolean }) {
@@ -63,7 +86,10 @@ export function AirReadout({
       aria-labelledby={headingId}
       className="overflow-hidden rounded-lg border border-rule"
     >
-      <CitySkyline level={hazeLevel(data.airCheck)} />
+      <CitySkyline scene={sceneFromConditions(data.airCheck, data.weather)} />
+      <p className="border-b border-rule px-5 py-2 text-sm text-text-dark-muted sm:px-8">
+        {weatherLine(data.weather)}
+      </p>
       <div className="flex flex-col gap-4 p-5 sm:p-8">
         <div className="flex flex-col gap-1">
           <h3 id={headingId} className="text-xl font-semibold">
