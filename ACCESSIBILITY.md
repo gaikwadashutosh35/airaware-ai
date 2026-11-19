@@ -47,3 +47,25 @@ The app must be usable by people with different visual, motor, cognitive, and as
 - Manual chart and form review.
 
 Automated scans do not prove full accessibility conformance.
+
+## Results (Phase 8, 2026-11-19)
+
+**axe in a real browser** (Chromium, colour contrast included, desktop and Pixel 7):
+- `/` and `/privacy`: no violations (`e2e/pages.spec.ts`, 4/4).
+- The dashboard's failure states and the full journey: no violations (`e2e/failures.spec.ts`, `e2e/journey.spec.ts`).
+
+**Keyboard walk** (Tab and Shift+Tab only, built-in browser, Vite dev build):
+
+| Page | Focus order | Focus visible | Traps |
+|---|---|---|---|
+| `/` | wordmark → place search → the four example "Why?" panels → the two source links in the open example → "Check your area's air quality" → footer links (Open-Meteo.com, Privacy) → wraps to the top | Yes. A blue ring on the dark page; the light-theme ring inside the light example panels | None |
+| `/app`, with a plan built | place search → Use my location → Hourly forecast → the 10 household questions → Save my answers → Delete my saved data → Build my daily plan → each card's "Why?" → Save plan → source links → footer links → wraps | Yes (checked on Build my daily plan). After building, the live region says "Your plan is ready." | None |
+| `/privacy` | heading → Open-Meteo.com → Privacy → wordmark → wraps | Yes | None |
+
+Focus order follows the visual order on every page.
+
+**Covered by component tests, not walked by hand:**
+- the saved-plans list and the delete confirmation (focus moves to Cancel);
+- the snapshot banner (focus moves to it on Open, and back to the plan heading on "Back to today").
+
+A screen-reader pass with a real reader has not been done yet.
