@@ -387,6 +387,50 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Acceptance | Scans actually run and findings reviewed (reported with real counts); no unresolved critical |
 | Needs from you | Repo pushed public; SonarQube Cloud account + `SONAR_TOKEN` secret |
 
+**As built (2026-11-19):**
+- **Repo:** public at `github.com/gaikwadashutosh35/airaware-ai`, one branch (`main`). GitHub secret scanning, push protection and Dependabot security updates are on by default.
+- **CI:** CI's first GitHub run was green. CI now has three jobs: `verify` (with coverage), `secrets` (gitleaks) and `sonar`. CodeQL default setup is on. See `TESTING_QA.md` §9.
+
+**Real counts, by source:**
+
+| Source | Result |
+|---|---|
+| gitleaks | Local: 61 commits, no leaks. CI: 63 commits, no leaks. |
+| `npm audit` | 0 vulnerabilities |
+| CodeQL | 0 alerts (JavaScript/TypeScript 87 rules, Actions 17 rules) |
+| SonarQube Cloud, first analysis | 0 bugs, 0 security hotspots, 0% duplication, 6 issues. Five were fixed: 2× http link, 3× `npm ci` without `--ignore-scripts`. One is accepted with a reason: `tabIndex` on the scrollable table. Coverage read 87% because the Playwright files were counted as app code; that scope is now fixed. |
+| Security audit (`security-audit` skill, quick profile, source-only) | 9 agents; 13 of 16 areas covered. 0 confirmed, 0 rejected, 1 needs-validation lead, 1 deferred (retry and fail-open amplification), 16 hardening notes. |
+| Code review (high) | 9 findings: 5 fixed, 4 accepted |
+| Accessibility | axe in a real browser on `/` and `/privacy` 4/4; keyboard walk of all three pages with no traps (`ACCESSIBILITY.md`) |
+
+- **Security audit's needs-validation lead:** unbounded Gemini spend. Graded High and fixed: answers are cached by their exact input, and each server makes at most 200 Gemini calls per day.
+
+**Fixes** (each with a test that failed first):
+- Gemini spend cap and answer reuse.
+- The Gemini key never follows a redirect.
+- Place labels reject control characters.
+- The CPCB link uses https.
+- `npm ci --ignore-scripts` in CI and in both Docker stages. The image was rebuilt and checked: `/api/v1/health`, `/` and `/privacy` return 200.
+- The chart for an empty forecast, and a missing unit.
+- Feedback and focus after deleting one saved plan.
+- "That day" wording on saved snapshots.
+- A slow load no longer overwrites edited answers.
+- The e2e cleanup check.
+
+**Re-tests after the fixes:**
+- Vitest: server 202 passed + 5 skipped, client 178/178.
+- Live Supabase isolation test 4/4.
+- `npm run e2e` 16/16.
+
+**Accepted risks:** listed in `THREAT_MODEL.md`, "Residual risks".
+
+**Not done:**
+- Unslop isn't installed, so that audit was skipped.
+- No screen-reader pass with a real reader.
+- Tidy-ups left for the owner's call: duplicated button styles and delete confirmation.
+
+**Plan files:** `docs/superpowers/specs/2026-11-19-phase8-audit-design.md`, `docs/superpowers/plans/2026-11-19-phase8-audit.md`.
+
 ### Phase 9 — Production deployment (≈1–2 h + your account setup)
 
 Option B: Dockerfile (multi-stage, client built into server static dir) → Cloud Run; secrets in Secret Manager; Supabase auth redirect URLs; verify real provider responses and timestamps in production; fresh-session and two-user checks; write `DEPLOYMENT.md`.

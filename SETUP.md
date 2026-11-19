@@ -112,7 +112,7 @@ Terminal 2 (client on port 5173, proxying `/api`):
 npm run dev -w client
 ```
 
-Open `http://localhost:5173`. The server listens on `PORT` (default 8080; Cloud Run sets it in production). `GET http://localhost:8080/api/v1/health` confirms it is up. Root scripts run every workspace: `npm run typecheck` (it also checks `e2e/`), `npm run lint`, `npm test`, `npm run build`.
+Open `http://localhost:5173`. The server listens on `PORT` (default 8080; Cloud Run sets it in production). `GET http://localhost:8080/api/v1/health` confirms it is up. Root scripts run every workspace: `npm run typecheck` (it also checks `e2e/`), `npm run lint`, `npm test`, `npm run test:coverage`, `npm run build`. CI installs with `npm ci --ignore-scripts`, because no dependency needs an install script.
 
 End-to-end tests build the client and start their own server on port 8090 (your dev servers can keep running):
 ```bash

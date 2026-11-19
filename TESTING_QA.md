@@ -122,6 +122,18 @@ Repeat with data provider unavailable, stale response, and AI provider unavailab
 - Do not suppress an issue merely to obtain a passing quality gate.
 - Document accepted false positives or risks with evidence.
 
+**As set up (Phase 8):** CI (`.github/workflows/ci.yml`) runs three jobs on GitHub.
+
+| Job | What it does | When |
+|---|---|---|
+| `verify` | Format, lint, typecheck, Vitest with coverage, build | Every push and pull request |
+| `secrets` | gitleaks v8.30.1 (image pinned by digest) over the full history, with `--redact` | Every push and pull request |
+| `sonar` | SonarQube Cloud (`gaikwadashutosh35_airaware-ai`), with coverage from `verify` | Pushes to `main` only, because it needs `SONAR_TOKEN` |
+
+- **SonarQube settings:** in `sonar-project.properties`. Automatic analysis is off, and the quality gate is advisory, so CI doesn't wait on it.
+- **CodeQL:** GitHub's default setup (no workflow file) scans JavaScript/TypeScript and GitHub Actions.
+- **Locally:** `npm run test:coverage` writes `server/coverage/` and `client/coverage/`. `npm audit` is run by hand and its result recorded.
+
 ## 10. Release gate
 
 - Build, typecheck, and lint pass.

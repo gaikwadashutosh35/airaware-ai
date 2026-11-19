@@ -39,13 +39,15 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Tests:** `npm run e2e` (Playwright, Chromium, desktop and phone) runs the full journey against the real services, plus the failure states, with axe in a real browser.
 - Landing chapters 3–6 ("A plan for your day", "Cleaner air at home", "Small swaps, honestly", "See why, every time"). Each shows a real card from our rules, drawn by the app's own card and labelled "Example from our rules". A server test keeps the card text identical to the rules. No new screenshot.
 
+- Phase 8 audit: public GitHub repo; CI adds gitleaks (full history) and a SonarQube Cloud scan with coverage; CodeQL default setup; real-browser axe on the landing and privacy pages.
 ### Changed
 - Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.
 
 ### Fixed
-- Not yet applicable.
+- Phase 8: Gemini calls are capped at 200 per day per server and reused for identical requests; the Gemini key never follows a redirect; place labels reject control characters; the CPCB standards link uses https; a saved snapshot says "that day"; deleting one saved plan keeps keyboard focus and says so; a slow load no longer overwrites edited answers; the chart no longer assumes a unit.
 
 ### Security
+- Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.
 - Coordinates with more than 2 decimals (~1.1 km) are rejected, so precise locations never reach request logs or Open-Meteo. The app never logs coordinates.
 - Outbound hosts are fixed constants.
 - Queries are Zod-validated.
