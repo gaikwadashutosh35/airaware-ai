@@ -50,11 +50,11 @@ function Privacy() {
           ]}
         />
         <Part
-          title="What Gemini receives"
+          title="What the AI writers receive"
           items={[
-            "When AI personalisation is on, our server sends Google's Gemini the 24-hour forecast check and the text of the suggestions our rules picked for you.",
+            "When AI personalisation is on, our server sends the 24-hour forecast check and the text of the suggestions our rules picked for you to Google's Gemini, and to Anthropic's Claude, only when Gemini gives no usable answer.",
             'Those suggestions’ reasons can mention your answers, for example "You said you exercise outdoors".',
-            'Gemini never receives the place name, coordinates or your account.',
+            'Neither receives the place name, coordinates or your account.',
           ]}
         />
         <Part

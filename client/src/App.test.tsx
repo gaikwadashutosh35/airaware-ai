@@ -36,11 +36,15 @@ describe('App', () => {
     ).toEqual([
       'What stays in your browser',
       'What Open-Meteo receives',
-      'What Gemini receives',
+      'What the AI writers receive',
       'What Supabase stores',
       'How to delete',
       'No analytics',
     ]);
+    // Final review I1 (Claude backup): every recipient is named.
+    expect(container.textContent).toContain(
+      "Anthropic's Claude, only when Gemini gives no usable answer",
+    );
     expect(
       screen.getByRole('link', { name: 'Privacy' }).getAttribute('href'),
     ).toBe('/privacy');

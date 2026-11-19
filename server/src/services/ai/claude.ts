@@ -25,6 +25,10 @@ export function createClaudeGenerator(options: {
     apiKey: options.apiKey,
     // Never ANTHROPIC_BASE_URL from the environment: the key goes only here.
     baseURL: 'https://api.anthropic.com',
+    // Never ANTHROPIC_LOG or trace content: request bodies can echo
+    // household answers.
+    logLevel: 'off',
+    openTelemetry: false,
     timeout: TIMEOUT_MS,
     maxRetries: 0,
   });

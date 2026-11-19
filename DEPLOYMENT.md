@@ -47,7 +47,7 @@ Netlify → Deploys → pick an earlier published deploy → **Publish deploy**.
 
 ## Claude backup (owner only)
 
-1. **Set a spend limit.** In the Anthropic Console, set a monthly spend limit for the workspace that owns the key. The in-process cap (200 Claude calls per UTC day per function instance) is only a second line.
+1. **Set a spend limit (pending).** A Console Admin creates an "AirAware" workspace with a $10/month spend limit, and a key from that workspace replaces the current one. Until then the key is in the shared Default workspace with no Console limit, and the only bound is the in-process cap: 200 Claude calls per UTC day per function instance (`THREAT_MODEL.md`).
 2. **Add the key.** Add `ANTHROPIC_API_KEY` in Netlify's environment variables, marked **secret**, scoped to Functions. Optionally add `CLAUDE_MODEL`.
 3. **Redeploy.** Use Deploys → Trigger deploy. The function log then says "Claude backup: configured (claude-haiku-5-5)". While Gemini is failing, plans say "Made with AI (claude-haiku-5-5, …)".
 

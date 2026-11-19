@@ -141,6 +141,6 @@ How will the decision be tested or reviewed?
 **Consequences:**
 - A new runtime dependency, `@anthropic-ai/sdk` (pinned to `1.8.0`).
 - Claude gets the same minimal context and passes the same checks as Gemini.
-- Each writer has its own daily cap. The real bound on Claude spend is the Anthropic Console spend limit.
+- Each writer has its own daily cap. Claude spend has no Console limit yet: an Admin must create a limited "AirAware" workspace. Until then, the per-instance cap is the only bound (`THREAT_MODEL.md`).
 - In the worst case a plan takes about 20 s: Gemini times out after 10 s, then Claude gets 10 s.
 - The SDK sends the key as a bearer token, and the client pins `https://api.anthropic.com`.

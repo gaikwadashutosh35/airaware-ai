@@ -86,6 +86,23 @@ describe('createClaudeGenerator', () => {
     expect(sent().url).toBe('https://api.anthropic.com/v1/messages');
   });
 
+  // Final review M3: debug logging would print the request body, whose
+  // suggestion reasons can echo household answers.
+  it('stays silent whatever ANTHROPIC_LOG says', async () => {
+    vi.stubEnv('ANTHROPIC_LOG', 'debug');
+    const loud = ['debug', 'info', 'warn'].map((level) =>
+      vi.spyOn(console, level as 'debug').mockImplementation(() => {}),
+    );
+    generate = createClaudeGenerator({
+      apiKey: 'test-key',
+      model: 'claude-test',
+    });
+    respond({ type: 'error', error: { type: 'overloaded_error' } }, 529);
+    await expect(generate(input)).rejects.toThrow(/^http 529$/);
+    vi.unstubAllEnvs();
+    for (const spy of loud) expect(spy).not.toHaveBeenCalled();
+  });
+
   it('sends the same prompt and context as Gemini', async () => {
     respond(message());
     await generate(input);
