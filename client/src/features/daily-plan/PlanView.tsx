@@ -28,7 +28,7 @@ export function PlanView({ plan }: { plan: DailyPlan }) {
   const { air, forecast } = plan;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex max-w-prose flex-col gap-6">
       {/* A saved plan can be for another place than the one on screen. */}
       <div className="flex flex-col gap-1">
         <p className="text-lg font-semibold">Plan for {plan.place.label}</p>

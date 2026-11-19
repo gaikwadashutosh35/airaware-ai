@@ -163,7 +163,7 @@ export function DailyPlanSection({
           <div
             ref={bannerRef}
             tabIndex={-1}
-            className="flex flex-col items-start gap-3 rounded-md border border-text-dark p-4"
+            className="flex flex-col items-start gap-3 border-l-4 border-text-dark pl-4"
           >
             <p className="font-semibold">
               Saved plan from {formatDateTime(opened.savedAt)}. This is a
