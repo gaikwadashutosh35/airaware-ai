@@ -19,6 +19,7 @@ import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
 import { PlanView } from './PlanView.tsx';
 
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
+const READY = 'Your plan is ready.';
 const BUILD_FAILED = 'Something went wrong building your plan.';
 const CHANGED = 'Your answers changed. Build the plan again to use them.';
 const STALE =
@@ -35,7 +36,8 @@ interface Built {
   builtWith: string;
   // Sent again unchanged by "Save plan".
   body: PlanBody;
-  saved: boolean;
+  // The saved plan's id, once the server saved it.
+  savedId: string | null;
 }
 
 type Status =
@@ -55,6 +57,7 @@ export function DailyPlanSection({
   onSaved,
   opened,
   onBackToToday,
+  deletedPlanId = null,
 }: {
   place: Place | null;
   context: HouseholdContext;
@@ -65,22 +68,31 @@ export function DailyPlanSection({
   // plan, which stays underneath for "Back to today".
   opened: SavedPlan | null;
   onBackToToday: () => void;
+  // The last plan deleted from the list: if it is the one saved here, the
+  // plan on screen is no longer saved.
+  deletedPlanId?: string | null;
 }) {
   const [built, setBuilt] = useState<Built | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('');
+  // The one live region: building, ready, and save results.
+  const [message, setMessage] = useState('');
   const request = useRef<AbortController | null>(null);
   const bannerRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const wasOpen = useRef(false);
   const headingId = useId();
   const hintId = useId();
   const noteId = useId();
 
   useEffect(() => () => request.current?.abort(), []);
 
-  // The list sits below the plan: move focus to what just opened.
+  // The list sits below the plan: move focus to what just opened, and back
+  // to this section when the snapshot closes, so it is never lost.
   useEffect(() => {
     if (opened) bannerRef.current?.focus();
+    else if (wasOpen.current) headingRef.current?.focus();
+    wasOpen.current = opened !== null;
   }, [opened]);
 
   async function build() {
@@ -98,14 +110,17 @@ export function DailyPlanSection({
     const controller = new AbortController();
     request.current = controller;
     setStatus({ kind: 'building' });
-    setSaveStatus('');
+    setMessage(LOADING);
     try {
       const plan = await buildDailyPlan(body, controller.signal);
       if (controller.signal.aborted) return;
-      setBuilt({ plan, builtAt: new Date(), builtWith, body, saved: false });
+      setBuilt({ plan, builtAt: new Date(), builtWith, body, savedId: null });
       setStatus({ kind: 'idle' });
+      setMessage(READY);
     } catch (error) {
       if (controller.signal.aborted) return;
+      // ErrorState is an alert of its own.
+      setMessage('');
       setStatus({
         kind: 'error',
         error:
@@ -119,7 +134,7 @@ export function DailyPlanSection({
   async function save() {
     if (!built) return;
     setSaving(true);
-    setSaveStatus('');
+    setMessage('');
     try {
       const token = await tokenForSave();
       const saved = await savePlan(token, built.body);
@@ -128,12 +143,12 @@ export function DailyPlanSection({
         ...built,
         plan: saved.plan,
         builtAt: new Date(saved.savedAt),
-        saved: true,
+        savedId: saved.id,
       });
-      setSaveStatus(SAVED);
+      setMessage(SAVED);
       onSaved();
     } catch (error) {
-      setSaveStatus(
+      setMessage(
         error instanceof ApiError && error.status === 409 ? LIMIT : SAVE_FAILED,
       );
     } finally {
@@ -149,13 +164,21 @@ export function DailyPlanSection({
       60,
     );
   const changed = built !== null && JSON.stringify(context) !== built.builtWith;
+  // Saved, and not deleted since: only then may the page say so.
+  const isSaved = built?.savedId != null && built.savedId !== deletedPlanId;
+  const shown = message === SAVED && !isSaved ? '' : message;
 
   return (
     <section
       aria-labelledby={headingId}
       className="flex flex-col gap-4 rounded-lg border border-rule p-5 sm:p-6"
     >
-      <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
+      <h2
+        id={headingId}
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-2xl font-semibold tracking-tight"
+      >
         Your daily plan
       </h2>
       {opened ? (
@@ -184,7 +207,9 @@ export function DailyPlanSection({
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              disabled={!place || status.kind === 'building'}
+              // Not during a save either: a rebuild then would sit under the
+              // save's "Saved" message.
+              disabled={!place || status.kind === 'building' || saving}
               aria-describedby={place ? undefined : hintId}
               onClick={() => void build()}
               className={buttonClass}
@@ -198,12 +223,8 @@ export function DailyPlanSection({
             )}
           </div>
 
-          {status.kind === 'building' && (
-            <>
-              <output className="block">{LOADING}</output>
-              <Loading label="Building your plan" />
-            </>
-          )}
+          <output className="block min-h-6 text-sm">{shown}</output>
+          {status.kind === 'building' && <Loading label="Building your plan" />}
           {status.kind === 'error' && (
             <ErrorState
               error={status.error}
@@ -216,7 +237,7 @@ export function DailyPlanSection({
               {changed && <p className="font-semibold">{CHANGED}</p>}
               {stale && <p className="font-semibold">{STALE}</p>}
               <PlanView plan={built.plan} />
-              {!built.saved && (
+              {!isSaved && (
                 <div className="flex flex-col items-start gap-2">
                   <button
                     type="button"
@@ -232,7 +253,6 @@ export function DailyPlanSection({
                   </p>
                 </div>
               )}
-              <output className="block min-h-6 text-sm">{saveStatus}</output>
             </>
           )}
         </>

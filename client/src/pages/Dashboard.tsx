@@ -35,6 +35,9 @@ function Dashboard() {
   const [opened, setOpened] = useState<SavedPlan | null>(null);
   // Bumped after a save or a delete: the saved list loads again.
   const [listVersion, setListVersion] = useState(0);
+  // The last plan deleted from the list, so the plan area stops calling
+  // that plan saved.
+  const [deletedPlanId, setDeletedPlanId] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
@@ -160,13 +163,15 @@ function Dashboard() {
           onSaved={() => setListVersion((n) => n + 1)}
           opened={opened}
           onBackToToday={() => setOpened(null)}
+          deletedPlanId={deletedPlanId}
         />
         <SavedPlansList
           version={listVersion}
           onOpen={setOpened}
-          onDeleted={(id) =>
-            setOpened((current) => (current?.id === id ? null : current))
-          }
+          onDeleted={(id) => {
+            setDeletedPlanId(id);
+            setOpened((current) => (current?.id === id ? null : current));
+          }}
         />
         <SourcesPanel
           sources={sources.state.status === 'ready' ? sources.state.data : null}

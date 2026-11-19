@@ -358,7 +358,11 @@ Estimates = my build time per phase, excluding your review and account setup.
   - `pages/Privacy.tsx` at `/privacy`.
   - The household form now reports its answers, so a plan uses what is on screen, saved or not.
 - **Server:** `/privacy` serves the client. There are no new API endpoints.
-- **Tests (Vitest):** server 195 passed + 5 skipped (live), client 164/164.
+- **Tests (Vitest):** server 195 passed + 5 skipped (live), client 168/168.
+- **Final review (Opus):** 0 Critical, 2 Important, 7 Minor.
+  - Fixed test-first: "Build" stayed enabled during a save, and deleting the just-saved plan left "Saved on this browser" on screen.
+  - Also fixed, raised from Minor by their effect: "Back to today" dropped keyboard focus, and building had no lasting live region for screen readers.
+  - Playwright re-run afterwards: 12/12.
 - **Tests (Playwright, `e2e/`, `npm run e2e`):** 12/12 on 2026-11-19, desktop and Pixel 7.
   - `failures.spec.ts`: provider down, stale data, AI down, AI up and plan rate limit, each with axe in a real browser (colour contrast included).
   - `journey.spec.ts`: `TESTING_QA.md` §7 steps 1–12 against real Open-Meteo and Supabase. Gemini returned 402, so the plans were rules-only. Step 11 proves isolation in the UI with a second browser context.

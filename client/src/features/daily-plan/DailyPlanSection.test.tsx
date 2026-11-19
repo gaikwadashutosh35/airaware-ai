@@ -391,6 +391,73 @@ describe('DailyPlanSection', () => {
     expect(saveButton()).toBeDefined();
   });
 
+  // Final review #1: a rebuild during a save could leave "Saved" under an
+  // unsaved plan.
+  it('keeps Build disabled while a save runs', async () => {
+    routeFetch((path) =>
+      path === PLAN_PATH ? planReply() : savedReply(rulesPlanFixture),
+    );
+    let signIn!: (token: string) => void;
+    session.tokenForSave.mockReturnValue(
+      new Promise<string>((resolve) => (signIn = resolve)),
+    );
+    renderSection();
+    await build();
+
+    fireEvent.click(saveButton());
+
+    expect(buildButton()).toHaveProperty('disabled', true);
+    signIn('tok');
+    expect(await screen.findByText(SAVED)).toBeDefined();
+    expect(buildButton()).toHaveProperty('disabled', false);
+  });
+
+  // Final review #2: deleting the plan just saved ends the "Saved" claim.
+  it('drops the saved claim when that saved plan is deleted', async () => {
+    routeFetch((path) =>
+      path === PLAN_PATH ? planReply() : savedReply(rulesPlanFixture),
+    );
+    const { update } = renderSection();
+    await build();
+    fireEvent.click(saveButton());
+    await screen.findByText(SAVED);
+
+    update({ deletedPlanId: 'other' });
+    expect(screen.getByText(SAVED)).toBeDefined();
+
+    update({ deletedPlanId: 'p1' });
+    expect(screen.queryByText(SAVED)).toBeNull();
+    expect(saveButton()).toBeDefined();
+  });
+
+  // Final review #3: "Back to today" must not drop keyboard focus.
+  it('puts focus on the plan heading after "Back to today"', () => {
+    const { update } = renderSection({ opened: snapshot });
+
+    update({ opened: null });
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Your daily plan' }),
+    );
+  });
+
+  // Final review #4: one live region that stays, so building and the
+  // finished plan are both announced.
+  it('announces building and the finished plan in one live region', async () => {
+    let reply!: (response: Response) => void;
+    routeFetch(() => new Promise<Response>((resolve) => (reply = resolve)));
+    renderSection();
+    const status = screen.getByRole('status');
+
+    fireEvent.click(buildButton());
+    expect(status.textContent).toBe(LOADING);
+    reply(planReply());
+    await screen.findByText(RULES_MADE_BY);
+
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status.textContent).toBe('Your plan is ready.');
+  });
+
   it('passes axe with a plan shown', async () => {
     routeFetch(() => planReply());
     const { container } = renderSection();
