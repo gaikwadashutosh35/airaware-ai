@@ -10,7 +10,8 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   timeout: 120_000,
-  use: { baseURL: 'http://localhost:8090' },
+  // A missing element fails in 30 s instead of waiting out the test.
+  use: { baseURL: 'http://localhost:8090', actionTimeout: 30_000 },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'phone', use: { ...devices['Pixel 7'] } },
