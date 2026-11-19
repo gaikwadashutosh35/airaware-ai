@@ -4,6 +4,7 @@ import type { SourceInfo } from '../../../shared/contracts.ts';
 import { HttpError, parseQuery } from '../errors.ts';
 import type { CachedForecast } from '../services/air-data/cachedForecast.ts';
 import { LIMITATIONS, SOURCE_URL } from '../services/air-data/openMeteo.ts';
+import { assessAir } from '../services/recommendations/airCheck.ts';
 
 // Plain decimals with at most 2 places (~1.1 km; the model grid is ~45 km).
 // Clients round before sending, so a precise location never reaches request
@@ -49,10 +50,19 @@ export function airQualityRouter(forecast: CachedForecast): Router {
 
   router.get('/forecast', async (req, res) => {
     const { latitude, longitude } = parseQuery(coordinatesQuery, req.query);
-    const series = await forecast(latitude, longitude, new Date());
+    const now = new Date();
+    const series = await forecast(latitude, longitude, now);
     // Open-Meteo does not report the model run time, so the forecast's age is
-    // unknown; `retrievedAt` says when the server fetched it.
-    res.json({ data: { ...series, freshness: 'unknown' } });
+    // unknown; `retrievedAt` says when the server fetched it. `airCheck` is
+    // the same 24-hour check the daily plan uses, so the client never
+    // derives limits itself.
+    res.json({
+      data: {
+        ...series,
+        freshness: 'unknown',
+        airCheck: assessAir(series, now),
+      },
+    });
   });
 
   router.get('/current', (req) => {

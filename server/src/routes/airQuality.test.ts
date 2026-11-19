@@ -34,6 +34,67 @@ describe('air-quality routes', () => {
       expect(res.body.data.hours[0].values.PM2_5).toBe(48);
     });
 
+    it('returns the 24-hour air check for the same forecast', async () => {
+      const now = new Date('2026-11-18T10:30:00.000Z');
+      const start = Date.UTC(2026, 10, 18, 10) / 1000;
+      const time = Array.from({ length: 48 }, (_, i) => start + i * 3600);
+      const unit = 'μg/m³';
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(now);
+      vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+        Promise.resolve(
+          Response.json({
+            hourly_units: { time: 'unixtime', pm2_5: unit, pm10: unit },
+            hourly: {
+              time,
+              pm2_5: time.map(() => 80),
+              pm10: time.map(() => 90),
+            },
+          }),
+        ),
+      );
+
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+      vi.useRealTimers();
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.airCheck).toEqual({
+        level: 'elevated',
+        windowStart: '2026-11-18T10:00:00.000Z',
+        checks: [
+          {
+            pollutant: 'PM2_5',
+            status: 'above_limit',
+            average24h: 80,
+            limit: 60,
+          },
+          {
+            pollutant: 'PM10',
+            status: 'within_limit',
+            average24h: 90,
+            limit: 100,
+          },
+        ],
+      });
+    });
+
+    it('a forecast too short for a 24-hour window checks as unknown', async () => {
+      stubFetch();
+
+      const res = await request(createApp()).get(
+        '/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86',
+      );
+
+      expect(res.body.data.airCheck.level).toBe('unknown');
+      expect(
+        res.body.data.airCheck.checks.map(
+          (c: { average24h: number | null }) => c.average24h,
+        ),
+      ).toEqual([null, null]);
+    });
+
     it('serves repeat and equivalent requests from the cache', async () => {
       const fetchSpy = stubFetch();
       const app = createApp();

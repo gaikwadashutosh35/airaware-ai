@@ -2,7 +2,7 @@ import type {
   ApiErrorBody,
   DailyPlan,
   ErrorCode,
-  ForecastSeries,
+  ForecastData,
   HouseholdContext,
   LocationResult,
   SavedPlan,
@@ -95,7 +95,7 @@ export function getForecast(
   latitude: number,
   longitude: number,
   signal?: AbortSignal,
-): Promise<ForecastSeries> {
+): Promise<ForecastData> {
   const query = new URLSearchParams({
     latitude: latitude.toFixed(2),
     longitude: longitude.toFixed(2),

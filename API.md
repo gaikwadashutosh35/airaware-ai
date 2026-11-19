@@ -106,6 +106,9 @@ Returns an hourly model forecast (48 hours from the current hour) and the provid
 - A pollutant the model does not return is omitted and named in `limitations`.
 - Missing hourly values are `null`.
 - There is never an AQI field.
+- `airCheck` is the server's own 24-hour check, the same one the daily plan uses (`AirAssessment`, below the daily-plan section). It compares the PM2.5 and PM10 model-forecast averages over the 24 hours from the current UTC hour with India's NAAQS 24-hour limits.
+  - Its `level` is `unknown` when the forecast has no complete 24-hour window.
+  - Clients show it as given and never derive limits themselves.
 
 ```ts
 type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
@@ -120,6 +123,11 @@ interface ForecastSeries {
   units: Partial<Record<Pollutant, string>>;
   hours: Array<{ time: string; values: Partial<Record<Pollutant, number | null>> }>;
   limitations: string[];
+}
+
+// What `data` holds.
+interface ForecastData extends ForecastSeries {
+  airCheck: AirAssessment;
 }
 ```
 

@@ -1,12 +1,12 @@
 import type {
-  ForecastSeries,
+  ForecastData,
   LocationResult,
   SourceInfo,
 } from '../../../shared/contracts.ts';
 
 // API-shaped copy of the Phase 2 recording (Open-Meteo, Pune, 2026-11-17,
 // first 3 hours from 17:00 UTC). Values are the recorded ones, unchanged.
-export const forecastFixture: ForecastSeries = {
+export const forecastFixture: ForecastData = {
   provider: 'Open-Meteo',
   sourceUrl: 'https://open-meteo.com/en/docs/air-quality-api',
   dataKind: 'model_forecast',
@@ -55,6 +55,16 @@ export const forecastFixture: ForecastSeries = {
     'Not the CPCB National AQI.',
     'Grid cell is about 45 km wide; conditions near roads or local sources can differ.',
   ],
+  // What the server's assessAir() returns for these 3 hours: too few for a
+  // 24-hour window.
+  airCheck: {
+    level: 'unknown',
+    windowStart: null,
+    checks: [
+      { pollutant: 'PM2_5', status: 'unknown', average24h: null, limit: 60 },
+      { pollutant: 'PM10', status: 'unknown', average24h: null, limit: 100 },
+    ],
+  },
 };
 
 // Same entries the server's /sources route returns.

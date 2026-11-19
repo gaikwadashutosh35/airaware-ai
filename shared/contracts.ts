@@ -108,6 +108,12 @@ export interface AirAssessment {
   checks: PollutantCheck[];
 }
 
+// The forecast endpoint's `data`: the series plus the server's 24-hour air
+// check for the same series and time.
+export interface ForecastData extends ForecastSeries {
+  airCheck: AirAssessment;
+}
+
 export type SourceReferenceId = 'open-meteo' | 'cpcb-naaqs-2009';
 
 // One piece of advice the rules engine allows. Phase 5's AI may reword or
