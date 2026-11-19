@@ -4,6 +4,10 @@ import { defineConfig, devices } from '@playwright/test';
 // Run with `npm run e2e`. They need the network, server/.env and
 // client/.env, so they are not part of `npm test` or CI. One worker keeps
 // the run under the 10-per-minute plan limit.
+// E2E_BASE_URL=<https://…> runs the same suite against a deployed site
+// (Phase 9) instead of starting a local server.
+const live = process.env.E2E_BASE_URL;
+
 export default defineConfig({
   testDir: '.',
   workers: 1,
@@ -11,18 +15,20 @@ export default defineConfig({
   retries: 0,
   timeout: 120_000,
   // A missing element fails in 30 s instead of waiting out the test.
-  use: { baseURL: 'http://localhost:8090', actionTimeout: 30_000 },
+  use: { baseURL: live ?? 'http://localhost:8090', actionTimeout: 30_000 },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'phone', use: { ...devices['Pixel 7'] } },
   ],
-  webServer: {
-    command:
-      'npm run build -w client && node --env-file-if-exists=server/.env server/src/server.ts',
-    cwd: '..',
-    env: { PORT: '8090' },
-    url: 'http://localhost:8090/api/v1/health',
-    reuseExistingServer: false,
-    timeout: 180_000,
-  },
+  webServer: live
+    ? undefined
+    : {
+        command:
+          'npm run build -w client && node --env-file-if-exists=server/.env server/src/server.ts',
+        cwd: '..',
+        env: { PORT: '8090' },
+        url: 'http://localhost:8090/api/v1/health',
+        reuseExistingServer: false,
+        timeout: 180_000,
+      },
 });

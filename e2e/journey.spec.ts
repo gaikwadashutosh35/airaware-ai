@@ -156,11 +156,17 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
     });
 
     await test.step('9. save the plan', async () => {
+      const notSetUp = await page
+        .getByText("Saving isn't set up on this site.")
+        .first()
+        .isVisible();
+      // Against the live site a missing Supabase build is a failure, never
+      // a skip (Phase 9).
+      if (process.env.E2E_BASE_URL) {
+        expect(notSetUp, 'saving must be set up on the live site').toBe(false);
+      }
       test.skip(
-        await page
-          .getByText("Saving isn't set up on this site.")
-          .first()
-          .isVisible(),
+        notSetUp,
         'Supabase settings missing in client/.env: save steps 9–12 skipped.',
       );
       await savePlan(page);
@@ -179,7 +185,8 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
         ];
       const context = await browser.newContext({
         ...device,
-        baseURL: 'http://localhost:8090',
+        // The project's own address: localhost, or the live site.
+        baseURL: testInfo.project.use.baseURL,
       });
       const other = await context.newPage();
       try {
