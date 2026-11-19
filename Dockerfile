@@ -6,7 +6,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY server/package.json server/
 COPY client/package.json client/
-RUN npm ci
+# No package needs an install script (only macOS-only fsevents has one).
+RUN npm ci --ignore-scripts
 COPY shared shared
 COPY client client
 # Public Supabase settings, baked into the client (both optional: without
@@ -22,7 +23,7 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 COPY server/package.json server/
 COPY client/package.json client/
-RUN npm ci --omit=dev -w server && npm cache clean --force
+RUN npm ci --ignore-scripts --omit=dev -w server && npm cache clean --force
 COPY server/src server/src
 COPY --from=build /app/client/dist client/dist
 USER node

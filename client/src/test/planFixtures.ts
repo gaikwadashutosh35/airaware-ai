@@ -195,7 +195,7 @@ export const rulesPlanFixture: DailyPlan = {
     {
       id: 'cpcb-naaqs-2009',
       name: 'National Ambient Air Quality Standards (CPCB, 18 November 2009)',
-      url: 'http://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf',
+      url: 'https://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf',
     },
   ],
   safetyNote:

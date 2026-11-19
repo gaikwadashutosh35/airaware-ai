@@ -420,3 +420,12 @@ describe('buildCandidates', () => {
     expect(second).toEqual(first);
   });
 });
+
+// Phase 8 (SonarQube S5332): source links people follow use https.
+describe('SOURCE_REFERENCES', () => {
+  it('every source link uses https', () => {
+    for (const source of Object.values(SOURCE_REFERENCES)) {
+      expect(source.url).toMatch(/^https:\/\//);
+    }
+  });
+});

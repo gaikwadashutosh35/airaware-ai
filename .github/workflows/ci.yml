@@ -20,7 +20,8 @@ jobs:
         with:
           node-version: 26
           cache: npm
-      - run: npm ci
+      # No package needs an install script (only macOS-only fsevents has one).
+      - run: npm ci --ignore-scripts
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck

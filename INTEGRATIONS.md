@@ -147,7 +147,7 @@ Check current pricing, plan limits, region, build commands, cold-start behavior,
 
 The rules engine (`server/src/services/recommendations/`) needs one signal for "the air is worse than usual today". It uses India's national 24-hour limits, not an AQI.
 
-- **Source:** CPCB, National Ambient Air Quality Standards, notification No. B-29016/20/90/PCI-L, 18 November 2009 (`http://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf`). Values verified 2026-11-18 against a copy of the notification.
+- **Source:** CPCB, National Ambient Air Quality Standards, notification No. B-29016/20/90/PCI-L, 18 November 2009 (`https://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf`). Values verified 2026-11-18 against a copy of the notification.
 - **Limits (24-hour average):** PM2.5 60 μg/m³, PM10 100 μg/m³.
 - **Method:**
   1. Take the 24 Open-Meteo forecast hours starting at the UTC hour that contains now. Each must be exactly one hour after the previous.

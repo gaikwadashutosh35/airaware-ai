@@ -105,7 +105,7 @@ export function ForecastPanel({
         <section
           aria-label="Hourly forecast table"
           // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable table region must be keyboard-focusable (WCAG 2.1.1; axe scrollable-region-focusable).
-          tabIndex={0}
+          tabIndex={0} // NOSONAR: the same WCAG 2.1.1 reason as the oxlint line above.
           className="mt-2 overflow-x-auto"
         >
           <table className="w-full border-collapse text-sm tabular-nums">
