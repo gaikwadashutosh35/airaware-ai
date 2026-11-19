@@ -41,6 +41,14 @@ afterEach(() => {
 });
 
 describe('createGeminiGenerator', () => {
+  // Phase 8 audit: the key header must never be replayed to a redirect
+  // target.
+  it('never follows a redirect with the key', async () => {
+    respond(answer);
+    await generate(input);
+    expect(sent().init.redirect).toBe('error');
+  });
+
   it('posts to the model endpoint with the key in a header', async () => {
     respond(answer);
     await generate(input);

@@ -33,7 +33,13 @@ function coordinate(min: number, max: number) {
 }
 export const planRequestSchema: z.ZodType<PlanRequest> = z.strictObject({
   place: z.strictObject({
-    label: z.string().trim().min(1).max(120),
+    label: z
+      .string()
+      .trim()
+      .min(1)
+      .max(120)
+      // No control characters: Postgres rejects NUL, after a planner run.
+      .regex(/^\P{Cc}*$/u, 'No control characters.'),
     latitude: coordinate(-90, 90),
     longitude: coordinate(-180, 180),
   }),

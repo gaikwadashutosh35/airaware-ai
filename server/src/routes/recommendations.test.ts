@@ -134,6 +134,9 @@ describe('POST /api/v1/recommendations/daily-plan', () => {
       { ...body, extra: true },
       { ...body, place: { ...body.place, latitude: 18.523 } },
       { ...body, place: { ...body.place, label: '  ' } },
+      // Phase 8 audit: a NUL got through to Postgres (and a planner run).
+      { ...body, place: { ...body.place, label: 'Pune\u0000' } },
+      { ...body, place: { ...body.place, label: 'Pune\u001b[31m' } },
       { ...body, householdContext: { diagnosis: 'x' } },
     ];
     for (const payload of invalid) {

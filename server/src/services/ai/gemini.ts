@@ -62,6 +62,8 @@ export function createGeminiGenerator(options: {
           'x-goog-api-key': options.apiKey,
         },
         body,
+        // Never replay the key header to a redirect target.
+        redirect: 'error',
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       text = await response.text();
