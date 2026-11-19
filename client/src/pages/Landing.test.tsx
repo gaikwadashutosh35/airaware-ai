@@ -72,6 +72,25 @@ describe('Landing', () => {
     }
   });
 
+  // Final review #1: the label is read before the card, so an example is
+  // never taken for today's air.
+  it('labels each example before its card', () => {
+    render(<Landing />);
+
+    for (const example of LANDING_EXAMPLES) {
+      const chapter = screen.getByRole('region', { name: example.heading });
+      const caption = chapter.querySelector('figcaption');
+      const title = within(chapter).getByRole('heading', { level: 3 });
+      expect(
+        Boolean(
+          caption &&
+          caption.compareDocumentPosition(title) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true);
+    }
+  });
+
   it('opens "Why?" on the see-why example, with its sources', () => {
     render(<Landing />);
 

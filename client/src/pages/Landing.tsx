@@ -74,6 +74,11 @@ function Chapter({
         <p className="max-w-[38ch] text-xl text-text-muted">{example.text}</p>
       </div>
       <figure className="flex min-w-0 flex-col gap-3">
+        {/* The label comes first, so an example is never read as today's
+            air. */}
+        <figcaption className="text-sm text-text-muted">
+          {example.caption}
+        </figcaption>
         <div className="on-light rounded-xl bg-surface-light p-5 text-text-dark sm:p-6 [&>article]:border-t-0 [&>article]:pt-0">
           <PlanCard
             item={{
@@ -87,9 +92,6 @@ function Chapter({
             openWhy={example.openWhy}
           />
         </div>
-        <figcaption className="text-sm text-text-muted">
-          {example.caption}
-        </figcaption>
       </figure>
     </section>
   );
