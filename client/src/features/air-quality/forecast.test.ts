@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { forecastFixture } from '../../test/fixtures.ts';
-import { hourForNow } from './forecast.ts';
+import { formatDateTime, hourForNow } from './forecast.ts';
+
+describe('formatDateTime', () => {
+  it('formats a date with day, month and time zone', () => {
+    const iso = '2026-11-20T02:30:00Z';
+    const date = new Date(iso);
+    const text = formatDateTime(iso);
+    expect(text).toContain(
+      new Intl.DateTimeFormat(undefined, { month: 'short' }).format(date),
+    );
+    expect(text).toContain(
+      new Intl.DateTimeFormat(undefined, { day: 'numeric' }).format(date),
+    );
+    expect(text).toMatch(/[A-Z]{2,}|GMT/);
+  });
+});
 
 describe('hourForNow', () => {
   it('returns the hour that contains now', () => {

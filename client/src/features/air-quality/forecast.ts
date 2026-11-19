@@ -34,6 +34,21 @@ export function formatTime(iso: string): string {
   return timeFormat.format(new Date(iso));
 }
 
+const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZoneName: 'short',
+});
+
+// Like formatTime, with the date: for times that can be days old (saved
+// plans) or two days ahead (forecast peaks).
+export function formatDateTime(iso: string): string {
+  return dateTimeFormat.format(new Date(iso));
+}
+
 export const POLLUTANTS: ReadonlyArray<{
   key: Pollutant;
   short: string;
