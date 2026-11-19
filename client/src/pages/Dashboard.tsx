@@ -160,7 +160,11 @@ function Dashboard() {
                 ) : forecast.state.status === 'error' ? (
                   <ErrorState
                     error={forecast.state.error}
-                    onRetry={forecast.retry}
+                    onRetry={() => {
+                      // The card unmounts on retry; keep focus on the place.
+                      forecast.retry();
+                      headingRef.current?.focus();
+                    }}
                     title="We couldn't load the forecast"
                   />
                 ) : (

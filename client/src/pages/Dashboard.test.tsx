@@ -394,7 +394,18 @@ describe('Dashboard', () => {
     vi.setSystemTime(new Date('2026-11-17T17:30:00Z'));
 
     fail = false;
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    const retry = screen.getByRole('button', { name: 'Try again' });
+    retry.focus();
+    expect(document.activeElement).toBe(retry);
+    fireEvent.click(retry);
+    // Final review C1: the button unmounts, so focus moves to the place
+    // heading instead of falling back to the page top.
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Pune, Maharashtra',
+      }),
+    );
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
