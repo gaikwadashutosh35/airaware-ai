@@ -124,9 +124,6 @@ function Dashboard() {
             ) : (
               <Loading label="Loading forecast" />
             )}
-            {sources.state.status === 'ready' && (
-              <SourcesPanel sources={sources.state.data} />
-            )}
           </div>
         ) : (
           <p className="max-w-prose text-text-dark-muted">
@@ -135,6 +132,14 @@ function Dashboard() {
           </p>
         )}
         <HouseholdPreferencesForm />
+        <SourcesPanel
+          sources={sources.state.status === 'ready' ? sources.state.data : null}
+          forecastLimitations={
+            forecast.state.status === 'ready'
+              ? forecast.state.data.series.limitations
+              : []
+          }
+        />
       </main>
       <footer className="border-t border-rule">
         <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-text-dark-muted sm:px-6">

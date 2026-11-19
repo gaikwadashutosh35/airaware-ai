@@ -220,11 +220,32 @@ describe('Dashboard', () => {
 
     await choosePlace();
 
-    const text = (container.textContent ?? '').replaceAll(
+    // Statements that the CPCB AQI is not shown, and the CPCB source's
+    // name, are the only allowed mentions; longest first.
+    const text = [
+      'We do not calculate the CPCB National AQI',
       'Not the CPCB National AQI',
-      '',
+      'CPCB National AQI',
+    ].reduce(
+      (rest, allowed) => rest.replaceAll(allowed, ''),
+      container.textContent ?? '',
     );
     expect(text).not.toMatch(/\bAQI\b/);
+  });
+
+  it('shows the forecast limitations once, in the sources panel', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    await choosePlace();
+
+    const matches = screen.getAllByText('Not the CPCB National AQI.');
+    expect(matches).toHaveLength(1);
+    expect(
+      screen
+        .getByRole('region', { name: 'Sources and limitations' })
+        .contains(matches[0]),
+    ).toBe(true);
   });
 
   it('offers a retry when the provider fails', async () => {

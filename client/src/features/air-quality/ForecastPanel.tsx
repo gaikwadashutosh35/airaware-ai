@@ -97,15 +97,7 @@ export function ForecastPanel({
 
       <ForecastChart series={series} loadedAt={now} />
 
-      <div className="flex flex-col gap-2">
-        <h4 className="font-semibold">Limitations</h4>
-        <ul className="list-disc pl-5 text-sm">
-          {series.limitations.map((limitation) => (
-            <li key={limitation}>{limitation}</li>
-          ))}
-        </ul>
-      </div>
-
+      {/* The forecast's limitations show once, in "Sources and limitations". */}
       <details className="group">
         <summary className="min-h-11 cursor-pointer py-2 font-medium">
           Hourly forecast ({series.hours.length} hours)
