@@ -1,4 +1,5 @@
 import type { ForecastSeries } from '../../../../shared/contracts.ts';
+import { ForecastChart } from './ForecastChart.tsx';
 import { formatTime, hourForNow, POLLUTANTS } from './forecast.ts';
 
 const NO_VALUE = 'No value';
@@ -6,9 +7,14 @@ const NO_VALUE = 'No value';
 export function ForecastPanel({
   series,
   now,
+  stale = false,
 }: {
   series: ForecastSeries;
+  // When the forecast loaded: picks the hour shown, which never changes on
+  // its own.
   now: Date;
+  // Retrieved more than an hour ago, by the running clock.
+  stale?: boolean;
 }) {
   const hour = hourForNow(series, now);
   const shown = POLLUTANTS.filter((pollutant) => series.units[pollutant.key]);
@@ -27,6 +33,11 @@ export function ForecastPanel({
           Model run time not reported by the provider. Retrieved{' '}
           {formatTime(series.retrievedAt)}.
         </p>
+        {stale && (
+          <p className="font-semibold">
+            Retrieved more than an hour ago. Reload for the latest forecast.
+          </p>
+        )}
       </div>
 
       {hour ? (
@@ -83,6 +94,8 @@ export function ForecastPanel({
       ) : (
         <p>The provider returned no forecast hours for this place.</p>
       )}
+
+      <ForecastChart series={series} loadedAt={now} />
 
       <div className="flex flex-col gap-2">
         <h4 className="font-semibold">Limitations</h4>

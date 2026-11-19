@@ -13,6 +13,7 @@ import {
   type Place,
 } from '../features/location/place.ts';
 import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
+import { isOlderThan, useNow } from '../lib/clock.ts';
 import { getForecast, getSources } from '../services/api.ts';
 
 function Dashboard() {
@@ -21,6 +22,8 @@ function Dashboard() {
   const [place, setPlace] = useState<Place | null>(() =>
     placeFromSearch(window.location.search),
   );
+  // Running clock for stale checks.
+  const now = useNow();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
@@ -107,6 +110,11 @@ function Dashboard() {
               <ForecastPanel
                 series={forecast.state.data.series}
                 now={forecast.state.data.loadedAt}
+                stale={isOlderThan(
+                  forecast.state.data.series.retrievedAt,
+                  now,
+                  60,
+                )}
               />
             ) : forecast.state.status === 'error' ? (
               <ErrorState

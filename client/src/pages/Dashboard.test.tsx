@@ -19,6 +19,9 @@ import Dashboard from './Dashboard.tsx';
 
 type ForecastResponder = (latitude: string | null) => Promise<Response>;
 
+const FORECAST_STALE =
+  'Retrieved more than an hour ago. Reload for the latest forecast.';
+
 function urlOf(input: RequestInfo | URL): URL {
   const href =
     typeof input === 'string'
@@ -189,6 +192,26 @@ describe('Dashboard', () => {
       'CO (μg/m³)',
     ]);
     expect(within(table).getAllByRole('rowheader')).toHaveLength(3);
+  });
+
+  it('says the forecast is old once it passes an hour, without a reload', async () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+    await choosePlace();
+    expect(screen.queryByText(FORECAST_STALE)).toBeNull();
+
+    // The fixture was retrieved at 17:05; 17:30 + 36 min = 18:06.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(36 * 60_000);
+    });
+
+    expect(screen.getByText(FORECAST_STALE)).toBeDefined();
+    // The figures stay at load time.
+    expect(
+      screen.getByText(
+        `Values for ${formatTime(forecastFixture.hours[0].time)}`,
+      ),
+    ).toBeDefined();
   });
 
   it('never shows an AQI number', async () => {
