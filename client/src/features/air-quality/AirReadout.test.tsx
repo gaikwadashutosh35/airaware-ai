@@ -33,6 +33,7 @@ describe('AirReadout', () => {
       screen.getByRole('heading', { level: 3, name: 'Model forecast' }),
     ).toBeDefined();
     const figure = screen.getByTestId('readout-pm25');
+    expect(figure.hasAttribute('data-lead')).toBe(true);
     expect(figure.textContent).toContain('48');
     expect(figure.textContent).toContain('μg/m³');
     expect(container.textContent).toMatch(/Values for /);
@@ -51,6 +52,14 @@ describe('AirReadout', () => {
     expect(screen.getByTestId('readout-pm25').textContent).toContain(
       'No value',
     );
+  });
+
+  it('has no headline figure when the model has no PM2.5', () => {
+    const series = structuredClone(forecastFixture);
+    delete series.units.PM2_5;
+    for (const hour of series.hours) delete hour.values.PM2_5;
+    const { container } = show(series);
+    expect(container.querySelector('[data-lead]')).toBeNull();
   });
 
   it('states the 24-hour check in words', async () => {

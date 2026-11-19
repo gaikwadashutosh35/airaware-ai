@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { HouseholdContext, SavedPlan } from '../../../shared/contracts.ts';
 import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
+import { AirReadout } from '../features/air-quality/AirReadout.tsx';
 import { ForecastPanel } from '../features/air-quality/ForecastPanel.tsx';
 import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
 import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
@@ -122,15 +123,21 @@ function Dashboard() {
             </p>
             <ObservationPanel note={cpcb?.limitations[0]} />
             {forecast.state.status === 'ready' ? (
-              <ForecastPanel
-                series={forecast.state.data.series}
-                now={forecast.state.data.loadedAt}
-                stale={isOlderThan(
-                  forecast.state.data.series.retrievedAt,
-                  now,
-                  60,
-                )}
-              />
+              <>
+                <AirReadout
+                  data={forecast.state.data.series}
+                  now={forecast.state.data.loadedAt}
+                  stale={isOlderThan(
+                    forecast.state.data.series.retrievedAt,
+                    now,
+                    60,
+                  )}
+                />
+                <ForecastPanel
+                  data={forecast.state.data.series}
+                  now={forecast.state.data.loadedAt}
+                />
+              </>
             ) : forecast.state.status === 'error' ? (
               <ErrorState
                 error={forecast.state.error}

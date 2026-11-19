@@ -208,7 +208,8 @@ describe('Dashboard', () => {
     await choosePlace();
 
     const lead = document.querySelector('[data-lead]');
-    expect(lead).toBe(screen.getByTestId('metric-PM2_5'));
+    // The headline figure lives in the air readout (Phase A redesign).
+    expect(lead).toBe(screen.getByTestId('readout-pm25'));
     expect(lead?.textContent).toContain('PM2.5');
     expect(lead?.textContent).toContain('48');
     expect(lead?.textContent).toContain('μg/m³');
@@ -233,7 +234,10 @@ describe('Dashboard', () => {
 
     await choosePlace();
 
-    const table = screen.getByRole('table');
+    // The hourly table, by its caption (the pollutant table is a second one).
+    const table = screen.getByRole('table', {
+      name: 'Hourly model forecast from Open-Meteo',
+    });
     expect(
       within(table)
         .getAllByRole('columnheader')

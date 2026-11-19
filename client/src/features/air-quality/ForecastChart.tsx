@@ -107,6 +107,21 @@ export function ForecastChart({
                 vectorEffect="non-scaling-stroke"
               />
             )}
+            {/* A soft area under PM2.5, the headline pollutant. */}
+            {valueRuns(
+              hours.map((hour) => hour.values.PM2_5),
+              yMax,
+            )
+              .filter((run) => run.length > 1)
+              .map((run) => (
+                <polygon
+                  key={`area-${run[0]?.x}`}
+                  data-part="area"
+                  points={`${run[0]?.x},100 ${run.map((p) => `${p.x},${p.y}`).join(' ')} ${run[run.length - 1]?.x},100`}
+                  className="fill-primary"
+                  opacity={0.18}
+                />
+              ))}
             {LINES.map((line) =>
               valueRuns(
                 hours.map((hour) => hour.values[line.key]),

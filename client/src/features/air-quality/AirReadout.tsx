@@ -76,22 +76,26 @@ export function AirReadout({
           )}
         </div>
 
-        <p
-          data-testid="readout-pm25"
-          className="flex flex-wrap items-baseline gap-x-3"
-        >
-          <span className="text-2xl font-semibold">PM2.5</span>
-          {pm25 == null ? (
-            <span className="text-2xl font-semibold">No value</span>
-          ) : (
-            <>
-              <span className="text-6xl font-semibold tracking-tight tabular-nums">
-                {pm25}
-              </span>
-              <span className="text-sm text-text-dark-muted">{unit}</span>
-            </>
-          )}
-        </p>
+        {/* A model without PM2.5 has no headline figure, never a blank one. */}
+        {data.units.PM2_5 && (
+          <p
+            data-testid="readout-pm25"
+            data-lead
+            className="flex flex-wrap items-baseline gap-x-3"
+          >
+            <span className="text-2xl font-semibold">PM2.5</span>
+            {pm25 == null ? (
+              <span className="text-2xl font-semibold">No value</span>
+            ) : (
+              <>
+                <span className="text-6xl font-semibold tracking-tight tabular-nums">
+                  {pm25}
+                </span>
+                <span className="text-sm text-text-dark-muted">{unit}</span>
+              </>
+            )}
+          </p>
+        )}
 
         {data.airCheck.level === 'unknown' && (
           <p className="font-medium">Air information unavailable</p>
