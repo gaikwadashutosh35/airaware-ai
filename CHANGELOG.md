@@ -46,6 +46,9 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Landing refresh (Phase B of the Stitch redesign):
+  - the hero shows a fresh, dated capture of the new readout (skyline, weather line, PM2.5 and the 24-hour check);
+  - the chapters and the four pipeline steps get decorative numbers "01"…"04" (hidden from screen readers), and the steps become cards.
 - Weather in the readout scene (Phase A2):
   - the server adds this hour's Open-Meteo weather forecast (`weather`, null on failure);
   - the skyline draws clouds, rain, a heat band and fog from it, with a weather line in words that names its hour;
