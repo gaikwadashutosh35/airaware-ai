@@ -425,6 +425,16 @@ Estimates = my build time per phase, excluding your review and account setup.
   - SonarQube: 0 bugs, 0 vulnerabilities, 0 code smells, 0 security hotspots, security rating A, coverage 94.6%, quality gate passed;
   - CodeQL: 0 alerts.
 
+**Final review (Opus):** 0 Critical, 1 Important, 7 Minor. Two items were fixed test-first (client tests now 179/179):
+- the slow-load fix dropped the other saved answers, so loads now merge;
+- answers deleted while still loading could come back. This was raised from Minor because a Save would store them again.
+
+Four minors are deferred:
+- lone surrogate characters in labels;
+- the client's link check is looser than the server's;
+- a saved rules plan says "right now";
+- the counter reset around midnight UTC.
+
 **Accepted risks:** listed in `THREAT_MODEL.md`, "Residual risks".
 
 **Not done:**
