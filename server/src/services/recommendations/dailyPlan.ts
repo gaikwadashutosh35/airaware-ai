@@ -6,7 +6,7 @@ import type {
 import { createTtlCache } from '../air-data/cache.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import { personalize, type GeneratePlan } from '../ai/personalize.ts';
-import { toWriterInput } from '../ai/planOutput.ts';
+import { toWriterInput, type PlanOutput } from '../ai/planOutput.ts';
 import { PROMPT_VERSION } from '../ai/prompts.ts';
 import { assessAir } from './airCheck.ts';
 import { householdContextSchema } from './householdContext.ts';
@@ -15,6 +15,8 @@ import { buildCandidates } from './rules.ts';
 
 const PLAN_TTL_MS = 10 * 60 * 1000;
 const PLAN_MAX_ENTRIES = 500;
+// Gemini calls per server instance per UTC day (each plan uses 1 or 2).
+const AI_CALLS_PER_DAY = 200;
 
 export interface PlanRequest {
   place: { label: string; latitude: number; longitude: number };
@@ -49,6 +51,8 @@ export function createDailyPlanner(deps: {
   forecast: CachedForecast;
   generate: GeneratePlan | null;
   model: string | null;
+  // Gemini calls allowed per UTC day; past it, plans are rules-only.
+  aiCallsPerDay?: number;
 }): DailyPlanner {
   // Gemini counts as configured only with both a generator and a model name.
   const ai =
@@ -56,6 +60,29 @@ export function createDailyPlanner(deps: {
       ? { generate: deps.generate, model: deps.model }
       : null;
   const plans = createTtlCache<DailyPlan>(PLAN_TTL_MS, PLAN_MAX_ENTRIES);
+  // Gemini's answers, keyed by exactly what Gemini was asked: a new place
+  // label or nearby coordinates with the same air and advice reuse one
+  // answer instead of buying another (Phase 8 audit).
+  const answers = createTtlCache<PlanOutput>(PLAN_TTL_MS, PLAN_MAX_ENTRIES);
+  // ponytail: per server instance; total spend is this times the Cloud Run
+  // max-instances setting (Phase 9).
+  const callsPerDay = deps.aiCallsPerDay ?? AI_CALLS_PER_DAY;
+  let budgetDay = '';
+  let callsToday = 0;
+  const counted =
+    (generate: GeneratePlan, now: Date): GeneratePlan =>
+    (input) => {
+      const day = now.toISOString().slice(0, 10);
+      if (day !== budgetDay) {
+        budgetDay = day;
+        callsToday = 0;
+      }
+      if (callsToday >= callsPerDay) {
+        return Promise.reject(new Error('daily limit'));
+      }
+      callsToday++;
+      return generate(input);
+    };
 
   return async ({ place, householdContext = {} }, now) => {
     // A provider failure is not an error here: the plan says air is unknown.
@@ -69,9 +96,15 @@ export function createDailyPlanner(deps: {
     const cached = plans.get(key, now.getTime());
     if (cached) return cached;
 
-    const output = ai
-      ? await personalize(toWriterInput(air, candidates), ai.generate)
-      : null;
+    let output: PlanOutput | null = null;
+    if (ai) {
+      const input = toWriterInput(air, candidates);
+      const asked = JSON.stringify(input);
+      output =
+        answers.get(asked, now.getTime()) ??
+        (await personalize(input, counted(ai.generate, now)));
+      if (output) answers.set(asked, output, now.getTime());
+    }
     const plan = buildPlan({
       label: place.label,
       air,
