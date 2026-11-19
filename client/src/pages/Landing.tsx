@@ -137,6 +137,9 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-12 text-sm text-text-muted sm:px-8">
           <p className="text-base font-semibold text-text">AirAware AI</p>
           <Attribution />
+          <a href="/privacy" className="underline">
+            Privacy
+          </a>
         </div>
       </footer>
     </div>

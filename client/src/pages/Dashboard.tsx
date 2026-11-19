@@ -178,8 +178,11 @@ function Dashboard() {
         />
       </main>
       <footer className="border-t border-rule">
-        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-text-dark-muted sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
           <Attribution />
+          <a href="/privacy" className="underline">
+            Privacy
+          </a>
         </div>
       </footer>
     </>

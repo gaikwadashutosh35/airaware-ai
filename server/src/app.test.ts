@@ -54,7 +54,7 @@ const clientDir = fileURLToPath(
 );
 
 describe('client pages', () => {
-  it.each(['/', '/app', '/app?place=Pune&lat=18.52&lon=73.86'])(
+  it.each(['/', '/app', '/app?place=Pune&lat=18.52&lon=73.86', '/privacy'])(
     'serves the built client at %s',
     async (path) => {
       const res = await request(createApp({ clientDir })).get(path);

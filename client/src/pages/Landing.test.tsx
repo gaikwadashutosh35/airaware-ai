@@ -91,6 +91,17 @@ describe('Landing', () => {
     ).toBeDefined();
   });
 
+  it('links to the privacy page from the footer', () => {
+    render(<Landing />);
+
+    const footer = screen.getByRole('contentinfo');
+    expect(
+      within(footer)
+        .getByRole('link', { name: 'Privacy' })
+        .getAttribute('href'),
+    ).toBe('/privacy');
+  });
+
   it('invents no numbers', () => {
     const { container } = render(<Landing />);
     const footer = screen.getByRole('contentinfo');

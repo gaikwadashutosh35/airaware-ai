@@ -408,6 +408,18 @@ describe('Dashboard', () => {
     expect(footer.textContent).toContain('CC BY 4.0');
   });
 
+  it('links to the privacy page from the footer', () => {
+    routeFetch(ok());
+    render(<Dashboard />);
+
+    const footer = screen.getByRole('contentinfo');
+    expect(
+      within(footer)
+        .getByRole('link', { name: 'Privacy' })
+        .getAttribute('href'),
+    ).toBe('/privacy');
+  });
+
   it('ignores a late device location after the user picked a place', async () => {
     let succeed: (p: {
       coords: { latitude: number; longitude: number };

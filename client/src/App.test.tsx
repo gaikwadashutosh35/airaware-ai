@@ -22,6 +22,31 @@ describe('App', () => {
     await expectNoAxeViolations(container);
   });
 
+  it('shows the privacy page at /privacy', async () => {
+    window.history.pushState({}, '', '/privacy');
+
+    const { container } = render(<App />);
+
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Privacy' }),
+    ).toBeDefined();
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+    ).toEqual([
+      'What stays in your browser',
+      'What Open-Meteo receives',
+      'What Gemini receives',
+      'What Supabase stores',
+      'How to delete',
+      'No analytics',
+    ]);
+    expect(
+      screen.getByRole('link', { name: 'Privacy' }).getAttribute('href'),
+    ).toBe('/privacy');
+    await expectNoAxeViolations(container);
+  });
+
   it('shows the dashboard at /app', async () => {
     window.history.pushState({}, '', '/app');
 
