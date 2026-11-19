@@ -47,7 +47,12 @@ Install everything from the repository root using the committed lockfile:
 npm ci
 ```
 
-The `server` and `client` workspaces declare their own dependencies. Later phases add packages (for example `@supabase/supabase-js`, `recharts`, Tailwind) in the phase that first needs them; install Tailwind with its current official guide for the Vite version in use.
+The `server` and `client` workspaces declare their own dependencies. Later phases add packages (for example `@supabase/supabase-js`, Tailwind) in the phase that first needs them; install Tailwind with its current official guide for the Vite version in use. The forecast chart is hand-drawn SVG, so there is no chart package.
+
+For the end-to-end tests (`@playwright/test`, a root dev dependency), download Chromium once. It goes to your user cache, not the repository:
+```bash
+npx playwright install chromium
+```
 
 The server runs TypeScript directly on Node ≥24 (built-in type stripping), so it needs no `tsx`, `ts-node-dev` or `dotenv`. It needs no `cors` because the client and API share one origin (ADR-005).
 
@@ -107,7 +112,13 @@ Terminal 2 (client on port 5173, proxying `/api`):
 npm run dev -w client
 ```
 
-Open `http://localhost:5173`. The server listens on `PORT` (default 8080; Cloud Run sets it in production). `GET http://localhost:8080/api/v1/health` confirms it is up. Root scripts run every workspace: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`.
+Open `http://localhost:5173`. The server listens on `PORT` (default 8080; Cloud Run sets it in production). `GET http://localhost:8080/api/v1/health` confirms it is up. Root scripts run every workspace: `npm run typecheck` (it also checks `e2e/`), `npm run lint`, `npm test`, `npm run build`.
+
+End-to-end tests build the client and start their own server on port 8090 (your dev servers can keep running):
+```bash
+npm run e2e
+```
+They need the network and both `.env` files; see `TESTING_QA.md` §7.
 
 ### Production image (the same one Cloud Run runs)
 

@@ -343,6 +343,35 @@ Estimates = my build time per phase, excluding your review and account setup.
 | Acceptance | Full E2E journey (TESTING_QA §7 steps 1–11) on desktop + mobile viewport; repeated with provider down, stale data, AI down |
 | Deferred | Share card (needs privacy review) — P1 |
 
+**As built (2026-11-19):**
+- **Scope:** owner-chosen: a hand-drawn SVG chart instead of recharts (no new runtime dependency), and Playwright for the journey. The "indoor air assistant" is the "Indoor air" section of the plan; chat stays deferred.
+- **Client, `features/air-quality/`:**
+  - `chart.ts` (pure maths) and `ForecastChart.tsx`: a 48-hour PM2.5 (solid) and PM10 (dashed) chart with a text summary and an "At load" marker, and no limit line. The hourly table stays.
+  - `SourcesPanel.tsx`: "Sources and limitations", with 4 fixed limitations from `limitations.ts` plus the forecast's own.
+- **Client, `features/daily-plan/`:**
+  - `planDisplay.ts`: grouping into "Your day" and the three topics, the made-by line and plain input labels.
+  - `PlanView.tsx` and `PlanCard.tsx`: the plan, with "Why?" panels.
+  - `DailyPlanSection.tsx`: build, save and the snapshot banner.
+  - `SavedPlansList.tsx`: open, and delete with confirmation.
+- **Client, other files:**
+  - `lib/clock.ts`: `isOlderThan` and the running `useNow` clock, which ticks every minute and when the tab is shown again.
+  - `pages/Privacy.tsx` at `/privacy`.
+  - The household form now reports its answers, so a plan uses what is on screen, saved or not.
+- **Server:** `/privacy` serves the client. There are no new API endpoints.
+- **Tests (Vitest):** server 195 passed + 5 skipped (live), client 164/164.
+- **Tests (Playwright, `e2e/`, `npm run e2e`):** 12/12 on 2026-11-19, desktop and Pixel 7.
+  - `failures.spec.ts`: provider down, stale data, AI down, AI up and plan rate limit, each with axe in a real browser (colour contrast included).
+  - `journey.spec.ts`: `TESTING_QA.md` §7 steps 1–12 against real Open-Meteo and Supabase. Gemini returned 402, so the plans were rules-only. Step 11 proves isolation in the UI with a second browser context.
+  - A deliberate break of the made-by line made the "AI down" test fail, which shows the tests can catch a regression.
+- **Stress pass (`break-ui`):** tested with every rule candidate, a 120-character place label, empty topics, missing averages and 20 saved plans, at 320 px and 1280 px.
+  - Fixed: cards inside the plan panel became flat ruled cards, and plan text got a prose measure at wide widths.
+  - Held up: no horizontal scroll at 320 px.
+- **Deferred:**
+  - Landing-page chapters 3–6, as a short follow-up straight after Phase 7.
+  - Playwright in CI, which Phase 8 decides.
+  - A server-side length cap on Gemini's summary and "For you" text. The UI wraps any length.
+- **Plan files:** `docs/superpowers/specs/2026-11-19-phase7-plan-screen-design.md`, `docs/superpowers/plans/2026-11-19-phase7-plan-screen.md`.
+
 ### Phase 8 — Quality and security audit (≈2–3 h)
 
 | | |

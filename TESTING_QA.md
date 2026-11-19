@@ -95,6 +95,13 @@ Test boundary values, out-of-range input, null values, averaging periods, requir
 
 Repeat with data provider unavailable, stale response, and AI provider unavailable.
 
+**Automated (Phase 7):** `npm run e2e` runs both journeys in Chromium at desktop and Pixel 7 sizes. It builds the client and starts the real server on port 8090. Every test ends with an axe check, colour contrast included.
+- **`e2e/journey.spec.ts`:** steps 1–12 against real Open-Meteo and Supabase. Step 11 is a second browser, so a second anonymous user, that must see only its own saved plan.
+- **`e2e/failures.spec.ts`:** provider down, stale data, AI down, AI up and a plan rate limit. These use test replies for the browser's forecast and plan requests.
+- **Needs:** the network, `server/.env` and `client/.env`. Without the Supabase settings in `client/.env`, the journey skips steps 9–12 and says why.
+- **Limits per run:** 8 plan requests (the API allows 10 per minute) and 4 anonymous sign-ins (Supabase allows 30 per hour). Wait a minute between runs. Every account the journey creates is deleted again.
+- It is not part of `npm test` or CI.
+
 ## 8. Accessibility QA
 
 - Semantic HTML and landmark structure.

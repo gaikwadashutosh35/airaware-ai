@@ -23,6 +23,20 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Phase 4 recommendation rules engine: household details schema, a 24-hour forecast check against India's NAAQS PM2.5/PM10 limits, and 17 explainable rules (server-only; no endpoint yet).
 - Phase 5 `POST /api/v1/recommendations/daily-plan`: Gemini (`gemini-3.8-flash`, prompt `daily-plan-v1`) features, orders and times the rules' actions and adds a summary and "for you" lines; every answer is checked, and any failure returns a labelled rules-only plan. The advice text stays the rules' own wording.
 - Phase 6 saved data: one-click anonymous Supabase sign-in (no email), saved household answers (`GET`/`PUT /api/v1/profile/preferences`), saved daily plans (`GET`/`POST /api/v1/plans`, `GET`/`DELETE /api/v1/plans/:id`), and `DELETE /api/v1/account`. The household form on the dashboard has "Save my answers" and "Delete my saved data". Migration `supabase/migrations/20261118120000_saved_data.sql`.
+- Phase 7 plan screen:
+  - **Your daily plan:** "Build my daily plan" uses the place and the household answers on screen, saved or not.
+  - **What a plan shows:**
+    - who made it (AI or our rules);
+    - the air notice first;
+    - a 24-hour air check labelled as a model forecast, not a station or the CPCB AQI;
+    - "Your day" for AI plans;
+    - Outdoors and travel, Indoor air and Sustainable swaps.
+    - Every card has a "Why?" panel with its reason, evidence, inputs, sources and caveat.
+  - **Saving:** "Save plan", a saved-plans list (open as a dated snapshot, delete with confirmation).
+  - **Forecast panel:** a 48-hour PM2.5/PM10 chart with a text summary (hand-drawn SVG, no new package).
+  - **Other pages and panels:** a "Sources and limitations" panel, and a `/privacy` page linked from every footer.
+  - **Stale data:** a running clock marks forecasts and plans older than an hour, even in a tab left open.
+  - **Tests:** `npm run e2e` (Playwright, Chromium, desktop and phone) runs the full journey against the real services, plus the failure states, with axe in a real browser.
 
 ### Changed
 - Hosting decision: one Google Cloud Run service (ADR-005) instead of Vercel + Render.
