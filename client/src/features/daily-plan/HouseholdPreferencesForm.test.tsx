@@ -186,32 +186,73 @@ describe('HouseholdPreferencesForm', () => {
 
   // Phase 6 deferred #9 / Phase 8 review: a slow load never overwrites
   // answers the person already changed.
-  it('keeps answers changed before the saved ones arrive', async () => {
+  // Phase 8 final review #1: merge, never skip — the person's own changes
+  // win, and every other saved answer still arrives.
+  it('merges saved answers under answers changed before they arrived', async () => {
     session.currentToken.mockResolvedValue('tok');
     let reply: (response: Response) => void = () => {};
-    vi.spyOn(globalThis, 'fetch').mockImplementation(
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(
       () =>
         new Promise<Response>((resolve) => {
           reply = resolve;
         }),
     );
     render(<HouseholdPreferencesForm />);
-    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
     const exercise = screen.getByLabelText<HTMLSelectElement>(
       'Do you exercise outdoors?',
     );
+    const purifier = screen.getByLabelText<HTMLSelectElement>(
+      'Do you have an air purifier?',
+    );
     fireEvent.change(exercise, { target: { value: 'yes' } });
 
+    reply(
+      ok({
+        context: {
+          routine: { outdoorExercise: false },
+          home: { airPurifier: true },
+        },
+        updatedAt: '2026-11-18T10:00:00.000Z',
+      }),
+    );
+
+    await waitFor(() => expect(purifier.value).toBe('yes'));
+    expect(exercise.value).toBe('yes');
+  });
+
+  // Phase 8 final review #4: answers deleted while still loading must not
+  // come back (a Save would store them again).
+  it('a delete before saved answers arrive never brings them back', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    let reply: (response: Response) => void = () => {};
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation((_input, init) =>
+        init?.method === 'DELETE'
+          ? Promise.resolve(new Response(null, { status: 204 }))
+          : new Promise<Response>((resolve) => {
+              reply = resolve;
+            }),
+      );
+    render(<HouseholdPreferencesForm />);
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Delete my saved data' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    expect(
+      await screen.findByText('Deleted. Nothing is saved now.'),
+    ).toBeDefined();
     reply(
       ok({
         context: { home: { airPurifier: true } },
         updatedAt: '2026-11-18T10:00:00.000Z',
       }),
     );
-    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(exercise.value).toBe('yes');
     expect(
       screen.getByLabelText<HTMLSelectElement>('Do you have an air purifier?')
         .value,

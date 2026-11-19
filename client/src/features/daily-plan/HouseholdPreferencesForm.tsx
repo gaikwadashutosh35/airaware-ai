@@ -42,12 +42,15 @@ export function HouseholdPreferencesForm({
 } = {}) {
   const [answers, setAnswersState] = useState<Answers>({});
   const onChangeRef = useRef(onChange);
-  // Set once the person changes an answer: a slow load must not undo it.
-  const touched = useRef(false);
+  // The answers on screen, for merging a late load under them.
+  const answersRef = useRef<Answers>({});
+  // The saved-answers load, cancelled by "Delete everything".
+  const loadRef = useRef<AbortController | null>(null);
   useEffect(() => {
     onChangeRef.current = onChange;
   });
   function setAnswers(next: Answers) {
+    answersRef.current = next;
     setAnswersState(next);
     onChangeRef.current?.(toContext(next));
   }
@@ -64,12 +67,17 @@ export function HouseholdPreferencesForm({
   useEffect(() => {
     if (!savingAvailable) return;
     const controller = new AbortController();
+    loadRef.current = controller;
     currentToken()
       .then((token) =>
         token ? getPreferences(token, controller.signal) : null,
       )
       .then((saved) => {
-        if (saved && !touched.current) setAnswers(toAnswers(saved.context));
+        // A late load fills in saved answers but never undoes one the
+        // person already changed; a delete meanwhile cancels it.
+        if (saved && !controller.signal.aborted) {
+          setAnswers({ ...toAnswers(saved.context), ...answersRef.current });
+        }
       })
       .catch(() => {
         if (!controller.signal.aborted) setStatus(LOAD_FAILED);
@@ -98,6 +106,7 @@ export function HouseholdPreferencesForm({
   }
 
   async function deleteEverything() {
+    loadRef.current?.abort();
     setBusy(true);
     try {
       const token = await currentToken();
@@ -145,7 +154,6 @@ export function HouseholdPreferencesForm({
                     id={id}
                     value={answers[fieldId(field)] ?? ''}
                     onChange={(event) => {
-                      touched.current = true;
                       setAnswers({
                         ...answers,
                         [fieldId(field)]: event.target.value,

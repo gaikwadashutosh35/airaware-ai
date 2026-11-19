@@ -66,7 +66,7 @@ Accepted in Phase 6 (saved data):
 - **Free project pausing** after 7 days of low activity makes saving unavailable (503) until the project is restored.
 
 Accepted in Phase 8 (audit, 2026-11-19). These are hardening notes, not demonstrated vulnerabilities:
-- **Gemini spend per instance.** The cap is 200 Gemini calls per UTC day per server instance, so total spend is that times Cloud Run's max-instances. Phase 9 sets max-instances, and the Gemini project's own quota or budget cap stays the outer limit.
+- **Gemini spend per instance.** The cap is 200 Gemini calls per UTC day per server instance, so total spend is that times Cloud Run's max-instances. Phase 9 sets max-instances, and the Gemini project's own quota or budget cap stays the outer limit. One client that keeps changing its answers can use up the day's 200 calls in about 20 minutes, within the 10-per-minute limit. Everyone then gets rules-only plans, clearly labelled, until 00:00 UTC (05:30 IST). The cap trades availability of AI personalisation for a bounded bill.
 - **Stored plans are not re-validated on read.** A person's own direct write can break only that person's own view (see direct writes above).
 - **Direct inserts can choose `id` and `created_at`** on their own plans. RLS still binds the row to them.
 - **Tokens stay valid until they expire,** even after sign-out or deletion, because the signature is checked locally. The foreign key to `auth.users` means a deleted user's token reaches no rows. Keep that foreign key on every future user-owned table.
