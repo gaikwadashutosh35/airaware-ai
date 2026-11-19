@@ -2,7 +2,7 @@ import type { Scene } from './scene.ts';
 
 // Per level 0 (no data: flat and faint, no haze, so it never reads as
 // smog) ... 5. Opacity only: no blur filter, no gradient. The only motion
-// (rain, heat shimmer) is transform-only and `motion-safe:`.
+// (rain, for under 5 s) is transform-only and `motion-safe:`.
 const SKY_TINT = [0, 0, 0.08, 0.16, 0.24, 0.32];
 const SUN = [0, 0.9, 0.7, 0.45, 0.25, 0.12];
 const HAZE_MID = [0, 0.15, 0.3, 0.45, 0.6, 0.75];
@@ -55,7 +55,7 @@ const CLOUDS: Array<[number, number]> = [
 ];
 
 // Slanted streaks on a 24 x 32 grid, one row taller than the band so the
-// loop (translate by one row) never shows a gap.
+// loop (one row down, half a column left) never shows a gap.
 const RAIN = Array.from({ length: 34 * 7 }, (_, i) => [
   (i % 34) * 24 + (Math.floor(i / 34) % 2) * 12,
   Math.floor(i / 34) * 32 - 32,
@@ -171,7 +171,7 @@ export function CitySkyline({ scene }: { scene: Scene }) {
           y="142"
           width="816"
           height="18"
-          className="fill-warning motion-safe:animate-shimmer"
+          className="fill-warning"
           opacity="0.14"
         />
       )}

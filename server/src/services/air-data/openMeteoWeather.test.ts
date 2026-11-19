@@ -15,12 +15,13 @@ function body(start = T10, extra: Record<string, unknown> = {}) {
       visibility: 'm',
     },
     hourly: {
-      time: [start, start + 3600],
-      temperature_2m: [31.2, 32],
-      precipitation: [0.4, 0],
-      precipitation_probability: [70, 20],
-      cloud_cover: [85, 40],
-      visibility: [24140, 30000],
+      time: [start, start + 3600, start + 7200],
+      temperature_2m: [31.2, 32, 33],
+      // Precipitation and its chance cover the hour before each row.
+      precipitation: [0.4, 0, 1.1],
+      precipitation_probability: [70, 20, 90],
+      cloud_cover: [85, 40, 60],
+      visibility: [24140, 30000, 28000],
       ...extra,
     },
   };
@@ -53,7 +54,7 @@ describe('fetchWeather', () => {
       'temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility',
     );
     expect(url.searchParams.get('timeformat')).toBe('unixtime');
-    expect(url.searchParams.get('forecast_hours')).toBe('2');
+    expect(url.searchParams.get('forecast_hours')).toBe('3');
   });
 
   it('returns the hour containing now', async () => {
@@ -61,12 +62,33 @@ describe('fetchWeather', () => {
     expect(await fetchWeather(18.52, 73.86, NOW)).toEqual({
       time: '2026-11-18T10:00:00.000Z',
       temperatureC: 31.2,
-      precipitationMm: 0.4,
-      precipitationProbability: 70,
+      precipitationMm: 0,
+      precipitationProbability: 20,
       cloudCoverPercent: 85,
       visibilityM: 24140,
       retrievedAt: NOW.toISOString(),
     });
+  });
+
+  // Review A2 #1: Open-Meteo sums precipitation (and its chance) over the
+  // hour before each row, so 10:00-11:00 is the 11:00 row, never 09:00-10:00.
+  it('reads rain for the hour containing now from the next row', async () => {
+    respond(body());
+    const weather = await fetchWeather(18.52, 73.86, NOW);
+    expect(weather?.precipitationMm).toBe(0);
+    expect(weather?.precipitationProbability).toBe(20);
+  });
+
+  it('rain is unknown when the next row is missing', async () => {
+    respond(body());
+    const weather = await fetchWeather(
+      18.52,
+      73.86,
+      new Date('2026-11-18T12:30:00.000Z'),
+    );
+    expect(weather?.temperatureC).toBe(33);
+    expect(weather?.precipitationMm).toBeNull();
+    expect(weather?.precipitationProbability).toBeNull();
   });
 
   it('maps missing variables to null', async () => {
@@ -79,7 +101,7 @@ describe('fetchWeather', () => {
   });
 
   it('returns null when no hour contains now', async () => {
-    respond(body(T10 - 2 * 3600));
+    respond(body(T10 - 3 * 3600));
     expect(await fetchWeather(18.52, 73.86, NOW)).toBeNull();
   });
 

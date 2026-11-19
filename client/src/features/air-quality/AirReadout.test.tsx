@@ -7,7 +7,7 @@ import type {
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { forecastFixture } from '../../test/fixtures.ts';
 import { AirReadout } from './AirReadout.tsx';
-import { formatDateTime } from './forecast.ts';
+import { formatDateTime, formatTime } from './forecast.ts';
 
 afterEach(cleanup);
 
@@ -179,7 +179,7 @@ describe('AirReadout', () => {
       },
     });
     expect(container.textContent).toContain(
-      'Weather this hour: 31 °C, rain (0.4 mm), 85 % cloud cover. Open-Meteo weather forecast.',
+      `Weather for ${formatTime(forecastFixture.weather!.time)}: 31 °C, rain (0.4 mm), 85 % cloud cover. Open-Meteo weather forecast.`,
     );
     expect(container.textContent).not.toMatch(/visibility/i);
   });
@@ -196,8 +196,28 @@ describe('AirReadout', () => {
       },
     });
     expect(container.textContent).toContain(
-      'Weather this hour: 29 °C, rain likely (70 %). Open-Meteo weather forecast.',
+      `Weather for ${formatTime(forecastFixture.weather!.time)}: 29 °C, rain likely (70 %). Open-Meteo weather forecast.`,
     );
+  });
+
+  // Review A2 #2: the line names its hour, so it never calls a past hour
+  // "this hour" while the page stays open.
+  it('the weather line names its hour, even with no values', () => {
+    const { container } = show({
+      ...forecastFixture,
+      weather: {
+        ...forecastFixture.weather!,
+        temperatureC: null,
+        precipitationMm: null,
+        precipitationProbability: null,
+        cloudCoverPercent: null,
+        visibilityM: null,
+      },
+    });
+    expect(container.textContent).toContain(
+      `Weather for ${formatTime(forecastFixture.weather!.time)}: no values reported. Open-Meteo weather forecast.`,
+    );
+    expect(container.textContent).not.toContain('this hour');
   });
 
   it('says when weather is unavailable', () => {

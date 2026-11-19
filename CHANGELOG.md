@@ -48,8 +48,9 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
 - Weather in the readout scene (Phase A2):
   - the server adds this hour's Open-Meteo weather forecast (`weather`, null on failure);
-  - the skyline draws clouds, rain, a heat shimmer and fog from it, with a weather line in words;
-  - the rain and shimmer stop under reduced motion.
+  - the skyline draws clouds, rain, a heat band and fog from it, with a weather line in words that names its hour;
+  - rain and its chance come from the row covering the current hour (Open-Meteo sums them over the hour before each row);
+  - the rain falls for under 5 seconds, then rests, and stays still under reduced motion.
 - Dashboard redesign (Phase A of the Stitch redesign):
   - a two-column layout from 1024 px, with a place bar and "Change place";
   - an air readout that leads with this hour's PM2.5 and states the server's 24-hour check in words;

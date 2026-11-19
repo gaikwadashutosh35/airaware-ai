@@ -47,7 +47,7 @@ export async function fetchWeather(
   url.searchParams.set('longitude', String(longitude));
   url.searchParams.set('hourly', VARIABLES.join(','));
   url.searchParams.set('timeformat', 'unixtime');
-  url.searchParams.set('forecast_hours', '2');
+  url.searchParams.set('forecast_hours', '3');
   let raw: z.infer<typeof rawWeather>;
   try {
     raw = await fetchJson(url, rawWeather);
@@ -60,13 +60,14 @@ export async function fetchWeather(
     (seconds) => seconds * 1000 <= t && t < seconds * 1000 + HOUR_MS,
   );
   if (i === -1) return null;
-  const at = (name: (typeof VARIABLES)[number]) =>
-    raw.hourly[name]?.[i] ?? null;
+  const at = (name: (typeof VARIABLES)[number], row = i) =>
+    raw.hourly[name]?.[row] ?? null;
   return {
     time: new Date(raw.hourly.time[i]! * 1000).toISOString(),
     temperatureC: at('temperature_2m'),
-    precipitationMm: at('precipitation'),
-    precipitationProbability: at('precipitation_probability'),
+    // Sums over the hour before each row: this hour's are on the next row.
+    precipitationMm: at('precipitation', i + 1),
+    precipitationProbability: at('precipitation_probability', i + 1),
     cloudCoverPercent: at('cloud_cover'),
     visibilityM: at('visibility'),
     retrievedAt: now.toISOString(),

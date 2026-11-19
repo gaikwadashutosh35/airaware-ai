@@ -21,7 +21,8 @@ function checkText(check: PollutantCheck, unit: string): string {
   return `${name} 24-hour average ${check.average24h} ${unit}, ${side} the ${check.limit} ${unit} limit`;
 }
 
-// This hour's weather in words, from known values only. The scene above
+// The hour's weather in words, from known values only, named by its time so
+// it never reads as current once the hour has passed. The scene above
 // draws the same facts; this line is what a screen reader hears.
 function weatherLine(weather: WeatherNow | null): string {
   if (!weather) return 'Weather unavailable';
@@ -38,9 +39,8 @@ function weatherLine(weather: WeatherNow | null): string {
   if (weather.visibilityM !== null && weather.visibilityM < 1000) {
     parts.push('visibility under 1 km');
   }
-  return parts.length
-    ? `Weather this hour: ${parts.join(', ')}. Open-Meteo weather forecast.`
-    : 'Weather this hour: no values reported. Open-Meteo weather forecast.';
+  const label = `Weather for ${formatTime(weather.time)}`;
+  return `${label}: ${parts.length ? parts.join(', ') : 'no values reported'}. Open-Meteo weather forecast.`;
 }
 
 function Marker({ above }: { above: boolean }) {

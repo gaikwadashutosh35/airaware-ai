@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { readFileSync } from 'node:fs';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { HazeLevel } from './haze.ts';
@@ -5,6 +7,10 @@ import type { Scene } from './scene.ts';
 import { CitySkyline } from './CitySkyline.tsx';
 
 afterEach(cleanup);
+
+// The theme's motion tokens as text (Vitest stubs CSS imports). The path is
+// relative to client/, Vitest's root.
+const css = readFileSync('src/index.css', 'utf8');
 
 function scene(fields: Partial<Scene> = {}): Scene {
   return {
@@ -98,14 +104,58 @@ describe('CitySkyline', () => {
   });
 
   it('animations only run when motion is welcome', () => {
-    for (const fields of [{ rain: true }, { heat: true }]) {
-      const container = draw(fields);
-      const animated = [...container.querySelectorAll('[class*="animate-"]')];
-      expect(animated.length).toBeGreaterThan(0);
-      for (const element of animated) {
-        expect(element.getAttribute('class')).toMatch(/motion-safe:animate-/);
-        expect(element.getAttribute('class')).not.toMatch(/(^|\s)animate-/);
-      }
+    const container = draw({ rain: true });
+    const animated = [...container.querySelectorAll('[class*="animate-"]')];
+    expect(animated.length).toBeGreaterThan(0);
+    for (const element of animated) {
+      expect(element.getAttribute('class')).toMatch(/motion-safe:animate-/);
+      expect(element.getAttribute('class')).not.toMatch(/(^|\s)animate-/);
+    }
+  });
+
+  // Review A2 #4: decorative motion stops within 5 seconds (WCAG 2.2.2).
+  it('the rain stops within five seconds', () => {
+    const value = /--animate-rain:\s*([^;]+);/.exec(css)?.[1] ?? '';
+    const tokens = value.split(/\s+/);
+    expect(tokens).not.toContain('infinite');
+    const seconds = Number.parseFloat(tokens.find((t) => /^[\d.]+s$/.test(t))!);
+    const runs = Number(tokens.find((t) => /^\d+$/.test(t)) ?? 1);
+    expect(seconds * runs).toBeLessThanOrEqual(5);
+  });
+
+  // Review A2 #5: a flat band wider than the view looks the same at every
+  // offset, so moving it costs frames and shows nothing.
+  it('the heat band stays still', () => {
+    const shimmer = draw({ heat: true }).querySelector('[data-part="shimmer"]');
+    expect(shimmer?.getAttribute('class')).not.toMatch(/animate-/);
+  });
+
+  // Review A2 minor a: one loop of the rain lands every visible streak on
+  // another streak, so the pattern never jumps sideways.
+  it('the rain loop is seamless', () => {
+    const keyframes =
+      /@keyframes rain-fall\s*{[\s\S]*?to\s*{\s*transform:\s*([^;]+);/.exec(
+        css,
+      )?.[1] ?? '';
+    const pair = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(keyframes);
+    const onlyY = /translateY\((-?[\d.]+)px\)/.exec(keyframes);
+    const [dx, dy] = pair
+      ? [Number(pair[1]), Number(pair[2])]
+      : [0, Number(onlyY?.[1])];
+    const streaks = [
+      ...draw({ rain: true }).querySelectorAll('[data-part="rain"] line'),
+    ].map((line) => [
+      Number(line.getAttribute('x1')),
+      Number(line.getAttribute('y1')),
+    ]);
+    const at = new Set(streaks.map(([x, y]) => `${x},${y}`));
+    // A streak runs from (x, y) to (x - 4, y + 10); visible if it crosses the view.
+    const visible = ([x, y]: number[]) =>
+      x! > 0 && x! - 4 < 800 && y! < 160 && y! + 10 > 0;
+    for (const [x, y] of streaks) {
+      const moved = [x! + dx, y! + dy];
+      if (visible(moved)) expect(at.has(moved.join(','))).toBe(true);
+      if (visible([x!, y!])) expect(at.has(`${x! - dx},${y! - dy}`)).toBe(true);
     }
   });
 });

@@ -27,23 +27,16 @@
   --color-focus: #1f6fd6;
 
   /* The readout scene's only motion: transform-only, used as
-     motion-safe:animate-* so reduced motion keeps it still. */
-  --animate-rain: rain-fall 0.8s linear infinite;
-  --animate-shimmer: heat-shimmer 3s ease-in-out infinite alternate;
+     motion-safe:animate-* so reduced motion keeps it still. Rain falls for
+     4.8 s, then rests (decorative motion stops within 5 s). One loop moves
+     the streak grid one row down and half a column left, onto itself. */
+  --animate-rain: rain-fall 0.8s linear 6;
   @keyframes rain-fall {
     from {
-      transform: translateY(0);
+      transform: translate(0, 0);
     }
     to {
-      transform: translateY(32px);
-    }
-  }
-  @keyframes heat-shimmer {
-    from {
-      transform: translateX(-4px);
-    }
-    to {
-      transform: translateX(4px);
+      transform: translate(-12px, 32px);
     }
   }
 
