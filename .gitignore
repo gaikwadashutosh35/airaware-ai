@@ -22,3 +22,7 @@ test-results/
 .idea
 .DS_Store
 .playwright-mcp/
+
+# Stitch design exports (reference only; kept out of git for the 10 MB limit)
+stitch_design_system_implementation/
+stitch_design_system_implementation.zip
