@@ -15,8 +15,14 @@ import { buildCandidates } from './rules.ts';
 
 const PLAN_TTL_MS = 10 * 60 * 1000;
 const PLAN_MAX_ENTRIES = 500;
-// Gemini calls per server instance per UTC day (each plan uses 1 or 2).
+// Calls per writer per server instance per UTC day (each plan uses 1 or 2).
 const AI_CALLS_PER_DAY = 200;
+
+interface Writer {
+  name: string;
+  generate: GeneratePlan;
+  model: string;
+}
 
 export interface PlanRequest {
   place: { label: string; latitude: number; longitude: number };
@@ -57,37 +63,48 @@ export function createDailyPlanner(deps: {
   forecast: CachedForecast;
   generate: GeneratePlan | null;
   model: string | null;
-  // Gemini calls allowed per UTC day; past it, plans are rules-only.
+  // Asked only when Gemini gives no accepted answer.
+  backup?: { generate: GeneratePlan; model: string } | null;
+  // Calls allowed per writer per UTC day; past it, that writer is skipped.
   aiCallsPerDay?: number;
 }): DailyPlanner {
   // Gemini counts as configured only with both a generator and a model name.
-  const ai =
-    deps.generate && deps.model
-      ? { generate: deps.generate, model: deps.model }
-      : null;
+  const writers: Writer[] = [];
+  if (deps.generate && deps.model) {
+    writers.push({
+      name: 'Gemini',
+      generate: deps.generate,
+      model: deps.model,
+    });
+  }
+  if (deps.backup) writers.push({ name: 'Claude', ...deps.backup });
+
   const plans = createTtlCache<DailyPlan>(PLAN_TTL_MS, PLAN_MAX_ENTRIES);
-  // Gemini's answers, keyed by exactly what Gemini was asked: a new place
-  // label or nearby coordinates with the same air and advice reuse one
-  // answer instead of buying another (Phase 8 audit).
-  const answers = createTtlCache<PlanOutput>(PLAN_TTL_MS, PLAN_MAX_ENTRIES);
-  // ponytail: per server instance; total spend is this times the Cloud Run
-  // max-instances setting (Phase 9).
+  // Accepted answers, keyed by exactly what the writer was asked: a new
+  // place label or nearby coordinates with the same air and advice reuse
+  // one answer instead of buying another (Phase 8 audit).
+  const answers = createTtlCache<{ output: PlanOutput; model: string }>(
+    PLAN_TTL_MS,
+    PLAN_MAX_ENTRIES,
+  );
+  // ponytail: per writer per server instance; total spend is this times the
+  // number of function instances (Phase 9).
   const callsPerDay = deps.aiCallsPerDay ?? AI_CALLS_PER_DAY;
-  let budgetDay = '';
-  let callsToday = 0;
+  const budgets = writers.map(() => ({ day: '', calls: 0 }));
   const counted =
-    (generate: GeneratePlan, now: Date): GeneratePlan =>
+    (index: number, now: Date): GeneratePlan =>
     (input) => {
+      const budget = budgets[index]!;
       const day = now.toISOString().slice(0, 10);
-      if (day !== budgetDay) {
-        budgetDay = day;
-        callsToday = 0;
+      if (day !== budget.day) {
+        budget.day = day;
+        budget.calls = 0;
       }
-      if (callsToday >= callsPerDay) {
+      if (budget.calls >= callsPerDay) {
         return Promise.reject(new Error('daily limit'));
       }
-      callsToday++;
-      return generate(input);
+      budget.calls++;
+      return writers[index]!.generate(input);
     };
 
   return async ({ place, householdContext = {} }, now) => {
@@ -102,28 +119,29 @@ export function createDailyPlanner(deps: {
     const cached = plans.get(key, now.getTime());
     if (cached) return cached;
 
-    let output: PlanOutput | null = null;
-    if (ai) {
+    let answer: { output: PlanOutput; model: string } | null = null;
+    if (writers.length) {
       const input = toWriterInput(air, candidates);
       const asked = JSON.stringify(input);
-      output =
-        answers.get(asked, now.getTime()) ??
-        (await personalize(input, counted(ai.generate, now)));
-      if (output) answers.set(asked, output, now.getTime());
+      answer = answers.get(asked, now.getTime()) ?? null;
+      for (let i = 0; !answer && i < writers.length; i++) {
+        const writer = writers[i]!;
+        const output = await personalize(input, counted(i, now), writer.name);
+        if (output) answer = { output, model: writer.model };
+      }
+      if (answer) answers.set(asked, answer, now.getTime());
     }
     const plan = buildPlan({
       label: place.label,
       air,
       forecast: series,
       candidates,
-      ai:
-        output && ai
-          ? { output, model: ai.model, promptVersion: PROMPT_VERSION }
-          : null,
+      ai: answer ? { ...answer, promptVersion: PROMPT_VERSION } : null,
     });
-    // Fallback plans are not cached, so the next request retries Gemini
-    // and Open-Meteo instead of serving a degraded plan for 10 minutes.
-    if (series && (!ai || plan.generatedBy === 'ai')) {
+    // Fallback plans are not cached, so the next request retries the
+    // writers and Open-Meteo instead of serving a degraded plan for 10
+    // minutes.
+    if (series && (!writers.length || plan.generatedBy === 'ai')) {
       plans.set(key, plan, now.getTime());
     }
     return plan;

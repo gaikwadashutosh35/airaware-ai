@@ -1,4 +1,5 @@
 import type { AppOptions } from '../app.ts';
+import { createClaudeGenerator } from '../services/ai/claude.ts';
 import { createGeminiGenerator } from '../services/ai/gemini.ts';
 import { createSupabaseStore } from '../services/saved/supabaseStore.ts';
 import type { Env } from './env.ts';
@@ -18,6 +19,20 @@ export function appOptionsFromEnv(env: Env): AppOptions {
       ? `Gemini: configured (${env.GEMINI_MODEL})`
       : 'Gemini not configured; plans are rules-only.',
   );
+  const backupPlan = env.ANTHROPIC_API_KEY
+    ? {
+        generate: createClaudeGenerator({
+          apiKey: env.ANTHROPIC_API_KEY,
+          model: env.CLAUDE_MODEL,
+        }),
+        model: env.CLAUDE_MODEL,
+      }
+    : undefined;
+  console.log(
+    backupPlan
+      ? `Claude backup: configured (${env.CLAUDE_MODEL})`
+      : 'Claude backup not configured.',
+  );
   const saved =
     env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY
       ? createSupabaseStore({
@@ -32,6 +47,7 @@ export function appOptionsFromEnv(env: Env): AppOptions {
     trustProxy: env.NODE_ENV === 'production',
     generatePlan,
     aiModel: env.GEMINI_MODEL,
+    backupPlan,
     saved,
   };
 }

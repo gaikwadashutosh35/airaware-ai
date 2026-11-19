@@ -20,6 +20,18 @@ const envSchema = z.object({
     .regex(/^[a-z0-9.-]*$/)
     .optional()
     .transform((model) => model || 'gemini-3.8-flash'),
+  // Optional backup plan writer when Gemini gives no accepted answer.
+  ANTHROPIC_API_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((key) => key || undefined),
+  CLAUDE_MODEL: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9.-]*$/)
+    .optional()
+    .transform((model) => model || 'claude-haiku-5-5'),
   // Optional: without both, saving is off. Empty lines count as unset.
   SUPABASE_URL: z
     .string()

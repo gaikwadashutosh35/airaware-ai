@@ -7,6 +7,7 @@ describe('loadEnv', () => {
       NODE_ENV: 'development',
       PORT: 8080,
       GEMINI_MODEL: 'gemini-3.8-flash',
+      CLAUDE_MODEL: 'claude-haiku-5-5',
       SUPABASE_URL: undefined,
       SUPABASE_PUBLISHABLE_KEY: undefined,
     });
@@ -51,6 +52,18 @@ describe('loadEnv', () => {
   it('an unsafe model name is rejected', () => {
     expect(() => loadEnv({ GEMINI_MODEL: 'models/../x' })).toThrow(
       /GEMINI_MODEL/,
+    );
+  });
+
+  it('an empty Anthropic key counts as unset', () => {
+    expect(
+      loadEnv({ ANTHROPIC_API_KEY: ' ' }).ANTHROPIC_API_KEY,
+    ).toBeUndefined();
+  });
+
+  it('an unsafe Claude model name is rejected', () => {
+    expect(() => loadEnv({ CLAUDE_MODEL: 'claude/../x' })).toThrow(
+      /CLAUDE_MODEL/,
     );
   });
 

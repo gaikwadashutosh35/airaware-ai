@@ -23,6 +23,8 @@ export interface AppOptions {
   // Gemini for the daily plan; without both, plans are rules-only.
   generatePlan?: GeneratePlan;
   aiModel?: string;
+  // Claude, asked only when Gemini gives no accepted answer.
+  backupPlan?: { generate: GeneratePlan; model: string };
   // Supabase-backed saved data; without it every saved-data route answers
   // 503 SAVE_UNAVAILABLE.
   saved?: SavedStore;
@@ -82,6 +84,7 @@ export function createApp(options: AppOptions = {}): express.Express {
     forecast,
     generate: options.generatePlan ?? null,
     model: options.aiModel ?? null,
+    backup: options.backupPlan ?? null,
   });
   // One counter for every route that can call Gemini.
   const planLimit = rateLimit({

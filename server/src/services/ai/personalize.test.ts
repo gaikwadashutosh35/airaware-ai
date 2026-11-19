@@ -14,6 +14,12 @@ afterEach(() => {
 });
 
 describe('personalize', () => {
+  it('names the provider in the failure log', async () => {
+    const generate = vi.fn().mockRejectedValue(new Error('timeout'));
+    expect(await personalize(input, generate, 'Claude')).toBeNull();
+    expect(errorSpy).toHaveBeenCalledWith('Claude plan failed: timeout');
+  });
+
   it('returns a valid answer', async () => {
     const generate = vi.fn().mockResolvedValue(JSON.stringify(valid()));
     expect(await personalize(input, generate)).toEqual(valid());

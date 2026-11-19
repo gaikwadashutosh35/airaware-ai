@@ -9,15 +9,16 @@ import {
 
 export type GeneratePlan = (input: PlanWriterInput) => Promise<string>;
 
-function fail(category: string): null {
-  console.error(`Gemini plan failed: ${category}`);
-  return null;
-}
-
 export async function personalize(
   input: PlanWriterInput,
   generate: GeneratePlan,
+  provider = 'Gemini',
 ): Promise<PlanOutput | null> {
+  const fail = (category: string): null => {
+    console.error(`${provider} plan failed: ${category}`);
+    return null;
+  };
+
   for (let attempt = 0; attempt < 2; attempt++) {
     let text: string;
     try {

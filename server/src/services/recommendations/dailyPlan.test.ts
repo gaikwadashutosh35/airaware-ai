@@ -154,4 +154,141 @@ describe('createDailyPlanner', () => {
     expect(first.air.level).toBe('unknown');
     expect(second).not.toBe(first);
   });
+
+  describe('backup writer', () => {
+    const forecast = forecastFrom(() => Promise.resolve(forecastSeries()));
+    const failing = () =>
+      vi.fn<GeneratePlan>(() => Promise.reject(new Error('http 503')));
+    const valid = () => vi.fn<GeneratePlan>(answer.getMockImplementation());
+    const quiet = () => vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    it('asks the backup when the first writer fails', async () => {
+      const errorSpy = quiet();
+      const gemini = failing();
+      const claude = valid();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: gemini,
+        model: 'gemini-test',
+        backup: { generate: claude, model: 'claude-test' },
+      });
+      const plan = await planner(request, NOW);
+      expect(plan.generatedBy).toBe('ai');
+      expect(plan.model).toBe('claude-test');
+      expect(gemini).toHaveBeenCalledTimes(1);
+      expect(claude).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledWith('Gemini plan failed: http 503');
+      errorSpy.mockRestore();
+    });
+
+    it('asks the backup when the first answer fails the checks', async () => {
+      const errorSpy = quiet();
+      const gemini = vi.fn<GeneratePlan>(async (input) => {
+        const text = await answer.getMockImplementation()!(input);
+        // 37 is not in the input, so the numbers check rejects it.
+        return text.replace('the forecast.', 'the forecast: 37 hours.');
+      });
+      const claude = valid();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: gemini,
+        model: 'gemini-test',
+        backup: { generate: claude, model: 'claude-test' },
+      });
+      const plan = await planner(request, NOW);
+      expect(gemini).toHaveBeenCalledTimes(1);
+      expect(plan.model).toBe('claude-test');
+      expect(errorSpy).toHaveBeenCalledWith('Gemini plan failed: numbers');
+      errorSpy.mockRestore();
+    });
+
+    it('never asks the backup when the first writer succeeds', async () => {
+      const claude = valid();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: valid(),
+        model: 'gemini-test',
+        backup: { generate: claude, model: 'claude-test' },
+      });
+      const plan = await planner(request, NOW);
+      expect(plan.model).toBe('gemini-test');
+      expect(claude).not.toHaveBeenCalled();
+    });
+
+    it('both failing gives the rules-only plan', async () => {
+      const errorSpy = quiet();
+      const gemini = failing();
+      const claude = failing();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: gemini,
+        model: 'gemini-test',
+        backup: { generate: claude, model: 'claude-test' },
+      });
+      const first = await planner(request, NOW);
+      const second = await planner(request, NOW);
+      expect(first.generatedBy).toBe('rules');
+      expect(second).not.toBe(first);
+      expect(gemini).toHaveBeenCalledTimes(2);
+      expect(claude).toHaveBeenCalledTimes(2);
+      expect(errorSpy).toHaveBeenCalledWith('Claude plan failed: http 503');
+      errorSpy.mockRestore();
+    });
+
+    it('uses the backup alone when Gemini is not configured', async () => {
+      const claude = valid();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: null,
+        model: null,
+        backup: { generate: claude, model: 'claude-test' },
+      });
+      const plan = await planner(request, NOW);
+      expect(plan.generatedBy).toBe('ai');
+      expect(plan.model).toBe('claude-test');
+    });
+
+    it("a reused backup answer keeps the backup's model", async () => {
+      const errorSpy = quiet();
+      const claude = valid();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: failing(),
+        model: 'gemini-test',
+        backup: { generate: claude, model: 'claude-test' },
+      });
+      const a = await planner(request, NOW);
+      const b = await planner(
+        { ...request, place: { ...request.place, label: 'Somewhere else' } },
+        NOW,
+      );
+      expect(claude).toHaveBeenCalledTimes(1);
+      expect(a.model).toBe('claude-test');
+      expect(b.model).toBe('claude-test');
+      errorSpy.mockRestore();
+    });
+
+    it('each writer has its own daily cap', async () => {
+      const errorSpy = quiet();
+      const gemini = failing();
+      const claude = valid();
+      const planner = createDailyPlanner({
+        forecast,
+        generate: gemini,
+        model: 'gemini-test',
+        backup: { generate: claude, model: 'claude-test' },
+        aiCallsPerDay: 1,
+      });
+      const first = await planner(request, NOW);
+      const second = await planner(
+        { ...request, householdContext: { home: { airPurifier: true } } },
+        NOW,
+      );
+      expect(first.model).toBe('claude-test');
+      expect(second.generatedBy).toBe('rules');
+      expect(gemini).toHaveBeenCalledTimes(1);
+      expect(claude).toHaveBeenCalledTimes(1);
+      errorSpy.mockRestore();
+    });
+  });
 });
