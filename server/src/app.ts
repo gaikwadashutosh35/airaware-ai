@@ -1,5 +1,5 @@
 import express from 'express';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import pkg from '../package.json' with { type: 'json' };
 import { errorHandler } from './errors.ts';
@@ -26,6 +26,10 @@ export interface AppOptions {
   // Supabase-backed saved data; without it every saved-data route answers
   // 503 SAVE_UNAVAILABLE.
   saved?: SavedStore;
+  // A header the host's edge sets to the client IP (Netlify:
+  // x-nf-client-connection-ip). When set, rate limits key on it and ignore
+  // X-Forwarded-For, which the client controls there.
+  clientIpHeader?: string;
 }
 
 export function createApp(options: AppOptions = {}): express.Express {
@@ -41,11 +45,22 @@ export function createApp(options: AppOptions = {}): express.Express {
         })
       : helmet(),
   );
+  const header = options.clientIpHeader;
+  const clientKey = header
+    ? {
+        keyGenerator: (req: express.Request) => {
+          const ip = req.get(header) || req.ip;
+          return ip ? ipKeyGenerator(ip) : 'unknown';
+        },
+        validate: { xForwardedForHeader: false },
+      }
+    : {};
   // Per-client limit. It does not cap total Open-Meteo calls (10 000/day);
   // that residual risk is accepted in docs/IMPLEMENTATION_PLAN.md §5.3.
   app.use(
     '/api/v1',
     rateLimit({
+      ...clientKey,
       windowMs: 60_000,
       limit: 60,
       standardHeaders: 'draft-8',
@@ -70,6 +85,7 @@ export function createApp(options: AppOptions = {}): express.Express {
   });
   // One counter for every route that can call Gemini.
   const planLimit = rateLimit({
+    ...clientKey,
     windowMs: 60_000,
     limit: 10,
     standardHeaders: 'draft-8',

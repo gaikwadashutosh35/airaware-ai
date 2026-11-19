@@ -111,3 +111,66 @@ describe('proxy trust', () => {
     vi.restoreAllMocks();
   });
 });
+
+describe('client-IP header', () => {
+  const H = 'x-nf-client-connection-ip';
+  const sources = (app: ReturnType<typeof createApp>, ip?: string) => {
+    const req = request(app).get('/api/v1/air-quality/sources');
+    return ip ? req.set(H, ip) : req;
+  };
+
+  it('limits each client separately by the header', async () => {
+    const app = createApp({ clientIpHeader: H });
+    for (let i = 0; i < 60; i++) {
+      expect((await sources(app, '203.0.113.1')).status).toBe(200);
+    }
+
+    expect((await sources(app, '203.0.113.2')).status).toBe(200);
+    expect((await sources(app, '203.0.113.1')).status).toBe(429);
+  });
+
+  it('ignores X-Forwarded-For when the header is set', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const app = createApp({ clientIpHeader: H });
+    for (let i = 0; i < 60; i++) {
+      const res = await sources(app, '203.0.113.1').set(
+        'X-Forwarded-For',
+        `198.51.100.${i}`,
+      );
+      expect(res.status).toBe(200);
+    }
+
+    const res = await sources(app, '203.0.113.1').set(
+      'X-Forwarded-For',
+      '198.51.100.200',
+    );
+
+    expect(res.status).toBe(429);
+    expect(error).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+
+  it('keys the plan limit on the header too', async () => {
+    const app = createApp({ clientIpHeader: H });
+    const plan = (ip: string) =>
+      request(app)
+        .post('/api/v1/recommendations/daily-plan')
+        .set(H, ip)
+        .send({});
+    for (let i = 0; i < 10; i++) {
+      expect((await plan('203.0.113.1')).status).toBe(400);
+    }
+
+    expect((await plan('203.0.113.1')).status).toBe(429);
+    expect((await plan('203.0.113.2')).status).toBe(400);
+  });
+
+  it('falls back to the connection address without the header', async () => {
+    const app = createApp({ clientIpHeader: H });
+    for (let i = 0; i < 60; i++) {
+      expect((await sources(app)).status).toBe(200);
+    }
+
+    expect((await sources(app)).status).toBe(429);
+  });
+});
