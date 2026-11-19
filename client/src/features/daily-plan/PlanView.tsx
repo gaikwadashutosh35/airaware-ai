@@ -29,7 +29,11 @@ export function PlanView({ plan }: { plan: DailyPlan }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-text-dark-muted">{madeByLine(plan)}</p>
+      {/* A saved plan can be for another place than the one on screen. */}
+      <div className="flex flex-col gap-1">
+        <p className="text-lg font-semibold">Plan for {plan.place.label}</p>
+        <p className="text-sm text-text-dark-muted">{madeByLine(plan)}</p>
+      </div>
       {plan.generatedBy === 'ai' && plan.summary && (
         <p className="text-lg">{plan.summary}</p>
       )}

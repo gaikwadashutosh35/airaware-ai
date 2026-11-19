@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import type { HouseholdContext } from '../../../shared/contracts.ts';
 import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
 import { ForecastPanel } from '../features/air-quality/ForecastPanel.tsx';
 import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
 import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
+import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
 import { HouseholdPreferencesForm } from '../features/daily-plan/HouseholdPreferencesForm.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import {
@@ -24,6 +26,10 @@ function Dashboard() {
   );
   // Running clock for stale checks.
   const now = useNow();
+  // The household answers on screen, saved or not.
+  const [context, setContext] = useState<HouseholdContext>({});
+  // Bumped by "Delete everything": the plan area starts afresh.
+  const [resets, setResets] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
@@ -131,7 +137,18 @@ function Dashboard() {
             forecast.
           </p>
         )}
-        <HouseholdPreferencesForm />
+        <HouseholdPreferencesForm
+          onChange={setContext}
+          onDeleted={() => setResets((n) => n + 1)}
+        />
+        <DailyPlanSection
+          // A new place, or deleting saved data, starts the plan area afresh.
+          key={`${place?.label}|${forecastKey}#${resets}`}
+          place={place}
+          context={context}
+          now={now}
+          onSaved={() => {}}
+        />
         <SourcesPanel
           sources={sources.state.status === 'ready' ? sources.state.data : null}
           forecastLimitations={

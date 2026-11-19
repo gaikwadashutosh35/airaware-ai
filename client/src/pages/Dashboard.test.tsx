@@ -15,6 +15,7 @@ import {
   searchFixture,
   sourcesFixture,
 } from '../test/fixtures.ts';
+import { rulesPlanFixture } from '../test/planFixtures.ts';
 import Dashboard from './Dashboard.tsx';
 
 type ForecastResponder = (latitude: string | null) => Promise<Response>;
@@ -32,8 +33,14 @@ function urlOf(input: RequestInfo | URL): URL {
   return new URL(href, 'http://localhost');
 }
 
-function routeFetch(forecast: ForecastResponder) {
-  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+// Answers any other path (plans, saved data); undefined = not handled.
+type OtherResponder = (
+  url: URL,
+  init?: RequestInit,
+) => Promise<Response> | undefined;
+
+function routeFetch(forecast: ForecastResponder, other?: OtherResponder) {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
     const url = urlOf(input);
     if (url.pathname === '/api/v1/locations/search') {
       return Promise.resolve(Response.json({ data: searchFixture }));
@@ -41,8 +48,54 @@ function routeFetch(forecast: ForecastResponder) {
     if (url.pathname === '/api/v1/air-quality/sources') {
       return Promise.resolve(Response.json({ data: sourcesFixture }));
     }
-    return forecast(url.searchParams.get('latitude'));
+    return other?.(url, init) ?? forecast(url.searchParams.get('latitude'));
   });
+}
+
+const session = vi.hoisted(() => ({
+  available: false,
+  currentToken: vi.fn<() => Promise<string | null>>(),
+  tokenForSave: vi.fn<() => Promise<string>>(),
+}));
+
+// Saving stays off unless a test switches it on.
+vi.mock('../lib/supabase.ts', () => ({
+  get savingAvailable() {
+    return session.available;
+  },
+  currentToken: () => session.currentToken(),
+  tokenForSave: () => session.tokenForSave(),
+  forgetSession: () => Promise.resolve(),
+}));
+
+const RULES_MADE_BY =
+  'Made by our rules. AI personalisation is unavailable right now.';
+
+function planRoutes(
+  plan: () => Promise<Response> = () =>
+    Promise.resolve(Response.json({ data: rulesPlanFixture })),
+): OtherResponder {
+  return (url, init) => {
+    if (url.pathname === '/api/v1/recommendations/daily-plan') return plan();
+    if (url.pathname === '/api/v1/profile/preferences') {
+      return Promise.resolve(Response.json({ data: null }));
+    }
+    if (url.pathname === '/api/v1/account' && init?.method === 'DELETE') {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    return undefined;
+  };
+}
+
+async function flush() {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+}
+
+async function buildPlan() {
+  fireEvent.click(screen.getByRole('button', { name: 'Build my daily plan' }));
+  await flush();
 }
 
 function ok(series: ForecastSeries = forecastFixture) {
@@ -84,6 +137,9 @@ describe('Dashboard', () => {
     vi.restoreAllMocks();
     window.history.replaceState(null, '', '/');
     Reflect.deleteProperty(navigator, 'geolocation');
+    session.available = false;
+    session.currentToken.mockReset().mockResolvedValue(null);
+    session.tokenForSave.mockReset().mockResolvedValue('tok');
   });
 
   it('asks for a place before loading any forecast', async () => {
@@ -409,6 +465,93 @@ describe('Dashboard', () => {
     ).toBeDefined();
     expect(screen.getByTestId('metric-PM2_5').textContent).toContain('99');
     expect(screen.getByTestId('metric-PM2_5').textContent).not.toContain('48');
+  });
+
+  it('builds the plan from the answers on screen without saving them', async () => {
+    const fetchSpy = routeFetch(ok(), planRoutes());
+    render(<Dashboard />);
+    await choosePlace();
+
+    fireEvent.change(screen.getByLabelText('Do you have an air purifier?'), {
+      target: { value: 'yes' },
+    });
+    await buildPlan();
+
+    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
+    const post = fetchSpy.mock.calls.find(
+      ([input]) =>
+        urlOf(input).pathname === '/api/v1/recommendations/daily-plan',
+    );
+    expect(JSON.parse(post?.[1]?.body as string)).toEqual({
+      place: { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 },
+      householdContext: { home: { airPurifier: true } },
+    });
+    expect(session.tokenForSave).not.toHaveBeenCalled();
+  });
+
+  it('clears the shown plan when a new place is chosen', async () => {
+    routeFetch(ok(), planRoutes());
+    render(<Dashboard />);
+    await choosePlace(0);
+    await buildPlan();
+    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
+
+    await choosePlace(1);
+
+    expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
+  });
+
+  // Review Focus 2.
+  it('never shows an old place plan under a new place', async () => {
+    let reply: (response: Response) => void = () => {};
+    routeFetch(
+      ok(),
+      planRoutes(
+        () =>
+          new Promise((resolve) => {
+            reply = resolve;
+          }),
+      ),
+    );
+    render(<Dashboard />);
+    await choosePlace(0);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Build my daily plan' }),
+    );
+
+    await choosePlace(1);
+    await act(async () => {
+      reply(Response.json({ data: rulesPlanFixture }));
+    });
+    await flush();
+
+    expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Build my daily plan' }),
+    ).toHaveProperty('disabled', false);
+    expect(
+      screen.queryByText('Building your plan. This can take up to 30 seconds.'),
+    ).toBeNull();
+  });
+
+  // Review Focus 1 (the plan area part).
+  it('clears the shown plan after "Delete everything"', async () => {
+    session.available = true;
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch(ok(), planRoutes());
+    render(<Dashboard />);
+    await choosePlace();
+    await buildPlan();
+    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Delete my saved data' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    await flush();
+
+    expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
+    expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
   });
 
   it('opens the place given in the address without moving focus', async () => {

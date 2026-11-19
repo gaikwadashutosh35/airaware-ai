@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ApiError,
+  buildDailyPlan,
   deletePlan,
   getForecast,
   getSources,
@@ -115,6 +116,23 @@ describe('api client', () => {
       'application/json',
     );
     expect(init?.body).toBe('{}');
+  });
+
+  it('posts the plan request and returns the plan', async () => {
+    const fetchSpy = respondWith({ data: { generatedBy: 'rules' } });
+    const body = {
+      place: { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 },
+      householdContext: { home: { airPurifier: true } },
+    };
+
+    const plan = await buildDailyPlan(body);
+
+    const [path, init] = fetchSpy.mock.calls[0]!;
+    expect(path).toBe('/api/v1/recommendations/daily-plan');
+    expect(init?.method).toBe('POST');
+    expect(new Headers(init?.headers).get('Authorization')).toBeNull();
+    expect(JSON.parse(init?.body as string)).toEqual(body);
+    expect(plan).toEqual({ generatedBy: 'rules' });
   });
 
   it('a 204 reply resolves undefined', async () => {

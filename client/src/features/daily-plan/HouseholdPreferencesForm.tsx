@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import type { HouseholdContext } from '../../../../shared/contracts.ts';
 import {
   currentToken,
   forgetSession,
@@ -19,18 +20,35 @@ import {
   type Answers,
 } from './householdFields.ts';
 
-const NOTE =
+// Shared with "Save plan".
+export const SAVE_NOTE =
   'Saved on this browser only. Clearing your browser data or switching devices loses it.';
+export const NOT_SET_UP = "Saving isn't set up on this site.";
 const SAVED = 'Saved on this browser.';
 const UNAVAILABLE =
   "Saving isn't available right now. Your answers are still on screen.";
-const NOT_SET_UP = "Saving isn't set up on this site.";
 const LOAD_FAILED = "Your saved answers couldn't be loaded right now.";
 const DELETED = 'Deleted. Nothing is saved now.';
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
 
-export function HouseholdPreferencesForm() {
-  const [answers, setAnswers] = useState<Answers>({});
+export function HouseholdPreferencesForm({
+  onChange,
+  onDeleted,
+}: {
+  // The answers on screen, saved or not: the daily plan uses them.
+  onChange?: (context: HouseholdContext) => void;
+  // After "Delete everything" succeeded.
+  onDeleted?: () => void;
+} = {}) {
+  const [answers, setAnswersState] = useState<Answers>({});
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
+  function setAnswers(next: Answers) {
+    setAnswersState(next);
+    onChangeRef.current?.(toContext(next));
+  }
   const [status, setStatus] = useState(savingAvailable ? '' : NOT_SET_UP);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -86,6 +104,7 @@ export function HouseholdPreferencesForm() {
       setAnswers({});
       setConfirming(false);
       setStatus(DELETED);
+      onDeleted?.();
     } catch {
       setStatus(DELETE_FAILED);
     } finally {
@@ -149,7 +168,7 @@ export function HouseholdPreferencesForm() {
           </fieldset>
         ))}
         <p id={noteId} className="text-sm">
-          {NOTE}
+          {SAVE_NOTE}
         </p>
         <div className="flex flex-wrap gap-3">
           <button

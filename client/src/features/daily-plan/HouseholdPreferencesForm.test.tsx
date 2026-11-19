@@ -184,6 +184,74 @@ describe('HouseholdPreferencesForm', () => {
     expect(screen.queryByText('Deleted. Nothing is saved now.')).toBeNull();
   });
 
+  it('reports answers as they change', () => {
+    routeFetch(() => ok(null));
+    const onChange = vi.fn();
+    render(<HouseholdPreferencesForm onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText('Do you have an air purifier?'), {
+      target: { value: 'yes' },
+    });
+
+    expect(onChange).toHaveBeenLastCalledWith({ home: { airPurifier: true } });
+  });
+
+  it('reports loaded saved answers', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch(() =>
+      ok({
+        context: { routine: { commuteMode: 'car' } },
+        updatedAt: '2026-11-18T10:00:00.000Z',
+      }),
+    );
+    const onChange = vi.fn();
+    render(<HouseholdPreferencesForm onChange={onChange} />);
+
+    await waitFor(() =>
+      expect(onChange).toHaveBeenLastCalledWith({
+        routine: { commuteMode: 'car' },
+      }),
+    );
+  });
+
+  it('reports a finished delete only', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    let deleteStatus = 500;
+    routeFetch((method) =>
+      method === 'DELETE'
+        ? deleteStatus === 204
+          ? new Response(null, { status: 204 })
+          : Response.json(
+              { error: { code: 'INTERNAL_ERROR', message: 'Failed.' } },
+              { status: 500 },
+            )
+        : ok(null),
+    );
+    const onChange = vi.fn();
+    const onDeleted = vi.fn();
+    render(
+      <HouseholdPreferencesForm onChange={onChange} onDeleted={onDeleted} />,
+    );
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Delete my saved data' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    expect(
+      await screen.findByText('Nothing was deleted. Try again in a moment.'),
+    ).toBeDefined();
+    expect(onDeleted).not.toHaveBeenCalled();
+
+    deleteStatus = 204;
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    expect(
+      await screen.findByText('Deleted. Nothing is saved now.'),
+    ).toBeDefined();
+    expect(onDeleted).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenLastCalledWith({});
+  });
+
   it('saving not set up disables the buttons', () => {
     session.available = false;
     routeFetch(() => ok(null));

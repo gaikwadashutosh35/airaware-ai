@@ -10,7 +10,7 @@ export function Loading({ label }: { label: string }) {
   );
 }
 
-function errorMessage(error: ApiError): string {
+function errorMessage(error: ApiError, fallback: string): string {
   switch (error.code) {
     case 'PROVIDER_ERROR':
       return 'Forecast provider unavailable.';
@@ -19,20 +19,23 @@ function errorMessage(error: ApiError): string {
     case 'RATE_LIMITED':
       return 'Too many requests. Try again in a minute.';
     default:
-      return 'Something went wrong loading the forecast.';
+      return fallback;
   }
 }
 
 export function ErrorState({
   error,
   onRetry,
+  fallback = 'Something went wrong loading the forecast.',
 }: {
   error: ApiError;
   onRetry: () => void;
+  // The message for any other error, in the caller's own words.
+  fallback?: string;
 }) {
   return (
     <div role="alert" className="flex flex-col items-start gap-2">
-      <p>{errorMessage(error)}</p>
+      <p>{errorMessage(error, fallback)}</p>
       <button
         type="button"
         onClick={onRetry}

@@ -1,5 +1,6 @@
 import type {
   ApiErrorBody,
+  DailyPlan,
   ErrorCode,
   ForecastSeries,
   HouseholdContext,
@@ -146,14 +147,25 @@ export function getPlan(token: string, id: string): Promise<SavedPlan> {
   });
 }
 
+// A daily-plan request: coordinates with at most 2 decimals.
+export interface PlanBody {
+  place: { label: string; latitude: number; longitude: number };
+  householdContext?: HouseholdContext;
+}
+
+// Builds a plan without saving it: no token, so no account is involved.
+export function buildDailyPlan(
+  body: PlanBody,
+  signal?: AbortSignal,
+): Promise<DailyPlan> {
+  return request('/api/v1/recommendations/daily-plan', signal, {
+    method: 'POST',
+    body,
+  });
+}
+
 // The server builds and saves the plan for this request.
-export function savePlan(
-  token: string,
-  body: {
-    place: { label: string; latitude: number; longitude: number };
-    householdContext?: HouseholdContext;
-  },
-): Promise<SavedPlan> {
+export function savePlan(token: string, body: PlanBody): Promise<SavedPlan> {
   return request('/api/v1/plans', undefined, { method: 'POST', body, token });
 }
 
