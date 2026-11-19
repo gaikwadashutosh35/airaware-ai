@@ -2,7 +2,9 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type {
   DailyPlan,
   HouseholdContext,
+  SavedPlan,
 } from '../../../../shared/contracts.ts';
+import { formatDateTime } from '../air-quality/forecast.ts';
 import { ErrorState, Loading } from '../../components/States.tsx';
 import { isOlderThan } from '../../lib/clock.ts';
 import { savingAvailable, tokenForSave } from '../../lib/supabase.ts';
@@ -51,23 +53,35 @@ export function DailyPlanSection({
   context,
   now,
   onSaved,
+  opened,
+  onBackToToday,
 }: {
   place: Place | null;
   context: HouseholdContext;
   // The running clock, for the stale check.
   now: Date;
   onSaved: () => void;
+  // A saved plan opened from the list: shown as a snapshot over the live
+  // plan, which stays underneath for "Back to today".
+  opened: SavedPlan | null;
+  onBackToToday: () => void;
 }) {
   const [built, setBuilt] = useState<Built | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const request = useRef<AbortController | null>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
   const hintId = useId();
   const noteId = useId();
 
   useEffect(() => () => request.current?.abort(), []);
+
+  // The list sits below the plan: move focus to what just opened.
+  useEffect(() => {
+    if (opened) bannerRef.current?.focus();
+  }, [opened]);
 
   async function build() {
     if (!place) return;
@@ -144,58 +158,83 @@ export function DailyPlanSection({
       <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
         Your daily plan
       </h2>
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          disabled={!place || status.kind === 'building'}
-          aria-describedby={place ? undefined : hintId}
-          onClick={() => void build()}
-          className={buttonClass}
-        >
-          Build my daily plan
-        </button>
-        {!place && (
-          <p id={hintId} className="text-sm">
-            Choose a place first.
-          </p>
-        )}
-      </div>
-
-      {status.kind === 'building' && (
+      {opened ? (
         <>
-          <output className="block">{LOADING}</output>
-          <Loading label="Building your plan" />
+          <div
+            ref={bannerRef}
+            tabIndex={-1}
+            className="flex flex-col items-start gap-3 rounded-md border border-text-dark p-4"
+          >
+            <p className="font-semibold">
+              Saved plan from {formatDateTime(opened.savedAt)}. This is a
+              snapshot, not current air information.
+            </p>
+            <button
+              type="button"
+              onClick={onBackToToday}
+              className={buttonClass}
+            >
+              Back to today
+            </button>
+          </div>
+          <PlanView plan={opened.plan} />
         </>
-      )}
-      {status.kind === 'error' && (
-        <ErrorState
-          error={status.error}
-          onRetry={() => void build()}
-          fallback={BUILD_FAILED}
-        />
-      )}
-      {status.kind === 'idle' && built && (
+      ) : (
         <>
-          {changed && <p className="font-semibold">{CHANGED}</p>}
-          {stale && <p className="font-semibold">{STALE}</p>}
-          <PlanView plan={built.plan} />
-          {!built.saved && (
-            <div className="flex flex-col items-start gap-2">
-              <button
-                type="button"
-                disabled={!savingAvailable || saving}
-                aria-describedby={noteId}
-                onClick={() => void save()}
-                className={buttonClass}
-              >
-                Save plan
-              </button>
-              <p id={noteId} className="text-sm">
-                {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={!place || status.kind === 'building'}
+              aria-describedby={place ? undefined : hintId}
+              onClick={() => void build()}
+              className={buttonClass}
+            >
+              Build my daily plan
+            </button>
+            {!place && (
+              <p id={hintId} className="text-sm">
+                Choose a place first.
               </p>
-            </div>
+            )}
+          </div>
+
+          {status.kind === 'building' && (
+            <>
+              <output className="block">{LOADING}</output>
+              <Loading label="Building your plan" />
+            </>
           )}
-          <output className="block min-h-6 text-sm">{saveStatus}</output>
+          {status.kind === 'error' && (
+            <ErrorState
+              error={status.error}
+              onRetry={() => void build()}
+              fallback={BUILD_FAILED}
+            />
+          )}
+          {status.kind === 'idle' && built && (
+            <>
+              {changed && <p className="font-semibold">{CHANGED}</p>}
+              {stale && <p className="font-semibold">{STALE}</p>}
+              <PlanView plan={built.plan} />
+              {!built.saved && (
+                <div className="flex flex-col items-start gap-2">
+                  <button
+                    type="button"
+                    disabled={!savingAvailable || saving}
+                    aria-describedby={noteId}
+                    onClick={() => void save()}
+                    className={buttonClass}
+                  >
+                    Save plan
+                  </button>
+                  <p id={noteId} className="text-sm">
+                    {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
+                  </p>
+                </div>
+              )}
+              <output className="block min-h-6 text-sm">{saveStatus}</output>
+            </>
+          )}
         </>
       )}
     </section>

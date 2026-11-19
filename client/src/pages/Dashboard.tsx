@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { HouseholdContext } from '../../../shared/contracts.ts';
+import type { HouseholdContext, SavedPlan } from '../../../shared/contracts.ts';
 import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
 import { ForecastPanel } from '../features/air-quality/ForecastPanel.tsx';
@@ -8,6 +8,7 @@ import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
 import { HouseholdPreferencesForm } from '../features/daily-plan/HouseholdPreferencesForm.tsx';
+import { SavedPlansList } from '../features/daily-plan/SavedPlansList.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import {
   placeFromSearch,
@@ -30,6 +31,10 @@ function Dashboard() {
   const [context, setContext] = useState<HouseholdContext>({});
   // Bumped by "Delete everything": the plan area starts afresh.
   const [resets, setResets] = useState(0);
+  // A saved plan opened from the list, shown as a snapshot.
+  const [opened, setOpened] = useState<SavedPlan | null>(null);
+  // Bumped after a save or a delete: the saved list loads again.
+  const [listVersion, setListVersion] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
@@ -59,6 +64,7 @@ function Dashboard() {
     awaitingLocation.current = false;
     focusResult.current = true;
     setPlace(next);
+    setOpened(null);
     window.history.replaceState(
       null,
       '',
@@ -139,7 +145,11 @@ function Dashboard() {
         )}
         <HouseholdPreferencesForm
           onChange={setContext}
-          onDeleted={() => setResets((n) => n + 1)}
+          onDeleted={() => {
+            setResets((n) => n + 1);
+            setOpened(null);
+            setListVersion((n) => n + 1);
+          }}
         />
         <DailyPlanSection
           // A new place, or deleting saved data, starts the plan area afresh.
@@ -147,7 +157,16 @@ function Dashboard() {
           place={place}
           context={context}
           now={now}
-          onSaved={() => {}}
+          onSaved={() => setListVersion((n) => n + 1)}
+          opened={opened}
+          onBackToToday={() => setOpened(null)}
+        />
+        <SavedPlansList
+          version={listVersion}
+          onOpen={setOpened}
+          onDeleted={(id) =>
+            setOpened((current) => (current?.id === id ? null : current))
+          }
         />
         <SourcesPanel
           sources={sources.state.status === 'ready' ? sources.state.data : null}

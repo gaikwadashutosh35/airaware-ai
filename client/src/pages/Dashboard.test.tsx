@@ -554,6 +554,70 @@ describe('Dashboard', () => {
     expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
   });
 
+  // A session with one saved plan (Delhi); deleting the account ends it.
+  function withSavedPlan(): OtherResponder {
+    session.available = true;
+    session.currentToken.mockResolvedValue('tok');
+    const saved = {
+      id: 'p1',
+      savedAt: '2026-11-17T10:00:00.000Z',
+      plan: { ...rulesPlanFixture, place: { label: 'Delhi' } },
+    };
+    const plans = planRoutes();
+    return (url, init) => {
+      if (url.pathname === '/api/v1/account') {
+        session.currentToken.mockResolvedValue(null);
+      }
+      if (url.pathname === '/api/v1/plans') {
+        return Promise.resolve(
+          Response.json({
+            data: [{ id: 'p1', savedAt: saved.savedAt, placeLabel: 'Delhi' }],
+          }),
+        );
+      }
+      if (url.pathname === '/api/v1/plans/p1') {
+        return Promise.resolve(Response.json({ data: saved }));
+      }
+      return plans(url, init);
+    };
+  }
+
+  async function openSavedPlan() {
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: /^Open/ }));
+    await flush();
+    expect(screen.getByText('Plan for Delhi')).toBeDefined();
+  }
+
+  // Review Focus 1.
+  it('hides the list and closes the snapshot after "Delete everything"', async () => {
+    routeFetch(ok(), withSavedPlan());
+    render(<Dashboard />);
+    await openSavedPlan();
+    expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Delete my saved data' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    await flush();
+
+    expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
+    expect(screen.queryByRole('heading', { name: 'Saved plans' })).toBeNull();
+    expect(screen.queryByText('Plan for Delhi')).toBeNull();
+  });
+
+  it('closes a snapshot when a new place is chosen', async () => {
+    routeFetch(ok(), withSavedPlan());
+    render(<Dashboard />);
+    await openSavedPlan();
+
+    await choosePlace();
+
+    expect(screen.queryByText('Plan for Delhi')).toBeNull();
+    expect(screen.queryByText(/This is a snapshot/)).toBeNull();
+  });
+
   it('opens the place given in the address without moving focus', async () => {
     window.history.replaceState(
       null,
