@@ -421,6 +421,9 @@ Estimates = my build time per phase, excluding your review and account setup.
 - Vitest: server 202 passed + 5 skipped, client 178/178.
 - Live Supabase isolation test 4/4.
 - `npm run e2e` 16/16.
+- After the push (CI run 44483156428, all three jobs green):
+  - SonarQube: 0 bugs, 0 vulnerabilities, 0 code smells, 0 security hotspots, security rating A, coverage 94.6%, quality gate passed;
+  - CodeQL: 0 alerts.
 
 **Accepted risks:** listed in `THREAT_MODEL.md`, "Residual risks".
 
