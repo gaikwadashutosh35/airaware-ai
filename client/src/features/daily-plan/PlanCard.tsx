@@ -10,14 +10,17 @@ export function PlanCard({
   sources,
   level,
   notice = false,
+  openWhy = false,
 }: {
   item: PlanItem;
   sources: DailyPlan['sources'];
-  level: 4 | 5;
+  level: 3 | 4 | 5;
   notice?: boolean;
+  // Start with "Why?" open (the landing page's see-why example).
+  openWhy?: boolean;
 }) {
   const { candidate, forYou, period, compact } = item;
-  const Heading = level === 4 ? 'h4' : 'h5';
+  const Heading = (['h3', 'h4', 'h5'] as const)[level - 3];
   const cited = sources.filter((source) =>
     candidate.sourceIds.includes(source.id),
   );
@@ -44,7 +47,7 @@ export function PlanCard({
           {notice && candidate.caveat && (
             <p className="text-sm">{candidate.caveat}</p>
           )}
-          <details>
+          <details open={openWhy}>
             <summary className="min-h-11 cursor-pointer py-2 font-medium">
               Why?<span className="sr-only"> ({candidate.title})</span>
             </summary>

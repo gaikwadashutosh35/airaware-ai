@@ -7,6 +7,7 @@ import {
   rulesPlanFixture,
   unavailablePlanFixture,
 } from '../../test/planFixtures.ts';
+import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
 
 const MODEL_LINE =
@@ -171,6 +172,23 @@ describe('PlanView', () => {
       ...rulesPlanFixture.featured.map((f) => f.candidate),
     ].filter((c) => c.priority === 'high');
     expect(screen.getAllByText('Important today')).toHaveLength(high.length);
+  });
+
+  it('can start with "Why?" open and use a level-3 title', () => {
+    const candidate = rulesPlanFixture.featured[0].candidate;
+    const { container } = render(
+      <PlanCard
+        item={{ candidate, forYou: null, period: null, compact: false }}
+        sources={rulesPlanFixture.sources}
+        level={3}
+        openWhy
+      />,
+    );
+
+    expect(
+      screen.getByRole('heading', { level: 3, name: candidate.title }),
+    ).toBeDefined();
+    expect(container.querySelector('details')?.open).toBe(true);
   });
 
   it('passes axe for the rules plan and the AI plan', async () => {
