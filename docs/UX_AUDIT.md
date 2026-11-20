@@ -170,7 +170,7 @@ They are ranked by how much they stop an ordinary person from getting an answer.
 ### P10. It feels like a website on a phone, not an assistant
 - **Where:** global (`index.html`, `index.css`, all buttons).
 - **Problem:**
-  - There are no press or hover states and no transitions: zero `hover:`, `active:` or `transition` utilities in the client.
+  - No control has a press state: there are no `active:` styles anywhere. The only hover and transition is the colour change on the landing call-to-action.
   - The grey tap flash isn't removed.
   - There is no `theme-color` and the favicon is blank (`data:,`).
   - "Inter" is named but never loaded, so phones show Roboto or SF, and Windows shows Segoe UI.
@@ -273,7 +273,7 @@ They are ranked by how much they stop an ordinary person from getting an answer.
 | # | Current problem | Where | User impact | Proposed improvement | Pri | Effort |
 |---|---|---|---|---|---|---|
 | 12.1 | First phone screen is inputs (P3) | `/app` | No answer above the fold | Place chip | C | S |
-| 12.2 | No press feedback, tap flash not removed, hover not gated (P10) | global | Feels like a web page | Mobile baseline and `:active` | M | S |
+| 12.2 | No press feedback, and the tap flash isn't removed (P10). Hover is already limited to devices that can hover, by Tailwind v4's `hover:`. | global | Feels like a web page | Mobile baseline and `:active` | M | S |
 | 12.3 | A bottom bar would need safe-area padding and `viewport-fit=cover`, absent today | `index.html` | Bar would sit under the home indicator | Add both with the bar | M | S |
 | 12.4 | A 70-character place name wraps to 4 heading lines (no overflow) | place heading | Pushes content down | Smaller place line in the chip; full name in the heading only | L | S |
 | 12.5 | Must be confirmed on a real phone: tap delay, safe areas, keyboard over inputs | n/a | Unknown | Phase 9 check on hardware (needs you or a USB-connected phone) | M | S |
