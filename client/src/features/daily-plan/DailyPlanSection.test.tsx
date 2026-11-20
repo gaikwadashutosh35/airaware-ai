@@ -291,7 +291,8 @@ describe('DailyPlanSection', () => {
     expect(calls(spy, PLAN_PATH)).toHaveLength(3);
   });
 
-  it('reports nothing once the forecast behind the plan is stale', async () => {
+  // Never the plan itself once its forecast is stale; My Home says why.
+  it('reports stale once the forecast behind the plan is stale', async () => {
     routeFetch(() => planReply());
     const { onPlan, update } = renderSection();
     await build();
@@ -300,7 +301,7 @@ describe('DailyPlanSection', () => {
     update({ now: new Date('2026-11-17T18:06:00Z') });
 
     await waitFor(() =>
-      expect(onPlan).toHaveBeenLastCalledWith({ kind: 'none' }),
+      expect(onPlan).toHaveBeenLastCalledWith({ kind: 'stale' }),
     );
   });
 

@@ -5,6 +5,7 @@ import { useRequest } from '../features/air-quality/useRequest.ts';
 import { PlanCard } from '../features/daily-plan/PlanCard.tsx';
 import {
   groupPlan,
+  PLAN_STALE,
   type PlanReport,
 } from '../features/daily-plan/planDisplay.ts';
 import { GuideGroups } from '../features/guides/GuideGroups.tsx';
@@ -45,14 +46,19 @@ export function MyHome({
     (card.id === 'guide.kitchen-exhaust' &&
       context.home?.kitchenExhaust === false);
   const showToday =
-    today.kind === 'building' || today.kind === 'error' || cards.length > 0;
+    today.kind === 'building' ||
+    today.kind === 'error' ||
+    today.kind === 'stale' ||
+    cards.length > 0;
   // The plan builds on its own and can land later: say so politely.
   const announce =
     today.kind === 'building'
       ? "Finding today's suggestions…"
-      : cards.length > 0
-        ? "Today's suggestions are ready."
-        : '';
+      : today.kind === 'stale'
+        ? PLAN_STALE
+        : cards.length > 0
+          ? "Today's suggestions are ready."
+          : '';
 
   return (
     <>
@@ -71,6 +77,8 @@ export function MyHome({
           {today.kind === 'building' && (
             <Loading label="Finding today's suggestions…" />
           )}
+          {/* Never a stale plan as today's: say why there are no cards. */}
+          {today.kind === 'stale' && <p>{PLAN_STALE}</p>}
           {today.kind === 'error' && (
             <ErrorState
               error={today.error}

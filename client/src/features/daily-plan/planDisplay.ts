@@ -10,12 +10,18 @@ import type { ApiError } from '../../services/api.ts';
 import { FIELDS, fieldId } from './householdFields.ts';
 
 // What Today's plan area shows, for My Home (Phase 8): never a plan Today
-// hides. 'none' before a build, or once the forecast behind it is stale.
+// hides. 'none' before a build; 'stale' instead of a plan whose forecast is
+// more than an hour old.
 export type PlanReport =
   | { kind: 'none' }
   | { kind: 'building' }
   | { kind: 'error'; error: ApiError; retry: () => void }
+  | { kind: 'stale' }
   | { kind: 'ready'; plan: DailyPlan };
+
+// Shown with a plan whose forecast is more than an hour old.
+export const PLAN_STALE =
+  'The forecast behind this plan is more than an hour old.';
 
 export type Topic = 'action' | 'indoor' | 'swap';
 

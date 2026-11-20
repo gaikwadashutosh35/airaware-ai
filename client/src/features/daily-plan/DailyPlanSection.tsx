@@ -25,12 +25,11 @@ import { topRecommendation } from '../today/today.ts';
 import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
 import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
-import { NO_AIR, type PlanReport } from './planDisplay.ts';
+import { NO_AIR, PLAN_STALE, type PlanReport } from './planDisplay.ts';
 
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const READY = 'Your plan is ready.';
 const BUILD_FAILED = 'Something went wrong building your plan.';
-const STALE = 'The forecast behind this plan is more than an hour old.';
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
@@ -78,7 +77,8 @@ export function DailyPlanSection({
   // True while Today or My Home is shown: the plan builds only then.
   active: boolean;
   onSaved: () => void;
-  // The plan on screen, or null: My Home shows its indoor cards.
+  // What this area shows (nothing, building, an error with a retry, a stale
+  // plan or the current one): My Home mirrors it.
   onPlan?: (report: PlanReport) => void;
   // The last plan deleted from the list: if it is the one saved here, the
   // plan on screen is no longer saved.
@@ -187,9 +187,8 @@ export function DailyPlanSection({
     if (status.kind === 'error') {
       return { kind: 'error', error: status.error, retry };
     }
-    return built && !stale
-      ? { kind: 'ready', plan: built.plan }
-      : { kind: 'none' };
+    if (!built) return { kind: 'none' };
+    return stale ? { kind: 'stale' } : { kind: 'ready', plan: built.plan };
   }, [status, built, stale, retry]);
   const sendReport = useEffectEvent((next: PlanReport) => onPlan?.(next));
   useEffect(() => {
@@ -239,7 +238,7 @@ export function DailyPlanSection({
       )}
       {status.kind === 'idle' && built && (
         <>
-          {stale && <p className="font-semibold">{STALE}</p>}
+          {stale && <p className="font-semibold">{PLAN_STALE}</p>}
           {/* The full day hides the air check, so say it here. */}
           {!built.plan.forecast && <p className="font-semibold">{NO_AIR}</p>}
           {top ? (

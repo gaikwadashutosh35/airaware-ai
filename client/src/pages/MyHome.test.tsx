@@ -296,6 +296,38 @@ describe('MyHome', () => {
     await screen.findByRole('heading', { name: 'Cooking and smoke' });
   });
 
+  // Workflow review: a plan whose forecast is already stale (a device clock
+  // well ahead of the server) must not make the section vanish unexplained,
+  // or take keyboard focus with it.
+  it('a stale plan keeps the section and says why, keeping focus', async () => {
+    routeGuides(guidesOk);
+    const { rerender } = render(
+      <MyHome
+        today={{
+          kind: 'error',
+          error: new ApiError(500, 'INTERNAL_ERROR', 'x'),
+          retry: vi.fn(),
+        }}
+        context={{}}
+      />,
+    );
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    const heading = screen.getByRole('heading', {
+      name: 'Today, for your home',
+    });
+    expect(document.activeElement).toBe(heading);
+
+    rerender(<MyHome today={{ kind: 'stale' }} context={{}} />);
+
+    const today = screen.getByRole('region', { name: 'Today, for your home' });
+    const STALE = 'The forecast behind this plan is more than an hour old.';
+    expect(within(today).getByText(STALE)).toBeDefined();
+    expect(within(today).queryByRole('article')).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe(STALE);
+    expect(document.activeElement).toBe(heading);
+  });
+
   it('shows the loading state', () => {
     routeGuides(() => new Promise<Response>(() => {}));
     show();
