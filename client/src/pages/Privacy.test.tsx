@@ -22,4 +22,25 @@ describe('Privacy', () => {
     );
     expect(text).not.toContain('No coordinates.');
   });
+
+  // Phase 7, decision 4: what happens to a typed question.
+  it('explains what happens to your questions', () => {
+    const { container, getByRole } = render(<Privacy />);
+    const text = container.textContent ?? '';
+
+    expect(
+      getByRole('heading', {
+        level: 2,
+        name: 'What happens to your questions',
+      }),
+    ).toBeTruthy();
+    for (const sentence of [
+      'Questions you type in Ask AirAware go only to our server, which uses them to pick a topic.',
+      'They are not saved, not logged and not sent to Gemini or Claude.',
+      'Your Ask answers stay on this page for this visit only.',
+      'For Ask answers, they get the forecast check and the suggestion text, never your question.',
+    ]) {
+      expect(text).toContain(sentence);
+    }
+  });
 });

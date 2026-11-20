@@ -42,6 +42,7 @@ Do not ask for diagnoses. Avoid inferring a condition from preferences. Give use
   - **Updates:** a new searched place replaces it.
   - **Removal:** "Forget this place" in My Profile removes it, and so does "Delete my saved data". This is the explicit location save that §2 allows.
 - **Not stored by the app:** device coordinates, email, name and chat.
+- **Ask AirAware questions (Phase 7):** a typed question goes only to our server, in the request body. The server matches it against fixed word lists to pick a topic and then drops it: it is never stored, logged, cached by its text, echoed in the answer or sent to an AI writer. Answers stay in the page's memory for the visit (at most 10) and are gone after a reload, a new place or "Delete my saved data". Nothing is written to browser storage.
 - **Stored by Supabase Auth:** the sign-in session, including the IP address and browser user agent. It is deleted with the account. Supabase's own auth audit log and platform logs may also record the IP address, and those entries are not removed when the account is deleted.
 - **Who can read it:** through the app, only that browser's session; database row-level security and a server token check both enforce this. The project owner and Supabase, as the hosting provider, can also access the database.
 - **Retention:** kept until the person uses "Delete my saved data". That deletes the account, the session, the saved answers and the saved plans, but not Supabase's own logs. Clearing browser data loses access to the account but does not delete the rows. A nightly job deletes anonymous accounts that have not been used for 30 days, together with their saved answers and plans.
@@ -56,7 +57,7 @@ Use aggregation or coarse location where analytics truly require it.
 Document each provider, data sent, purpose, retention/terms, and configuration. Do not send unnecessary household context to an AI provider. Only send the minimum validated context needed to generate recommendations.
 
 - **Weather (Open-Meteo).** The server asks Open-Meteo's weather forecast for the same rounded coordinates (2 decimals, about 1 km) as the air forecast. Nothing else is sent, and nothing is stored.
-- **Plan writers (Gemini, then Claude).** Each gets the same minimal context: the air level, the PM2.5/PM10 checks, and the rules' candidate suggestions. It gets no place name, no coordinates, no time window and no raw household answers. Gemini (Google) is asked first. Claude (Anthropic) is asked only when Gemini gives no accepted answer, and only if the owner has added an Anthropic key. Neither answer is logged.
+- **Plan writers (Gemini, then Claude).** Each gets the same minimal context: the air level, the PM2.5/PM10 checks, and the rules' candidate suggestions. It gets no place name, no coordinates, no time window and no raw household answers. Gemini (Google) is asked first. Claude (Anthropic) is asked only when Gemini gives no accepted answer, and only if the owner has added an Anthropic key. Neither answer is logged. For an Ask AirAware answer they get the same kind of context for the topic's cards, never the typed question; medical and out-of-scope questions call neither.
 
 ## 7. User controls
 The product should provide:

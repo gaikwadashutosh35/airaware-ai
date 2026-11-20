@@ -22,8 +22,11 @@ export function forecastAt(retrievedAt: Date): ForecastSeries {
   };
 }
 
-// A test plan whose forecast was retrieved at `retrievedAt`.
-export function planAt(plan: DailyPlan, retrievedAt: Date): DailyPlan {
+// A test plan (or Ask answer) whose forecast was retrieved at `retrievedAt`.
+export function planAt<T extends Pick<DailyPlan, 'air' | 'forecast'>>(
+  plan: T,
+  retrievedAt: Date,
+): T {
   return {
     ...plan,
     air: {
@@ -49,19 +52,24 @@ function fulfil(route: Route, reply: Reply) {
       });
 }
 
-// Answers the browser's forecast and plan requests; everything else reaches
-// the real server.
+// Answers the browser's forecast, plan and Ask requests; everything else
+// reaches the real server.
 export async function routeApi(
   page: Page,
-  replies: { forecast: Reply; plan?: Reply },
+  replies: { forecast: Reply; plan?: Reply; answer?: Reply },
 ): Promise<void> {
   await page.route('**/api/v1/air-quality/forecast**', (route) =>
     fulfil(route, replies.forecast),
   );
-  const { plan } = replies;
+  const { plan, answer } = replies;
   if (plan) {
     await page.route('**/api/v1/recommendations/daily-plan', (route) =>
       fulfil(route, plan),
+    );
+  }
+  if (answer) {
+    await page.route('**/api/v1/assistant/answer', (route) =>
+      fulfil(route, answer),
     );
   }
 }

@@ -80,6 +80,12 @@ Rules:
 Return only JSON matching the schema.
 ```
 
+**Ask AirAware (redesign Phase 7)** reuses this prompt, `daily-plan-v2`, unchanged:
+- **Input:** the same shape as a plan: the air check plus the notices and the topic's up to three cards.
+- **No user text:** the typed question picks a topic on the server and never enters a prompt, so the `user` part of §1 is not used. Medical and out-of-scope questions make no AI call.
+- **What is used:** only the summary, as the answer's 1–2 sentences. The cards keep the server's order; the AI's featured order and "for you" lines are not shown.
+- **Extra Ask-only check:** a summary that opens with yes or no, or says "go ahead", "fine/ok to" or "good/bad idea", is rejected like any failed check and the answer falls back to rules (`Ask summary failed: verdict`).
+
 ## 4. Indoor air prompt
 
 ```text

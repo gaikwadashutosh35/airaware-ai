@@ -46,6 +46,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Ask AirAware (Phase 7 of the assistant redesign):
+  - `/app/ask`: six topic chips, five starter questions and a 200-character question box; a chip or starter asks at once;
+  - `POST /api/v1/assistant/answer` takes a question or a topic. The question only picks a topic on the server (fixed word lists, medical first) and is never logged, stored, echoed or sent to an AI writer;
+  - each answer: 1–2 sentences from the plan's writer (or the verdict's explanation), who made it, "Based on: {verdict} · Model forecast · updated {time}", "Not current" when old, up to three cards (your own first, then guides) with "Why?", and the safety note. Never a yes or no on safety;
+  - medical and out-of-scope questions get fixed replies and no AI call; the endpoint shares the plan's 10-per-minute limit, daily AI budget and answers cache;
+  - answers stay in memory for the visit, newest first, at most 10; a new place or "Delete my saved data" clears them. Today's ask box and its "Outdoor activities" and "My family" choices ask through it;
+  - the Privacy page adds "What happens to your questions".
 - Guide library, My Home and Better Habits (Phase 8 of the assistant redesign):
   - 17 general guide cards with neutral reasons and 10 cited sources (MoHFW, WHO, US EPA, CAQM/PIB, the Solid Waste Management Rules 2026, BEE), each opened and checked; wording fixed by `docs/superpowers/specs/2026-11-20-guide-library.md`;
   - `GET /api/v1/recommendations/guides?topic=home|habits`, outside the plan limit and cached for an hour; guide cards never enter a plan;

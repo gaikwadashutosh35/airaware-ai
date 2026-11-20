@@ -37,6 +37,7 @@ describe('App', () => {
       'What stays in your browser',
       'What Open-Meteo receives',
       'What the AI writers receive',
+      'What happens to your questions',
       'What Supabase stores',
       'How to delete',
       'No analytics',

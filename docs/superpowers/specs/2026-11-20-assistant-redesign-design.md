@@ -164,9 +164,9 @@ Each screen lists its content in order, then its states. The wireframes show eac
 7. **"Your recommendation for today".** One `PlanCard` with "Why this recommendation?", which is the existing "Why?". The card is the plan's first featured action; for a rules-only plan, the first card that is not a notice. The air notice itself is not repeated, because the verdict already says it.
 8. **"See your full day".** A collapsed `PlanView` without its air notice or air check (both are in the verdict and the details), plus "Save plan".
 9. **"What would you like help with?"** Four links, each with an icon and a one-line description:
-   - **Outdoor activities** ("Walks, exercise, commutes") goes to `/app/ask?topic=outdoors`.
+   - **Outdoor activities** ("Walks, exercise, commutes") opens `/app/ask` and asks the outdoors topic at once. *Amended (Phase 7): the topic is held in memory, never `?topic=` in the address.*
    - **My home** ("Cooking, windows, purifiers") goes to `/app/home`.
-   - **My family** ("Children, older adults, school runs") goes to `/app/ask?topic=family`.
+   - **My family** ("Children, older adults, school runs") opens `/app/ask` and asks the family topic at once (in memory, as above).
    - **Greener habits** ("Small swaps that cut smoke and exhaust") goes to `/app/habits`.
 10. **"Ask AirAware anything".** An input, plus 3 starter questions. Submitting opens `/app/ask` with the question asked.
 11. **"Air quality details"** (collapsed, §7.3).
@@ -203,7 +203,7 @@ A `<details>` element. When open, it holds the existing parts, unchanged in cont
   - Commuting
   - Greener habits
 
-  `?topic=` preselects one.
+  *Amended (Phase 7): there is no `?topic=`. A chip asks its topic at once, and the latest answer's topic shows as pressed with a tick.*
 - Starter questions (from the brief), the ones for the chosen topic first:
   - "Can I go for a morning walk today?"
   - "Is it a good idea to open my windows?"
@@ -213,7 +213,7 @@ A `<details>` element. When open, it holds the existing parts, unchanged in cont
 - **Input:** labelled "Ask about your air, home or day", up to 200 characters, with `enterkeyhint="send"` and a "Send" button.
 
 **Each answer contains:**
-1. A short answer in 2–3 sentences, labelled "Made with AI" or "Made by our rules".
+1. A short answer in 1–2 sentences, labelled "Made with AI" or "Made by our rules". *Amended (Phase 7, decision 2): the plan's writer (`daily-plan-v2`) writes it; a rules answer uses the verdict's explanation.*
 2. "Based on": the verdict, its time, "Model forecast", and any stale or missing-data notice.
 3. Up to three cards, each with "Why?":
    - first, today's personal cards for the topic;
@@ -223,7 +223,7 @@ A `<details>` element. When open, it holds the existing parts, unchanged in cont
 It never says yes or no to safety.
 
 **States:**
-- **Thinking:** "AirAware is thinking…", with a skeleton and `aria-live="polite"`.
+- **Thinking:** "AirAware is thinking…", with a skeleton. *Amended (Phase 7): one screen-reader status line says it, then "Answer ready. …"; focus moves to the new answer's heading (§11).*
 - **Error:** the existing `ErrorState` with "Try again".
 - **Out-of-scope question:** "I can help with outdoor plans, windows and ventilation, indoor air, family and greener habits", with the topic chips.
 - **Medical question:** "I can't give medical advice. For health concerns, please talk to a doctor.", followed by the forecast.
@@ -319,11 +319,11 @@ Eight sections, on the dark theme:
    - The scope of this content is decision G1 (§15).
    - Sources are researched and shown to the owner before commit.
 4. **`POST /api/v1/assistant/answer`** (Phase 7):
-   - **Request:** `{question (1–200 chars), place, householdContext?}`.
-   - **Response:** `{topic, summary, generatedBy, air, cards[], sources[], notices[], safetyNote}`.
+   - **Request:** `{question (1–200 chars), place, householdContext?}` or `{topic, place, householdContext?}`, exactly one of `question` and `topic`. *Amended (Phase 7, decision 1).*
+   - **Response:** `{topic, summary, generatedBy, air, forecast, cards[], sources[], notices[], safetyNote}`. *Amended (Phase 7): `forecast` (the model-forecast metadata, or null) carries "updated {time}" and the stale check; `summary` is null for a rules answer; `topic` can be `medical` or `out_of_scope`. Never the question, model or prompt version.*
    - **Topic choice:** deterministic keyword lists on the server, unit-tested, plus a medical-question guard.
    - **AI:** writes only the summary, from the topic, the forecast check and the chosen cards (never the question text), under the plan's existing output checks.
-   - **Caching:** summaries are cached by topic, place, hour and answers.
+   - **Caching:** summaries come from the plan's writer, cached for 10 minutes by exactly what the writer is asked (the air check and the cards), never by the question text. *Amended (Phase 7).*
    - **Logging:** the question is never logged or stored.
    - **Rate limit:** the plan's limiter.
 
@@ -345,7 +345,7 @@ All of it is off under `prefers-reduced-motion`. The rain is unchanged.
 - **Landmarks:** header, nav "Main", main and footer; a skip link.
 - **Headings:** one H1 per page, in order.
 - **Onboarding:** chips are real checkboxes and radios inside a `fieldset` and `legend`. Focus moves to each step's heading.
-- **Ask:** the answers region is `aria-live="polite"`. The input has a visible label.
+- **Ask:** one persistent `sr-only` status line (`<output>`) says "AirAware is thinking…", then "Answer ready. …" or the medical or out-of-scope sentence; focus moves to each new answer's heading. The input has a visible label. *Amended (Phase 7): a live answers list would read every card aloud.*
 - **Dialog:** the native `<dialog>` closes on Escape and returns focus.
 - **Targets and focus:** targets are 44 px or more, and focus is visible on the navy bars (the existing `.on-dark` focus colour).
 - **Axe:** every new page gets axe tests. Playwright covers the phone and desktop projects.

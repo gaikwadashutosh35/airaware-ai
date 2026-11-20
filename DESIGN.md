@@ -116,8 +116,10 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans. An opened plan shows below the list under its snapshot banner, with "Close", which returns focus to its Open button.
   - `TodayLead`: the scene, weather strip, verdict (`h2`), word tag, provenance line, stale banner and caveat.
   - `DailyPlanSection`: builds by itself while Today or My Home is shown (no plan, changed answers, or a plan over an hour old by the device clock), never twice at once. After an error it waits for "Try again". It shows the top card, with the full day in a `<details>`, and reports its state (nothing, building, an error with a retry, a stale plan, or the current one) for My Home, which shows the same states and never a stale plan as today's.
-  - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family hand their topic to Ask in memory.
-  - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. The question goes to Ask in memory, never into the address.
+  - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family ask their topic through `useAsk` and open Ask.
+  - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. Send asks through `useAsk` and opens Ask; the question never goes into the address.
+  - `Ask` (Phase 7): one `h1`, the context line with "Edit" to My Profile, the place search when there is no place, `TopicChips` (buttons with `aria-pressed` and a tick on the latest answer's topic, so never colour alone), five starter buttons, the question box (no `name`, `autocomplete="off"`), then the answers, newest first. One `sr-only` `<output>` says "AirAware is thinking…", then "Answer ready. …" or the medical or out-of-scope sentence; an error is ErrorState's own alert. Send, chips and starters are disabled while an answer is coming.
+  - `AskEntry`: an `<article>` per answer with its `h2` (the question or chip label, `tabIndex={-1}`), which takes focus when the answer is new and after "Try again". Cards are `PlanCard`s at level 3 with "Why?". Answers are separated by a top rule, so the error card is never a card inside a card.
   - `AirDetails`: one closed `<details>` with every number, unit, time and source behind the verdict. The 24-hour limits come from the server's check.
   - `GuideGroups`: the guide library's groups, each heading at a given level (2 on Better Habits, 3 on My Home) with its `PlanCard`s one level below and "Why it matters", then the safety note. A group left empty by its `hide` filter is left out.
   - `MyHome`: "Today, for your home" (the plan's indoor cards, full size) before "Ways to improve indoor air". A guide whose `personalRuleId` is on screen is hidden; "Near a busy road" needs a yes.
@@ -141,6 +143,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - Enabled buttons, and links with the `press` class, scale to 0.97 while pressed (120 ms, `cubic-bezier(0.23, 1, 0.32, 1)`), only under `prefers-reduced-motion: no-preference`.
   - With reduced motion, a pressed button fades to 80% opacity instead, with no movement. Tailwind's preflight already removes the phone tap highlight for everyone.
   - Phones have no double-tap delay (`touch-action: manipulation`).
+- A new Ask answer rises in: opacity 0 → 1 and `translate: 0 8px` → 0 over 200 ms with the same curve, from `@starting-style`, only under `prefers-reduced-motion: no-preference`. Browsers without `@starting-style` show it at once.
 - The readout scene's rain is its only decorative motion: it animates `transform` only, falls for under 5 seconds and then rests, and is used as `motion-safe:animate-*`, so it stays still under reduced motion. The heat band is still.
 
 ## 10. Responsive behavior

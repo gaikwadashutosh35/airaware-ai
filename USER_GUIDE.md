@@ -4,7 +4,7 @@
 - **Today:** how your air is, one recommendation, and ways to get help.
 - **My Home:** today's suggestions for your home, then ways to improve indoor air.
 - **Better Habits:** small changes in travel, waste, cooking and energy use.
-- **Ask AirAware:** being built.
+- **Ask AirAware:** questions about your air, home or day, answered from our suggestions and today's forecast.
 - **My Profile:** your answers and saved plans.
 
 **First visit:** three short steps (where, your day, your home), then Today. Steps 2 and 3 are optional and have **Skip**.
@@ -23,8 +23,8 @@ Once a place is chosen, the place button at the top shows it. Tap it to search a
 Today answers "How is my air?" first, from top to bottom:
 - **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · updated {time}". When the forecast is old, a "Not current" line sits under it. While Today stays open, it reloads the forecast and rebuilds the plan once an hour.
 - **Your recommendation for today:** one suggestion, with who made it (our rules or AI) and the safety note. **Why this recommendation?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
-- **What would you like help with?** Outdoor activities, My home, My family and Greener habits.
-- **Ask AirAware anything:** type a question or pick a starter question.
+- **What would you like help with?** Outdoor activities, My home, My family and Greener habits. Outdoor activities and My family open Ask AirAware with that topic answered.
+- **Ask AirAware anything:** type a question or pick a starter question, then **Send** to get the answer on Ask AirAware.
 - **Air quality details**, closed until you open it: the PM2.5 figure, the chart and tables, the forecast location, how the 24-hour check works, and the sources and limitations.
 
 A forecast is not a station measurement. A pollutant concentration is not automatically the overall CPCB National AQI.
@@ -57,6 +57,14 @@ Open **Why?** on any card to see the reason, whether it rests on today's forecas
 - **Ways to improve indoor air:** general guides in groups: Cooking and smoke, Ventilation, Dust and cleaning, Indoor habits, Filtration, and Near a busy road (only if you said your home is near one). A guide that repeats one of today's suggestions is left out.
 
 Open **Why it matters** on any card for its reason and sources. The guides cite public sources such as India's Ministry of Health air-pollution advisory, WHO and the US EPA. They consider indoor sources and the air outside together: do not assume closing or opening windows is always correct.
+
+## 5a. Ask AirAware
+- **Topics:** Outdoor activities, Windows and ventilation, Indoor air, My family, Commuting and Greener habits. Tapping one answers at once; the one answered last shows a tick.
+- **Starter questions** also answer at once, or type your own question (up to 200 characters) and press **Send**.
+- **Each answer:** a short answer, who made it (our rules or AI), what it is based on (today's forecast check, "Model forecast" and its time, with "Not current" when it is over an hour old), up to three suggestions with **Why?**, and the safety note. It never says yes or no to whether something is safe.
+- **Health questions:** "I can't give medical advice. For health concerns, please talk to a doctor.", with today's forecast. Questions outside air, home and day list what Ask can help with.
+- **Your questions** go only to our server, which uses them to pick a topic. They are not saved, logged or sent to an AI. Answers stay on the page for this visit (the latest 10) and are cleared when you choose another place.
+- The line under the heading says which forecast is used and how many of your 10 household questions you have answered; **Edit** opens My Profile.
 
 ## 6. Better Habits
 General guides in four groups: Daily commuting and vehicle idling, Waste, Cooking, and Energy use. Each has **Why it matters** and its sources. Choose the changes that suit your life. The app never states how much pollution a change saves, because it has no documented way to calculate it.

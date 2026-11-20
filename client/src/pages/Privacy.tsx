@@ -54,7 +54,16 @@ function Privacy() {
           items={[
             "When AI personalisation is on, our server sends the 24-hour forecast check and the text of the suggestions our rules picked for you to Google's Gemini, and to Anthropic's Claude, only when Gemini gives no usable answer.",
             'Those suggestions’ reasons can mention your answers, for example "You said you exercise outdoors".',
+            'For Ask answers, they get the forecast check and the suggestion text, never your question.',
             'Neither receives the place name, coordinates or your account.',
+          ]}
+        />
+        <Part
+          title="What happens to your questions"
+          items={[
+            'Questions you type in Ask AirAware go only to our server, which uses them to pick a topic.',
+            'They are not saved, not logged and not sent to Gemini or Claude.',
+            'Your Ask answers stay on this page for this visit only.',
           ]}
         />
         <Part

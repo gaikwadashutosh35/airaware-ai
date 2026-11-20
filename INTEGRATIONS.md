@@ -71,7 +71,8 @@ Rules:
 - **Free tier:** Google may use free-tier prompts and responses to improve its products, and people may review them. The input above holds only the app's own fixed text and model-forecast numbers.
 - **Checks:** schema, lengths, candidate ids (exact match, every high-priority action included), numbers only from the input (number words and number-plus-unit pairs included), banned wording (safety and health claims, named conditions, AQI, reassurance such as "the air is clean"). The full list is in the Phase 5 spec, check 5. Invalid JSON or schema → one retry. Any other failure → a labelled rules-only plan.
 - **Logging:** one line, `Gemini plan failed: <category>` (`timeout`, `http <status>`, `network`, `empty response`, `invalid json`, `schema`, `length`, `ids`, `numbers`, `wording`). Never the key, prompts, Gemini's text, household details, labels, coordinates or request bodies.
-- **Not built:** the chat endpoint (`/assistant/chat`), deferred until after Phase 8.
+- **Ask AirAware (redesign Phase 7):** `POST /api/v1/assistant/answer` uses the same writer, so one daily budget and one 10-minute answers cache cover plans and Ask. The typed question only picks a topic on the server and is then dropped; the writer gets the same input as for a plan (the air check and the topic's cards), so the free-tier basis above is unchanged. Medical and out-of-scope questions call no AI. An Ask summary that reads as a yes or no on safety falls back to rules, logged as the constant line `Ask summary failed: verdict`.
+- **Not built:** an open chat. Ask AirAware is guided: one question, one answer, no conversation history.
 
 Official docs: https://ai.google.dev/gemini-api/docs
 
