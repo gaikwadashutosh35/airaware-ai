@@ -193,6 +193,17 @@ Response (illustrative):
 
 All `/api/v1` routes share a rate limit of 60 requests per minute per IP. Requests over the limit get `429 RATE_LIMITED`.
 
+### `GET /api/v1/recommendations/guides?topic=home|habits`
+
+Public. Returns the guide library for My Home (`home`) or Better Habits (`habits`): general cards with neutral reasons and cited sources, grouped as the page shows them. The wording is fixed by `docs/superpowers/specs/2026-11-20-guide-library.md`. It calls no AI, so it does not count against the daily plan's 10-per-minute limit (only the shared 60 per minute). It changes only on deploy, so it is sent with `Cache-Control: public, max-age=3600`. A missing, unknown or extra parameter returns `400 VALIDATION_ERROR`.
+
+Response (shortened):
+```json
+{ "data": { "topic": "habits", "groups": [{ "id": "waste", "heading": "Waste", "cards": [{ "id": "guide.no-open-burning", "personalRuleId": "swap.no-open-burning", "section": "swap", "priority": "medium", "title": "Don't burn waste or leaves", "text": "…", "reason": "…", "evidenceType": "general_suggestion", "sourceIds": ["swm-rules-2026", "mohfw-air-advisory-2025"], "inputsUsed": [] }] }], "sources": [{ "id": "swm-rules-2026", "name": "Solid Waste Management Rules, 2026 (Gazette of India)", "url": "https://static.pib.gov.in/…" }], "safetyNote": "General information only, not medical advice. Follow local public-health advisories." } }
+```
+
+`personalRuleId` names the rule that gives the same advice personally; the app hides the guide card when today's plan shows that rule. Guide cards never enter a daily plan.
+
 ### `POST /api/v1/recommendations/daily-plan`
 
 Public, rate-limited endpoint (no sign-in until Phase 6). Returns a daily plan for one place and optional household details. Gemini picks, orders and times the rules' recommendation candidates and adds a summary and one "for you" line per featured action; every advice text, reason, caveat and source stays the rules' own wording. Without Gemini, or when Gemini fails or its answer fails a check, the same request returns a complete rules-only plan.

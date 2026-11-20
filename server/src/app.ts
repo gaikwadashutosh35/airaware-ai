@@ -8,6 +8,7 @@ import { airQualityRouter } from './routes/airQuality.ts';
 import { locationsRouter } from './routes/locations.ts';
 import { plansRouter } from './routes/plans.ts';
 import { preferencesRouter } from './routes/preferences.ts';
+import { guidesRouter } from './routes/guides.ts';
 import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
 import { createCachedWeather } from './services/air-data/cachedWeather.ts';
@@ -106,6 +107,8 @@ export function createApp(options: AppOptions = {}): express.Express {
     airQualityRouter(forecast, createCachedWeather()),
   );
   app.use('/api/v1/locations', locationsRouter());
+  // Before the recommendations router, so guides skip its plan limiter.
+  app.use('/api/v1/recommendations/guides', guidesRouter());
   app.use(
     '/api/v1/recommendations',
     recommendationsRouter({ planner, planLimit }),

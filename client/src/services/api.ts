@@ -3,6 +3,8 @@ import type {
   DailyPlan,
   ErrorCode,
   ForecastData,
+  GuideSet,
+  GuideTopic,
   HouseholdContext,
   LocationResult,
   SavedPlan,
@@ -112,6 +114,14 @@ export function searchLocations(
     `/api/v1/locations/search?${new URLSearchParams({ q: query })}`,
     signal,
   );
+}
+
+// The guide library for My Home or Better Habits (Phase 8).
+export function getGuides(
+  topic: GuideTopic,
+  signal?: AbortSignal,
+): Promise<GuideSet> {
+  return request(`/api/v1/recommendations/guides?topic=${topic}`, signal);
 }
 
 export function getSources(signal?: AbortSignal): Promise<SourceInfo[]> {

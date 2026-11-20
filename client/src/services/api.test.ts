@@ -4,6 +4,7 @@ import {
   buildDailyPlan,
   deletePlan,
   getForecast,
+  getGuides,
   getSources,
   savePreferences,
   searchLocations,
@@ -93,6 +94,17 @@ describe('api client', () => {
     expect(fetchSpy.mock.calls[0]?.[0]).toBe(
       '/api/v1/locations/search?q=Pune+%26+Co',
     );
+  });
+
+  it('getGuides asks for the topic', async () => {
+    const fetchSpy = respondWith({ data: { topic: 'habits', groups: [] } });
+
+    const set = await getGuides('habits');
+
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe(
+      '/api/v1/recommendations/guides?topic=habits',
+    );
+    expect(set.topic).toBe('habits');
   });
 
   it('returns the source list', async () => {
