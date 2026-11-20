@@ -32,7 +32,9 @@ test('sections rise in as they scroll into view', async ({ page }) => {
   expect((await styleOf(page)).name).toBe('reveal');
   await placeTop(page, -10);
   expect((await styleOf(page)).opacity).toBe('0');
-  await placeTop(page, 200);
+  // Fully shown 120 px in on every screen, phones' bottom scroll padding
+  // included.
+  await placeTop(page, 130);
   expect((await styleOf(page)).opacity).toBe('1');
 });
 

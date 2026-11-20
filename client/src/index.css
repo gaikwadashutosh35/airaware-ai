@@ -153,12 +153,13 @@
 
     /* Landing sections rise in as they scroll into view (spec §7.8). Fully
        shown 120 px after a section's top enters, however tall it is.
-       `animation-timeline` comes after the shorthand, which resets it.
+       `animation-timeline` comes after the shorthand, which resets it. The
+       0px inset stops phones' bottom scroll padding from delaying it.
        Without support, nothing moves. */
     @supports (animation-timeline: view()) {
       .reveal {
         animation: reveal linear both;
-        animation-timeline: view();
+        animation-timeline: view(0px);
         animation-range: entry 0% entry 120px;
       }
     }
