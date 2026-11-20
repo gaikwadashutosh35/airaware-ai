@@ -77,6 +77,16 @@ airaware-ai/
 
 Responsible for navigation, forms, display, local UI state, accessibility, and calling typed API services. It must not calculate official AQI or call private AI keys directly.
 
+**Paths:** there is no router library. `App.tsx` switches on the path that `lib/navigation.ts` provides (`usePath`, `navigate`, `appPage`).
+- `/` is the landing page; `/privacy` is the privacy page.
+- Every `/app/*` path renders `AppShell`:
+  - `/app` is Today;
+  - `/app/ask`, `/app/home`, `/app/habits` and `/app/welcome` are the redesign pages, built in later phases;
+  - `/app/profile` is My Profile.
+- `AppShell` holds the place, forecast, answers and saved-plan state, so moving between pages refetches nothing.
+- A searched place travels in `?place=&lat=&lon=` on any app path. A device location never does.
+- The server (`app.ts`) and `netlify.toml` serve `index.html` for `/app/*`.
+
 ### API
 
 Authenticates users, validates payloads, applies rate limits, enforces ownership, invokes services, and returns normalized responses.

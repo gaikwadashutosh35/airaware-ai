@@ -46,6 +46,12 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Navigation and app shell (Phase 2 of the assistant redesign):
+  - every `/app` page shares one frame with five-item navigation (Today, Ask AirAware, My Home, Better Habits, My Profile). It is a bottom bar on phones and a navy top bar on larger screens, with a skip link and a phone-safe bottom inset;
+  - a place button changes the place from any page, in a native dialog;
+  - the household answers and saved plans move to My Profile. Answers stay unsaved while you move around;
+  - moving between pages refetches nothing, and back and forward work;
+  - the server and Netlify serve the app on every `/app/*` path.
 - Design system base (Phase 3 of the assistant redesign):
   - Inter is self-hosted: one Latin variable font file, 48 KB, OFL, under `client/public/fonts/`. It is preloaded and uses `font-display: swap`;
   - buttons shrink slightly while pressed, only when motion is welcome, and never when disabled;

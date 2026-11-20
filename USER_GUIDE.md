@@ -1,7 +1,14 @@
 # AirAware AI — User Guide
 
+**Getting around:** five places, in the bar at the bottom on a phone or at the top on a computer:
+- **Today:** your air and your plan.
+- **Ask AirAware**, **My Home** and **Better Habits:** being built.
+- **My Profile:** your answers and saved plans.
+
 ## 1. Choose a location
 Search for a city or area. You can use manual selection without sharing GPS. If you choose browser geolocation, the browser will ask for permission.
+
+Once a place is chosen, the place button at the top shows it. Tap it, or **Change place**, to search again or use your location.
 
 ## 2. Understand the data card
 Check:
@@ -17,7 +24,7 @@ A forecast is not a station measurement. A pollutant concentration is not automa
 The chart shows PM2.5 (solid line) and PM10 (dashed line) for the next 48 hours, with a written summary under it. The dotted "At load" line marks the hour the forecast loaded; the exact hourly values are in the table below it. If the page stays open for more than an hour, it says "Not current: retrieved more than an hour ago. Reload for the latest forecast."
 
 ## 3. Set optional preferences
-Choose only the context you want to share:
+In **My Profile**, choose only the context you want to share. The answers stay while you move around the app, even unsaved:
 - Commute mode.
 - Outdoor exercise habit.
 - Cooking/ventilation context.
@@ -45,7 +52,7 @@ Choose practical habit changes that suit your life. Treat qualitative benefits a
 
 ## 7. Manage saved data
 - **Save plan** keeps the plan on this browser. The first save creates an anonymous account (no email, name or password).
-- **Saved plans** lists them, newest first. **Open** shows one under "Saved plan from …. This is a snapshot, not current air information."; **Back to today** returns to your current plan. **Delete** removes one plan after a confirmation. You can keep up to 20.
+- **Saved plans**, in My Profile, lists them, newest first. **Open** shows one on Today under "Saved plan from …. This is a snapshot, not current air information."; **Back to today** returns to your current plan. **Delete** removes one plan after a confirmation. You can keep up to 20.
 - **Delete my saved data** (in Your household) removes your account, saved answers and saved plans.
 
 ## 8. Privacy

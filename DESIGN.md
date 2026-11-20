@@ -107,6 +107,11 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 - `SustainableSwapCard`
 - `SourceAndLimitationsPanel`
 - `EmptyState`, `ErrorState`, `StaleDataState`, `Skeleton`
+- **Built in the assistant redesign:**
+  - `AppShell`: the frame for every `/app` page.
+  - `AppNav`: one `<nav aria-label="Main">`. It is a bottom bar on phones, inline in the navy top bar from `md`, and marks the current page with `aria-current="page"`, an elevated pill and a teal icon.
+  - `PlaceChip`: the place button and a native modal `<dialog>` holding `LocationSearch` and `UseMyLocation`.
+  - `Profile`: the household answers and saved plans.
 
 ## 9. Interaction and motion
 
