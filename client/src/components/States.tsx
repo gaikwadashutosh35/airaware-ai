@@ -1,18 +1,10 @@
-import { CitySkyline } from '../features/air-quality/CitySkyline.tsx';
 import type { ApiError } from '../services/api.ts';
 
 const PULSE =
   'animate-pulse rounded bg-text-dark/10 motion-reduce:animate-none';
 
-// A placeholder of grey lines; with `band`, readout-shaped (the scene band
-// first). Screen readers hear only the label.
-export function Loading({
-  label,
-  band = false,
-}: {
-  label: string;
-  band?: boolean;
-}) {
+// A placeholder of grey lines. Screen readers hear only the label.
+export function Loading({ label }: { label: string }) {
   return (
     <div
       aria-busy="true"
@@ -20,13 +12,6 @@ export function Loading({
     >
       <span className="sr-only">{label}</span>
       <div aria-hidden="true" className="flex flex-col">
-        {/* The skyline's own still silhouette, the same size as the scene,
-            so nothing shifts or hints at a result before it loads. */}
-        {band && (
-          <div data-part="skeleton-band">
-            <CitySkyline scene={null} />
-          </div>
-        )}
         <div className="flex flex-col gap-3 p-5 sm:p-8">
           <div className={`h-6 w-1/3 ${PULSE}`} />
           <div className={`h-14 w-1/2 ${PULSE}`} />

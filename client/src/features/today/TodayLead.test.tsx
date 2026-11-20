@@ -137,46 +137,14 @@ describe('TodayLead', () => {
     expect(container.textContent).toContain('Weather unavailable');
   });
 
-  it('the scene follows the weather', () => {
-    const { container } = show({
-      ...forecastFixture,
-      weather: { ...forecastFixture.weather!, precipitationMm: 1.2 },
-    });
-    expect(container.querySelector('[data-part="rain"]')).not.toBeNull();
-    expect(container.querySelector('svg[data-air]')).not.toBeNull();
-  });
-
-  // Moved from AirReadout: the scene's look follows the 24-hour check.
-  it('the scene follows the air check', () => {
-    const look = (airCheck: AirAssessment) => {
-      const { container, unmount } = show({ ...forecastFixture, airCheck });
-      const level = container
-        .querySelector('svg[data-air]')
-        ?.getAttribute('data-air');
-      unmount();
-      return level;
-    };
+  // Backdrop design §5.4: the app backdrop owns the scene now; the
+  // weather line, the scene's words, leads the card.
+  it('the lead card draws no scene', () => {
+    const { container } = show(forecastFixture);
+    expect(container.querySelector('svg')).toBeNull();
     expect(
-      look({
-        level: 'elevated',
-        windowStart: null,
-        checks: [
-          {
-            pollutant: 'PM2_5',
-            status: 'above_limit',
-            average24h: 72,
-            limit: 60,
-          },
-          {
-            pollutant: 'PM10',
-            status: 'unknown',
-            average24h: null,
-            limit: 100,
-          },
-        ],
-      }),
-    ).toBe('above');
-    expect(look(forecastFixture.airCheck)).toBe('unknown');
+      container.querySelector('section')?.firstElementChild?.textContent,
+    ).toMatch(/^Weather for /);
   });
 
   it('never says AQI, safe or healthy', () => {

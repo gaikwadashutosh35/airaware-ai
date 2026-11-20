@@ -55,11 +55,56 @@ function seconds(token: string) {
 describe('CitySkyline', () => {
   it('is decorative and carries its state', () => {
     const container = draw({ air: 'above', clouds: 2 });
-    const svg = container.querySelector('svg');
-    expect(svg?.getAttribute('aria-hidden')).toBe('true');
-    expect(svg?.getAttribute('data-air')).toBe('above');
-    expect(svg?.getAttribute('data-clouds')).toBe('2');
+    const root = container.firstElementChild;
+    expect(root?.getAttribute('aria-hidden')).toBe('true');
+    expect(root?.getAttribute('data-air')).toBe('above');
+    expect(root?.getAttribute('data-clouds')).toBe('2');
     expect(container.querySelector('text, [tabindex], a')).toBeNull();
+  });
+
+  // Backdrop design §5.1: fixed behind the page, never in the way.
+  it('a fixed backdrop that takes no clicks', () => {
+    for (const fields of [{ rain: true, clouds: 3 } as const, null]) {
+      const root = draw(fields).firstElementChild;
+      const classes = (root?.getAttribute('class') ?? '').split(/\s+/);
+      for (const name of ['fixed', 'inset-0', '-z-10', 'pointer-events-none']) {
+        expect(classes).toContain(name);
+      }
+      expect(
+        root?.querySelector('a, button, input, select, textarea, [tabindex]'),
+      ).toBeNull();
+    }
+  });
+
+  it('the city sits above the phone bar and never over a fifth of the screen', () => {
+    for (const fields of [{}, null]) {
+      const city = draw(fields).querySelector('[data-layer="city"]');
+      const classes = (city?.getAttribute('class') ?? '').split(/\s+/);
+      for (const name of [
+        'h-[min(8rem,20vh)]',
+        'sm:h-[min(11rem,20vh)]',
+        'bottom-[calc(3.5rem+env(safe-area-inset-bottom))]',
+        'md:bottom-0',
+      ]) {
+        expect(classes).toContain(name);
+      }
+    }
+  });
+
+  // No hard top edge over the sky: each fades in from the band's top.
+  it('veils and fog fade in from the band top', () => {
+    const container = draw({ air: 'above', fog: true });
+    for (const name of ['veil-far', 'veil-mid', 'fog']) {
+      const ref = /url\(#([^)]+)\)/.exec(
+        part(container, name)?.getAttribute('fill') ?? '',
+      )?.[1];
+      const gradient = [...container.querySelectorAll('linearGradient')].find(
+        (g) => g.id === ref,
+      );
+      expect(
+        gradient?.querySelector('stop')?.getAttribute('stop-opacity'),
+      ).toBe('0');
+    }
   });
 
   // Cityscape D1: one look per server level, from tokens only.
@@ -157,7 +202,7 @@ describe('CitySkyline', () => {
 
   it('loading draws a still, neutral silhouette', () => {
     const container = draw(null);
-    expect(container.querySelector('svg')?.getAttribute('data-air')).toBe(
+    expect(container.firstElementChild?.getAttribute('data-air')).toBe(
       'loading',
     );
     for (const name of ['glow', 'cloud', 'veil-far', 'rain', 'windows']) {
@@ -173,14 +218,14 @@ describe('CitySkyline', () => {
         <CitySkyline scene={scene({ glow: true })} />
       </>,
     );
-    const svgs = [...container.querySelectorAll('svg')];
-    const ids = svgs.map((svg) =>
-      [...svg.querySelectorAll('[id]')].map((el) => el.id),
+    const roots = [...container.children];
+    const ids = roots.map((root) =>
+      [...root.querySelectorAll('[id]')].map((el) => el.id),
     );
     expect(ids[0]!.length).toBeGreaterThan(0);
     expect(ids[0]!.some((id) => ids[1]!.includes(id))).toBe(false);
-    svgs.forEach((svg, i) => {
-      for (const el of svg.querySelectorAll('[fill^="url(#"]')) {
+    roots.forEach((root, i) => {
+      for (const el of root.querySelectorAll('[fill^="url(#"]')) {
         const ref = /url\(#([^)]+)\)/.exec(el.getAttribute('fill')!)![1]!;
         expect(ids[i]).toContain(ref);
       }
@@ -217,32 +262,40 @@ describe('CitySkyline', () => {
     expect(part(draw(), 'fog')).toBeNull();
   });
 
-  // Review A2 minor a: one loop of the rain lands every visible streak on
-  // another streak, so the pattern never jumps sideways.
-  it('the rain loop is seamless', () => {
+  // Review A2 minor a, for a tile: one loop of the rain moves each streak
+  // onto another streak of the repeating tile, so the pattern never jumps.
+  it('the rain tile repeats under its loop', () => {
     const keyframes =
       /@keyframes rain-fall\s*{[\s\S]*?to\s*{\s*transform:\s*([^;]+);/.exec(
         css,
       )?.[1] ?? '';
     const pair = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(keyframes);
-    const onlyY = /translateY\((-?[\d.]+)px\)/.exec(keyframes);
-    const [dx, dy] = pair
-      ? [Number(pair[1]), Number(pair[2])]
-      : [0, Number(onlyY?.[1])];
-    const streaks = [
-      ...draw({ rain: true }).querySelectorAll('[data-part="rain"] line'),
-    ].map((line) => [
+    const [dx, dy] = [Number(pair?.[1]), Number(pair?.[2])];
+    expect([dx, dy]).toEqual([-12, 32]);
+    const container = draw({ rain: true });
+    const ref = /url\(#([^)]+)\)/.exec(
+      part(container, 'rain')?.getAttribute('fill') ?? '',
+    )?.[1];
+    const tile = [...container.querySelectorAll('pattern')].find(
+      (p) => p.id === ref,
+    );
+    const [w, h] = [
+      Number(tile?.getAttribute('width')),
+      Number(tile?.getAttribute('height')),
+    ];
+    expect([w, h]).toEqual([24, 64]);
+    const mod = (n: number, m: number) => ((n % m) + m) % m;
+    const streaks = [...(tile?.querySelectorAll('line') ?? [])].map((line) => [
       Number(line.getAttribute('x1')),
       Number(line.getAttribute('y1')),
     ]);
+    expect(streaks).toHaveLength(2);
     const at = new Set(streaks.map(([x, y]) => `${x},${y}`));
-    // A streak runs from (x, y) to (x - 4, y + 10); visible if it crosses the view.
-    const visible = ([x, y]: number[]) =>
-      x! > 0 && x! - 4 < 800 && y! < 160 && y! + 10 > 0;
     for (const [x, y] of streaks) {
-      const moved = [x! + dx, y! + dy];
-      if (visible(moved)) expect(at.has(moved.join(','))).toBe(true);
-      if (visible([x!, y!])) expect(at.has(`${x! - dx},${y! - dy}`)).toBe(true);
+      expect(at.has(`${mod(x! + dx, w)},${mod(y! + dy, h)}`)).toBe(true);
+      // Each streak (to x - 4, y + 10) stays inside the tile, so none is cut.
+      expect(x! - 4).toBeGreaterThanOrEqual(0);
+      expect(y! + 10).toBeLessThanOrEqual(h);
     }
   });
 });

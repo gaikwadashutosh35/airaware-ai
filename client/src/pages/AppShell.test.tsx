@@ -401,6 +401,96 @@ describe('AppShell', () => {
     expect(forecastCalls(fetchSpy)).toHaveLength(forecasts + 1);
   });
 
+  // Backdrop design §5.2 and §5.5.
+  const ABOVE: typeof forecastFixture = {
+    ...forecastFixture,
+    airCheck: {
+      level: 'elevated',
+      windowStart: forecastFixture.hours[0]!.time,
+      checks: [
+        {
+          pollutant: 'PM2_5',
+          status: 'above_limit',
+          average24h: 72.4,
+          limit: 60,
+        },
+        {
+          pollutant: 'PM10',
+          status: 'within_limit',
+          average24h: 80,
+          limit: 100,
+        },
+      ],
+    },
+  };
+  const backdrop = () => document.querySelector('[data-air]');
+  const note = () => screen.queryByText(/^Background: model forecast/);
+
+  it('the backdrop is neutral before a place is chosen', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+    expect(window.location.pathname).toBe('/app/welcome');
+    expect(backdrop()?.getAttribute('data-air')).toBe('unknown');
+    expect(note()).toBeNull();
+  });
+
+  it('the backdrop follows the forecast on every page', async () => {
+    routeFetch(ok(ABOVE), planRoutes());
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    const root = backdrop();
+    expect(root?.getAttribute('data-air')).toBe('above');
+    expect(note()?.textContent).toBe(
+      'Background: model forecast for Pune, Maharashtra.',
+    );
+    expect(note()?.closest('footer')).not.toBeNull();
+
+    await goTo('Better Habits');
+    expect(backdrop()).toBe(root);
+    expect(note()).not.toBeNull();
+  });
+
+  it('the hourly reload keeps the backdrop and its note', async () => {
+    let calls = 0;
+    routeFetch(
+      () => (++calls === 1 ? ok(ABOVE)() : new Promise<Response>(() => {})),
+      planRoutes(),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+
+    // An hour on, Today reloads; the new forecast never arrives here.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61 * 60_000);
+    });
+    await flush();
+    expect(calls).toBe(2);
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+    expect(note()?.textContent).toMatch(/ Not current\.$/);
+  });
+
+  it('a failed forecast leaves a neutral backdrop', async () => {
+    routeFetch(
+      () =>
+        Promise.resolve(
+          Response.json(
+            { error: { code: 'PROVIDER_ERROR', message: 'Provider down.' } },
+            { status: 502 },
+          ),
+        ),
+      planRoutes(),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    expect(backdrop()?.getAttribute('data-air')).toBe('unknown');
+    expect(note()).toBeNull();
+  });
+
   it('never shows an AQI number', async () => {
     routeFetch(ok());
     const { container } = render(<AppShell />);

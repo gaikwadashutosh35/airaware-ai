@@ -2,13 +2,12 @@ import { useId } from 'react';
 import type { ForecastData } from '../../../../shared/contracts.ts';
 import { StaleBanner } from '../air-quality/AirReadout.tsx';
 import { weatherLine } from '../air-quality/forecast.ts';
-import { CitySkyline } from '../air-quality/CitySkyline.tsx';
-import { sceneFromConditions } from '../air-quality/scene.ts';
 import { LEVEL_TAG } from '../daily-plan/planDisplay.ts';
 import { verdictFrom } from './today.ts';
 
-// Today's lead: the scene, then the forecast in one sentence with its kind,
-// source and time. Numbers live in "Air quality details".
+// Today's lead: this hour's weather in words (the app backdrop draws it),
+// then the forecast in one sentence with its kind, source and time. Numbers
+// live in "Air quality details".
 export function TodayLead({
   data,
   stale,
@@ -29,7 +28,6 @@ export function TodayLead({
       aria-labelledby={headingId}
       className="overflow-hidden rounded-lg border border-rule"
     >
-      <CitySkyline scene={sceneFromConditions(data.airCheck, data.weather)} />
       <p className="border-b border-rule px-5 py-2 text-sm text-text-dark-muted sm:px-8">
         {weatherLine(data.weather)}
       </p>

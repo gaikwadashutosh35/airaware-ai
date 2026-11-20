@@ -60,12 +60,13 @@ const CLOUDS: Array<[number, number]> = [
   [180, 36],
 ];
 
-// Slanted streaks on a 24 x 32 grid, one row taller than the band so the
-// loop (one row down, half a column left) never shows a gap.
-const RAIN = Array.from({ length: 34 * 7 }, (_, i) => [
-  (i % 34) * 24 + (Math.floor(i / 34) % 2) * 12,
-  Math.floor(i / 34) * 32 - 32,
-]);
+// The rain tile (24 x 64): two slanted streaks a row (32) and half a column
+// (12) apart, so the loop (one row down, half a column left) lands the tile
+// on itself. Each streak runs to (x - 4, y + 10), inside the tile.
+const RAIN_TILE: Array<[number, number]> = [
+  [8, 4],
+  [20, 36],
+];
 
 // Token colours as whole class strings, so Tailwind emits them. The sky's
 // top mutes towards `rule` under an overcast deck (weather, not air).
@@ -96,11 +97,13 @@ const VEIL_FAR: Record<SceneAir, number> = {
   above: 0.42,
   unknown: 0,
 };
+// Veil colours, as gradient stops: each veil fades in from the city band's
+// top so it never draws a hard edge across the sky.
 const VEIL: Record<SceneAir, string> = {
-  within: 'fill-rule',
+  within: '[stop-color:var(--color-rule)]',
   above:
-    '[fill:color-mix(in_oklab,var(--color-rule)_88%,var(--color-secondary))]',
-  unknown: 'fill-rule',
+    '[stop-color:color-mix(in_oklab,var(--color-rule)_88%,var(--color-secondary))]',
+  unknown: '[stop-color:var(--color-rule)]',
 };
 
 const rects = (row: Array<[number, number, number]>) =>
@@ -114,206 +117,276 @@ const tank = (cx: number, top: number) =>
   `M${cx - 4} ${top - 2}h1.5v2h-1.5z` +
   `M${cx + 2.5} ${top - 2}h1.5v2h-1.5z`;
 
-const BAND = 'block h-32 w-full sm:h-44';
+// The fixed full-screen backdrop and its layers (backdrop design §5.1). The
+// city band never takes over a fifth of the screen, and sits above the phone
+// bar (56 px plus the safe area) below md.
+const ROOT = 'pointer-events-none fixed inset-0 -z-10 overflow-hidden';
+const FILL = 'absolute inset-0 size-full';
+const CITY =
+  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0';
 
-// A decorative city skyline. Its look (sky, glow strength, veils) follows
-// the server's 24-hour air check; clouds, rain, fog, heat and daylight follow
-// this hour's weather forecast. The readout's words carry the meaning; this
-// picture is hidden from assistive technology. With no scene yet, a still,
-// neutral silhouette of the same city.
+// From nothing at the band's top to full strength at 60 % of its height.
+function Fade({ id, stop }: { id: string; stop: string }) {
+  return (
+    <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopOpacity="0" className={stop} />
+      <stop offset="0.6" className={stop} />
+    </linearGradient>
+  );
+}
+
+// The app's backdrop: a decorative city behind every page. Its look (sky,
+// glow strength, veils) follows the server's 24-hour air check; clouds, rain,
+// fog, heat and daylight follow this hour's weather forecast. The page's
+// words carry the meaning; this picture is hidden from assistive technology.
+// With no scene yet, a still, neutral silhouette of the same city.
 export function CitySkyline({ scene }: { scene: Scene | null }) {
   // Letters, digits, _ and - only, so every url(#…) resolves.
   const id = useId().replace(/[^\w-]/g, '');
 
   if (!scene) {
     return (
-      <svg
-        aria-hidden="true"
-        data-air="loading"
-        viewBox="0 0 800 160"
-        preserveAspectRatio="xMidYMax slice"
-        className={BAND}
-      >
-        <rect width="800" height="160" className="fill-surface-light" />
-        <g className="fill-rule" opacity="0.7">
-          {rects(FAR_ALL)}
-        </g>
-        <g className="fill-rule">{rects(NEAR_ALL)}</g>
-      </svg>
+      <div aria-hidden="true" data-air="loading" className={ROOT}>
+        <svg data-layer="sky" className={FILL}>
+          <rect width="100%" height="100%" className="fill-surface-light" />
+        </svg>
+        <svg
+          data-layer="city"
+          viewBox="0 0 800 160"
+          preserveAspectRatio="xMidYMax slice"
+          className={CITY}
+        >
+          <g className="fill-rule" opacity="0.7">
+            {rects(FAR_ALL)}
+          </g>
+          <g className="fill-rule">{rects(NEAR_ALL)}</g>
+        </svg>
+      </div>
     );
   }
 
   const sky = SKY[scene.air];
   const overcast = scene.clouds === 3;
   return (
-    <svg
+    <div
       aria-hidden="true"
       data-air={scene.air}
       data-clouds={scene.clouds}
-      viewBox="0 0 800 160"
-      preserveAspectRatio="xMidYMax slice"
-      className={BAND}
+      className={ROOT}
     >
-      <defs>
-        <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" className={overcast ? sky.overcast : sky.top} />
-          <stop offset="1" className={sky.bottom} />
-        </linearGradient>
-        <radialGradient id={`${id}-glow`}>
-          <stop offset="0" className="[stop-color:var(--color-warning)]" />
-          <stop
-            offset="0.3"
-            stopOpacity="0.6"
-            className="[stop-color:var(--color-warning)]"
-          />
-          <stop
-            offset="1"
-            stopOpacity="0"
-            className="[stop-color:var(--color-warning)]"
-          />
-        </radialGradient>
-        <pattern
-          id={`${id}-windows`}
-          width="7"
-          height="9"
-          patternUnits="userSpaceOnUse"
-        >
-          <rect
-            x="2"
-            y="2"
-            width="3"
-            height="4"
-            className="fill-surface-light"
-            opacity="0.5"
-          />
-        </pattern>
-      </defs>
-      <rect data-part="sky" width="800" height="160" fill={`url(#${id}-sky)`} />
-      {scene.glow && (
-        <circle
-          data-part="glow"
-          cx="560"
-          cy="58"
-          r={scene.heat ? 76 : 62}
-          fill={`url(#${id}-glow)`}
-          opacity={GLOW[scene.air]}
-        />
-      )}
-      {overcast && (
-        <ellipse
-          data-part="cloud-deck"
-          cx="400"
-          cy="-6"
-          rx="520"
-          ry="30"
-          className="fill-rule"
-          opacity="0.85"
-        />
-      )}
-      <g data-part="clouds" className="motion-safe:animate-drift">
-        {CLOUDS.slice(0, scene.clouds).map(([cx, cy]) => (
-          <g key={cx} data-part="cloud">
-            <ellipse
-              cx={cx}
-              cy={cy + 2}
-              rx="38"
-              ry="9"
-              className="fill-rule"
-              opacity="0.7"
-            />
-            <g className="fill-surface-light">
-              <ellipse cx={cx} cy={cy} rx="36" ry="10" />
-              <ellipse cx={cx - 15} cy={cy - 6} rx="17" ry="11" />
-              <ellipse cx={cx + 12} cy={cy - 9} rx="20" ry="13" />
-            </g>
-          </g>
-        ))}
-      </g>
-      <g data-part="far" className="fill-text-dark-muted" opacity="0.42">
-        {rects(FAR_ALL)}
-        {/* A domed hall. */}
-        <rect x="160" y="120" width="50" height="40" />
-        <path d="M163 120 A22 22 0 0 1 207 120 Z" />
-      </g>
-      <rect
-        data-part="veil-far"
-        width="800"
-        height="160"
-        className={VEIL[scene.air]}
-        opacity={VEIL_FAR[scene.air]}
-      />
-      <g
-        data-part="mid"
-        className="[fill:color-mix(in_oklab,var(--color-text-dark-muted)_55%,var(--color-text-dark))]"
-        opacity="0.62"
+      <svg
+        data-layer="sky"
+        viewBox="0 0 1 1"
+        preserveAspectRatio="none"
+        className={FILL}
       >
-        {rects(MID_ALL)}
-      </g>
-      {scene.air === 'above' && (
-        <rect
-          data-part="veil-mid"
-          width="800"
-          height="160"
-          className={VEIL.above}
-          opacity="0.2"
-        />
-      )}
-      <g data-part="near" className="fill-text-dark" opacity="0.9">
-        {rects(NEAR_ALL)}
-        {/* A memorial arch. */}
-        <path d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z" />
-      </g>
-      <g data-part="tanks" className="fill-text-dark" opacity="0.9">
-        {NEAR_ALL.filter((_, i) => i % 3 === 1).map(([x, w, h]) => (
-          <path key={x} d={tank(x + w / 2, 160 - h)} />
-        ))}
-      </g>
-      {/* Lit windows: detail a phone's small band can't hold. */}
-      <g data-part="windows" className="max-sm:hidden">
-        {NEAR_ALL.map(([x, w, h]) => (
-          <rect
-            key={x}
-            x={x + 3}
-            y={160 - h + 5}
-            width={w - 6}
-            height={h - 9}
-            fill={`url(#${id}-windows)`}
+        <defs>
+          <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" className={overcast ? sky.overcast : sky.top} />
+            <stop offset="1" className={sky.bottom} />
+          </linearGradient>
+        </defs>
+        <rect data-part="sky" width="1" height="1" fill={`url(#${id}-sky)`} />
+      </svg>
+      {/* The upper sky, under the 64 px header. */}
+      <svg
+        data-layer="upper"
+        viewBox="0 0 800 160"
+        preserveAspectRatio="xMidYMin slice"
+        className="absolute inset-x-0 top-16 h-40 w-full sm:h-56"
+      >
+        <defs>
+          <radialGradient id={`${id}-glow`}>
+            <stop offset="0" className="[stop-color:var(--color-warning)]" />
+            <stop
+              offset="0.3"
+              stopOpacity="0.6"
+              className="[stop-color:var(--color-warning)]"
+            />
+            <stop
+              offset="1"
+              stopOpacity="0"
+              className="[stop-color:var(--color-warning)]"
+            />
+          </radialGradient>
+        </defs>
+        {scene.glow && (
+          <circle
+            data-part="glow"
+            cx="560"
+            cy="58"
+            r={scene.heat ? 76 : 62}
+            fill={`url(#${id}-glow)`}
+            opacity={GLOW[scene.air]}
           />
-        ))}
-      </g>
-      {scene.fog && (
-        <rect
-          data-part="fog"
-          y="96"
-          width="800"
-          height="64"
-          className="fill-surface-light"
-          opacity="0.6"
-        />
-      )}
-      {scene.rain && (
-        <g
-          data-part="rain"
-          className="stroke-text-dark-muted motion-safe:animate-rain"
-          opacity="0.5"
-          strokeWidth="1.5"
-        >
-          {RAIN.map(([x, y]) => (
-            <line key={`${x},${y}`} x1={x} y1={y} x2={x! - 4} y2={y! + 10} />
+        )}
+        {overcast && (
+          <ellipse
+            data-part="cloud-deck"
+            cx="400"
+            cy="-6"
+            rx="520"
+            ry="30"
+            className="fill-rule"
+            opacity="0.85"
+          />
+        )}
+        <g data-part="clouds" className="motion-safe:animate-drift">
+          {CLOUDS.slice(0, scene.clouds).map(([cx, cy]) => (
+            <g key={cx} data-part="cloud">
+              <ellipse
+                cx={cx}
+                cy={cy + 2}
+                rx="38"
+                ry="9"
+                className="fill-rule"
+                opacity="0.7"
+              />
+              <g className="fill-surface-light">
+                <ellipse cx={cx} cy={cy} rx="36" ry="10" />
+                <ellipse cx={cx - 15} cy={cy - 6} rx="17" ry="11" />
+                <ellipse cx={cx + 12} cy={cy - 9} rx="20" ry="13" />
+              </g>
+            </g>
           ))}
         </g>
-      )}
-      {scene.heat && (
+      </svg>
+      <svg
+        data-layer="city"
+        viewBox="0 0 800 160"
+        preserveAspectRatio="xMidYMax slice"
+        className={CITY}
+      >
+        <defs>
+          <Fade id={`${id}-veil`} stop={VEIL[scene.air]} />
+          <Fade
+            id={`${id}-fog`}
+            stop="[stop-color:var(--color-surface-light)]"
+          />
+          <pattern
+            id={`${id}-windows`}
+            width="7"
+            height="9"
+            patternUnits="userSpaceOnUse"
+          >
+            <rect
+              x="2"
+              y="2"
+              width="3"
+              height="4"
+              className="fill-surface-light"
+              opacity="0.5"
+            />
+          </pattern>
+        </defs>
+        <g data-part="far" className="fill-text-dark-muted" opacity="0.42">
+          {rects(FAR_ALL)}
+          {/* A domed hall. */}
+          <rect x="160" y="120" width="50" height="40" />
+          <path d="M163 120 A22 22 0 0 1 207 120 Z" />
+        </g>
         <rect
-          data-part="shimmer"
-          x="-8"
-          y="142"
-          width="816"
-          height="18"
-          className="fill-warning"
-          opacity="0.14"
+          data-part="veil-far"
+          width="800"
+          height="160"
+          fill={`url(#${id}-veil)`}
+          opacity={VEIL_FAR[scene.air]}
         />
+        <g
+          data-part="mid"
+          className="[fill:color-mix(in_oklab,var(--color-text-dark-muted)_55%,var(--color-text-dark))]"
+          opacity="0.62"
+        >
+          {rects(MID_ALL)}
+        </g>
+        {scene.air === 'above' && (
+          <rect
+            data-part="veil-mid"
+            width="800"
+            height="160"
+            fill={`url(#${id}-veil)`}
+            opacity="0.2"
+          />
+        )}
+        <g data-part="near" className="fill-text-dark" opacity="0.9">
+          {rects(NEAR_ALL)}
+          {/* A memorial arch. */}
+          <path d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z" />
+        </g>
+        <g data-part="tanks" className="fill-text-dark" opacity="0.9">
+          {NEAR_ALL.filter((_, i) => i % 3 === 1).map(([x, w, h]) => (
+            <path key={x} d={tank(x + w / 2, 160 - h)} />
+          ))}
+        </g>
+        {/* Lit windows: detail a phone's small band can't hold. */}
+        <g data-part="windows" className="max-sm:hidden">
+          {NEAR_ALL.map(([x, w, h]) => (
+            <rect
+              key={x}
+              x={x + 3}
+              y={160 - h + 5}
+              width={w - 6}
+              height={h - 9}
+              fill={`url(#${id}-windows)`}
+            />
+          ))}
+        </g>
+        {/* Fog at the city's base only (backdrop design §5.1). */}
+        {scene.fog && (
+          <rect
+            data-part="fog"
+            width="800"
+            height="160"
+            fill={`url(#${id}-fog)`}
+            opacity="0.6"
+          />
+        )}
+        {scene.heat && (
+          <rect
+            data-part="shimmer"
+            x="-8"
+            y="142"
+            width="816"
+            height="18"
+            className="fill-warning"
+            opacity="0.14"
+          />
+        )}
+      </svg>
+      {/* Rain over the whole screen: a tile one loop of rain-fall maps onto
+          itself, on a rect that overhangs the screen so the loop never shows
+          an edge (it moves 12 px left and 32 px down). */}
+      {scene.rain && (
+        <svg data-layer="rain" className={FILL}>
+          <defs>
+            <pattern
+              id={`${id}-rain`}
+              width="24"
+              height="64"
+              patternUnits="userSpaceOnUse"
+            >
+              <g
+                className="stroke-text-dark-muted"
+                opacity="0.5"
+                strokeWidth="1.5"
+              >
+                {RAIN_TILE.map(([x, y]) => (
+                  <line key={x} x1={x} y1={y} x2={x - 4} y2={y + 10} />
+                ))}
+              </g>
+            </pattern>
+          </defs>
+          <rect
+            data-part="rain"
+            x="-24"
+            y="-64"
+            width="120%"
+            height="120%"
+            fill={`url(#${id}-rain)`}
+            className="motion-safe:animate-rain"
+          />
+        </svg>
       )}
-    </svg>
+    </div>
   );
 }

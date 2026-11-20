@@ -33,6 +33,8 @@ import { AirDetails } from '../features/today/AirDetails.tsx';
 import { AskBox } from '../features/today/AskBox.tsx';
 import { HelpChoices } from '../features/today/HelpChoices.tsx';
 import { TodayLead } from '../features/today/TodayLead.tsx';
+import { CitySkyline } from '../features/air-quality/CitySkyline.tsx';
+import { backdropNote, backdropScene } from '../features/air-quality/scene.ts';
 import { greeting } from '../features/today/today.ts';
 
 // What is saved for a remembered place: label and 2-decimal coordinates.
@@ -134,6 +136,12 @@ function AppShell() {
     forecast.state.status === 'ready' &&
     isOlderThan(forecast.state.data.loadedAt.toISOString(), now, 60);
   const reloadForecast = useEffectEvent(() => forecast.retry());
+  // The backdrop's forecast: the ready one, or the one a same-place reload
+  // will replace, so the screen never flashes grey once an hour.
+  const shown =
+    forecast.state.status === 'ready'
+      ? forecast.state.data.series
+      : (forecast.previous?.series ?? null);
   useEffect(() => {
     if (forecastDue) reloadForecast();
   }, [forecastDue]);
@@ -228,6 +236,10 @@ function AppShell() {
   return (
     <>
       <title>{`${TITLES[page]} | AirAware AI`}</title>
+      {/* One backdrop for every app page; it stays mounted between pages. */}
+      <CitySkyline
+        scene={backdropScene(shown, forecast.state.status === 'loading')}
+      />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-20 focus:rounded-md focus:bg-surface-light focus:px-4 focus:py-3"
@@ -357,7 +369,7 @@ function AppShell() {
                       level={2}
                     />
                   ) : (
-                    <Loading label="Loading forecast" band />
+                    <Loading label="Loading forecast" />
                   )}
                 </>
               ) : null}
@@ -434,6 +446,14 @@ function AppShell() {
       {/* Bottom padding on phones keeps the footer clear of the nav bar. */}
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pt-8 pb-24 text-sm text-text-dark-muted sm:px-6 md:pb-8">
+          {shown && place && (
+            <p>
+              {backdropNote(
+                place.label,
+                isOlderThan(shown.retrievedAt, now, 60),
+              )}
+            </p>
+          )}
           <Attribution />
           <a href="/privacy" className="underline">
             Privacy

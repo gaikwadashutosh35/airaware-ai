@@ -13,25 +13,18 @@ describe('Loading', () => {
   });
 
   it('the skeleton is hidden except its label', async () => {
-    const { container } = render(<Loading label="Loading forecast" band />);
+    const { container } = render(<Loading label="Loading forecast" />);
     const busy = container.querySelector('[aria-busy="true"]');
     expect(busy).not.toBeNull();
     expect(container.textContent).toBe('Loading forecast');
-    const band = container.querySelector('[data-part="skeleton-band"]');
-    expect(band).not.toBeNull();
-    expect(band!.closest('[aria-hidden="true"]')).not.toBeNull();
     await expectNoAxeViolations(container);
   });
 
-  // Cityscape: the forecast band is the skyline's own silhouette, still and
-  // neutral, so nothing hints at a result before it loads.
-  it('the forecast band is a still skyline silhouette', () => {
-    const { container } = render(<Loading label="Loading forecast" band />);
-    const band = container.querySelector('[data-part="skeleton-band"]');
-    expect(band?.querySelector('svg[data-air="loading"]')).not.toBeNull();
-    expect(band!.closest('[aria-hidden="true"]')).not.toBeNull();
-    expect(band!.getAttribute('class') ?? '').not.toMatch(/animate-/);
-    expect(band!.querySelector('[class*="animate-"]')).toBeNull();
+  // Backdrop design §5.4: the app backdrop draws the silhouette now.
+  it('loading has no scene band', () => {
+    const { container } = render(<Loading label="Loading forecast" />);
+    expect(container.querySelector('[data-part="skeleton-band"]')).toBeNull();
+    expect(container.querySelector('svg')).toBeNull();
   });
 
   it('the skeleton pulses only when motion is welcome', () => {
