@@ -33,6 +33,7 @@ Suggested starting palette (validate in browser and contrast tooling):
 |---|---|---|
 | `--color-bg` | `#080F1C` | Marketing dark base |
 | `--color-surface` | `#101C2B` | Dark panels |
+| `--color-elevated` | `#172638` | Raised dark surfaces (navigation bars, active nav item) |
 | `--color-surface-light` | `#F5F8FA` | Dashboard light surface option |
 | `--color-primary` | `#39D5C2` | Primary accent/actions |
 | `--color-secondary` | `#64A9FF` | Informational accents |
@@ -47,6 +48,11 @@ Do not use these colors as the only indicators. Every AQI/status signal also nee
 ## 4. Typography
 
 - Primary UI: Inter or a similar highly legible sans-serif.
+- **Inter is self-hosted:**
+  - One Latin variable file, `client/public/fonts/inter-latin-wght-normal.woff2`, from `@fontsource-variable/inter` 5.3.0, under the OFL licence (`OFL.txt` beside it).
+  - It is preloaded and uses `font-display: swap`, so text is never hidden.
+  - `font-size-adjust: from-font` keeps the fallback at Inter's size.
+  - Other glyphs fall back to the system sans.
 - Display headings: choose one restrained display family only if it supports the editorial narrative.
 - Use a limited scale: display, H1, H2, H3, body, small, caption.
 - Keep dashboard body text comfortably readable.
@@ -113,7 +119,10 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 - Avoid scroll-jacking. Normal scrolling must remain predictable.
 - On mobile, prioritize touch targets and reduce heavy visual effects.
 
-- The readout scene's rain is its only motion: it animates `transform` only, falls for under 5 seconds and then rests, and is used as `motion-safe:animate-*`, so it stays still under reduced motion. The heat band is still.
+- **Press feedback:**
+  - Enabled buttons, and links with the `press` class, scale to 0.97 while pressed (120 ms, `cubic-bezier(0.23, 1, 0.32, 1)`), only under `prefers-reduced-motion: no-preference`.
+  - Phones get no tap highlight and no double-tap delay (`touch-action: manipulation`).
+- The readout scene's rain is its only decorative motion: it animates `transform` only, falls for under 5 seconds and then rests, and is used as `motion-safe:animate-*`, so it stays still under reduced motion. The heat band is still.
 
 ## 10. Responsive behavior
 
