@@ -49,7 +49,7 @@ test('stale data: both stale messages', async ({ page }) => {
     ),
   ).toBeVisible();
   await expect(
-    page.getByText('This plan was built more than an hour ago.'),
+    page.getByText('The forecast behind this plan is more than an hour old.'),
   ).toBeVisible();
   await expectNoAxeViolations(page);
 });
@@ -77,7 +77,7 @@ test('AI down: a complete rules-only plan', async ({ page }) => {
   }
   await expect(page.getByRole('heading', { name: 'Your day' })).toHaveCount(0);
   await expect(
-    page.getByText('This plan was built more than an hour ago', {
+    page.getByText('The forecast behind this plan is more than an hour old', {
       exact: false,
     }),
   ).toHaveCount(0);

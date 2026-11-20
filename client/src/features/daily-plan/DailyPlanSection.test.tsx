@@ -37,7 +37,7 @@ const PLAN_PATH = '/api/v1/recommendations/daily-plan';
 const RULES_MADE_BY =
   'Made by our rules. AI personalisation is unavailable right now.';
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
-const PLAN_STALE = 'This plan was built more than an hour ago.';
+const PLAN_STALE = 'The forecast behind this plan is more than an hour old.';
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
@@ -320,6 +320,28 @@ describe('DailyPlanSection', () => {
     expect(within(fullDay).getByText('Save plan')).toBeDefined();
     expect(within(fullDay).queryByText('Air notice')).toBeNull();
     expect(within(fullDay).queryByText('Air check')).toBeNull();
+  });
+
+  // The full day hides the air check, so a plan without air data says so
+  // beside the card.
+  it('says beside the card when the plan has no air data', async () => {
+    routeFetch(() => planReply(unavailablePlanFixture));
+    const { unmount } = renderSection();
+    await build();
+
+    const line = screen.getByText(
+      'Air information is unavailable for this plan.',
+    );
+    expect(line.closest('details')).toBeNull();
+    unmount();
+
+    vi.restoreAllMocks();
+    routeFetch(() => planReply());
+    renderSection();
+    await build();
+    expect(
+      screen.queryByText('Air information is unavailable for this plan.'),
+    ).toBeNull();
   });
 
   it('says when no card fits the answers', async () => {

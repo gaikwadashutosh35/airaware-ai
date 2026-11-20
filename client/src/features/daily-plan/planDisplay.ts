@@ -120,3 +120,6 @@ export const LEVEL_TAG = {
   not_elevated: 'Within the limit',
   unknown: 'No data',
 } as const;
+
+// A plan built without a forecast says so, word for word.
+export const NO_AIR = 'Air information is unavailable for this plan.';

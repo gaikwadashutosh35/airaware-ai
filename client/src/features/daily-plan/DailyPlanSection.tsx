@@ -17,11 +17,12 @@ import { topRecommendation } from '../today/today.ts';
 import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
 import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
+import { NO_AIR } from './planDisplay.ts';
 
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const READY = 'Your plan is ready.';
 const BUILD_FAILED = 'Something went wrong building your plan.';
-const STALE = 'This plan was built more than an hour ago.';
+const STALE = 'The forecast behind this plan is more than an hour old.';
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
@@ -197,6 +198,8 @@ export function DailyPlanSection({
       {status.kind === 'idle' && built && (
         <>
           {stale && <p className="font-semibold">{STALE}</p>}
+          {/* The full day hides the air check, so say it here. */}
+          {!built.plan.forecast && <p className="font-semibold">{NO_AIR}</p>}
           {top ? (
             <PlanCard
               item={top}

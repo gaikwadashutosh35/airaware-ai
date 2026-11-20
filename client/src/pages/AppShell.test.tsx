@@ -344,6 +344,35 @@ describe('AppShell', () => {
     ).toBeDefined();
   });
 
+  // Owner's call: the verdict refreshes when the plan does, so both rest
+  // on the same forecast.
+  it('reloads the forecast once it is an hour old, while Today shows', async () => {
+    const fetchSpy = routeFetch(ok(), planRoutes());
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    const forecasts = forecastCalls(fetchSpy).length;
+    expect(planPosts(fetchSpy)).toHaveLength(1);
+
+    // Away on My Profile, nothing reloads.
+    await goTo('My Profile');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61 * 60_000);
+    });
+    expect(forecastCalls(fetchSpy)).toHaveLength(forecasts);
+
+    await goTo('Today');
+    await flush();
+    expect(forecastCalls(fetchSpy)).toHaveLength(forecasts + 1);
+    expect(planPosts(fetchSpy)).toHaveLength(2);
+
+    // Once, not again a few minutes later.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+    });
+    expect(forecastCalls(fetchSpy)).toHaveLength(forecasts + 1);
+  });
+
   it('never shows an AQI number', async () => {
     routeFetch(ok());
     const { container } = render(<AppShell />);

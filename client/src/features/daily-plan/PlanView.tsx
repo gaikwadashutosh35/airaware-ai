@@ -2,11 +2,16 @@ import { useId, type ReactNode } from 'react';
 import type { DailyPlan } from '../../../../shared/contracts.ts';
 import { formatDateTime } from '../air-quality/forecast.ts';
 import { PlanCard } from './PlanCard.tsx';
-import { checkText, groupPlan, madeByLine, LEVEL_TAG } from './planDisplay.ts';
+import {
+  checkText,
+  groupPlan,
+  madeByLine,
+  LEVEL_TAG,
+  NO_AIR,
+} from './planDisplay.ts';
 
 const MODEL_LINE =
   'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB AQI.';
-const NO_AIR = 'Air information is unavailable for this plan.';
 const emptyTopic = (day: string) =>
   `No suggestions in this area for your answers ${day}.`;
 

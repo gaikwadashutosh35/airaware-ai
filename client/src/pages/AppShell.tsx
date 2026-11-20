@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type {
   HouseholdContext,
   PreferencesUpdate,
@@ -117,6 +117,17 @@ function AppShell() {
     series: await getForecast(place!.latitude, place!.longitude, signal),
     loadedAt: new Date(),
   }));
+  // An hour after it loaded (device clock), Today reloads the forecast, as
+  // the plan rebuilds then too, so the verdict and the recommendation rest on
+  // the same data. A failed load waits for "Try again".
+  const forecastDue =
+    page === 'today' &&
+    forecast.state.status === 'ready' &&
+    isOlderThan(forecast.state.data.loadedAt.toISOString(), now, 60);
+  const reloadForecast = useEffectEvent(() => forecast.retry());
+  useEffect(() => {
+    if (forecastDue) reloadForecast();
+  }, [forecastDue]);
 
   // After the user picks a place, move focus to the result so keyboard and
   // screen-reader users land on it; a place from the address keeps focus put.
