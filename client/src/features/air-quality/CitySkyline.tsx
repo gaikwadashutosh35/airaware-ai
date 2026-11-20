@@ -345,10 +345,14 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
         )}
       </div>
       {/* Rain over the whole screen: a tile one loop of rain-fall maps onto
-          itself, on a rect that overhangs the screen so the loop never shows
-          an edge (it moves 12 px left and 32 px down). */}
+          itself. The whole layer moves, as one box the browser can hand to
+          the GPU, and overhangs the screen by 64 px each side, so the loop
+          (12 px left, 32 px down) never shows an edge. */}
       {scene.rain && (
-        <svg data-layer="rain" className={FILL}>
+        <svg
+          data-layer="rain"
+          className="absolute -inset-16 motion-safe:animate-rain"
+        >
           <defs>
             <pattern
               id={`${id}-rain`}
@@ -369,12 +373,9 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
           </defs>
           <rect
             data-part="rain"
-            x="-24"
-            y="-64"
-            width="120%"
-            height="120%"
+            width="100%"
+            height="100%"
             fill={`url(#${id}-rain)`}
-            className="motion-safe:animate-rain"
           />
         </svg>
       )}

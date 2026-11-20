@@ -491,6 +491,68 @@ describe('AppShell', () => {
     expect(note()).toBeNull();
   });
 
+  // Final review: the old place's look never shows under a new place.
+  it('a new place starts from the silhouette, never the old look', async () => {
+    let calls = 0;
+    let release: (response: Response) => void = () => {};
+    routeFetch(
+      () =>
+        ++calls === 1
+          ? ok(ABOVE)()
+          : new Promise<Response>((resolve) => {
+              release = resolve;
+            }),
+      planRoutes(),
+    );
+    render(<AppShell />);
+    await choosePlace(0);
+    await flush();
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+
+    await choosePlace(1);
+    expect(calls).toBe(2);
+    expect(backdrop()?.getAttribute('data-air')).toBe('loading');
+    expect(note()).toBeNull();
+
+    await act(async () => {
+      release(Response.json({ data: forecastFixture }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(backdrop()?.getAttribute('data-air')).toBe('unknown');
+    expect(note()).not.toBeNull();
+  });
+
+  // Final review: a reload that fails drops the old look and its note.
+  it('a failed hourly reload leaves a neutral backdrop', async () => {
+    let calls = 0;
+    routeFetch(
+      () =>
+        ++calls === 1
+          ? ok(ABOVE)()
+          : Promise.resolve(
+              Response.json(
+                {
+                  error: { code: 'PROVIDER_ERROR', message: 'Provider down.' },
+                },
+                { status: 502 },
+              ),
+            ),
+      planRoutes(),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61 * 60_000);
+    });
+    await flush();
+    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(backdrop()?.getAttribute('data-air')).toBe('unknown');
+    expect(note()).toBeNull();
+  });
+
   it('never shows an AQI number', async () => {
     routeFetch(ok());
     const { container } = render(<AppShell />);

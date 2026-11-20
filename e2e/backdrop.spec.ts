@@ -292,6 +292,12 @@ const SKIES: Array<Partial<WeatherNow>> = [
   { precipitationMm: 1, cloudCoverPercent: 90, isDay: true }, // rain, deck
 ];
 
+const LOOK: Record<Level, string> = {
+  not_elevated: 'within',
+  elevated: 'above',
+  unknown: 'unknown',
+};
+
 for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
   test(`the title block reads against every sky: ${level}`, async ({
     page,
@@ -300,9 +306,10 @@ for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
       await stub(page, level, weather);
       await page.goto(PUNE);
       await expect(visibleH1(page)).toBeVisible();
-      await expect(page.locator('[data-air]')).not.toHaveAttribute(
+      // The look this run asked for, not just any drawn look.
+      await expect(page.locator('[data-air]')).toHaveAttribute(
         'data-air',
-        'loading',
+        LOOK[level],
       );
       const worst = await titleContrast(page);
       expect(
@@ -358,3 +365,94 @@ for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
     }
   });
 }
+
+// Final review: the rain moves its whole layer, as one box, and stays still
+// under reduced motion.
+for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+  test(`the rain layer moves as one box: ${reducedMotion}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion });
+    await stub(page, 'not_elevated', { precipitationMm: 1 });
+    await page.goto(PUNE);
+    const layer = page.locator('[data-layer="rain"]');
+    await expect(layer).toBeAttached();
+    const name = await layer.evaluate(
+      (el) => getComputedStyle(el).animationName,
+    );
+    expect(name).toBe(reducedMotion === 'reduce' ? 'none' : 'rain-fall');
+  });
+}
+
+// Final review: the page clips sideways overflow (html, body
+// overflow-x: clip), so scrollWidth always fits. Measure each element's
+// edges instead: nothing shown may reach past the screen unless an
+// ancestor that fits clips it. The backdrop overhangs by design.
+function pastTheEdge(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const width = document.documentElement.clientWidth;
+    const fits = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.left >= -0.5 && r.right <= width + 0.5;
+    };
+    const offenders: string[] = [];
+    for (const el of document.body.querySelectorAll('*')) {
+      // The backdrop overhangs by design; screen-reader-only text is
+      // clipped to nothing.
+      if (el.closest('[data-air], .sr-only') || !el.checkVisibility()) {
+        continue;
+      }
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0 || fits(el)) continue;
+      let clipped = false;
+      for (
+        let a = el.parentElement;
+        a && a !== document.body;
+        a = a.parentElement
+      ) {
+        if (
+          /hidden|clip|auto|scroll/.test(getComputedStyle(a).overflowX) &&
+          fits(a)
+        ) {
+          clipped = true;
+          break;
+        }
+      }
+      if (!clipped) {
+        offenders.push(
+          `${el.tagName.toLowerCase()} "${(el.textContent ?? '').trim().slice(0, 30)}" ${Math.round(r.left)}..${Math.round(r.right)}`,
+        );
+      }
+    }
+    return offenders;
+  });
+}
+
+for (const path of [
+  '/app',
+  '/app/ask',
+  '/app/home',
+  '/app/habits',
+  '/app/profile',
+]) {
+  test(`nothing reaches past a 320 px screen: ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await stub(page, 'not_elevated', { precipitationMm: 1 });
+    await page.goto(at(path));
+    await expect(visibleH1(page)).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    for (const details of await page.locator('main details').all()) {
+      await details.evaluate((el) => {
+        (el as HTMLDetailsElement).open = true;
+      });
+    }
+    expect(await pastTheEdge(page)).toEqual([]);
+  });
+}
+
+test('nothing reaches past a 320 px screen: Welcome', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/app/welcome');
+  await expect(visibleH1(page)).toBeVisible();
+  expect(await pastTheEdge(page)).toEqual([]);
+});

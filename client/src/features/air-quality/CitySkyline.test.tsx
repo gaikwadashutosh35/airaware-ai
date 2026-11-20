@@ -102,7 +102,7 @@ describe('CitySkyline', () => {
   });
 
   // No hard top edge over the sky: each fades in from the top of the city
-  // box as shown. On screens wider than 5:1 \`slice\` crops the drawing's top,
+  // box as shown. On screens wider than 5:1 `slice` crops the drawing's top,
   // so a fade drawn in the drawing would start part-way and show an edge.
   it('veils and fog fade in from the visible band top', () => {
     const container = draw({ air: 'above', fog: true });
@@ -249,6 +249,19 @@ describe('CitySkyline', () => {
       expect(element.getAttribute('class')).toMatch(/motion-safe:animate-/);
       expect(element.getAttribute('class')).not.toMatch(/(^|\s)animate-/);
     }
+  });
+
+  // Final review: the rain moves as one box (its whole layer), which the
+  // browser can hand to the GPU, not a shape inside an SVG, which it
+  // repaints over the whole screen every frame. The box overhangs the
+  // screen by 64 px each side, more than one loop moves it (12 by 32 px).
+  it('the rain moves as one box that overhangs the screen', () => {
+    const container = draw({ rain: true });
+    const layer = container.querySelector('[data-layer="rain"]');
+    const classes = (layer?.getAttribute('class') ?? '').split(/\s+/);
+    expect(classes).toContain('motion-safe:animate-rain');
+    expect(classes).toContain('-inset-16');
+    expect(layer?.querySelectorAll('[class*="animate-"]')).toHaveLength(0);
   });
 
   // Review A2 #4: decorative motion stops within 5 seconds (WCAG 2.2.2).
