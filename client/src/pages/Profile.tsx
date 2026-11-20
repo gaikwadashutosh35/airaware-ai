@@ -71,7 +71,12 @@ export function Profile({
 
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">My Profile</h1>
+      <h1
+        data-part="title-block"
+        className="text-3xl font-semibold tracking-tight"
+      >
+        My Profile
+      </h1>
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <HouseholdPreferencesForm
           key={formKey}
@@ -88,7 +93,7 @@ export function Profile({
           {(remembered || status) && (
             <section
               aria-labelledby={placeHeadingId}
-              className="flex flex-col items-start gap-3 rounded-lg border border-rule p-5 sm:p-6"
+              className="flex flex-col items-start gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
             >
               <h2
                 id={placeHeadingId}
@@ -124,7 +129,7 @@ export function Profile({
             />
           </div>
           {opened && (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
               <div
                 ref={bannerRef}
                 tabIndex={-1}

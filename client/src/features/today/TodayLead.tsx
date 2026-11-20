@@ -26,7 +26,7 @@ export function TodayLead({
   return (
     <section
       aria-labelledby={headingId}
-      className="overflow-hidden rounded-lg border border-rule"
+      className="overflow-hidden rounded-lg border border-rule bg-surface-light"
     >
       <p className="border-b border-rule px-5 py-2 text-sm text-text-dark-muted sm:px-8">
         {weatherLine(data.weather)}

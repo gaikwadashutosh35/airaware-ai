@@ -209,7 +209,7 @@ export function DailyPlanSection({
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-4 rounded-lg border border-rule p-5 sm:p-6"
+      className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
     >
       <h2
         id={headingId}

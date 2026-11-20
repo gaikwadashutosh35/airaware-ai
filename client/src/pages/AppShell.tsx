@@ -323,8 +323,8 @@ function AppShell() {
           />
         )}
         <div hidden={page !== 'today'} className="contents">
-          <div className="flex flex-col gap-1">
-            {place && <p className="text-text-dark-muted">{greeting(now)}</p>}
+          <div data-part="title-block" className="flex flex-col gap-1">
+            {place && <p className="text-text-dark">{greeting(now)}</p>}
             <h1
               ref={headingRef}
               tabIndex={-1}
@@ -394,7 +394,7 @@ function AppShell() {
           {/* After the verdict and recommendation: Today answers "How is my
             air?" first, even on a 320×640 phone. */}
           {place && Object.keys(context).length === 0 && !inviteDismissed && (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule p-4">
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule bg-surface-light p-4">
               <a
                 href="/app/welcome"
                 onClick={(event) => {
@@ -443,9 +443,8 @@ function AppShell() {
           )}
         </div>
       </main>
-      {/* Bottom padding on phones keeps the footer clear of the nav bar. */}
-      <footer className="border-t border-rule">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pt-8 pb-24 text-sm text-text-dark-muted sm:px-6 md:pb-8">
+      <footer className="border-t border-rule bg-surface-light">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
           {shown && place && (
             <p>
               {backdropNote(
@@ -460,6 +459,12 @@ function AppShell() {
           </a>
         </div>
       </footer>
+      {/* Space as tall as the city band (plus the phone bar below md), so
+          every page ends on the whole city with no text resting on it. */}
+      <div
+        aria-hidden="true"
+        className="h-[calc(min(8rem,20vh)+3.5rem+env(safe-area-inset-bottom))] sm:h-[calc(min(11rem,20vh)+3.5rem+env(safe-area-inset-bottom))] md:h-[min(11rem,20vh)]"
+      />
     </>
   );
 }

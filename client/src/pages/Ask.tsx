@@ -66,12 +66,12 @@ export function Ask({
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-6">
-      <div className="flex flex-col gap-2">
+      <div data-part="title-block" className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">
           {ASK_COPY.heading}
         </h1>
         {place && (
-          <p className="text-sm text-text-dark-muted">
+          <p className="text-sm text-text-dark">
             {`Using: ${place.label === NEAR_YOU ? 'the model forecast near you (approximate)' : `the ${place.label} model forecast`}${updatedAt ? `, updated ${clockTime(updatedAt)}` : ''} · ${answeredCount(context)} of 10 answers · `}
             <a
               href="/app/profile"
@@ -92,63 +92,69 @@ export function Ask({
       <output className="sr-only">{status}</output>
 
       {!place ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
           <LocationSearch onSelect={onChoosePlace} />
           <UseMyLocation onLocateStart={onLocateStart} onLocate={onLocate} />
         </div>
       ) : (
         <>
-          <TopicChips pressed={topic} busy={ask.thinking} onTopic={askTopic} />
-          <ul className="flex flex-col items-start gap-2">
-            {startersFor(topic).map((starter) => (
-              <li key={starter.question}>
+          <div className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+            <TopicChips
+              pressed={topic}
+              busy={ask.thinking}
+              onTopic={askTopic}
+            />
+            <ul className="flex flex-col items-start gap-2">
+              {startersFor(topic).map((starter) => (
+                <li key={starter.question}>
+                  <button
+                    type="button"
+                    disabled={ask.thinking}
+                    onClick={() =>
+                      ask.send({ question: starter.question }, starter.question)
+                    }
+                    className="min-h-11 rounded-full border border-rule px-4 text-left text-sm disabled:opacity-60"
+                  >
+                    {starter.question}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const typed = question.trim();
+                if (!typed) return;
+                ask.send({ question: typed }, typed);
+                setQuestion('');
+              }}
+              className="flex flex-col gap-1"
+            >
+              <label htmlFor={inputId} className="font-medium">
+                {ASK_COPY.inputLabel}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id={inputId}
+                  type="text"
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
+                  required
+                  maxLength={200}
+                  enterKeyHint="send"
+                  autoComplete="off"
+                  className="min-h-12 min-w-0 flex-1 rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
+                />
                 <button
-                  type="button"
+                  type="submit"
                   disabled={ask.thinking}
-                  onClick={() =>
-                    ask.send({ question: starter.question }, starter.question)
-                  }
-                  className="min-h-11 rounded-full border border-rule px-4 text-left text-sm disabled:opacity-60"
+                  className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
                 >
-                  {starter.question}
+                  {ASK_COPY.send}
                 </button>
-              </li>
-            ))}
-          </ul>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              const typed = question.trim();
-              if (!typed) return;
-              ask.send({ question: typed }, typed);
-              setQuestion('');
-            }}
-            className="flex flex-col gap-1"
-          >
-            <label htmlFor={inputId} className="font-medium">
-              {ASK_COPY.inputLabel}
-            </label>
-            <div className="flex gap-2">
-              <input
-                id={inputId}
-                type="text"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                required
-                maxLength={200}
-                enterKeyHint="send"
-                autoComplete="off"
-                className="min-h-12 min-w-0 flex-1 rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
-              />
-              <button
-                type="submit"
-                disabled={ask.thinking}
-                className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
-              >
-                {ASK_COPY.send}
-              </button>
-            </div>
-          </form>
+              </div>
+            </form>
+          </div>
           {ask.entries.map((entry) => (
             <AskEntry
               key={entry.id}

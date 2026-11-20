@@ -166,10 +166,8 @@ export function Welcome({
 
   return (
     <div className="flex w-full max-w-xl flex-col gap-6 md:mx-auto">
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold text-text-dark-muted">
-          Step {step} of 3
-        </p>
+      <div data-part="title-block" className="flex flex-col gap-1">
+        <p className="text-sm font-semibold text-text-dark">Step {step} of 3</p>
         <h1
           ref={headingRef}
           tabIndex={-1}
@@ -179,178 +177,180 @@ export function Welcome({
         </h1>
       </div>
 
-      {step === 1 && (
-        <div className="flex flex-col gap-6">
-          <LocationSearch
-            onSelect={(next) => {
-              onChoosePlace(next);
-              setStep(2);
-            }}
-          />
-          <UseMyLocation
-            onLocateStart={onLocateStart}
-            onLocate={(next) => {
-              onLocate(next);
-              setStep(2);
-            }}
-          />
-        </div>
-      )}
+      <div className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+        {step === 1 && (
+          <div className="flex flex-col gap-6">
+            <LocationSearch
+              onSelect={(next) => {
+                onChoosePlace(next);
+                setStep(2);
+              }}
+            />
+            <UseMyLocation
+              onLocateStart={onLocateStart}
+              onLocate={(next) => {
+                onLocate(next);
+                setStep(2);
+              }}
+            />
+          </div>
+        )}
 
-      {step === 2 && (
-        <div className="flex flex-col gap-6">
-          <p className="text-text-dark-muted">
-            Choose any that fit. All optional.
-          </p>
-          <Group legend="Your day">
-            {DAYS.map(([value, label]) => (
-              <Chip
-                key={value}
-                type="checkbox"
-                name="day"
-                label={label}
-                checked={choices.days.has(value)}
-                onChange={() => set({ days: toggleDay(choices.days, value) })}
-              />
-            ))}
-          </Group>
-          {choices.days.has('office') && (
-            <Group legend="How do you usually travel?">
-              {TRAVEL.map(([value, label]) => (
+        {step === 2 && (
+          <div className="flex flex-col gap-6">
+            <p className="text-text-dark-muted">
+              Choose any that fit. All optional.
+            </p>
+            <Group legend="Your day">
+              {DAYS.map(([value, label]) => (
                 <Chip
                   key={value}
-                  type="radio"
-                  name="travel"
+                  type="checkbox"
+                  name="day"
                   label={label}
-                  checked={choices.travel === value}
-                  onChange={() => set({ travel: value })}
+                  checked={choices.days.has(value)}
+                  onChange={() => set({ days: toggleDay(choices.days, value) })}
                 />
               ))}
             </Group>
-          )}
-        </div>
-      )}
+            {choices.days.has('office') && (
+              <Group legend="How do you usually travel?">
+                {TRAVEL.map(([value, label]) => (
+                  <Chip
+                    key={value}
+                    type="radio"
+                    name="travel"
+                    label={label}
+                    checked={choices.travel === value}
+                    onChange={() => set({ travel: value })}
+                  />
+                ))}
+              </Group>
+            )}
+          </div>
+        )}
 
-      {step === 3 && (
-        <div className="flex flex-col gap-6">
-          <Group legend="What do you mostly cook with?">
-            {FUEL.map(([value, label]) => (
-              <Chip
-                key={value}
-                type="radio"
-                name="fuel"
-                label={label}
-                checked={choices.fuel === value}
-                onChange={() => set({ fuel: value })}
-              />
-            ))}
-          </Group>
-          <Group legend="Kitchen exhaust or chimney?">
-            {YES_NO.map(([value, label]) => (
-              <Chip
-                key={label}
-                type="radio"
-                name="exhaust"
-                label={label}
-                checked={choices.exhaust === value}
-                onChange={() => set({ exhaust: value })}
-              />
-            ))}
-          </Group>
-          <Group legend="Air purifier?">
-            {YES_NO.map(([value, label]) => (
-              <Chip
-                key={label}
-                type="radio"
-                name="purifier"
-                label={label}
-                checked={choices.purifier === value}
-                onChange={() => set({ purifier: value })}
-              />
-            ))}
-          </Group>
-          <Group legend="Near a busy road?">
-            {ROAD.map(([value, label]) => (
-              <Chip
-                key={value}
-                type="radio"
-                name="road"
-                label={label}
-                checked={choices.busyRoad === value}
-                onChange={() => set({ busyRoad: value })}
-              />
-            ))}
-          </Group>
-          <div className="flex flex-col gap-1">
-            <label className="flex min-h-11 items-center gap-3 font-semibold">
-              <input
-                type="checkbox"
-                checked={remember}
-                disabled={!savingAvailable}
-                onChange={(event) => setRemember(event.target.checked)}
-                className="size-5"
-              />
-              Remember on this device
-            </label>
-            <p className="text-sm text-text-dark-muted">
-              {savingAvailable
-                ? 'Creates an anonymous save on this device. Delete it any time in My Profile.'
-                : NOT_SET_UP}
-            </p>
-            {remember && !placeIsSearched && (
+        {step === 3 && (
+          <div className="flex flex-col gap-6">
+            <Group legend="What do you mostly cook with?">
+              {FUEL.map(([value, label]) => (
+                <Chip
+                  key={value}
+                  type="radio"
+                  name="fuel"
+                  label={label}
+                  checked={choices.fuel === value}
+                  onChange={() => set({ fuel: value })}
+                />
+              ))}
+            </Group>
+            <Group legend="Kitchen exhaust or chimney?">
+              {YES_NO.map(([value, label]) => (
+                <Chip
+                  key={label}
+                  type="radio"
+                  name="exhaust"
+                  label={label}
+                  checked={choices.exhaust === value}
+                  onChange={() => set({ exhaust: value })}
+                />
+              ))}
+            </Group>
+            <Group legend="Air purifier?">
+              {YES_NO.map(([value, label]) => (
+                <Chip
+                  key={label}
+                  type="radio"
+                  name="purifier"
+                  label={label}
+                  checked={choices.purifier === value}
+                  onChange={() => set({ purifier: value })}
+                />
+              ))}
+            </Group>
+            <Group legend="Near a busy road?">
+              {ROAD.map(([value, label]) => (
+                <Chip
+                  key={value}
+                  type="radio"
+                  name="road"
+                  label={label}
+                  checked={choices.busyRoad === value}
+                  onChange={() => set({ busyRoad: value })}
+                />
+              ))}
+            </Group>
+            <div className="flex flex-col gap-1">
+              <label className="flex min-h-11 items-center gap-3 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  disabled={!savingAvailable}
+                  onChange={(event) => setRemember(event.target.checked)}
+                  className="size-5"
+                />
+                Remember on this device
+              </label>
               <p className="text-sm text-text-dark-muted">
-                Your location isn't saved; only your answers are.
+                {savingAvailable
+                  ? 'Creates an anonymous save on this device. Delete it any time in My Profile.'
+                  : NOT_SET_UP}
+              </p>
+              {remember && !placeIsSearched && (
+                <p className="text-sm text-text-dark-muted">
+                  Your location isn't saved; only your answers are.
+                </p>
+              )}
+            </div>
+            {error && (
+              <p role="alert" className="font-semibold">
+                {error}
               </p>
             )}
           </div>
-          {error && (
-            <p role="alert" className="font-semibold">
-              {error}
-            </p>
-          )}
-        </div>
-      )}
+        )}
 
-      {step > 1 && (
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className={button}
-            onClick={() => setStep(step === 3 ? 2 : 1)}
-          >
-            Back
-          </button>
-          {step === 2 ? (
+        {step > 1 && (
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              className={primary}
-              onClick={() => {
-                setAnswered((a) => ({ ...a, day: true }));
-                setStep(3);
-              }}
+              className={button}
+              onClick={() => setStep(step === 3 ? 2 : 1)}
             >
-              Next
+              Back
             </button>
-          ) : (
+            {step === 2 ? (
+              <button
+                type="button"
+                className={primary}
+                onClick={() => {
+                  setAnswered((a) => ({ ...a, day: true }));
+                  setStep(3);
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={primary}
+                disabled={busy}
+                onClick={() => void finish(true)}
+              >
+                See my air
+              </button>
+            )}
             <button
               type="button"
-              className={primary}
+              className={button}
               disabled={busy}
-              onClick={() => void finish(true)}
+              onClick={() => (step === 2 ? setStep(3) : void finish(false))}
             >
-              See my air
+              Skip
             </button>
-          )}
-          <button
-            type="button"
-            className={button}
-            disabled={busy}
-            onClick={() => (step === 2 ? setStep(3) : void finish(false))}
-          >
-            Skip
-          </button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

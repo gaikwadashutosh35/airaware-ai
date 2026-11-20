@@ -62,10 +62,18 @@ export function MyHome({
 
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">My Home</h1>
+      <h1
+        data-part="title-block"
+        className="text-3xl font-semibold tracking-tight"
+      >
+        My Home
+      </h1>
       <output className="sr-only">{announce}</output>
       {showToday && (
-        <section aria-labelledby={todayId} className="flex flex-col gap-3">
+        <section
+          aria-labelledby={todayId}
+          className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+        >
           <h2
             id={todayId}
             ref={todayRef}
@@ -113,7 +121,10 @@ export function MyHome({
           )}
         </section>
       )}
-      <section aria-labelledby={waysId} className="flex flex-col gap-6">
+      <section
+        aria-labelledby={waysId}
+        className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+      >
         <h2
           id={waysId}
           ref={waysRef}

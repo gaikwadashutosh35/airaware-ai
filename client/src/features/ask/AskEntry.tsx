@@ -139,7 +139,7 @@ export function AskEntry({
     <article
       aria-labelledby={headingId}
       aria-busy={entry.status === 'thinking'}
-      className="ask-answer flex flex-col gap-3 border-t border-rule pt-6"
+      className="ask-answer flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
     >
       <h2
         id={headingId}

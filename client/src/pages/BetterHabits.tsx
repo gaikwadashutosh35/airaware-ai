@@ -15,6 +15,7 @@ export function BetterHabits() {
   return (
     <>
       <h1
+        data-part="title-block"
         ref={headingRef}
         tabIndex={-1}
         className="text-3xl font-semibold tracking-tight"
@@ -22,7 +23,9 @@ export function BetterHabits() {
         Better Habits
       </h1>
       {guides.state.status === 'ready' ? (
-        <GuideGroups set={guides.state.data} level={2} />
+        <div className="rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+          <GuideGroups set={guides.state.data} level={2} />
+        </div>
       ) : guides.state.status === 'error' ? (
         <ErrorState
           error={guides.state.error}

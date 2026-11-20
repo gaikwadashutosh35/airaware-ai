@@ -16,7 +16,10 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
   const inputId = useId();
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
+    <section
+      aria-labelledby={headingId}
+      className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+    >
       <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
         Ask AirAware anything
       </h2>
