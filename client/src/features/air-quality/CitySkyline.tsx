@@ -97,13 +97,11 @@ const VEIL_FAR: Record<SceneAir, number> = {
   above: 0.42,
   unknown: 0,
 };
-// Veil colours, as gradient stops: each veil fades in from the city band's
-// top so it never draws a hard edge across the sky.
 const VEIL: Record<SceneAir, string> = {
-  within: '[stop-color:var(--color-rule)]',
+  within: 'bg-rule',
   above:
-    '[stop-color:color-mix(in_oklab,var(--color-rule)_88%,var(--color-secondary))]',
-  unknown: '[stop-color:var(--color-rule)]',
+    'bg-[color-mix(in_oklab,var(--color-rule)_88%,var(--color-secondary))]',
+  unknown: 'bg-rule',
 };
 
 const rects = (row: Array<[number, number, number]>) =>
@@ -125,15 +123,17 @@ const FILL = 'absolute inset-0 size-full';
 const CITY =
   'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0';
 
-// From nothing at the band's top to full strength at 60 % of its height.
-function Fade({ id, stop }: { id: string; stop: string }) {
-  return (
-    <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stopOpacity="0" className={stop} />
-      <stop offset="0.6" className={stop} />
-    </linearGradient>
-  );
-}
+// The city's rows share one drawing box, stacked as layers so the veils
+// and fog can sit between them as HTML. Those fade in from the top of the
+// city box as shown, to full strength at 60 % of it: on screens wider than
+// 5:1, `slice` crops the drawing's top, so a fade drawn inside it would
+// start part-way and show an edge across the sky.
+const ROW = {
+  viewBox: '0 0 800 160',
+  preserveAspectRatio: 'xMidYMax slice',
+  className: FILL,
+} as const;
+const MASK = '[mask-image:linear-gradient(transparent,black_60%)]';
 
 // The app's backdrop: a decorative city behind every page. Its look (sky,
 // glow strength, veils) follows the server's 24-hour air check; clouds, rain,
@@ -150,17 +150,14 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
         <svg data-layer="sky" className={FILL}>
           <rect width="100%" height="100%" className="fill-surface-light" />
         </svg>
-        <svg
-          data-layer="city"
-          viewBox="0 0 800 160"
-          preserveAspectRatio="xMidYMax slice"
-          className={CITY}
-        >
-          <g className="fill-rule" opacity="0.7">
-            {rects(FAR_ALL)}
-          </g>
-          <g className="fill-rule">{rects(NEAR_ALL)}</g>
-        </svg>
+        <div data-layer="city" className={CITY}>
+          <svg {...ROW}>
+            <g className="fill-rule" opacity="0.7">
+              {rects(FAR_ALL)}
+            </g>
+            <g className="fill-rule">{rects(NEAR_ALL)}</g>
+          </svg>
+        </div>
       </div>
     );
   }
@@ -251,108 +248,100 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
           ))}
         </g>
       </svg>
-      <svg
-        data-layer="city"
-        viewBox="0 0 800 160"
-        preserveAspectRatio="xMidYMax slice"
-        className={CITY}
-      >
-        <defs>
-          <Fade id={`${id}-veil`} stop={VEIL[scene.air]} />
-          <Fade
-            id={`${id}-fog`}
-            stop="[stop-color:var(--color-surface-light)]"
-          />
-          <pattern
-            id={`${id}-windows`}
-            width="7"
-            height="9"
-            patternUnits="userSpaceOnUse"
-          >
-            <rect
-              x="2"
-              y="2"
-              width="3"
-              height="4"
-              className="fill-surface-light"
-              opacity="0.5"
-            />
-          </pattern>
-        </defs>
-        <g data-part="far" className="fill-text-dark-muted" opacity="0.42">
-          {rects(FAR_ALL)}
-          {/* A domed hall. */}
-          <rect x="160" y="120" width="50" height="40" />
-          <path d="M163 120 A22 22 0 0 1 207 120 Z" />
-        </g>
-        <rect
+      <div data-layer="city" className={CITY}>
+        <svg {...ROW}>
+          <g data-part="far" className="fill-text-dark-muted" opacity="0.42">
+            {rects(FAR_ALL)}
+            {/* A domed hall. */}
+            <rect x="160" y="120" width="50" height="40" />
+            <path d="M163 120 A22 22 0 0 1 207 120 Z" />
+          </g>
+        </svg>
+        <div
           data-part="veil-far"
-          width="800"
-          height="160"
-          fill={`url(#${id}-veil)`}
-          opacity={VEIL_FAR[scene.air]}
+          className={`${FILL} ${VEIL[scene.air]} ${MASK}`}
+          style={{ opacity: VEIL_FAR[scene.air] }}
         />
-        <g
-          data-part="mid"
-          className="[fill:color-mix(in_oklab,var(--color-text-dark-muted)_55%,var(--color-text-dark))]"
-          opacity="0.62"
-        >
-          {rects(MID_ALL)}
-        </g>
+        <svg {...ROW}>
+          <g
+            data-part="mid"
+            className="[fill:color-mix(in_oklab,var(--color-text-dark-muted)_55%,var(--color-text-dark))]"
+            opacity="0.62"
+          >
+            {rects(MID_ALL)}
+          </g>
+        </svg>
         {scene.air === 'above' && (
-          <rect
+          <div
             data-part="veil-mid"
-            width="800"
-            height="160"
-            fill={`url(#${id}-veil)`}
-            opacity="0.2"
+            className={`${FILL} ${VEIL.above} ${MASK}`}
+            style={{ opacity: 0.2 }}
           />
         )}
-        <g data-part="near" className="fill-text-dark" opacity="0.9">
-          {rects(NEAR_ALL)}
-          {/* A memorial arch. */}
-          <path d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z" />
-        </g>
-        <g data-part="tanks" className="fill-text-dark" opacity="0.9">
-          {NEAR_ALL.filter((_, i) => i % 3 === 1).map(([x, w, h]) => (
-            <path key={x} d={tank(x + w / 2, 160 - h)} />
-          ))}
-        </g>
-        {/* Lit windows: detail a phone's small band can't hold. */}
-        <g data-part="windows" className="max-sm:hidden">
-          {NEAR_ALL.map(([x, w, h]) => (
-            <rect
-              key={x}
-              x={x + 3}
-              y={160 - h + 5}
-              width={w - 6}
-              height={h - 9}
-              fill={`url(#${id}-windows)`}
-            />
-          ))}
-        </g>
+        <svg {...ROW}>
+          <defs>
+            <pattern
+              id={`${id}-windows`}
+              width="7"
+              height="9"
+              patternUnits="userSpaceOnUse"
+            >
+              <rect
+                x="2"
+                y="2"
+                width="3"
+                height="4"
+                className="fill-surface-light"
+                opacity="0.5"
+              />
+            </pattern>
+          </defs>
+          <g data-part="near" className="fill-text-dark" opacity="0.9">
+            {rects(NEAR_ALL)}
+            {/* A memorial arch. */}
+            <path d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z" />
+          </g>
+          <g data-part="tanks" className="fill-text-dark" opacity="0.9">
+            {NEAR_ALL.filter((_, i) => i % 3 === 1).map(([x, w, h]) => (
+              <path key={x} d={tank(x + w / 2, 160 - h)} />
+            ))}
+          </g>
+          {/* Lit windows: detail a phone's small band can't hold. */}
+          <g data-part="windows" className="max-sm:hidden">
+            {NEAR_ALL.map(([x, w, h]) => (
+              <rect
+                key={x}
+                x={x + 3}
+                y={160 - h + 5}
+                width={w - 6}
+                height={h - 9}
+                fill={`url(#${id}-windows)`}
+              />
+            ))}
+          </g>
+        </svg>
         {/* Fog at the city's base only (backdrop design §5.1). */}
         {scene.fog && (
-          <rect
+          <div
             data-part="fog"
-            width="800"
-            height="160"
-            fill={`url(#${id}-fog)`}
-            opacity="0.6"
+            className={`${FILL} bg-surface-light ${MASK}`}
+            style={{ opacity: 0.6 }}
           />
         )}
         {scene.heat && (
-          <rect
-            data-part="shimmer"
-            x="-8"
-            y="142"
-            width="816"
-            height="18"
-            className="fill-warning"
-            opacity="0.14"
-          />
+          <svg {...ROW}>
+            <rect
+              data-part="shimmer"
+              x="-8"
+              y="142"
+              width="816"
+              height="18"
+              className="fill-warning"
+              opacity="0.14"
+            />
+          </svg>
         )}
-      </svg>
+      </div>
       {/* Rain over the whole screen: a tile one loop of rain-fall maps onto
           itself, on a rect that overhangs the screen so the loop never shows
           an edge (it moves 12 px left and 32 px down). */}

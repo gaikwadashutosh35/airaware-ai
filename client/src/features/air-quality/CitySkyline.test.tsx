@@ -30,8 +30,15 @@ function draw(fields: Partial<Scene> | null = {}) {
 
 const part = (container: HTMLElement, name: string) =>
   container.querySelector(`[data-part="${name}"]`);
-const opacityOf = (container: HTMLElement, name: string) =>
-  Number(part(container, name)?.getAttribute('opacity') ?? 0);
+// An SVG part's opacity attribute, or an HTML layer's inline opacity.
+const opacityOf = (container: HTMLElement, name: string) => {
+  const el = part(container, name);
+  return Number(
+    el?.getAttribute('opacity') ??
+      (el as HTMLElement | null)?.style.opacity ??
+      0,
+  );
+};
 // The class of the first stop of the gradient the sky is filled with.
 function topStop(container: HTMLElement): string {
   const sky = part(container, 'sky');
@@ -91,19 +98,18 @@ describe('CitySkyline', () => {
     }
   });
 
-  // No hard top edge over the sky: each fades in from the band's top.
-  it('veils and fog fade in from the band top', () => {
+  // No hard top edge over the sky: each fades in from the top of the city
+  // box as shown. On screens wider than 5:1 \`slice\` crops the drawing's top,
+  // so a fade drawn in the drawing would start part-way and show an edge.
+  it('veils and fog fade in from the visible band top', () => {
     const container = draw({ air: 'above', fog: true });
+    const city = container.querySelector('[data-layer="city"]');
     for (const name of ['veil-far', 'veil-mid', 'fog']) {
-      const ref = /url\(#([^)]+)\)/.exec(
-        part(container, name)?.getAttribute('fill') ?? '',
-      )?.[1];
-      const gradient = [...container.querySelectorAll('linearGradient')].find(
-        (g) => g.id === ref,
+      const layer = part(container, name);
+      expect(layer?.parentElement).toBe(city);
+      expect(layer?.getAttribute('class') ?? '').toContain(
+        '[mask-image:linear-gradient(transparent,black_60%)]',
       );
-      expect(
-        gradient?.querySelector('stop')?.getAttribute('stop-opacity'),
-      ).toBe('0');
     }
   });
 
