@@ -80,10 +80,3 @@ export function mergedLimitations(
     ? [...forecastLimitations, ...APP_LIMITATIONS]
     : [...LIMITATIONS];
 }
-
-// What a person picked on Today, for the Ask page (Phase 7). Held in memory:
-// a typed question must never reach the address, history or server logs.
-export interface AskIntent {
-  topic?: 'outdoors' | 'family';
-  question?: string;
-}

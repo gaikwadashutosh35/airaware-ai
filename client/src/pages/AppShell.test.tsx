@@ -33,6 +33,7 @@ import {
   habitsGuidesFixture,
   homeGuidesFixture,
 } from '../test/guideFixtures.ts';
+import { aiAskFixture } from '../test/askFixtures.ts';
 import { rulesPlanFixture } from '../test/planFixtures.ts';
 import { verdictFrom } from '../features/today/today.ts';
 import AppShell from './AppShell.tsx';
@@ -82,6 +83,10 @@ function routeFetch(forecast: ForecastResponder, other?: OtherResponder) {
     // Today builds a plan by itself: a rules plan unless a test says otherwise.
     if (url.pathname === '/api/v1/recommendations/daily-plan') {
       return Promise.resolve(Response.json({ data: rulesPlanFixture }));
+    }
+    // Ask answers too, so its POST never falls through to forecast JSON.
+    if (url.pathname === '/api/v1/assistant/answer') {
+      return Promise.resolve(Response.json({ data: aiAskFixture }));
     }
     return forecast(url.searchParams.get('latitude'));
   });
@@ -142,6 +147,15 @@ function planPosts(fetchSpy: ReturnType<typeof routeFetch>) {
     ([input]) => urlOf(input).pathname === '/api/v1/recommendations/daily-plan',
   );
 }
+
+function askPosts(fetchSpy: ReturnType<typeof routeFetch>) {
+  return fetchSpy.mock.calls.filter(
+    ([input]) => urlOf(input).pathname === '/api/v1/assistant/answer',
+  );
+}
+
+const askBody = (call: Parameters<typeof fetch> | undefined) =>
+  JSON.parse(call![1]!.body as string) as Record<string, unknown>;
 
 function forecastCalls(fetchSpy: ReturnType<typeof routeFetch>) {
   return fetchSpy.mock.calls.filter(
@@ -492,6 +506,155 @@ describe('AppShell', () => {
       screen.getByRole('heading', { level: 1, name: 'Ask AirAware' }),
     ).toBeDefined();
     expect(window.location.href).not.toMatch(/purifier/i);
+  });
+
+  // Phase 7: Today hands questions and topics to Ask.
+  it("Today's ask box asks once, and the answer shows on Ask", async () => {
+    const fetchSpy = routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Ask about your air, home or day' }),
+      { target: { value: 'Should I run the purifier tonight?' } },
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await flush();
+
+    expect(askPosts(fetchSpy)).toHaveLength(1);
+    expect(askBody(askPosts(fetchSpy)[0])).toMatchObject({
+      question: 'Should I run the purifier tonight?',
+    });
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Should I run the purifier tonight?',
+      }),
+    ).toBeDefined();
+    expect(screen.getByText(aiAskFixture.summary!)).toBeDefined();
+  });
+
+  it('"Outdoor activities" on Today asks that topic; the address keeps only the place', async () => {
+    const fetchSpy = routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    const search = window.location.search;
+
+    fireEvent.click(screen.getByRole('link', { name: /^Outdoor activities/ }));
+    await flush();
+
+    expect(window.location.pathname).toBe('/app/ask');
+    expect(window.location.search).toBe(search);
+    expect(askPosts(fetchSpy)).toHaveLength(1);
+    expect(askBody(askPosts(fetchSpy)[0])).toMatchObject({
+      topic: 'outdoors',
+    });
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Outdoor activities' }),
+    ).toBeDefined();
+  });
+
+  it('an answer still coming finishes after leaving Ask', async () => {
+    let reply: (response: Response) => void = () => {};
+    routeFetch(ok(), (url) =>
+      url.pathname === '/api/v1/assistant/answer'
+        ? new Promise((resolve) => {
+            reply = resolve;
+          })
+        : undefined,
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await goTo('Ask AirAware');
+    fireEvent.click(screen.getByRole('button', { name: 'Indoor air' }));
+
+    await goTo('My Home');
+    await act(async () => {
+      reply(Response.json({ data: aiAskFixture }));
+    });
+    await flush();
+    await goTo('Ask AirAware');
+
+    expect(screen.getByText(aiAskFixture.summary!)).toBeDefined();
+  });
+
+  it('a new place clears the answers', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    await goTo('Ask AirAware');
+    fireEvent.click(screen.getByRole('button', { name: 'Indoor air' }));
+    await flush();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Indoor air' }),
+    ).toBeDefined();
+
+    await choosePlace(1);
+
+    expect(
+      screen.queryByRole('heading', { level: 2, name: 'Indoor air' }),
+    ).toBeNull();
+  });
+
+  // Review Focus 1: a typed question goes only into the Ask POST body.
+  it('a typed question stays out of the address, history, storage and other requests', async () => {
+    const MARKER = 'zq7marker';
+    const fetchSpy = routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    const send = (text: string) => {
+      fireEvent.change(
+        screen.getByRole('textbox', {
+          name: 'Ask about your air, home or day',
+        }),
+        { target: { value: text } },
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    };
+
+    send(`walk ${MARKER} today`); // from Today
+    await flush();
+    send(`windows ${MARKER}`); // on Ask
+    await flush();
+
+    expect(askPosts(fetchSpy)).toHaveLength(2);
+    expect(window.location.href).not.toContain(MARKER);
+    expect(JSON.stringify(window.history.state)).not.toContain(MARKER);
+    for (const storage of [localStorage, sessionStorage]) {
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i)!;
+        expect(key + storage.getItem(key)).not.toContain(MARKER);
+      }
+    }
+    for (const [input, init] of fetchSpy.mock.calls) {
+      const url = urlOf(input);
+      expect(url.href).not.toContain(MARKER);
+      if (url.pathname !== '/api/v1/assistant/answer') {
+        // The app sends JSON strings only.
+        expect(typeof init?.body === 'string' ? init.body : '').not.toContain(
+          MARKER,
+        );
+      }
+    }
+    for (const field of document.querySelectorAll('input[name]')) {
+      expect((field as HTMLInputElement).value).not.toContain(MARKER);
+    }
+  });
+
+  it('reloads the forecast once it is an hour old, while Ask shows', async () => {
+    const fetchSpy = routeFetch(ok(), planRoutes());
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    await goTo('Ask AirAware');
+    const forecasts = forecastCalls(fetchSpy).length;
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61 * 60_000);
+    });
+    await flush();
+
+    expect(forecastCalls(fetchSpy)).toHaveLength(forecasts + 1);
   });
 
   it('shows the forecast limitations once, in the sources panel', async () => {

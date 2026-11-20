@@ -10,6 +10,8 @@ import { PlaceChip } from '../components/PlaceChip.tsx';
 import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
+import { TOPICS } from '../features/ask/ask.ts';
+import { useAsk } from '../features/ask/useAsk.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
 import type { PlanReport } from '../features/daily-plan/planDisplay.ts';
 import {
@@ -22,16 +24,16 @@ import { isOlderThan, useNow } from '../lib/clock.ts';
 import { appPage, navigate, usePath } from '../lib/navigation.ts';
 import { currentToken, tokenForSave } from '../lib/supabase.ts';
 import { getForecast, getSources, savePreferences } from '../services/api.ts';
+import { Ask } from './Ask.tsx';
 import { BetterHabits } from './BetterHabits.tsx';
 import { MyHome } from './MyHome.tsx';
-import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
 import { Welcome } from './Welcome.tsx';
 import { AirDetails } from '../features/today/AirDetails.tsx';
 import { AskBox } from '../features/today/AskBox.tsx';
 import { HelpChoices } from '../features/today/HelpChoices.tsx';
 import { TodayLead } from '../features/today/TodayLead.tsx';
-import { greeting, type AskIntent } from '../features/today/today.ts';
+import { greeting } from '../features/today/today.ts';
 
 // What is saved for a remembered place: label and 2-decimal coordinates.
 function toSaved(place: Place): SavedPlace {
@@ -92,9 +94,9 @@ function AppShell() {
   const [todayPlan, setTodayPlan] = useState<PlanReport>({ kind: 'none' });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
-  // A help topic or typed question for Ask (Phase 7 reads it). In memory
-  // only: never in the address.
-  const askIntent = useRef<AskIntent | null>(null);
+  // Ask's answers for the visit, here so they survive moving pages. A typed
+  // question lives only in memory and the POST body, never in the address.
+  const ask = useAsk(place, context, resets);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
   // The place chip's dialog.
@@ -125,9 +127,10 @@ function AppShell() {
   }));
   // An hour after it loaded (device clock), Today reloads the forecast, as
   // the plan rebuilds then too, so the verdict and the recommendation rest on
-  // the same data. A failed load waits for "Try again".
+  // the same data; Ask too, so its "updated" time is never over an hour old.
+  // A failed load waits for "Try again".
   const forecastDue =
-    page === 'today' &&
+    (page === 'today' || page === 'ask') &&
     forecast.state.status === 'ready' &&
     isOlderThan(forecast.state.data.loadedAt.toISOString(), now, 60);
   const reloadForecast = useEffectEvent(() => forecast.retry());
@@ -291,7 +294,22 @@ function AppShell() {
         )}
         {page === 'home' && <MyHome today={todayPlan} context={context} />}
         {page === 'habits' && <BetterHabits />}
-        {page === 'ask' && <Placeholder title={TITLES[page]} />}
+        {page === 'ask' && (
+          <Ask
+            place={place}
+            updatedAt={
+              forecast.state.status === 'ready'
+                ? forecast.state.data.series.retrievedAt
+                : null
+            }
+            context={context}
+            now={now}
+            ask={ask}
+            onChoosePlace={(next) => choose(next, true)}
+            onLocateStart={locateStart}
+            onLocate={locate}
+          />
+        )}
         <div hidden={page !== 'today'} className="contents">
           <div className="flex flex-col gap-1">
             {place && <p className="text-text-dark-muted">{greeting(now)}</p>}
@@ -387,15 +405,11 @@ function AppShell() {
           {place && (
             <>
               <HelpChoices
-                onAsk={(topic) => {
-                  askIntent.current = { topic };
-                }}
+                onAsk={(topic) =>
+                  ask.send({ topic }, TOPICS.find((t) => t.id === topic)!.label)
+                }
               />
-              <AskBox
-                onAsk={(question) => {
-                  askIntent.current = { question };
-                }}
-              />
+              <AskBox onAsk={(question) => ask.send({ question }, question)} />
               <AirDetails
                 data={
                   forecast.state.status === 'ready'

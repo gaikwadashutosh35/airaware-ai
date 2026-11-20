@@ -1,9 +1,9 @@
 import { Footprints, House, Leaf, Users, type LucideIcon } from 'lucide-react';
 import { useId } from 'react';
+import type { AskTopic } from '../../../../shared/contracts.ts';
 import { follow } from '../../lib/navigation.ts';
-import type { AskIntent } from './today.ts';
 
-type Topic = NonNullable<AskIntent['topic']>;
+type Topic = Extract<AskTopic, 'outdoors' | 'family'>;
 
 const CHOICES: Array<{
   title: string;
