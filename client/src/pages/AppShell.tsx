@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type {
+  DailyPlan,
   HouseholdContext,
   PreferencesUpdate,
   SavedPlace,
@@ -21,6 +22,7 @@ import { isOlderThan, useNow } from '../lib/clock.ts';
 import { appPage, navigate, usePath } from '../lib/navigation.ts';
 import { currentToken, tokenForSave } from '../lib/supabase.ts';
 import { getForecast, getSources, savePreferences } from '../services/api.ts';
+import { MyHome } from './MyHome.tsx';
 import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
 import { Welcome } from './Welcome.tsx';
@@ -85,6 +87,8 @@ function AppShell() {
   // The last plan deleted from the list, so the plan area stops calling
   // that plan saved.
   const [deletedPlanId, setDeletedPlanId] = useState<string | null>(null);
+  // The plan on Today, for My Home's "Today, for your home".
+  const [todayPlan, setTodayPlan] = useState<DailyPlan | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // A help topic or typed question for Ask (Phase 7 reads it). In memory
@@ -284,9 +288,10 @@ function AppShell() {
             onFinish={finishWelcome}
           />
         )}
-        {page !== 'today' && page !== 'profile' && page !== 'welcome' && (
+        {page === 'home' && <MyHome plan={todayPlan} context={context} />}
+        {page === 'ask' || page === 'habits' ? (
           <Placeholder title={TITLES[page]} />
-        )}
+        ) : null}
         <div hidden={page !== 'today'} className="contents">
           <div className="flex flex-col gap-1">
             {place && <p className="text-text-dark-muted">{greeting(now)}</p>}
@@ -351,6 +356,7 @@ function AppShell() {
                 // plan is built twice, first without them.
                 active={(page === 'today' || page === 'home') && loaded}
                 onSaved={() => setListVersion((n) => n + 1)}
+                onPlan={setTodayPlan}
                 deletedPlanId={deletedPlanId}
               />
             </div>

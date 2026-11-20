@@ -29,6 +29,10 @@ import {
   searchFixture,
   sourcesFixture,
 } from '../test/fixtures.ts';
+import {
+  habitsGuidesFixture,
+  homeGuidesFixture,
+} from '../test/guideFixtures.ts';
 import { rulesPlanFixture } from '../test/planFixtures.ts';
 import { verdictFrom } from '../features/today/today.ts';
 import AppShell from './AppShell.tsx';
@@ -65,6 +69,16 @@ function routeFetch(forecast: ForecastResponder, other?: OtherResponder) {
     }
     const answer = other?.(url, init);
     if (answer) return answer;
+    if (url.pathname === '/api/v1/recommendations/guides') {
+      return Promise.resolve(
+        Response.json({
+          data:
+            url.searchParams.get('topic') === 'habits'
+              ? habitsGuidesFixture
+              : homeGuidesFixture,
+        }),
+      );
+    }
     // Today builds a plan by itself: a rules plan unless a test says otherwise.
     if (url.pathname === '/api/v1/recommendations/daily-plan') {
       return Promise.resolve(Response.json({ data: rulesPlanFixture }));
@@ -761,6 +775,32 @@ describe('AppShell', () => {
     expect(JSON.parse(posts[0]?.[1]?.body as string).householdContext).toEqual(
       saved,
     );
+  });
+
+  it('/app/home shows My Home, not the placeholder', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+    await flush();
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'My Home' }),
+    ).toBeDefined();
+    expect(
+      screen.queryByText('This part of AirAware is on its way.'),
+    ).toBeNull();
+    // Today's plan reaches My Home.
+    expect(
+      screen.getByRole('region', { name: 'Today, for your home' }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Cooking and smoke' }),
+    ).toBeDefined();
   });
 
   // Phase 8: My Home shows today's indoor cards, so it builds the plan too.
