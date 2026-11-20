@@ -64,7 +64,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";
   - both screenshots are real captures from 20 Nov 2026, labelled as past; the old readout screenshot is gone;
   - sections after the hero rise in as they scroll into view (CSS `animation-timeline: view()`), and stay still under reduced motion or without support;
-  - `e2e/landing.spec.ts` checks the reveal, reduced motion and where the hero buttons lead on a first visit.
+  - `e2e/landing.spec.ts` checks the reveal, reduced motion and where the hero buttons lead on a first visit;
+  - after review: sections finish rising in 120 px into view on phones too; the step arrows hide in the 2×2 grid (768–1023 px); the details screenshot is a 390 px phone capture, so it reads on a 320 px phone; a test keeps "safe", "healthy" and "clean air" off the page.
 - Ask AirAware (Phase 7 of the assistant redesign):
   - `/app/ask`: six topic chips, five starter questions and a 200-character question box; a chip or starter asks at once;
   - `POST /api/v1/assistant/answer` takes a question or a topic. The question only picks a topic on the server (fixed word lists, medical first) and is never logged, stored, echoed or sent to an AI writer;
