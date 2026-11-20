@@ -288,27 +288,6 @@ function AppShell() {
           </div>
           {/* No place yet: saved answers are checked, then Welcome opens. */}
           {!place && <Loading label="Loading your place" />}
-          {place && Object.keys(context).length === 0 && !inviteDismissed && (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule p-4">
-              <a
-                href="/app/welcome"
-                onClick={(event) => {
-                  event.preventDefault();
-                  navigate('/app/welcome');
-                }}
-                className="press inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-bg"
-              >
-                Make it personal: 2 quick questions
-              </a>
-              <button
-                type="button"
-                onClick={() => setInviteDismissed(true)}
-                className="min-h-11 rounded-md border border-text-dark px-4"
-              >
-                Not now
-              </button>
-            </div>
-          )}
 
           {/* Air on the left, the plan on the right from lg; one column (air
             first) below it. */}
@@ -358,6 +337,29 @@ function AppShell() {
               />
             </div>
           </div>
+          {/* After the verdict and recommendation: Today answers "How is my
+            air?" first, even on a 320×640 phone. */}
+          {place && Object.keys(context).length === 0 && !inviteDismissed && (
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule p-4">
+              <a
+                href="/app/welcome"
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigate('/app/welcome');
+                }}
+                className="press inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-bg"
+              >
+                Make it personal: 2 quick questions
+              </a>
+              <button
+                type="button"
+                onClick={() => setInviteDismissed(true)}
+                className="min-h-11 rounded-md border border-text-dark px-4"
+              >
+                Not now
+              </button>
+            </div>
+          )}
           {place && (
             <>
               <HelpChoices

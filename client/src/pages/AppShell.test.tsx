@@ -997,6 +997,35 @@ describe('AppShell', () => {
     ).toBeNull();
   });
 
+  // Phase 6 proof: on a 320×640 phone the invite pushed the verdict off the
+  // first screen. Today answers "How is my air?" first.
+  it('the verdict and recommendation come before the invite', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+
+    const invite = screen.getByRole('link', {
+      name: 'Make it personal: 2 quick questions',
+    });
+    for (const before of [
+      screen.getByRole('heading', {
+        level: 2,
+        name: verdictFrom(forecastFixture.airCheck).title,
+      }),
+      screen.getByRole('heading', { name: 'Your recommendation for today' }),
+    ]) {
+      expect(
+        before.compareDocumentPosition(invite) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+
   // Final review, Important 1: a remount reloaded saved answers over Welcome's.
   it('answers cleared in Welcome stay cleared', async () => {
     const fetchSpy = routeFetch(
