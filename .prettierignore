@@ -1,2 +1,4 @@
 *.md
 package-lock.json
+# Third-party skill files, kept as published.
+.claude/skills/dimensional-drawing/
