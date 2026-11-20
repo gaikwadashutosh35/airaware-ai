@@ -208,6 +208,12 @@ describe('Welcome', () => {
     );
   });
 
+  // Final review, Important 3: production has no StrictMode re-run.
+  it('arriving puts focus on the heading', () => {
+    setup();
+    expect(document.activeElement).toBe(heading(STEP2));
+  });
+
   it('each step moves focus to its heading', () => {
     setup();
     click('Next');

@@ -896,6 +896,95 @@ describe('AppShell', () => {
     ).toBeNull();
   });
 
+  // Final review, Important 1: a remount reloaded saved answers over Welcome's.
+  it('answers cleared in Welcome stay cleared', async () => {
+    const fetchSpy = routeFetch(
+      ok(),
+      withSaved({
+        context: { routine: { outdoorExercise: true } },
+        place: null,
+        updatedAt: 'x',
+      }),
+    );
+    render(<AppShell />);
+    await flush();
+    await choosePlace(0, { skipWelcome: false });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Outdoor exercise' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'See my air' }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await goTo('My Profile');
+    await flush();
+
+    expect(
+      (screen.getByLabelText('Do you exercise outdoors?') as HTMLSelectElement)
+        .value,
+    ).toBe('');
+    expect(
+      fetchSpy.mock.calls.filter(
+        ([input, init]) =>
+          urlOf(input).pathname === '/api/v1/profile/preferences' &&
+          init?.method !== 'PUT',
+      ),
+    ).toHaveLength(1);
+  });
+
+  // Final review, Important 2.
+  it('Welcome opened at its own address starts from the saved answers', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/welcome?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(
+      ok(),
+      withSaved({
+        context: { routine: { outdoorExercise: true } },
+        place: null,
+        updatedAt: 'x',
+      }),
+    );
+    render(<AppShell />);
+    await flush();
+
+    expect(
+      (
+        screen.getByRole('checkbox', {
+          name: 'Outdoor exercise',
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+  });
+
+  // Final review, Important 3.
+  it('after Welcome, focus lands on the place heading', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+    fireEvent.click(
+      screen.getByRole('link', { name: 'Make it personal: 2 quick questions' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Pune, Maharashtra',
+      }),
+    );
+  });
+
   it('skip link comes first and targets main', () => {
     routeFetch(ok());
     render(<AppShell />);

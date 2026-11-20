@@ -60,6 +60,7 @@ export function Profile({
           initial={context}
           onChange={onContextChange}
           onLoaded={onLoaded}
+          skipLoad={formKey > 0}
           onDeleted={onDeleted}
         />
         <div className="flex flex-col gap-6">

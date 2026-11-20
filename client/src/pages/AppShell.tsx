@@ -195,6 +195,8 @@ function AppShell() {
     }
     setContext(next);
     setFormKey((key) => key + 1);
+    // Today's place heading takes focus once it shows.
+    focusResult.current = true;
     navigate('/app');
   }
 
@@ -264,7 +266,11 @@ function AppShell() {
             }}
           />
         </div>
-        {page === 'welcome' && (
+        {page === 'welcome' && !loaded && (
+          <Loading label="Loading your place" />
+        )}
+        {/* Welcome waits for saved answers, so it starts from them. */}
+        {page === 'welcome' && loaded && (
           <Welcome
             place={place}
             placeIsSearched={placeQuery !== ''}

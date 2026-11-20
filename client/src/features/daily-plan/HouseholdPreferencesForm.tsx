@@ -39,6 +39,7 @@ export function HouseholdPreferencesForm({
   onChange,
   onDeleted,
   onLoaded,
+  skipLoad = false,
 }: {
   // Answers already given this visit, so leaving the page keeps them.
   initial?: HouseholdContext;
@@ -49,6 +50,9 @@ export function HouseholdPreferencesForm({
   // Once, after the first load attempt: what was saved, or null (saving not
   // set up, no session, nothing saved, or the load failed).
   onLoaded?: (saved: SavedPreferences | null) => void;
+  // The answers in `initial` are already the latest (after Welcome): no
+  // reload, which would merge saved answers back over cleared ones.
+  skipLoad?: boolean;
 } = {}) {
   // Answered questions only: a blank would hide a saved answer in the merge.
   const [answers, setAnswersState] = useState<Answers>(() =>
@@ -58,6 +62,8 @@ export function HouseholdPreferencesForm({
   );
   const onChangeRef = useRef(onChange);
   const onLoadedRef = useRef(onLoaded);
+  // Read once, when the form mounts (a new key remounts it).
+  const skipLoadRef = useRef(skipLoad);
   // The answers on screen, for merging a late load under them.
   const answersRef = useRef<Answers>(answers);
   // The saved-answers load, cancelled by "Delete everything".
@@ -82,6 +88,7 @@ export function HouseholdPreferencesForm({
   // Saved answers load only for an existing session: opening the page never
   // creates an account.
   useEffect(() => {
+    if (skipLoadRef.current) return;
     if (!savingAvailable) {
       onLoadedRef.current?.(null);
       return;

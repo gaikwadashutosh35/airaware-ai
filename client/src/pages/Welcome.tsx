@@ -123,12 +123,10 @@ export function Welcome({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const moved = useRef(false);
 
-  // Focus follows the step, but not on first arrival.
+  // Focus follows the step, from arrival on (a page change in the app).
   useEffect(() => {
-    if (moved.current) headingRef.current?.focus();
-    moved.current = true;
+    headingRef.current?.focus();
   }, [step]);
 
   const set = (patch: Partial<OnboardingChoices>) =>
