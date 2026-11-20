@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cityscape states</title>
+    <!-- Phase 1 proposal sheet for the adaptive cityscape (not built). Every
+         scene is drawn by one function from the existing CitySkyline
+         geometry (client/src/features/air-quality/CitySkyline.tsx), so only
+         the state treatment changes between pictures. Colours are the
+         DESIGN.md tokens from client/src/index.css, mixed with color-mix. -->
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #080f1c;
+        --surface: #101c2b;
+        --elevated: #172638;
+        --light: #f5f8fa;
+        --primary: #39d5c2;
+        --secondary: #64a9ff;
+        --text: #f4f7fa;
+        --text-dark: #182435;
+        --warning: #f5b84b;
+        --muted: #4a5a6e;
+        --rule: #d3dce6;
+        --rule-dark: #22344a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px 16px 64px;
+        background: #fff;
+        color: var(--text-dark);
+        font:
+          15px/1.5 Inter,
+          ui-sans-serif,
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1240px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      p {
+        margin: 0;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 72ch;
+      }
+      .badge {
+        display: inline-block;
+        border: 1px solid var(--text-dark);
+        border-radius: 999px;
+        padding: 1px 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+      }
+      .card {
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--light);
+      }
+      .card svg {
+        display: block;
+        width: 100%;
+        height: 128px;
+      }
+      .card .body {
+        padding: 12px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: #fff;
+        border-top: 1px solid var(--rule);
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .data {
+        font:
+          12px/1.45 ui-monospace,
+          SFMono-Regular,
+          Consolas,
+          monospace;
+        color: var(--muted);
+      }
+      .stale {
+        border: 1px solid var(--warning);
+        background: color-mix(in oklab, var(--warning) 15%, #fff);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        border-top: 1px solid var(--rule);
+        padding: 8px 10px 8px 0;
+      }
+      th {
+        font-weight: 600;
+      }
+      .scroll {
+        overflow-x: auto;
+      }
+      .pair {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      }
+      .frames {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .frames > div {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .phone {
+        width: 390px;
+        height: 844px;
+        max-width: 100%;
+        border: 1px solid var(--rule);
+        border-radius: 18px;
+        overflow: hidden;
+        background: var(--light);
+        position: relative;
+      }
+      .bar {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        height: 64px;
+        font-weight: 600;
+      }
+      .chip {
+        border: 1px solid var(--rule-dark);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-weight: 500;
+        font-size: 14px;
+      }
+      .pad {
+        padding: 20px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .lead {
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--light);
+      }
+      .lead svg {
+        display: block;
+        width: 100%;
+      }
+      .wline {
+        border-bottom: 1px solid var(--rule);
+        padding: 6px 20px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .verdict {
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .verdict h4 {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+      }
+      .phone .nav {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+      .nav {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        justify-content: space-around;
+        height: 57px;
+        align-items: center;
+        font-size: 12px;
+      }
+      .desk-wrap {
+        width: 640px;
+        max-width: 100%;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+      }
+      .desk {
+        width: 1280px;
+        zoom: 0.5;
+        background: var(--light);
+      }
+      .desk .cols {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 24px;
+        padding: 24px 32px;
+        align-items: start;
+      }
+      .ph {
+        border: 1px dashed var(--rule);
+        border-radius: 8px;
+        padding: 16px;
+        color: var(--muted);
+        min-height: 260px;
+      }
+      ol.layers {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .note {
+        border-left: 3px solid var(--secondary);
+        padding: 4px 12px;
+        color: var(--text-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Adaptive cityscape: state comparison</h1>
+        <p class="lede">
+          Phase 1 proposal, not built. Every picture below uses the same skyline
+          geometry as today's <code>CitySkyline</code> (its far and near rows,
+          the domed hall and the arch), plus a proposed middle row, rooftop
+          water tanks and lit windows. Only the treatment changes. Air state
+          comes from <code>airCheck.level</code> only; clouds, rain, fog and
+          heat come from <code>weather</code> only. Bracketed text is a
+          placeholder, not data.
+        </p>
+      </header>
+
+      <section>
+        <h2>1. Five states, same geometry</h2>
+        <p class="lede">
+          Weather is held at the same "partly cloudy" value in all five, so only
+          the air and freshness treatment differs.
+        </p>
+        <div class="grid" id="states"></div>
+      </section>
+
+      <section>
+        <h2>2. Weather stays independent of air</h2>
+        <p class="lede">
+          The spec's test scenarios. Clouds never thicken because the air is
+          above the limit, and a clear sky never appears because it is within.
+        </p>
+        <div class="grid" id="weather"></div>
+      </section>
+
+      <section>
+        <h2>3. Today's scene vs the proposal</h2>
+        <p class="lede">
+          Left: today's drawing (haze level 2 and 3 of the five ratio bands).
+          Right: the proposal for the same server results.
+        </p>
+        <div class="pair" id="compare"></div>
+      </section>
+
+      <section>
+        <h2>4. Layout: phone 390 × 844 and desktop 1280 × 720</h2>
+        <p class="lede">
+          The scene stays the band at the top of Today's lead card, with no text
+          on the artwork. Band heights are unchanged (128 px on phones, 176 px
+          from 640 px): at 320 × 640 the verdict title ends 20 px above the
+          bottom bar, so a taller phone band would push it under the bar.
+          Windows are hidden on phones.
+        </p>
+        <div class="frames">
+          <div>
+            <div class="phone" id="phone"></div>
+            <p class="data">
+              Phone 390 × 844, the first screen. Windows hidden below 640 px.
+            </p>
+          </div>
+          <div>
+            <div class="desk-wrap"><div class="desk" id="desk"></div></div>
+            <p class="data">Desktop 1280 × 720, shown at half size.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>5. Layers, back to front</h2>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Driven by</th>
+                <th>Within</th>
+                <th>Above</th>
+                <th>Unknown</th>
+                <th>Loading</th>
+              </tr>
+            </thead>
+            <tbody id="layers"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Tokens (client/src/index.css).
+      const T = {
+        bg: '#080f1c',
+        light: '#f5f8fa',
+        secondary: '#64a9ff',
+        textDark: '#182435',
+        warning: '#f5b84b',
+        muted: '#4a5a6e',
+        rule: '#d3dce6',
+      };
+      const mix = (a, p, b) => `color-mix(in oklab, ${a} ${p}%, ${b})`;
+
+      // Existing geometry, copied from CitySkyline.tsx: [x, width, height]
+      // on a 160-high ground line, the right half rotated.
+      const FAR = [
+        [0, 28, 60],
+        [30, 22, 85],
+        [55, 35, 50],
+        [95, 18, 95],
+        [115, 40, 65],
+        [215, 26, 75],
+        [245, 34, 55],
+        [285, 20, 90],
+        [310, 38, 62],
+        [352, 24, 80],
+        [378, 22, 58],
+      ];
+      const NEAR = [
+        [-5, 40, 38],
+        [38, 30, 52],
+        [72, 46, 30],
+        [122, 24, 46],
+        [200, 36, 34],
+        [240, 28, 50],
+        [272, 44, 28],
+        [320, 26, 44],
+        [350, 52, 32],
+      ];
+      const shifted = (row, by) =>
+        row.map(([x, w], i) => [x + 400, w, row[(i + by) % row.length][2]]);
+      const FAR_ALL = [...FAR, ...shifted(FAR, 4)];
+      const NEAR_ALL = [...NEAR, ...shifted(NEAR, 3)];
+      const CLOUDS = [
+        [300, 30],
+        [480, 22],
+        [180, 36],
+      ];
+      // Proposed: a middle row of offices and flats between them.
+      const MID = [
+        [12, 30, 66],
+        [50, 24, 52],
+        [86, 32, 74],
+        [132, 20, 58],
+        [226, 28, 68],
+        [262, 22, 56],
+        [296, 34, 78],
+        [338, 26, 62],
+        [374, 22, 50],
+      ];
+      const MID_ALL = [...MID, ...shifted(MID, 5)];
+
+      // Air state (airCheck.level) → presentation only.
+      const AIR = {
+        within: {
+          top: mix(T.secondary, 46, T.light),
+          bottom: T.light,
+          glow: 0.6,
+          veilFar: 0.05,
+          veilMid: 0,
+          veil: T.rule,
+        },
+        above: {
+          top: mix(T.secondary, 14, T.rule),
+          bottom: mix(T.rule, 45, T.light),
+          glow: 0.22,
+          veilFar: 0.42,
+          veilMid: 0.2,
+          veil: mix(T.rule, 88, T.secondary),
+        },
+        unknown: {
+          top: T.rule,
+          bottom: T.light,
+          glow: 0,
+          veilFar: 0,
+          veilMid: 0,
+          veil: T.rule,
+        },
+      };
+      // Weather (weather.*) → presentation only.
+      const WX = {
+        clear: { label: 'cloudCoverPercent < 20', clouds: 0 },
+        partly: { label: 'cloudCoverPercent 20–49', clouds: 1 },
+        overcast: { label: 'cloudCoverPercent ≥ 80', clouds: 3, deck: true },
+        rain: {
+          label: 'precipitationMm ≥ 0.2',
+          clouds: 3,
+          deck: true,
+          rain: true,
+        },
+        missing: { label: 'weather = null', clouds: 0 },
+      };
+
+      let n = 0;
+      const rects = (row, fill, op) =>
+        `<g style="fill:${fill}" opacity="${op}">` +
+        row
+          .map(
+            ([x, w, h]) =>
+              `<rect x="${x}" y="${160 - h}" width="${w}" height="${h}"/>`,
+          )
+          .join('') +
+        '</g>';
+      const cloud = ([cx, cy]) =>
+        `<g><ellipse cx="${cx}" cy="${cy + 2}" rx="38" ry="9" style="fill:${T.rule}" opacity=".7"/>` +
+        `<ellipse cx="${cx}" cy="${cy}" rx="36" ry="10" style="fill:#fff"/>` +
+        `<ellipse cx="${cx - 15}" cy="${cy - 6}" rx="17" ry="11" style="fill:#fff"/>` +
+        `<ellipse cx="${cx + 12}" cy="${cy - 9}" rx="20" ry="13" style="fill:#fff"/></g>`;
+
+      function scene(air, wx, { windows = true, loading = false } = {}) {
+        const id = n++;
+        if (loading) {
+          // Neutral, static placeholder: the silhouette only.
+          return (
+            `<svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">` +
+            `<rect width="800" height="160" style="fill:${T.light}"/>` +
+            rects(FAR_ALL, T.rule, 0.7) +
+            rects(NEAR_ALL, T.rule, 1) +
+            '</svg>'
+          );
+        }
+        const A = AIR[air];
+        const W = WX[wx];
+        const top = W.deck ? mix(A.top, 45, T.rule) : A.top;
+        let s =
+          `<svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs>` +
+          `<linearGradient id="sky${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${top}"/><stop offset="1" style="stop-color:${A.bottom}"/></linearGradient>` +
+          `<radialGradient id="glow${id}"><stop offset="0" style="stop-color:${T.warning};stop-opacity:1"/><stop offset=".3" style="stop-color:${T.warning};stop-opacity:.6"/><stop offset="1" style="stop-color:${T.warning};stop-opacity:0"/></radialGradient>` +
+          `<pattern id="win${id}" width="7" height="9" patternUnits="userSpaceOnUse"><rect x="2" y="2" width="3" height="4" style="fill:${T.light}" opacity=".5"/></pattern>` +
+          `</defs><rect width="800" height="160" fill="url(#sky${id})"/>`;
+        // Daylight glow: air sets its strength. It is a sunshine claim, so it
+        // needs known weather; overcast, rain or no weather hides it.
+        if (A.glow && !W.deck && wx !== 'missing') {
+          s += `<circle cx="560" cy="58" r="62" fill="url(#glow${id})" opacity="${A.glow}"/>`;
+        }
+        if (W.deck) {
+          s += `<g style="fill:${T.rule}" opacity=".85"><ellipse cx="400" cy="-6" rx="520" ry="30"/></g>`;
+        }
+        s += CLOUDS.slice(0, W.clouds).map(cloud).join('');
+        s += rects(FAR_ALL, T.muted, 0.42);
+        s += `<g style="fill:${T.muted}" opacity=".42"><rect x="160" y="120" width="50" height="40"/><path d="M163 120 A22 22 0 0 1 207 120 Z"/></g>`;
+        s += `<rect width="800" height="160" style="fill:${A.veil}" opacity="${A.veilFar}"/>`;
+        s += rects(MID_ALL, mix(T.muted, 55, T.textDark), 0.62);
+        if (A.veilMid)
+          s += `<rect width="800" height="160" style="fill:${A.veil}" opacity="${A.veilMid}"/>`;
+        s += rects(NEAR_ALL, T.textDark, 0.9);
+        s += `<path style="fill:${T.textDark}" opacity=".9" d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z"/>`;
+        // Rooftop water tanks on every third near building.
+        s +=
+          `<g style="fill:${T.textDark}" opacity=".9">` +
+          NEAR_ALL.filter((_, i) => i % 3 === 1)
+            .map(
+              ([x, w, h]) =>
+                `<rect x="${x + w / 2 - 5}" y="${160 - h - 7}" width="10" height="5" rx="1"/><rect x="${x + w / 2 - 4}" y="${160 - h - 2}" width="1.5" height="2"/><rect x="${x + w / 2 + 2.5}" y="${160 - h - 2}" width="1.5" height="2"/>`,
+            )
+            .join('') +
+          '</g>';
+        if (windows) {
+          s += NEAR_ALL.map(
+            ([x, w, h]) =>
+              `<rect x="${x + 3}" y="${160 - h + 5}" width="${Math.max(0, w - 6)}" height="${Math.max(0, h - 9)}" fill="url(#win${id})"/>`,
+          ).join('');
+        }
+        if (W.rain) {
+          let r = '';
+          for (let i = 0; i < 34 * 7; i++) {
+            const x = (i % 34) * 24 + (Math.floor(i / 34) % 2) * 12;
+            const y = Math.floor(i / 34) * 32 - 32;
+            r += `<line x1="${x}" y1="${y}" x2="${x - 4}" y2="${y + 10}"/>`;
+          }
+          s += `<g style="stroke:${T.muted}" stroke-width="1.5" opacity=".5">${r}</g>`;
+        }
+        return s + '</svg>';
+      }
+
+      // Today's drawing, for the comparison (CitySkyline.tsx at a level).
+      function current(level, clouds) {
+        const SKY = [0, 0, 0.08, 0.16, 0.24, 0.32],
+          SUN = [0, 0.9, 0.7, 0.45, 0.25, 0.12];
+        const HM = [0, 0.15, 0.3, 0.45, 0.6, 0.75],
+          HF = [0, 0.1, 0.22, 0.36, 0.5, 0.64];
+        let s =
+          `<svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">` +
+          `<rect width="800" height="160" style="fill:${T.light}"/><rect width="800" height="160" style="fill:${T.muted}" opacity="${SKY[level]}"/>` +
+          `<circle cx="560" cy="56" r="18" style="fill:${T.warning}" opacity="${SUN[level]}"/>`;
+        s += CLOUDS.slice(0, clouds)
+          .map(
+            ([cx, cy]) =>
+              `<g style="fill:${T.rule}" opacity=".9"><ellipse cx="${cx}" cy="${cy}" rx="34" ry="10"/><ellipse cx="${cx - 14}" cy="${cy - 6}" rx="16" ry="10"/><ellipse cx="${cx + 12}" cy="${cy - 8}" rx="18" ry="12"/></g>`,
+          )
+          .join('');
+        s +=
+          rects(FAR_ALL, T.muted, 0.55) +
+          `<g style="fill:${T.muted}" opacity=".55"><rect x="160" y="120" width="50" height="40"/><path d="M163 120 A22 22 0 0 1 207 120 Z"/></g>`;
+        s += `<rect width="800" height="160" style="fill:${T.rule}" opacity="${HM[level]}"/>`;
+        s +=
+          rects(NEAR_ALL, T.textDark, 0.85) +
+          `<path style="fill:${T.textDark}" opacity=".85" d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z"/>`;
+        return (
+          s +
+          `<rect width="800" height="160" style="fill:${T.rule}" opacity="${HF[level]}"/></svg>`
+        );
+      }
+
+      const TAG = {
+        within: 'Within the limit',
+        above: 'Above the limit',
+        unknown: 'No data',
+      };
+      const LEVEL = {
+        within: "'not_elevated'",
+        above: "'elevated'",
+        unknown: "'unknown'",
+      };
+      const card = (title, art, lines, extra = '') =>
+        `<article class="card">${art}<div class="body"><h3>${title}</h3>${extra}<p class="data">${lines.join('<br>')}</p></div></article>`;
+
+      document.getElementById('states').innerHTML = [
+        card(
+          'Within the 24-hour limits',
+          scene('within', 'partly'),
+          [
+            `airCheck.level = ${LEVEL.within}`,
+            'weather: cloudCoverPercent 20–49',
+            'Brighter sky, clear far row, minimal veil',
+          ],
+          `<span class="badge">${TAG.within}</span>`,
+        ),
+        card(
+          'Above the 24-hour limit',
+          scene('above', 'partly'),
+          [
+            `airCheck.level = ${LEVEL.above}`,
+            'weather: cloudCoverPercent 20–49',
+            'Muted blue-grey sky, veil softens far and middle rows',
+          ],
+          `<span class="badge">${TAG.above}</span>`,
+        ),
+        card(
+          'Unknown or unavailable',
+          scene('unknown', 'partly'),
+          [
+            `airCheck.level = ${LEVEL.unknown}`,
+            'weather: cloudCoverPercent 20–49',
+            'Neutral grey sky, no glow, no veil, normal contrast',
+          ],
+          `<span class="badge">${TAG.unknown}</span>`,
+        ),
+        card(
+          'Stale (last known: within)',
+          scene('within', 'partly'),
+          [
+            'retrievedAt older than 60 min (client clock)',
+            'Scene keeps the last-known state, unchanged',
+            'The existing banner stays in HTML under the verdict',
+          ],
+          `<p class="stale">Not current: retrieved more than an hour ago. Reload for the latest forecast.</p>`,
+        ),
+        card(
+          'Loading',
+          scene(null, null, { loading: true }),
+          [
+            'forecast.state.status ≠ ready',
+            'Static silhouette, no sky, glow, clouds or veil',
+            "Replaces today's pulsing grey band",
+          ],
+          `<span class="badge">Loading forecast</span>`,
+        ),
+      ].join('');
+
+      document.getElementById('weather').innerHTML = [
+        card('Within + clear', scene('within', 'clear'), [WX.clear.label]),
+        card('Within + overcast', scene('within', 'overcast'), [
+          WX.overcast.label,
+          'Cloud deck mutes the sky top; no haze added',
+        ]),
+        card('Above + clear', scene('above', 'clear'), [
+          WX.clear.label,
+          'Clear sky, haze from the air check only',
+        ]),
+        card('Above + rain', scene('above', 'rain'), [
+          WX.rain.label,
+          'Rain only from a forecast amount, not a chance',
+        ]),
+        card('Unknown air + partly cloudy', scene('unknown', 'partly'), [
+          WX.partly.label,
+          'Clouds still follow the weather',
+        ]),
+        card('Within + weather missing', scene('within', 'missing'), [
+          WX.missing.label,
+          'No clouds, rain or glow; "Weather unavailable" in words',
+        ]),
+      ].join('');
+
+      document.getElementById('compare').innerHTML = [
+        card('Today: within (haze level 2)', current(2, 1), [
+          'Ratio band 0.5–1; sun disc; grey veil over everything',
+        ]),
+        card('Proposed: within', scene('within', 'partly'), [
+          'From airCheck.level only',
+        ]),
+        card('Today: above (haze level 3)', current(3, 1), [
+          'Ratio band 1–1.5; levels 4–5 get heavier, 5 adds a smog band',
+        ]),
+        card('Proposed: above', scene('above', 'partly'), [
+          'One look for every elevated forecast; no smog band',
+        ]),
+      ].join('');
+
+      const verdict = (h) =>
+        `<div class="wline">Weather for [hour]: [°C], [cloud %]. Open-Meteo weather forecast.</div>` +
+        `<div class="verdict"><h4>Forecast within India's 24-hour limits</h4>` +
+        `<p class="muted" style="font-size:13px"><span class="badge">Within the limit</span> Model forecast · Open-Meteo · updated [time]</p>` +
+        `<p>Fine and coarse particles are forecast below the national daily limits for the next 24 hours.</p></div>`;
+
+      document.getElementById('phone').innerHTML =
+        `<div class="bar">AirAware AI <span class="chip">Pune, Mahara… ▾</span></div>` +
+        `<div class="pad"><div><p class="muted">Good evening</p><p style="font-size:30px;font-weight:600;line-height:1.15;margin:0">Today in Pune, Maharashtra</p></div>` +
+        `<div class="lead">${scene('within', 'partly', { windows: false }).replace('<svg ', '<svg style="height:128px" ')}${verdict()}</div></div>` +
+        `<div class="nav"><span>Today</span><span>Ask</span><span>Home</span><span>Habits</span><span>Profile</span></div>`;
+
+      document.getElementById('desk').innerHTML =
+        `<div class="bar" style="padding:0 32px"><span>AirAware AI</span><span style="display:flex;gap:28px;font-weight:500"><span>Today</span><span>Ask AirAware</span><span>My Home</span><span>Better Habits</span><span>My Profile</span></span><span class="chip">Pune, Maharashtra ▾</span></div>` +
+        `<div style="padding:24px 32px 0"><p class="muted">Good evening</p><p style="font-size:30px;font-weight:600;margin:0">Today in Pune, Maharashtra</p></div>` +
+        `<div class="cols"><div class="lead">${scene('within', 'partly').replace('<svg ', '<svg style="height:176px" ')}${verdict()}</div>` +
+        `<div class="ph"><strong style="color:var(--text-dark)">Your recommendation for today</strong><br>[the plan's top card, unchanged]</div></div>`;
+
+      const L = [
+        [
+          'Sky gradient',
+          'airCheck.level (top mutes when overcast)',
+          'secondary 46% into surface-light',
+          'secondary 14% into rule',
+          'rule to surface-light, no blue',
+          'flat surface-light',
+        ],
+        [
+          'Daylight glow',
+          'airCheck.level sets strength; needs known weather; hidden by overcast or rain',
+          'warning glow, strong',
+          'warning glow, faint',
+          'none',
+          'none',
+        ],
+        [
+          'Clouds',
+          'weather.cloudCoverPercent (existing 20/50/80 % steps)',
+          'by cover',
+          'by cover',
+          'by cover',
+          'none',
+        ],
+        [
+          'Far row + dome',
+          'fixed geometry',
+          'clear',
+          'softened by veil',
+          'normal',
+          'rule silhouette',
+        ],
+        ['Far veil', 'airCheck.level', 'minimal', 'noticeable', 'none', 'none'],
+        [
+          'Middle row (new)',
+          'fixed geometry',
+          'clear',
+          'softened by veil',
+          'normal',
+          'not drawn',
+        ],
+        [
+          'Near row + arch, tanks, windows',
+          'fixed geometry; windows from 640 px',
+          'clear',
+          'clear',
+          'normal',
+          'rule silhouette',
+        ],
+        [
+          'Fog band / heat band',
+          'weather.visibilityM / temperatureC (existing)',
+          'by weather',
+          'by weather',
+          'by weather',
+          'none',
+        ],
+        [
+          'Rain',
+          'weather.precipitationMm ≥ 0.2 only',
+          'by weather',
+          'by weather',
+          'by weather',
+          'none',
+        ],
+      ];
+      document.getElementById('layers').innerHTML = L.map(
+        (r) =>
+          `<tr>${r.map((c, i) => (i ? `<td>${c}</td>` : `<th>${c}</th>`)).join('')}</tr>`,
+      ).join('');
+    </script>
+  </body>
+</html>
