@@ -1,6 +1,5 @@
 import { CircleUser, House, Leaf, MessageCircle, Sun } from 'lucide-react';
-import type { MouseEvent } from 'react';
-import { navigate, type AppPage } from '../lib/navigation.ts';
+import { follow, type AppPage } from '../lib/navigation.ts';
 
 const ITEMS = [
   { page: 'today', href: '/app', name: 'Today', short: 'Today', Icon: Sun },
@@ -33,13 +32,6 @@ const ITEMS = [
     Icon: CircleUser,
   },
 ] as const;
-
-// Same-tab, unmodified clicks stay in the app; others open as normal links.
-function follow(event: MouseEvent<HTMLAnchorElement>, href: string) {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  event.preventDefault();
-  navigate(href);
-}
 
 // One navigation landmark: a bottom bar on phones, inline in the top bar from
 // md. Each link is named by its full label; phones show the short one.

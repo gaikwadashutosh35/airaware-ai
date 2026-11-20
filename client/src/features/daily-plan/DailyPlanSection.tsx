@@ -79,6 +79,7 @@ export function DailyPlanSection({
   // The one live region: building, ready, and save results.
   const [message, setMessage] = useState('');
   const request = useRef<AbortController | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const headingId = useId();
   const noteId = useId();
 
@@ -179,7 +180,12 @@ export function DailyPlanSection({
       aria-labelledby={headingId}
       className="flex flex-col gap-4 rounded-lg border border-rule p-5 sm:p-6"
     >
-      <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
+      <h2
+        id={headingId}
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-2xl font-semibold tracking-tight"
+      >
         Your recommendation for today
       </h2>
       {!place && <p className="text-sm">Choose a place first.</p>}
@@ -190,7 +196,11 @@ export function DailyPlanSection({
       {status.kind === 'error' && (
         <ErrorState
           error={status.error}
-          onRetry={() => void build()}
+          onRetry={() => {
+            void build();
+            // "Try again" goes as the build starts: keep focus here.
+            headingRef.current?.focus();
+          }}
           fallback={BUILD_FAILED}
           title="We couldn't build your recommendation."
         />

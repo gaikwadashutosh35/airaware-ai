@@ -27,6 +27,8 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
           if (!asked) return;
           onAsk(asked);
           navigate('/app/ask');
+          // The box hides with Today: focus the page it opened.
+          document.getElementById('main')?.focus();
         }}
         className="flex flex-col gap-1"
       >
@@ -40,6 +42,7 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
             type="text"
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
+            required
             maxLength={200}
             enterKeyHint="send"
             autoComplete="off"

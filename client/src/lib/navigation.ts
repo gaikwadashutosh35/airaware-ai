@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore, type MouseEvent } from 'react';
 
 // In-app navigation without a router: the address bar is the state.
 const NAVIGATED = 'airaware:navigate';
@@ -33,4 +33,18 @@ export type AppPage = 'today' | (typeof PAGES)[number];
 export function appPage(path: string): AppPage {
   const name = path.replace(/^\/app\/?/, '').replace(/\/$/, '');
   return PAGES.find((page) => page === name) ?? 'today';
+}
+
+// Same-tab, unmodified clicks stay in the app; others open as normal links.
+// True when it navigated here.
+export function follow(
+  event: MouseEvent<HTMLAnchorElement>,
+  href: string,
+): boolean {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return false;
+  }
+  event.preventDefault();
+  navigate(href);
+  return true;
 }

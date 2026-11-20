@@ -1,6 +1,6 @@
 import { Footprints, House, Leaf, Users, type LucideIcon } from 'lucide-react';
 import { useId } from 'react';
-import { navigate } from '../../lib/navigation.ts';
+import { follow } from '../../lib/navigation.ts';
 import type { AskIntent } from './today.ts';
 
 type Topic = NonNullable<AskIntent['topic']>;
@@ -55,9 +55,10 @@ export function HelpChoices({ onAsk }: { onAsk: (topic: Topic) => void }) {
             <a
               href={to}
               onClick={(event) => {
-                event.preventDefault();
+                if (!follow(event, to)) return;
                 if (topic) onAsk(topic);
-                navigate(to);
+                // The choice hides with Today: focus the page it opened.
+                document.getElementById('main')?.focus();
               }}
               className="press flex h-full min-h-11 items-start gap-3 rounded-lg border border-rule p-4 hover:border-text-dark"
             >

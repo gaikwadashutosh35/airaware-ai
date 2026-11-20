@@ -37,6 +37,26 @@ describe('AskBox', () => {
     expect(window.location.href).not.toMatch(/smoke/i);
   });
 
+  it('moves focus to the page it opens', () => {
+    render(
+      <main id="main" tabIndex={-1}>
+        <AskBox onAsk={vi.fn()} />
+      </main>,
+    );
+
+    fireEvent.change(input(), { target: { value: 'Is today windy?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(document.activeElement?.id).toBe('main');
+  });
+
+  // The browser asks for a question instead of doing nothing.
+  it('needs a question', () => {
+    render(<AskBox onAsk={vi.fn()} />);
+
+    expect(input().required).toBe(true);
+  });
+
   it('sends nothing when the box is empty', () => {
     const onAsk = vi.fn();
     render(<AskBox onAsk={onAsk} />);

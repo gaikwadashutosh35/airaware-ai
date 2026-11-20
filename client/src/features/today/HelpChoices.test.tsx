@@ -35,6 +35,32 @@ describe('HelpChoices', () => {
     }
   });
 
+  // The choice hides with Today: focus goes to the page, not to nowhere.
+  it('moves focus to the page it opens', () => {
+    render(
+      <main id="main" tabIndex={-1}>
+        <HelpChoices onAsk={vi.fn()} />
+      </main>,
+    );
+
+    fireEvent.click(choice('My home'));
+
+    expect(document.activeElement?.id).toBe('main');
+  });
+
+  it('lets a modified click open a new tab', () => {
+    const onAsk = vi.fn();
+    render(<HelpChoices onAsk={onAsk} />);
+
+    const followed = fireEvent.click(choice('Outdoor activities'), {
+      ctrlKey: true,
+    });
+
+    expect(followed).toBe(true);
+    expect(window.location.pathname).toBe('/app');
+    expect(onAsk).not.toHaveBeenCalled();
+  });
+
   it('gives each choice its line and passes axe', async () => {
     const { container } = render(<HelpChoices onAsk={vi.fn()} />);
 

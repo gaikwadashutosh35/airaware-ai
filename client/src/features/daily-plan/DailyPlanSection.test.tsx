@@ -250,6 +250,24 @@ describe('DailyPlanSection', () => {
     expect(calls(spy, PLAN_PATH)).toHaveLength(2);
   });
 
+  // "Try again" disappears as the build starts: focus stays in the section.
+  it('keeps focus in the section after Try again', async () => {
+    let first = true;
+    routeFetch(() => {
+      if (!first) return planReply();
+      first = false;
+      return errorReply(500, 'INTERNAL_ERROR');
+    });
+    renderSection();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Your recommendation for today' }),
+    );
+    await build();
+  });
+
   it('a plan error offers Try again, never an automatic retry', async () => {
     const spy = routeFetch(() => errorReply(500, 'INTERNAL_ERROR'));
     renderSection();
