@@ -16,7 +16,7 @@ Create a trustworthy environmental technology product. Use the storytelling qual
 - Bold headline and concise supporting copy.
 - Alternating story chapters explaining product capabilities.
 - Product screenshots and real UI visualizations.
-- Strong CTA: “Check your area's air quality” or “Build my daily plan”.
+- Strong CTA: “Check your area's air quality”.
 
 ### Application dashboard
 - Prioritize information readability over atmosphere.

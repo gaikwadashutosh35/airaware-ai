@@ -40,7 +40,7 @@ function toSaved(place: Place): SavedPlace {
 }
 
 const TITLES = {
-  today: 'Air-quality dashboard',
+  today: 'Today',
   welcome: 'Welcome',
   ask: 'Ask AirAware',
   home: 'My Home',
@@ -92,7 +92,7 @@ function AppShell() {
   const askIntent = useRef<AskIntent | null>(null);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
-  // The place chip's dialog; Today's "Change place" opens it too.
+  // The place chip's dialog.
   const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
   // Onboarding (D2): the form's first load of saved answers has finished;
   // the searched place remembered on this device; a key that remounts the

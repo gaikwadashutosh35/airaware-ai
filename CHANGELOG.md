@@ -51,7 +51,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - "Your recommendation for today" builds by itself: when Today shows a place, after the answers change, and once the plan is over an hour old. One card with "Why this recommendation?"; "See your full day" folds the rest and "Save plan". "Build my daily plan" is gone; "Try again" stays for errors;
   - "What would you like help with?" (four choices) and "Ask AirAware anything" (three starter questions). A topic or question goes to Ask in memory, never in the address;
   - "Air quality details", closed, holds the PM2.5 figure, the forecast panel, the forecast location, "Official CPCB observations are not connected yet.", the 24-hour method and the sources. The limitations show the forecast's own lines plus the app's two;
-  - a saved plan opens in My Profile with "Close", not on Today.
+  - a saved plan opens in My Profile with "Close", not on Today;
+  - after review: a returning user's visit builds once, with the saved answers; "Made with AI" or "Made by our rules" and the safety note sit beside the card; the forecast reloads with the hourly rebuild; the plan's stale line says "The forecast behind this plan is more than an hour old."; focus stays put after help choices, Send and Try again; Ctrl/Cmd-clicks open new tabs; "Air quality details" has its own heading; a device location reads "Today near you (approximate)"; the tab is titled "Today".
 - Onboarding (Phase 5 of the assistant redesign):
   - a first visit to `/app` gets three short steps: where, your day (office or school commute, outdoor exercise, work from home) and your home (cooking fuel, exhaust, purifier, busy road). Steps 2 and 3 can be skipped;
   - "Remember on this device" (off by default) saves the answers and the searched place with the existing anonymous save, so the next visit opens Today. A device location is never saved;

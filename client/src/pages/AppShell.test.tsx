@@ -593,6 +593,15 @@ describe('AppShell', () => {
     expect(copy.textContent).not.toContain('19.08');
   });
 
+  // The tab says what the nav and the H1 say.
+  it('names the tab Today', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+
+    expect(document.title).toBe('Today | AirAware AI');
+  });
+
   it('greets and names the place in the H1', async () => {
     window.history.replaceState(
       null,

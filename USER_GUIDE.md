@@ -15,12 +15,12 @@ If you arrive with a place already chosen, Today offers **Make it personal: 2 qu
 ## 1. Choose a location
 Search for a city or area. You can use manual selection without sharing GPS. If you choose browser geolocation, the browser will ask for permission.
 
-Once a place is chosen, the place button at the top shows it. Tap it, or **Change place**, to search again or use your location.
+Once a place is chosen, the place button at the top shows it. Tap it to search again or use your location.
 
 ## 2. Today
 Today answers "How is my air?" first, from top to bottom:
-- **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · updated {time}". When the forecast is old, a "Not current" line sits under it.
-- **Your recommendation for today:** one suggestion. **Why this recommendation?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
+- **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · updated {time}". When the forecast is old, a "Not current" line sits under it. While Today stays open, it reloads the forecast and rebuilds the plan once an hour.
+- **Your recommendation for today:** one suggestion, with who made it (our rules or AI) and the safety note. **Why this recommendation?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
 - **What would you like help with?** Outdoor activities, My home, My family and Greener habits.
 - **Ask AirAware anything:** type a question or pick a starter question.
 - **Air quality details**, closed until you open it: the PM2.5 figure, the chart and tables, the forecast location, how the 24-hour check works, and the sources and limitations.
