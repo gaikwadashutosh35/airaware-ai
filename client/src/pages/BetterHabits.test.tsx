@@ -75,6 +75,10 @@ describe('BetterHabits', () => {
     ).toBeDefined();
     fail = false;
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    // The button goes with the error card: focus stays on the page heading.
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { level: 1, name: 'Better Habits' }),
+    );
     expect(
       await screen.findByRole('heading', { level: 2, name: 'Waste' }),
     ).toBeDefined();

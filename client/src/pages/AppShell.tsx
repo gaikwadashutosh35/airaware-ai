@@ -1,6 +1,5 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type {
-  DailyPlan,
   HouseholdContext,
   PreferencesUpdate,
   SavedPlace,
@@ -12,6 +11,7 @@ import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
+import type { PlanReport } from '../features/daily-plan/planDisplay.ts';
 import {
   NEAR_YOU,
   placeFromSearch,
@@ -88,8 +88,8 @@ function AppShell() {
   // The last plan deleted from the list, so the plan area stops calling
   // that plan saved.
   const [deletedPlanId, setDeletedPlanId] = useState<string | null>(null);
-  // The plan on Today, for My Home's "Today, for your home".
-  const [todayPlan, setTodayPlan] = useState<DailyPlan | null>(null);
+  // Today's plan area, for My Home's "Today, for your home".
+  const [todayPlan, setTodayPlan] = useState<PlanReport>({ kind: 'none' });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // A help topic or typed question for Ask (Phase 7 reads it). In memory
@@ -289,7 +289,7 @@ function AppShell() {
             onFinish={finishWelcome}
           />
         )}
-        {page === 'home' && <MyHome plan={todayPlan} context={context} />}
+        {page === 'home' && <MyHome today={todayPlan} context={context} />}
         {page === 'habits' && <BetterHabits />}
         {page === 'ask' && <Placeholder title={TITLES[page]} />}
         <div hidden={page !== 'today'} className="contents">

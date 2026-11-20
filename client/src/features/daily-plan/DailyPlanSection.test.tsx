@@ -226,45 +226,72 @@ describe('DailyPlanSection', () => {
   });
 
   // My Home shows the plan's indoor cards (Phase 8).
-  it('reports each finished plan, and null for a new place', async () => {
+  it('reports each finished plan, and nothing for a new place', async () => {
     const saved = { ...rulesPlanFixture, place: { label: 'Saved label' } };
     routeFetch((path) =>
       path === PLAN_PATH ? planReply() : savedReply(saved),
     );
     // A new place mounts a fresh section.
     const { onPlan } = renderSection();
-    expect(onPlan).toHaveBeenNthCalledWith(1, null);
+    expect(onPlan).toHaveBeenNthCalledWith(1, { kind: 'none' });
 
     await build();
     await waitFor(() =>
-      expect(onPlan).toHaveBeenLastCalledWith(rulesPlanFixture),
+      expect(onPlan).toHaveBeenLastCalledWith({
+        kind: 'ready',
+        plan: rulesPlanFixture,
+      }),
     );
 
     fireEvent.click(saveButton());
     await screen.findByText(SAVED);
-    await waitFor(() => expect(onPlan).toHaveBeenLastCalledWith(saved));
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith({ kind: 'ready', plan: saved }),
+    );
   });
 
   // Final review, Important 1: My Home must not show a plan Today hides.
-  it('reports null while rebuilding and after a failed rebuild', async () => {
+  // My Home shows these states too (Phase 8 minors).
+  it('reports building, then an error whose retry builds again', async () => {
     let builds = 0;
-    routeFetch(() =>
-      ++builds === 1 ? planReply() : errorReply(500, 'INTERNAL_ERROR'),
+    let fail!: () => void;
+    const spy = routeFetch(() =>
+      ++builds === 2
+        ? // A request that takes a moment, then fails.
+          new Promise<Response>(
+            (resolve) => (fail = () => resolve(errorReply(500, 'x'))),
+          )
+        : planReply(),
     );
     const { onPlan, update } = renderSection();
     await build();
-    await waitFor(() =>
-      expect(onPlan).toHaveBeenLastCalledWith(rulesPlanFixture),
-    );
 
     update({ context: { home: { airPurifier: true } } });
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith({ kind: 'building' }),
+    );
+    fail();
     await screen.findByRole('heading', {
       name: "We couldn't build your recommendation.",
     });
-    await waitFor(() => expect(onPlan).toHaveBeenLastCalledWith(null));
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith(
+        expect.objectContaining({ kind: 'error' }),
+      ),
+    );
+
+    const report = onPlan.mock.lastCall?.[0] as { retry: () => void };
+    act(() => report.retry());
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith({
+        kind: 'ready',
+        plan: rulesPlanFixture,
+      }),
+    );
+    expect(calls(spy, PLAN_PATH)).toHaveLength(3);
   });
 
-  it('reports null once the forecast behind the plan is stale', async () => {
+  it('reports nothing once the forecast behind the plan is stale', async () => {
     routeFetch(() => planReply());
     const { onPlan, update } = renderSection();
     await build();
@@ -272,7 +299,9 @@ describe('DailyPlanSection', () => {
     // 17:05 + 61 min.
     update({ now: new Date('2026-11-17T18:06:00Z') });
 
-    await waitFor(() => expect(onPlan).toHaveBeenLastCalledWith(null));
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith({ kind: 'none' }),
+    );
   });
 
   it('never creates an account to build a plan', async () => {

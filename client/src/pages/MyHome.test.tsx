@@ -6,6 +6,8 @@ import {
   within,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { PlanReport } from '../features/daily-plan/planDisplay.ts';
+import { ApiError } from '../services/api.ts';
 import type { DailyPlan, HouseholdContext } from '../../../shared/contracts.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { homeGuidesFixture } from '../test/guideFixtures.ts';
@@ -30,7 +32,8 @@ function show(
   plan: DailyPlan | null = rulesPlanFixture,
   context: HouseholdContext = {},
 ) {
-  return render(<MyHome plan={plan} context={context} />);
+  const today: PlanReport = plan ? { kind: 'ready', plan } : { kind: 'none' };
+  return render(<MyHome today={today} context={context} />);
 }
 
 // The plan's indoor cards, in its order.
@@ -179,6 +182,85 @@ describe('MyHome', () => {
       await screen.findByRole('heading', { name: 'Cooking and smoke' }),
     ).toBeDefined();
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("says today's suggestions are on their way, then announces them", async () => {
+    routeGuides(guidesOk);
+    const { rerender } = render(
+      <MyHome today={{ kind: 'building' }} context={{}} />,
+    );
+
+    const today = screen.getByRole('region', { name: 'Today, for your home' });
+    expect(
+      within(today).getByText("Finding today's suggestions…"),
+    ).toBeDefined();
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe("Finding today's suggestions…");
+
+    rerender(
+      <MyHome today={{ kind: 'ready', plan: rulesPlanFixture }} context={{}} />,
+    );
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status.textContent).toBe("Today's suggestions are ready.");
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+  });
+
+  it('a failed build offers Try again, keeping focus in the section', async () => {
+    routeGuides(guidesOk);
+    const retry = vi.fn();
+    render(
+      <MyHome
+        today={{
+          kind: 'error',
+          error: new ApiError(429, 'RATE_LIMITED', 'x'),
+          retry,
+        }}
+        context={{}}
+      />,
+    );
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    expect(
+      screen.getByRole('heading', {
+        level: 3,
+        name: "We couldn't get today's suggestions",
+      }),
+    ).toBeDefined();
+    expect(
+      screen.getByText('Too many requests. Try again in a minute.'),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Today, for your home' }),
+    );
+  });
+
+  it('Try again on the guides keeps focus on their heading', async () => {
+    let fail = true;
+    routeGuides(() =>
+      fail
+        ? Promise.resolve(
+            Response.json(
+              { error: { code: 'INTERNAL_ERROR', message: 'x' } },
+              { status: 500 },
+            ),
+          )
+        : guidesOk(),
+    );
+    show(null);
+    await screen.findByRole('heading', {
+      name: "We couldn't load the guides",
+    });
+
+    fail = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Ways to improve indoor air' }),
+    );
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
   });
 
   it('shows the loading state', () => {

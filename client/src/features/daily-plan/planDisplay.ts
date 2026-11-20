@@ -6,7 +6,16 @@ import type {
   PollutantCheck,
   RecommendationCandidate,
 } from '../../../../shared/contracts.ts';
+import type { ApiError } from '../../services/api.ts';
 import { FIELDS, fieldId } from './householdFields.ts';
+
+// What Today's plan area shows, for My Home (Phase 8): never a plan Today
+// hides. 'none' before a build, or once the forecast behind it is stale.
+export type PlanReport =
+  | { kind: 'none' }
+  | { kind: 'building' }
+  | { kind: 'error'; error: ApiError; retry: () => void }
+  | { kind: 'ready'; plan: DailyPlan };
 
 export type Topic = 'action' | 'indoor' | 'swap';
 

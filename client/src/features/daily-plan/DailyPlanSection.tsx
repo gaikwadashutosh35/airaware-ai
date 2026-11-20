@@ -1,4 +1,12 @@
-import { useEffect, useEffectEvent, useId, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type {
   DailyPlan,
   HouseholdContext,
@@ -17,7 +25,7 @@ import { topRecommendation } from '../today/today.ts';
 import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
 import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
-import { NO_AIR } from './planDisplay.ts';
+import { NO_AIR, type PlanReport } from './planDisplay.ts';
 
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const READY = 'Your plan is ready.';
@@ -71,7 +79,7 @@ export function DailyPlanSection({
   active: boolean;
   onSaved: () => void;
   // The plan on screen, or null: My Home shows its indoor cards.
-  onPlan?: (plan: DailyPlan | null) => void;
+  onPlan?: (report: PlanReport) => void;
   // The last plan deleted from the list: if it is the one saved here, the
   // plan on screen is no longer saved.
   deletedPlanId?: string | null;
@@ -166,15 +174,27 @@ export function DailyPlanSection({
     (built === null ||
       JSON.stringify(context) !== built.builtWith ||
       isOlderThan(built.builtAt.toISOString(), now, 60));
-  // Only a current plan Today shows, so My Home never shows one Today hides:
-  // null on mount (a new place), while building, after an error, and once
-  // the forecast behind it is stale.
-  const currentPlan =
-    status.kind === 'idle' && built && !stale ? built.plan : null;
-  const reportPlan = useEffectEvent((plan: DailyPlan | null) => onPlan?.(plan));
+  // A stable "build again" for My Home's Try again.
+  const buildRef = useRef(build);
   useEffect(() => {
-    reportPlan(currentPlan);
-  }, [currentPlan]);
+    buildRef.current = build;
+  });
+  const retry = useCallback(() => void buildRef.current(), []);
+  // What this area shows, for My Home: never a plan Today hides, and
+  // nothing once the forecast behind it is stale.
+  const report = useMemo((): PlanReport => {
+    if (status.kind === 'building') return { kind: 'building' };
+    if (status.kind === 'error') {
+      return { kind: 'error', error: status.error, retry };
+    }
+    return built && !stale
+      ? { kind: 'ready', plan: built.plan }
+      : { kind: 'none' };
+  }, [status, built, stale, retry]);
+  const sendReport = useEffectEvent((next: PlanReport) => onPlan?.(next));
+  useEffect(() => {
+    sendReport(report);
+  }, [report]);
   const startBuild = useEffectEvent(() => void build());
   useEffect(() => {
     if (!due) return;
