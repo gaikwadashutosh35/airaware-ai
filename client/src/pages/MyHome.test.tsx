@@ -89,6 +89,39 @@ describe('MyHome', () => {
     ).toBeNull();
   });
 
+  // Review Focus 2, with a plan shaped like the server's: no answers and a
+  // day within the limits still give one indoor card (smoke at the source).
+  it('no answers, within the limits: one card today, its twin hidden', async () => {
+    routeGuides(guidesOk);
+    const quiet: DailyPlan = {
+      ...rulesPlanFixture,
+      air: { ...rulesPlanFixture.air, level: 'not_elevated' },
+      featured: rulesPlanFixture.featured.filter((f) =>
+        ['indoor.smoke-sources', 'swap.no-open-burning'].includes(
+          f.candidate.id,
+        ),
+      ),
+      more: [],
+    };
+    show(quiet);
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    const today = screen.getByRole('region', {
+      name: 'Today, for your home',
+    });
+    expect(
+      within(today)
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent),
+    ).toEqual(['Cut indoor smoke at the source']);
+    expect(screen.queryByRole('heading', { name: 'Indoor habits' })).toBeNull();
+    for (const group of ['Cooking and smoke', 'Dust and cleaning']) {
+      expect(
+        screen.getByRole('heading', { level: 3, name: group }),
+      ).toBeDefined();
+    }
+  });
+
   // Review Focus 1.
   it('a personal card hides its general twin', async () => {
     routeGuides(guidesOk);

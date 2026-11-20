@@ -45,7 +45,7 @@
 ## Review focus
 
 1. **The same advice twice.** Expected: a guide card whose rule is in today's plan is hidden on My Home. Task 4 test: `a personal card hides its general twin`.
-2. **No answers, a day within the limits.** Expected: My Home and Better Habits still show every general group, and "Today, for your home" is hidden when the plan has no indoor cards. Task 4 test: `without a plan, only the guides show`.
+2. **No answers, a day within the limits.** Expected: Better Habits shows every group, and My Home every general group except the twins of today's cards. (Corrected after the final review: every plan carries "Cut indoor smoke at the source", so with a plan "Today, for your home" always shows that card and "Indoor habits" is hidden.) Tests: `without a plan, only the guides show` and `no answers, within the limits: one card today, its twin hidden`.
 3. **The guides endpoint fails.** Expected: an error card with "Try again"; "Today, for your home" still shows. Task 4 test: `a guides error keeps today's cards`.
 4. **Rate limits.** Expected: guides requests never count against the 10-a-minute plan limit. Task 2 test: `guides are not rate-limited with plans`.
 5. **Wording drift.** Expected: banned words and savings figures never appear in a guide card, and every source resolves. Task 1 tests: `no guide card uses banned words or a savings figure` and `every guide card cites a known source`.

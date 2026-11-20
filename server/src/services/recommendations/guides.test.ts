@@ -1,14 +1,70 @@
 // The guide library (decision G1 A). Its wording and sources are fixed by
 // docs/superpowers/specs/2026-11-20-guide-library.md.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type {
+  AirAssessment,
   GuideCard,
   GuideTopic,
   SourceReferenceId,
 } from '../../../../shared/contracts.ts';
 import { ASK_GUIDES, guideSet } from './guides.ts';
 import { SAFETY_NOTE } from './plan.ts';
-import { RULE_IDS, SOURCE_REFERENCES } from './rules.ts';
+import { RULE_IDS, SOURCE_REFERENCES, buildCandidates } from './rules.ts';
+
+const SPEC = new URL(
+  '../../../../docs/superpowers/specs/2026-11-20-guide-library.md',
+  import.meta.url,
+);
+const TICK = String.fromCharCode(96);
+
+interface SpecCard {
+  id: string;
+  twin?: string;
+  // The fields the spec says repeat the rule's own words.
+  ownFields: string[];
+  fields: Record<string, string>;
+}
+
+// The library spec's cards: a bold, backticked guide id line, then its
+// "- **Field:** value" lines.
+function specCards(): Map<string, SpecCard> {
+  const cards = new Map<string, SpecCard>();
+  const head = new RegExp(`^\\*\\*${TICK}(guide\\.[a-z-]+)${TICK}\\*\\*(.*)$`);
+  const twin = new RegExp(`twin ${TICK}([a-z.-]+)${TICK}`);
+  let current: SpecCard | null = null;
+  for (const line of readFileSync(SPEC, 'utf8').split(/\r?\n/)) {
+    const card = head.exec(line);
+    if (card) {
+      current = {
+        id: card[1]!,
+        twin: twin.exec(card[2]!)?.[1],
+        ownFields:
+          /the rule's own ([a-z ]+)\)/
+            .exec(card[2]!)?.[1]
+            ?.split(' ')
+            .filter((word) => word !== 'and') ?? [],
+        fields: {},
+      };
+      cards.set(current.id, current);
+      continue;
+    }
+    if (line.startsWith('#') || line.startsWith('---')) current = null;
+    const field =
+      /^- \*\*(Title|Text|Why it matters|Caveat|Sources):\*\* (.*)$/.exec(line);
+    if (current && field) current.fields[field[1]!] = field[2]!;
+  }
+  return cards;
+}
+
+const elevatedAir: AirAssessment = {
+  level: 'elevated',
+  windowStart: '2026-11-19T00:00:00.000Z',
+  checks: [
+    { pollutant: 'PM2_5', status: 'above_limit', average24h: 75, limit: 60 },
+    { pollutant: 'PM10', status: 'within_limit', average24h: 80, limit: 100 },
+  ],
+};
 
 const cardsOf = (topic: GuideTopic): GuideCard[] =>
   guideSet(topic).groups.flatMap((group) => group.cards);
@@ -86,7 +142,8 @@ describe('guide library', () => {
   });
 
   it('no guide card uses banned words or a savings figure', () => {
-    const banned = /\bsafe|healthy|clean air|\bAQI\b|%|per cent|\bkg\b|tonne/i;
+    const banned =
+      /\bsafe|healthy|clean air|good air|bad air|\bAQI\b|%|per cent|\bkg\b|tonne/i;
     for (const card of allCards()) {
       for (const words of [card.title, card.text, card.reason, card.caveat]) {
         expect(words ?? '', card.id).not.toMatch(banned);
@@ -159,5 +216,57 @@ describe('guide library', () => {
     expect(card('guide.older-sensitive').text).toBe(
       "On days above the limit, India's health advisory asks older adults and people who may be more sensitive to avoid prolonged or strenuous exertion outdoors.",
     );
+  });
+
+  // DATA_GOVERNANCE §8: the library spec fixes the wording; the code must
+  // match it, card by card.
+  it('every card matches the library spec word for word', () => {
+    const spec = specCards();
+    const cards = [...new Map(allCards().map((c) => [c.id, c])).values()];
+    expect([...spec.keys()].sort()).toEqual(cards.map((c) => c.id).sort());
+    for (const card of cards) {
+      const written = spec.get(card.id)!;
+      expect(
+        {
+          title: card.title,
+          text: card.text,
+          reason: card.reason,
+          caveat: card.caveat,
+          sources: card.sourceIds.map((id) => TICK + id + TICK).join(', '),
+          twin: card.personalRuleId,
+        },
+        card.id,
+      ).toEqual({
+        title: written.fields['Title'],
+        text: written.fields['Text'],
+        reason: written.fields['Why it matters'],
+        caveat: written.fields['Caveat'],
+        sources: written.fields['Sources'],
+        twin: written.twin,
+      });
+    }
+  });
+
+  it("twins that reuse the rule's words match the rule", () => {
+    const rules = buildCandidates(
+      { home: { nearBusyRoad: 'yes' }, routine: { schoolCommute: true } },
+      elevatedAir,
+    );
+    const reused = [...specCards().values()].filter((c) => c.ownFields.length);
+    expect(reused.map((c) => c.id).sort()).toEqual([
+      'guide.busy-road',
+      'guide.no-open-burning',
+      'guide.school-run',
+      'guide.smoke-sources',
+    ]);
+    for (const written of reused) {
+      const card = allCards().find((c) => c.id === written.id)!;
+      const rule = rules.find((r) => r.id === written.twin);
+      expect(rule, written.id).toBeDefined();
+      for (const field of written.ownFields) {
+        const key = field as 'title' | 'text' | 'reason';
+        expect(card[key], `${written.id} ${key}`).toBe(rule![key]);
+      }
+    }
   });
 });
