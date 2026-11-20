@@ -153,3 +153,72 @@ test.describe('a long place in the header', () => {
     });
   }
 });
+
+// Phase 9: Windows High Contrast. The backdrop steps aside, focus still
+// shows on the navy bars and the panels, and axe still passes.
+test.describe('forced colours', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+  });
+
+  test('forced colours: no backdrop, focus still shows', async ({ page }) => {
+    await open(page, '/app');
+    await expect(page.locator('[data-air]')).toBeHidden();
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('Tab');
+      const outline = await page.evaluate(() => {
+        const el = document.activeElement;
+        return el ? getComputedStyle(el).outlineStyle : 'none';
+      });
+      expect(outline).not.toBe('none');
+    }
+  });
+
+  // The header's words against its background, as the browser forces them
+  // (the computed `color`, which is what it paints).
+  test('forced colours: the header reads', async ({ page }) => {
+    await open(page, '/app');
+    const worst = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      const rgb = (css: string) => {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = css;
+        ctx.fillRect(0, 0, 1, 1);
+        return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+      };
+      const lum = (c: number[]) => {
+        const [r, g, b] = c.map((v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+      };
+      const header = document.querySelector('header')!;
+      const bg = rgb(getComputedStyle(header).backgroundColor);
+      let ratio = Infinity;
+      for (const el of header.querySelectorAll('a, button, span')) {
+        if (!el.checkVisibility() || !(el.textContent ?? '').trim()) continue;
+        const [hi, lo] = [lum(rgb(getComputedStyle(el).color)), lum(bg)].sort(
+          (x, y) => y - x,
+        );
+        ratio = Math.min(ratio, (hi! + 0.05) / (lo! + 0.05));
+      }
+      return ratio;
+    });
+    expect(worst).toBeGreaterThanOrEqual(4.5);
+  });
+
+  for (const path of ['/app', '/app/ask']) {
+    test(`axe passes in forced colours: ${path}`, async ({ page }) => {
+      await open(page, path);
+      // axe's colour-contrast misreads forced colours in Chromium: it takes
+      // the authored -webkit-text-fill-color (#f4f7fa in the navy header),
+      // not the forced colour the browser paints (black or link blue on
+      // white; computed `color` and a screenshot agree). The header's real
+      // contrast is checked above; every other axe rule still runs.
+      await expectNoAxeViolations(page, { skip: ['color-contrast'] });
+    });
+  }
+});

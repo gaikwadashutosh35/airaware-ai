@@ -119,8 +119,10 @@ const tank = (cx: number, top: number) =>
 // city band never takes over a fifth of the screen, and sits above the phone
 // bar (56 px plus the safe area) below md. Under 24rem tall (a phone held
 // sideways) a wrapped title could reach the band, so the city hides and the
-// sky alone carries the look.
-const ROOT = 'pointer-events-none fixed inset-0 -z-10 overflow-hidden';
+// sky alone carries the look. In Windows High Contrast (forced colours) the
+// whole backdrop steps aside, so the words sit on the system background.
+const ROOT =
+  'pointer-events-none fixed inset-0 -z-10 overflow-hidden forced-colors:hidden';
 const FILL = 'absolute inset-0 size-full';
 const CITY =
   'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:24rem)]:hidden';

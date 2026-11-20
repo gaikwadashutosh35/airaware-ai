@@ -69,6 +69,17 @@ describe('CitySkyline', () => {
     expect(container.querySelector('text, [tabindex], a')).toBeNull();
   });
 
+  // Phase 9: in Windows High Contrast the words sit on the system
+  // background, with no picture behind them.
+  it('the backdrop steps aside in forced colours', () => {
+    for (const fields of [{ rain: true, clouds: 3 } as const, null]) {
+      const root = draw(fields).firstElementChild;
+      expect((root?.getAttribute('class') ?? '').split(/\s+/)).toContain(
+        'forced-colors:hidden',
+      );
+    }
+  });
+
   // Backdrop design §5.1: fixed behind the page, never in the way.
   it('a fixed backdrop that takes no clicks', () => {
     for (const fields of [{ rain: true, clouds: 3 } as const, null]) {
