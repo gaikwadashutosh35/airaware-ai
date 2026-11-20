@@ -763,6 +763,24 @@ describe('AppShell', () => {
     );
   });
 
+  // Phase 8: My Home shows today's indoor cards, so it builds the plan too.
+  it('My Home builds the plan once', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    const fetchSpy = routeFetch(ok(), planRoutes());
+    render(<AppShell />);
+    await flush();
+    await flush();
+    expect(planPosts(fetchSpy)).toHaveLength(1);
+
+    await goTo('Today');
+    await flush();
+    expect(planPosts(fetchSpy)).toHaveLength(1);
+  });
+
   it('a built plan survives leaving Today', async () => {
     const fetchSpy = routeFetch(ok(), planRoutes());
     render(<AppShell />);

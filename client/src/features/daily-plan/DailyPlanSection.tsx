@@ -60,6 +60,7 @@ export function DailyPlanSection({
   now,
   active,
   onSaved,
+  onPlan,
   deletedPlanId = null,
 }: {
   place: Place | null;
@@ -69,6 +70,8 @@ export function DailyPlanSection({
   // True while Today is shown: the plan builds only then.
   active: boolean;
   onSaved: () => void;
+  // The plan on screen, or null: My Home shows its indoor cards.
+  onPlan?: (plan: DailyPlan | null) => void;
   // The last plan deleted from the list: if it is the one saved here, the
   // plan on screen is no longer saved.
   deletedPlanId?: string | null;
@@ -163,6 +166,11 @@ export function DailyPlanSection({
     (built === null ||
       JSON.stringify(context) !== built.builtWith ||
       isOlderThan(built.builtAt.toISOString(), now, 60));
+  // Null on mount (a new place), then each finished build or save.
+  const reportPlan = useEffectEvent((plan: DailyPlan | null) => onPlan?.(plan));
+  useEffect(() => {
+    reportPlan(built?.plan ?? null);
+  }, [built]);
   const startBuild = useEffectEvent(() => void build());
   useEffect(() => {
     if (!due) return;

@@ -86,6 +86,7 @@ type Props = ComponentProps<typeof DailyPlanSection>;
 
 function renderSection(props: Partial<Props> = {}) {
   const onSaved = vi.fn();
+  const onPlan = vi.fn();
   const all = (more: Partial<Props>) => (
     <DailyPlanSection
       place={place}
@@ -93,6 +94,7 @@ function renderSection(props: Partial<Props> = {}) {
       now={at}
       active
       onSaved={onSaved}
+      onPlan={onPlan}
       {...props}
       {...more}
     />
@@ -101,6 +103,7 @@ function renderSection(props: Partial<Props> = {}) {
   return {
     ...utils,
     onSaved,
+    onPlan,
     update: (more: Partial<Props>) => utils.rerender(all(more)),
   };
 }
@@ -220,6 +223,24 @@ describe('DailyPlanSection', () => {
 
     expect(calls(spy, PLAN_PATH)).toHaveLength(2);
     expect(screen.queryByText(PLAN_STALE)).toBeNull();
+  });
+
+  // My Home shows the plan's indoor cards (Phase 8).
+  it('reports each finished plan, and null for a new place', async () => {
+    const saved = { ...rulesPlanFixture, place: { label: 'Saved label' } };
+    routeFetch((path) =>
+      path === PLAN_PATH ? planReply() : savedReply(saved),
+    );
+    // A new place mounts a fresh section.
+    const { onPlan } = renderSection();
+    expect(onPlan).toHaveBeenNthCalledWith(1, null);
+
+    await build();
+    expect(onPlan).toHaveBeenLastCalledWith(rulesPlanFixture);
+
+    fireEvent.click(saveButton());
+    await screen.findByText(SAVED);
+    expect(onPlan).toHaveBeenLastCalledWith(saved);
   });
 
   it('never creates an account to build a plan', async () => {
