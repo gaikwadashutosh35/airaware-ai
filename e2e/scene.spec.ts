@@ -1,7 +1,18 @@
 // Today's skyline in a real browser: the clouds settle once and rest, and
 // nothing moves under reduced motion (jsdom can't run CSS animations).
 import { expect, test, type Page } from '@playwright/test';
-import { forecastAt, PUNE, routeApi } from './routes.ts';
+import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
+import { forecastAt, planAt, PUNE, routeApi } from './routes.ts';
+
+// Today builds a plan by itself, so the plan is answered here too: real
+// builds would spend the shared 10-a-minute plan limit the journey needs.
+async function stubToday(page: Page): Promise<void> {
+  const now = new Date();
+  await routeApi(page, {
+    forecast: { data: forecastAt(now) },
+    plan: { data: planAt(rulesPlanFixture, now) },
+  });
+}
 
 async function cloudsStyle(page: Page) {
   const clouds = page.locator('[data-part="clouds"]');
@@ -13,7 +24,7 @@ async function cloudsStyle(page: Page) {
 }
 
 test('clouds drift then rest', async ({ page }) => {
-  await routeApi(page, { forecast: { data: forecastAt(new Date()) } });
+  await stubToday(page);
   await page.goto(PUNE);
 
   expect((await cloudsStyle(page)).name).toBe('cloud-drift');
@@ -25,7 +36,7 @@ test('clouds drift then rest', async ({ page }) => {
 
 test('no drift under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await routeApi(page, { forecast: { data: forecastAt(new Date()) } });
+  await stubToday(page);
   await page.goto(PUNE);
 
   expect((await cloudsStyle(page)).name).toBe('none');
