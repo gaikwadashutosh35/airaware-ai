@@ -38,7 +38,7 @@ export function PlaceChip({
         type="button"
         aria-label={label ? `Change place: ${label}` : 'Choose a place'}
         onClick={() => onOpenChange(true)}
-        className="ml-auto flex min-h-11 max-w-44 min-w-0 items-center gap-1.5 rounded-full border border-rule-dark px-3 text-sm md:ml-2 md:max-w-56"
+        className="ml-auto flex min-h-11 max-w-44 min-w-0 items-center gap-1.5 rounded-full border border-rule-dark px-3 text-sm md:ml-2 md:max-w-56 lg:max-w-50"
       >
         <MapPin aria-hidden="true" className="size-4 flex-none" />
         <span className="truncate">{label ?? 'Choose a place'}</span>

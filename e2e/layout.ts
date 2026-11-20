@@ -1,6 +1,6 @@
 // Shared Playwright helpers for the layout specs: one stub that answers every
 // request the app pages make, and in-page checks for edges and tap targets.
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import type {
   AirAssessment,
   ForecastData,
@@ -152,4 +152,45 @@ export function smallTargets(page: Page): Promise<string[]> {
     }
     return offenders;
   });
+}
+
+// Text cut off by its own box: an element that hides overflow and holds
+// more than it shows. A deliberate ellipsis (`truncate`, whose full text is
+// the control's accessible name) is not a cut.
+export function clippedText(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const clips = (value: string) => value === 'hidden' || value === 'clip';
+    const offenders: string[] = [];
+    for (const el of document.body.querySelectorAll<HTMLElement>('*')) {
+      if (el.closest('[data-air], .sr-only, .truncate')) continue;
+      if (!el.checkVisibility() || !(el.textContent ?? '').trim()) continue;
+      const style = getComputedStyle(el);
+      const wide =
+        clips(style.overflowX) && el.scrollWidth > el.clientWidth + 1;
+      const tall =
+        clips(style.overflowY) && el.scrollHeight > el.clientHeight + 1;
+      if (wide || tall) {
+        offenders.push(
+          `${el.tagName.toLowerCase()} "${(el.textContent ?? '').trim().slice(0, 30)}" ${el.scrollWidth}/${el.clientWidth}x${el.scrollHeight}/${el.clientHeight}`,
+        );
+      }
+    }
+    return offenders;
+  });
+}
+
+// Opens a page at rest (no rise-in motion), with Pune for the app pages but
+// Welcome, which opens fresh, and every details element open.
+export async function open(page: Page, path: string): Promise<void> {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  const withPlace = path.startsWith('/app') && path !== '/app/welcome';
+  await page.goto(withPlace ? at(path) : path);
+  await expect(page.locator('h1:visible').first()).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  for (const details of await page.locator('main details').all()) {
+    await details.evaluate((el) => {
+      (el as HTMLDetailsElement).open = true;
+    });
+  }
 }
