@@ -261,8 +261,8 @@ Every route below needs `Authorization: Bearer <Supabase access token>`. The tok
 
 | Route | Body / params | Success |
 |---|---|---|
-| `GET /api/v1/profile/preferences` | none | `200 { data: { context: HouseholdContext, updatedAt } \| null }` |
-| `PUT /api/v1/profile/preferences` | `HouseholdContext` (unknown fields → 400) | `200 { data: { context, updatedAt } }` |
+| `GET /api/v1/profile/preferences` | none | `200 { data: { context: HouseholdContext, place: SavedPlace \| null, updatedAt } \| null }` |
+| `PUT /api/v1/profile/preferences` | `{ context?: HouseholdContext, place?: SavedPlace \| null }`, at least one (unknown fields → 400) | `200 { data: { context, place, updatedAt } }` |
 | `GET /api/v1/plans` | none | `200 { data: [{ id, savedAt, placeLabel }] }`, newest first |
 | `GET /api/v1/plans/:id` | `id` uuid | `200 { data: { id, savedAt, plan: DailyPlan } }` |
 | `POST /api/v1/plans` | the daily-plan request body | `201 { data: { id, savedAt, plan } }` |
@@ -275,6 +275,12 @@ Every route below needs `Authorization: Bearer <Supabase access token>`. The tok
 - A missing plan and another user's plan both get `404 NOT_FOUND` "Saved plan not found." A non-uuid `id` gets 400.
 - A missing or invalid token → `401 UNAUTHENTICATED`. Saving not configured, or Supabase unreachable → `503 SAVE_UNAVAILABLE`.
 - A stored preferences row that no longer matches the household schema reads back as `null`.
+- **Preferences `PUT`** changes only the fields it sends. Omitted fields keep their saved values, and `place: null` forgets the place.
+- **`SavedPlace`** is `{ label, latitude, longitude }`, with the same rules as the daily-plan place:
+  - the label is up to 120 characters, with no control characters;
+  - coordinates have at most 2 decimals.
+
+  The client saves only a searched place, never a device location (D2).
 
 Not built: profiles, saved locations and plan feedback (P1).
 

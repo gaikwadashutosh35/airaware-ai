@@ -117,14 +117,14 @@ export function createSupabaseStore(options: {
             : null;
         },
 
-        async putPreferences(context) {
+        async putPreferences(doc) {
           const row = unwrap(
             await preferences()
-              .upsert({ user_id: userId, context })
+              .upsert({ user_id: userId, context: doc })
               .select('updated_at')
               .single<{ updated_at: string }>(),
           );
-          return { context, updatedAt: row.updated_at };
+          return { updatedAt: row.updated_at };
         },
 
         async listPlans() {

@@ -177,9 +177,23 @@ export interface DailyPlan {
 
 // Saved data (Phase 6). Stored per anonymous Supabase user; a saved plan is
 // a snapshot from `savedAt`, never current air information.
+// A searched place the person asked to remember (D2). Never a device location.
+export interface SavedPlace {
+  label: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface SavedPreferences {
   context: HouseholdContext;
+  place: SavedPlace | null;
   updatedAt: string;
+}
+
+// PUT body: only the fields sent change; `place: null` forgets the place.
+export interface PreferencesUpdate {
+  context?: HouseholdContext;
+  place?: SavedPlace | null;
 }
 
 export interface SavedPlanSummary {

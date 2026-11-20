@@ -2,8 +2,8 @@ import type {
   DailyPlan,
   HouseholdContext,
   SavedPlan,
+  SavedPlace,
   SavedPlanSummary,
-  SavedPreferences,
 } from '../../../../shared/contracts.ts';
 
 // Supabase could not be reached or failed: never treated as success or as
@@ -18,7 +18,10 @@ export class PlanLimitError extends Error {}
 export interface UserStore {
   // `context` is returned raw; the route checks it before use.
   getPreferences(): Promise<{ context: unknown; updatedAt: string } | null>;
-  putPreferences(context: HouseholdContext): Promise<SavedPreferences>;
+  // Replaces the row: the answers, plus a remembered place if any.
+  putPreferences(
+    doc: HouseholdContext & { place?: SavedPlace },
+  ): Promise<{ updatedAt: string }>;
   // Newest first.
   listPlans(): Promise<SavedPlanSummary[]>;
   getPlan(id: string): Promise<SavedPlan | null>;

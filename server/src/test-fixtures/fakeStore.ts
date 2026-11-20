@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   DailyPlan,
   HouseholdContext,
+  SavedPlace,
   SavedPlan,
 } from '../../../shared/contracts.ts';
 import {
@@ -47,12 +48,12 @@ export function createFakeStore() {
         guard();
         return preferences.get(userId) ?? null;
       },
-      async putPreferences(context: HouseholdContext) {
+      async putPreferences(doc: HouseholdContext & { place?: SavedPlace }) {
         guard();
         writes.push(`preferences:${userId}`);
-        const saved = { context, updatedAt: stamp() };
+        const saved = { context: doc as unknown, updatedAt: stamp() };
         preferences.set(userId, saved);
-        return saved;
+        return { updatedAt: saved.updatedAt };
       },
       async listPlans() {
         guard();

@@ -37,18 +37,20 @@ function coordinate(min: number, max: number) {
     .max(max)
     .refine((v) => Number(v.toFixed(2)) === v, 'At most 2 decimal places.');
 }
+// Also the remembered place in saved preferences.
+export const placeSchema: z.ZodType<PlanRequest['place']> = z.strictObject({
+  label: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    // No control characters: Postgres rejects NUL, after a planner run.
+    .regex(/^\P{Cc}*$/u, 'No control characters.'),
+  latitude: coordinate(-90, 90),
+  longitude: coordinate(-180, 180),
+});
 export const planRequestSchema: z.ZodType<PlanRequest> = z.strictObject({
-  place: z.strictObject({
-    label: z
-      .string()
-      .trim()
-      .min(1)
-      .max(120)
-      // No control characters: Postgres rejects NUL, after a planner run.
-      .regex(/^\P{Cc}*$/u, 'No control characters.'),
-    latitude: coordinate(-90, 90),
-    longitude: coordinate(-180, 180),
-  }),
+  place: placeSchema,
   householdContext: householdContextSchema.optional(),
 });
 

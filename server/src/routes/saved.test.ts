@@ -48,7 +48,7 @@ describe('saved preferences', () => {
     const put = await request(server)
       .put('/api/v1/profile/preferences')
       .set('Authorization', as('token-a'))
-      .send(context);
+      .send({ context });
     expect(put.status).toBe(200);
     const mine = await request(server)
       .get('/api/v1/profile/preferences')
@@ -73,6 +73,100 @@ describe('saved preferences', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
     expect(fake.writes).toEqual([]);
+  });
+
+  const PUNE = {
+    label: 'Pune, Maharashtra',
+    latitude: 18.52,
+    longitude: 73.86,
+  };
+  const put = (server: ReturnType<typeof app>, body: unknown) =>
+    request(server)
+      .put('/api/v1/profile/preferences')
+      .set('Authorization', as('token-a'))
+      .send(body as object);
+  const get = async (server: ReturnType<typeof app>) =>
+    (
+      await request(server)
+        .get('/api/v1/profile/preferences')
+        .set('Authorization', as('token-a'))
+    ).body.data;
+
+  it('saves a remembered place with the answers', async () => {
+    const server = app();
+    const res = await put(server, {
+      context: { home: { airPurifier: true } },
+      place: PUNE,
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toMatchObject({
+      context: { home: { airPurifier: true } },
+      place: PUNE,
+    });
+    expect(await get(server)).toMatchObject({
+      context: { home: { airPurifier: true } },
+      place: PUNE,
+    });
+  });
+
+  it('a place-only update keeps the saved answers', async () => {
+    const server = app();
+    await put(server, { context: { home: { airPurifier: true } } });
+    await put(server, { place: PUNE });
+    expect(await get(server)).toMatchObject({
+      context: { home: { airPurifier: true } },
+      place: PUNE,
+    });
+  });
+
+  it('a null place forgets it and keeps the answers', async () => {
+    const server = app();
+    await put(server, {
+      context: { home: { airPurifier: true } },
+      place: PUNE,
+    });
+    await put(server, { place: null });
+    expect(await get(server)).toMatchObject({
+      context: { home: { airPurifier: true } },
+      place: null,
+    });
+  });
+
+  it('an answers-only update keeps the remembered place', async () => {
+    const server = app();
+    await put(server, { context: {}, place: PUNE });
+    await put(server, { context: { routine: { outdoorExercise: true } } });
+    expect(await get(server)).toMatchObject({
+      context: { routine: { outdoorExercise: true } },
+      place: PUNE,
+    });
+  });
+
+  it('rejects a place with more than 2 decimals or control characters', async () => {
+    for (const place of [
+      { ...PUNE, latitude: 18.5204 },
+      { ...PUNE, label: 'Pune\u0000' },
+    ]) {
+      const res = await put(app(), { place });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    }
+    expect(fake.writes).toEqual([]);
+  });
+
+  it('rejects an empty update', async () => {
+    const res = await put(app(), {});
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(fake.writes).toEqual([]);
+  });
+
+  it('an old row without a place reads back with place null', async () => {
+    fake.seedPreferences('user-a', { home: { airPurifier: true } });
+    expect(await get(app())).toMatchObject({
+      context: { home: { airPurifier: true } },
+      place: null,
+    });
   });
 
   it('a stored context that fails the schema reads back as null', async () => {
@@ -187,7 +281,7 @@ describe('account and failures', () => {
     await request(server)
       .put('/api/v1/profile/preferences')
       .set('Authorization', as('token-a'))
-      .send({ home: { airPurifier: true } });
+      .send({ context: { home: { airPurifier: true } } });
     await request(server)
       .post('/api/v1/plans')
       .set('Authorization', as('token-a'))
