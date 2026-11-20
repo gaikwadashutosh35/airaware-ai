@@ -78,6 +78,41 @@
     line-height: 1.55;
   }
 
+  /* Phones: no grey flash on tap (controls show their own states), no
+     double-tap-zoom wait, and a long press doesn't select a button label.
+     Links and body text stay selectable. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  button,
+  summary,
+  input,
+  select,
+  label {
+    touch-action: manipulation;
+  }
+
+  button {
+    user-select: none;
+  }
+
+  /* Press feedback (DESIGN.md §9): a slight shrink while pressed, only when
+     motion is welcome. Disabled buttons stay still. `.press` gives a link
+     styled as a button the same feel. */
+  @media (prefers-reduced-motion: no-preference) {
+    button:not(:disabled),
+    .press {
+      transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    button:not(:disabled):active,
+    .press:active {
+      transform: scale(0.97);
+    }
+  }
+
   h1,
   h2,
   h3,

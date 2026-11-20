@@ -42,7 +42,7 @@ function ActionLink() {
   return (
     <a
       href="/app"
-      className="inline-flex min-h-12 items-center self-start rounded-full bg-primary px-6 font-semibold whitespace-nowrap text-bg transition-colors duration-150 hover:bg-text"
+      className="press inline-flex min-h-12 items-center self-start rounded-full bg-primary px-6 font-semibold whitespace-nowrap text-bg transition duration-150 hover:bg-text"
     >
       {ACTION}
     </a>

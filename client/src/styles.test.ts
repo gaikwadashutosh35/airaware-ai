@@ -35,4 +35,35 @@ describe('design system base', () => {
   it('the elevated surface token exists', () => {
     expect(css).toContain('--color-elevated: #172638;');
   });
+
+  it('presses scale only when motion is welcome', () => {
+    const start = css.indexOf('@media (prefers-reduced-motion: no-preference)');
+    expect(start).toBeGreaterThan(-1);
+    // The block ends at the first line that closes at its own indent.
+    const block = css.slice(start, css.indexOf('\n  }', start));
+    expect(block).toMatch(
+      /button:not\(:disabled\)[^{]*{[^}]*transition: transform 120ms cubic-bezier\(0\.23, 1, 0\.32, 1\)/,
+    );
+    expect(block).toMatch(
+      /button:not\(:disabled\):active[^{]*{[^}]*transform: scale\(0\.97\)/,
+    );
+    // No press scale anywhere else, so reduced motion and disabled stay still.
+    expect(css.split('scale(0.97)').length - 1).toBe(
+      block.split('scale(0.97)').length - 1,
+    );
+  });
+
+  it('phones show no grey tap flash and no tap delay', () => {
+    expect(css).toMatch(
+      /html\s*{[^}]*-webkit-tap-highlight-color: transparent;/,
+    );
+    expect(css).toMatch(
+      /a,\s*button,\s*summary,\s*input,\s*select,\s*label\s*{[^}]*touch-action: manipulation;/,
+    );
+  });
+
+  it("button labels can't be selected by a long press", () => {
+    expect(css).toMatch(/\bbutton\s*{[^}]*user-select: none;/);
+    expect(css).not.toMatch(/body\s*{[^}]*user-select: none/);
+  });
 });
