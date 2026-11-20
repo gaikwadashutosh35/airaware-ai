@@ -1,3 +1,4 @@
+import { CitySkyline } from '../features/air-quality/CitySkyline.tsx';
 import type { ApiError } from '../services/api.ts';
 
 const PULSE =
@@ -19,11 +20,12 @@ export function Loading({
     >
       <span className="sr-only">{label}</span>
       <div aria-hidden="true" className="flex flex-col">
+        {/* The skyline's own still silhouette, the same size as the scene,
+            so nothing shifts or hints at a result before it loads. */}
         {band && (
-          <div
-            data-part="skeleton-band"
-            className={`h-32 rounded-none sm:h-44 ${PULSE}`}
-          />
+          <div data-part="skeleton-band">
+            <CitySkyline scene={null} />
+          </div>
         )}
         <div className="flex flex-col gap-3 p-5 sm:p-8">
           <div className={`h-6 w-1/3 ${PULSE}`} />

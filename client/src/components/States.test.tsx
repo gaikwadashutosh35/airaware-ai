@@ -23,6 +23,17 @@ describe('Loading', () => {
     await expectNoAxeViolations(container);
   });
 
+  // Cityscape: the forecast band is the skyline's own silhouette, still and
+  // neutral, so nothing hints at a result before it loads.
+  it('the forecast band is a still skyline silhouette', () => {
+    const { container } = render(<Loading label="Loading forecast" band />);
+    const band = container.querySelector('[data-part="skeleton-band"]');
+    expect(band?.querySelector('svg[data-air="loading"]')).not.toBeNull();
+    expect(band!.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(band!.getAttribute('class') ?? '').not.toMatch(/animate-/);
+    expect(band!.querySelector('[class*="animate-"]')).toBeNull();
+  });
+
   it('the skeleton pulses only when motion is welcome', () => {
     const { container } = render(<Loading label="Loading forecast" />);
     const pulsing = [...container.querySelectorAll('.animate-pulse')];
