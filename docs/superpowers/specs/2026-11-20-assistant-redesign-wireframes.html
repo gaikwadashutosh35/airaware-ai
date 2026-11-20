@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AirAware Wireframes</title>
+    <style>
+      :root {
+        --bg: #080f1c;
+        --surface: #101c2b;
+        --elevated: #172638;
+        --light: #f5f8fa;
+        --primary: #39d5c2;
+        --text: #f4f7fa;
+        --ink: #182435;
+        --ink-muted: #4a5a6e;
+        --muted: #a9b7c8;
+        --rule: #d3dce6;
+        --warning: #f5b84b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 64px;
+        background: #e9eef3;
+        color: var(--ink);
+        font:
+          15px/1.45 Inter,
+          ui-sans-serif,
+          system-ui,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      h1.doc {
+        margin: 0 0 4px;
+        font-size: 28px;
+      }
+      .lede {
+        max-width: 760px;
+        margin: 0 0 8px;
+        color: var(--ink-muted);
+      }
+      section.screen {
+        margin-top: 48px;
+      }
+      section.screen > h2 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      section.screen > p {
+        max-width: 760px;
+        margin: 0 0 16px;
+        color: var(--ink-muted);
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+      figure {
+        min-width: 0;
+        max-width: 100%;
+        margin: 0;
+      }
+      figcaption {
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-muted);
+      }
+      .phone,
+      .desk {
+        overflow: hidden;
+        border: 1px solid #b9c4d0;
+        border-radius: 18px;
+        background: var(--light);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+      }
+      .phone {
+        width: 340px;
+        max-width: 100%;
+      }
+      .desk {
+        width: 1040px;
+        max-width: 100%;
+        border-radius: 10px;
+      }
+      .pad {
+        padding: 16px;
+      }
+      .stack > * + * {
+        margin-top: 12px;
+      }
+      .topbar {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        padding: 10px 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+      }
+      .topbar .logo {
+        font-weight: 700;
+      }
+      .topbar .nav {
+        display: flex;
+        gap: 4px;
+      }
+      .topbar .nav span {
+        padding: 6px 10px;
+        border-radius: 999px;
+        color: var(--muted);
+      }
+      .topbar .nav span.on {
+        background: var(--elevated);
+        color: var(--text);
+        font-weight: 700;
+        box-shadow: inset 0 -2px 0 var(--primary);
+      }
+      .chipplace {
+        margin-left: auto;
+        padding: 6px 12px;
+        border: 1px solid #3a4f68;
+        border-radius: 999px;
+        color: var(--text);
+        white-space: nowrap;
+      }
+      .phonebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .bottombar {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding: 6px 4px 14px;
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 11px;
+        text-align: center;
+      }
+      .bottombar div.on {
+        color: var(--text);
+        font-weight: 700;
+      }
+      .ico {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 22px;
+        margin: 0 auto 2px;
+        border-radius: 999px;
+        font-size: 11px;
+        border: 1px solid #3a4f68;
+      }
+      .on .ico {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--bg);
+      }
+      .scene {
+        display: grid;
+        place-items: center;
+        height: 110px;
+        border-radius: 10px;
+        background:
+          repeating-linear-gradient(90deg, #c4cfdb 0 18px, #b3c0ce 18px 30px)
+            bottom / 100% 46px no-repeat,
+          #dfe6ee;
+        color: var(--ink-muted);
+        font-size: 12px;
+      }
+      .greet {
+        font-size: 13px;
+        color: var(--ink-muted);
+      }
+      .h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .verdict {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 750;
+        line-height: 1.2;
+      }
+      .tag {
+        display: inline-block;
+        padding: 1px 8px;
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .small {
+        font-size: 12.5px;
+        color: var(--ink-muted);
+      }
+      .ph {
+        color: #7b8a9c;
+        font-style: italic;
+      }
+      .card {
+        padding: 14px;
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        background: #fff;
+      }
+      .card.focus {
+        border: 2px solid var(--ink);
+      }
+      .card h4 {
+        margin: 0 0 4px;
+        font-size: 15px;
+      }
+      .card p {
+        margin: 0;
+      }
+      .why {
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .sec {
+        margin: 6px 0 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .btn {
+        display: inline-block;
+        min-height: 44px;
+        padding: 11px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--ink);
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .btn.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--bg);
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .help {
+        min-height: 76px;
+        padding: 12px;
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        background: #fff;
+        font-weight: 650;
+        font-size: 14px;
+      }
+      .help span {
+        display: block;
+        margin-top: 2px;
+        font-weight: 400;
+        font-size: 12px;
+        color: var(--ink-muted);
+      }
+      .input {
+        min-height: 46px;
+        padding: 12px;
+        border: 1px solid var(--ink);
+        border-radius: 10px;
+        background: #fff;
+        color: #7b8a9c;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip {
+        padding: 8px 12px;
+        border: 1px solid var(--ink-muted);
+        border-radius: 999px;
+        font-size: 13px;
+        background: #fff;
+      }
+      .chip.sel {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .details {
+        padding: 12px 14px;
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        background: #fff;
+        font-weight: 650;
+      }
+      .banner {
+        padding: 8px 10px;
+        border: 1px solid var(--warning);
+        border-radius: 8px;
+        background: rgb(245 184 75 / 0.15);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .skel {
+        height: 14px;
+        border-radius: 6px;
+        background: #dfe6ee;
+      }
+      .bubble {
+        margin-left: auto;
+        max-width: 80%;
+        padding: 10px 12px;
+        border-radius: 14px 14px 4px 14px;
+        background: var(--ink);
+        color: #fff;
+        font-size: 14px;
+      }
+      .steps {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink-muted);
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      .dark {
+        background: var(--bg);
+        color: var(--text);
+      }
+      .dark .small,
+      .dark .ph {
+        color: var(--muted);
+      }
+      .dark .card {
+        background: var(--light);
+        color: var(--ink);
+      }
+      .land {
+        padding: 36px 40px;
+        border-bottom: 1px solid var(--elevated);
+      }
+      .land h3 {
+        margin: 0 0 6px;
+        font-size: 26px;
+      }
+      .shot {
+        display: grid;
+        place-items: center;
+        min-height: 150px;
+        border: 1px dashed var(--muted);
+        border-radius: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+        padding: 12px;
+      }
+      .flow {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .flow span {
+        padding: 8px 12px;
+        border: 1px solid var(--elevated);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+      @media (max-width: 720px) {
+        .two,
+        .grid4 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="doc">AirAware: assistant redesign wireframes</h1>
+    <p class="lede">
+      Low-fidelity layouts for owner review, Phase 1. Text in
+      <span class="ph">[brackets]</span> is live data filled by the app; no real
+      readings are shown here. Card titles and texts are the real rule cards
+      from <code>rules.ts</code>. Spec:
+      <code>2026-11-20-assistant-redesign-design.md</code>.
+    </p>
+
+    <!-- 1. TODAY -->
+    <section class="screen">
+      <h2>1. Today: one situation, one action</h2>
+      <p>
+        The verdict is the largest text. One recommendation shows without a
+        button. Everything technical folds into "Air quality details". The
+        bottom bar (phone) and top bar (desktop) appear on every app page.
+      </p>
+      <div class="row">
+        <figure>
+          <figcaption>Phone, first screen and scroll</figcaption>
+          <div class="phone">
+            <div class="phonebar">
+              <b>AirAware</b><span class="chipplace">Pune, Maharashtra ▾</span>
+            </div>
+            <div class="pad stack">
+              <div>
+                <div class="greet">Good morning</div>
+                <p class="h1">Today in Pune, Maharashtra</p>
+              </div>
+              <div class="scene">[skyline: haze follows the 24-hour check]</div>
+              <p class="verdict">Forecast within India's 24-hour limits</p>
+              <div>
+                <span class="tag">Within the limit</span>
+                <span class="small">
+                  Model forecast · Open-Meteo · updated
+                  <span class="ph">[8:15 AM]</span></span
+                >
+              </div>
+              <p class="small">
+                Fine and coarse particles are forecast below the national daily
+                limits for the next 24 hours. Within the limit doesn't mean the
+                air is clean or free of risk.
+              </p>
+              <p class="sec">Your recommendation for today</p>
+              <div class="card focus">
+                <h4>Cut indoor smoke at the source</h4>
+                <p>
+                  Incense, mosquito coils, candles and tobacco all add smoke
+                  indoors. Using them less, or not indoors, is the simplest
+                  indoor-air step.
+                </p>
+                <p class="small" style="margin-top: 6px">
+                  <b>For you:</b>
+                  <span class="ph">[one line, from your answers]</span>
+                </p>
+                <div class="why">▸ Why this recommendation?</div>
+              </div>
+              <div class="details">▸ See your full day</div>
+              <p class="sec">What would you like help with?</p>
+              <div class="grid2">
+                <div class="help">
+                  Outdoor activities<span>Walks, exercise, commutes</span>
+                </div>
+                <div class="help">
+                  My home<span>Cooking, windows, purifiers</span>
+                </div>
+                <div class="help">
+                  My family<span>Children, older adults, school runs</span>
+                </div>
+                <div class="help">
+                  Greener habits<span>Small swaps that cut smoke</span>
+                </div>
+              </div>
+              <p class="sec">Ask AirAware anything</p>
+              <div class="input">Can I go for a morning walk today?</div>
+              <div class="chips">
+                <span class="chip">Open my windows?</span>
+                <span class="chip">Improve indoor air</span>
+                <span class="chip">Children outdoors</span>
+              </div>
+              <div class="details">▸ Air quality details</div>
+            </div>
+            <div class="bottombar">
+              <div class="on"><span class="ico">☀</span>Today</div>
+              <div><span class="ico">A</span>Ask</div>
+              <div><span class="ico">H</span>Home</div>
+              <div><span class="ico">B</span>Habits</div>
+              <div><span class="ico">P</span>Profile</div>
+            </div>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Desktop (1280 px)</figcaption>
+          <div class="desk">
+            <div class="topbar">
+              <span class="logo">AirAware</span>
+              <span class="nav"
+                ><span class="on">Today</span><span>Ask AirAware</span
+                ><span>My Home</span><span>Better Habits</span
+                ><span>My Profile</span></span
+              >
+              <span class="chipplace">Pune, Maharashtra ▾</span>
+            </div>
+            <div class="pad stack" style="padding: 24px 32px">
+              <div>
+                <div class="greet">Good morning</div>
+                <p class="h1">Today in Pune, Maharashtra</p>
+              </div>
+              <div class="two">
+                <div class="stack">
+                  <div class="scene" style="height: 150px">
+                    [skyline: haze follows the 24-hour check]
+                  </div>
+                  <p class="verdict">Forecast within India's 24-hour limits</p>
+                  <div>
+                    <span class="tag">Within the limit</span>
+                    <span class="small"
+                      >Model forecast · Open-Meteo · updated
+                      <span class="ph">[8:15 AM]</span></span
+                    >
+                  </div>
+                  <p class="small">
+                    Fine and coarse particles are forecast below the national
+                    daily limits for the next 24 hours. Within the limit doesn't
+                    mean the air is clean or free of risk.
+                  </p>
+                </div>
+                <div class="stack">
+                  <p class="sec" style="margin: 0">
+                    Your recommendation for today
+                  </p>
+                  <div class="card focus">
+                    <h4>Cut indoor smoke at the source</h4>
+                    <p>
+                      Incense, mosquito coils, candles and tobacco all add smoke
+                      indoors. Using them less, or not indoors, is the simplest
+                      indoor-air step.
+                    </p>
+                    <div class="why">▸ Why this recommendation?</div>
+                  </div>
+                  <div class="details">▸ See your full day</div>
+                </div>
+              </div>
+              <p class="sec">What would you like help with?</p>
+              <div class="grid4">
+                <div class="help">
+                  Outdoor activities<span>Walks, exercise, commutes</span>
+                </div>
+                <div class="help">
+                  My home<span>Cooking, windows, purifiers</span>
+                </div>
+                <div class="help">
+                  My family<span>Children, older adults, school runs</span>
+                </div>
+                <div class="help">
+                  Greener habits<span>Small swaps that cut smoke</span>
+                </div>
+              </div>
+              <p class="sec">Ask AirAware anything</p>
+              <div class="two">
+                <div class="input">Can I go for a morning walk today?</div>
+                <div class="chips">
+                  <span class="chip">Open my windows?</span>
+                  <span class="chip">Improve indoor air</span>
+                  <span class="chip">Children outdoors</span>
+                </div>
+              </div>
+              <div class="details">▸ Air quality details</div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 2. DETAILS AND STATES -->
+    <section class="screen">
+      <h2>2. Air quality details and Today's states</h2>
+      <p>
+        Details hold every technical part, unchanged. States keep the verdict
+        honest: stale is never hidden, and missing data says so.
+      </p>
+      <div class="row">
+        <figure>
+          <figcaption>Details open</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <div class="details">▾ Air quality details</div>
+              <p class="small">
+                PM2.5 <b class="ph">[value] µg/m³</b> · model forecast for
+                <span class="ph">[hour, with time zone]</span>
+              </p>
+              <div
+                class="scene"
+                style="
+                  height: 70px;
+                  background: #fff;
+                  border: 1px solid var(--rule);
+                "
+              >
+                [48-hour chart + its text summary]
+              </div>
+              <div class="card small">
+                [pollutant table: PM2.5, PM10, NO₂, SO₂, O₃, CO, with units and
+                the 24-hour check] · ▸ Hourly forecast (48 hours)
+              </div>
+              <p class="small">
+                <b>How the 24-hour check works:</b> India's 24-hour limits are
+                60 µg/m³ for PM2.5 and 100 µg/m³ for PM10. We don't calculate an
+                AQI.
+              </p>
+              <p class="small">
+                Open-Meteo, CAMS global forecast, about 45 km grid. Model run
+                time not reported. Retrieved <span class="ph">[time]</span>.
+              </p>
+              <p class="small">
+                Official CPCB observations are not connected yet.
+              </p>
+              <p class="small">
+                <b>Sources and limitations</b>
+                <span class="ph">[3 sources, 4–5 distinct limits]</span>
+              </p>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>Stale, and recommendation loading</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <p class="verdict">Forecast within India's 24-hour limits</p>
+              <div class="banner">
+                Not current: retrieved more than an hour ago. Reload for the
+                latest forecast.
+              </div>
+              <p class="sec">Your recommendation for today</p>
+              <div class="card stack" aria-label="Finding your recommendation">
+                <div class="small">Finding your recommendation…</div>
+                <div class="skel" style="width: 60%"></div>
+                <div class="skel"></div>
+                <div class="skel" style="width: 80%"></div>
+              </div>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>No air data</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <p class="verdict">Live air information unavailable</p>
+              <p class="small">
+                We could not get a complete 24-hour forecast for this place, so
+                there's no advice about today's air. The suggestions below apply
+                on any day.
+              </p>
+              <span class="btn">Try again</span>
+              <p class="sec">Your recommendation for today</p>
+              <div class="card">
+                <h4>Cut indoor smoke at the source</h4>
+                <p>
+                  Incense, mosquito coils, candles and tobacco all add smoke
+                  indoors. Using them less, or not indoors, is the simplest
+                  indoor-air step.
+                </p>
+                <div class="why">▸ Why this recommendation?</div>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 3. ONBOARDING -->
+    <section class="screen">
+      <h2>3. Onboarding: three short, skippable steps</h2>
+      <p>
+        Shown on a first visit or when no place is chosen. Steps 2 and 3 can be
+        skipped. Nothing is saved unless "Remember on this device" is ticked. On
+        desktop, the same steps sit in a centred 560 px column.
+      </p>
+      <div class="row">
+        <figure>
+          <figcaption>Step 1</figcaption>
+          <div class="phone">
+            <div class="phonebar"><b>AirAware</b></div>
+            <div class="pad stack">
+              <div class="steps">Step 1 of 3</div>
+              <p class="h1">Where should we check air quality?</p>
+              <div class="small">Search for a city or area in India</div>
+              <div class="input">Type at least 2 letters…</div>
+              <span class="btn">Use my location</span>
+              <p class="small">
+                Your browser asks first. Your location is rounded to about 1 km
+                before it leaves your browser.
+              </p>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>Step 2</figcaption>
+          <div class="phone">
+            <div class="phonebar"><b>AirAware</b></div>
+            <div class="pad stack">
+              <div class="steps">Step 2 of 3 · ‹ Back</div>
+              <p class="h1">What does your typical day look like?</p>
+              <p class="small">Choose any that fit. All optional.</p>
+              <div class="chips">
+                <span class="chip sel">Office commute</span>
+                <span class="chip">School commute</span>
+                <span class="chip sel">Outdoor exercise</span>
+                <span class="chip">Work from home</span>
+              </div>
+              <div class="small"><b>How do you usually travel?</b></div>
+              <div class="chips">
+                <span class="chip">Walk</span><span class="chip">Cycle</span
+                ><span class="chip sel">Two-wheeler</span
+                ><span class="chip">Car</span
+                ><span class="chip">Public transport</span>
+              </div>
+              <div class="row" style="gap: 10px">
+                <span class="btn primary">Next</span
+                ><span class="btn">Skip</span>
+              </div>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>Step 3</figcaption>
+          <div class="phone">
+            <div class="phonebar"><b>AirAware</b></div>
+            <div class="pad stack">
+              <div class="steps">Step 3 of 3 · ‹ Back</div>
+              <p class="h1">Tell us a little about your home.</p>
+              <div class="small"><b>What do you mostly cook with?</b></div>
+              <div class="chips">
+                <span class="chip sel">LPG</span
+                ><span class="chip">Electric</span
+                ><span class="chip">Wood, coal or crop waste</span
+                ><span class="chip">Other</span
+                ><span class="chip">Prefer not to say</span>
+              </div>
+              <div class="small">
+                <b>Kitchen exhaust or chimney?</b> <span class="chip">Yes</span>
+                <span class="chip">No</span>
+              </div>
+              <div class="small">
+                <b>Air purifier?</b> <span class="chip">Yes</span>
+                <span class="chip">No</span>
+              </div>
+              <div class="small">
+                <b>Near a busy road?</b> <span class="chip">Yes</span>
+                <span class="chip">No</span> <span class="chip">Not sure</span>
+              </div>
+              <div class="small">
+                ☐ <b>Remember on this device</b><br />Creates an anonymous save
+                on this device. Delete it any time in My Profile.
+              </div>
+              <div class="row" style="gap: 10px">
+                <span class="btn primary">See my air</span
+                ><span class="btn">Skip</span>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 4. ASK -->
+    <section class="screen">
+      <h2>4. Ask AirAware: guided questions, answers from the rules</h2>
+      <p>
+        Questions are matched to the existing advice cards and today's forecast.
+        AI only writes the 2–3 sentence answer, under the same checks as the
+        daily plan. Never yes or no on safety. Nothing typed here is saved or
+        logged.
+      </p>
+      <div class="row">
+        <figure>
+          <figcaption>Before a question</figcaption>
+          <div class="phone">
+            <div class="phonebar">
+              <b>AirAware</b><span class="chipplace">Pune, Maharashtra ▾</span>
+            </div>
+            <div class="pad stack">
+              <p class="h1">Ask AirAware</p>
+              <p class="small">
+                Using: the Pune model forecast, updated
+                <span class="ph">[8:15 AM]</span> ·
+                <span class="ph">[3]</span> of 10 answers · <u>Edit</u>
+              </p>
+              <div class="chips">
+                <span class="chip sel">Outdoor activities</span
+                ><span class="chip">Windows and ventilation</span
+                ><span class="chip">Indoor air</span
+                ><span class="chip">My family</span
+                ><span class="chip">Commuting</span
+                ><span class="chip">Greener habits</span>
+              </div>
+              <div class="card">Can I go for a morning walk today?</div>
+              <div class="card">
+                How can I reduce pollution while commuting?
+              </div>
+              <div class="card">Is it a good idea to open my windows?</div>
+              <div class="small">Ask about your air, home or day</div>
+              <div class="row" style="gap: 8px; flex-wrap: nowrap">
+                <div class="input" style="flex: 1">Type a question…</div>
+                <span class="btn primary">Send</span>
+              </div>
+            </div>
+            <div class="bottombar">
+              <div><span class="ico">☀</span>Today</div>
+              <div class="on"><span class="ico">A</span>Ask</div>
+              <div><span class="ico">H</span>Home</div>
+              <div><span class="ico">B</span>Habits</div>
+              <div><span class="ico">P</span>Profile</div>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>An answer</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <div class="bubble">Can I go for a morning walk today?</div>
+              <div class="card stack">
+                <p>
+                  <span class="ph"
+                    >[2–3 sentences: what the forecast shows this morning and
+                    what the cards below suggest. Never "yes, it's safe".]</span
+                  >
+                </p>
+                <p class="small">Made with AI · advice from our fixed rules</p>
+                <p class="small">
+                  <b>Based on:</b> Forecast within India's 24-hour limits ·
+                  Model forecast · updated <span class="ph">[8:15 AM]</span>
+                </p>
+              </div>
+              <div class="card">
+                <h4>Check conditions before outdoor exercise</h4>
+                <p>
+                  Before a long or hard outdoor session, check local air-quality
+                  updates and advisories.
+                </p>
+                <div class="why">▸ Why?</div>
+              </div>
+              <div class="card">
+                <p class="ph">
+                  [general guide card for outdoor plans, neutral wording with
+                  sources (decision G1)]
+                </p>
+                <div class="why">▸ Why?</div>
+              </div>
+              <p class="small">
+                General information only, not medical advice. Follow local
+                public-health advisories.
+              </p>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>Thinking, and a medical question</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <div class="bubble">Is it a good idea to open my windows?</div>
+              <div class="card stack">
+                <div class="small">AirAware is thinking…</div>
+                <div class="skel"></div>
+                <div class="skel" style="width: 70%"></div>
+              </div>
+              <div class="bubble">Should I change my child's inhaler dose?</div>
+              <div class="card">
+                <p>
+                  I can't give medical advice. For health concerns, please talk
+                  to a doctor.
+                </p>
+                <p class="small" style="margin-top: 6px">
+                  Today: Forecast within India's 24-hour limits · Model forecast
+                </p>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 5. HOME + HABITS -->
+    <section class="screen">
+      <h2>5. My Home and Better Habits</h2>
+      <p>
+        Today's cards for you first, then evergreen advice grouped by topic.
+        "Why it matters" opens the same reason, sources and caveat as "Why?".
+        Groups marked <b>new</b> need new cards with cited sources (D4), shown
+        to you before they ship.
+      </p>
+      <div class="row">
+        <figure>
+          <figcaption>My Home</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <p class="h1">My Home</p>
+              <p class="sec">Today, for your home</p>
+              <div class="card">
+                <h4>Use the kitchen exhaust while cooking</h4>
+                <p>
+                  Switch the exhaust on before you start cooking and leave it
+                  running for a few minutes after.
+                </p>
+                <div class="why">▸ Why it matters</div>
+              </div>
+              <p class="sec">Ways to improve indoor air</p>
+              <div class="details">▸ Cooking and smoke · 3</div>
+              <div class="details">▸ Ventilation · 1 + new</div>
+              <div class="details">▸ Dust and cleaning · new</div>
+              <div class="details">▸ Indoor habits · 1</div>
+              <div class="details">▸ Filtration · 1 + new</div>
+              <div class="details">▸ Near a busy road · 1</div>
+            </div>
+            <div class="bottombar">
+              <div><span class="ico">☀</span>Today</div>
+              <div><span class="ico">A</span>Ask</div>
+              <div class="on"><span class="ico">H</span>Home</div>
+              <div><span class="ico">B</span>Habits</div>
+              <div><span class="ico">P</span>Profile</div>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>Better Habits</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <p class="h1">Better Habits</p>
+              <p class="small">
+                Small, realistic swaps. We never show an emissions saving we
+                can't calculate.
+              </p>
+              <p class="sec">Daily commuting and idling</p>
+              <div class="card">
+                <h4>Combine trips and avoid idling</h4>
+                <p>
+                  Combining errands into one trip and switching off the engine
+                  while waiting cut your vehicle's exhaust. For some trips,
+                  public transport, carpooling, walking or cycling may also be
+                  practical.
+                </p>
+                <div class="why">▸ Why it matters</div>
+              </div>
+              <p class="sec">Waste</p>
+              <div class="card">
+                <h4>Don't burn waste or leaves</h4>
+                <div class="why">▸ Why it matters</div>
+              </div>
+              <p class="sec">Cooking</p>
+              <div class="card">
+                <h4>Consider a cleaner cooking fuel where possible</h4>
+                <div class="why">▸ Why it matters</div>
+              </div>
+              <p class="sec">Energy use</p>
+              <div class="card ph">[new cards with cited sources, D4]</div>
+            </div>
+            <div class="bottombar">
+              <div><span class="ico">☀</span>Today</div>
+              <div><span class="ico">A</span>Ask</div>
+              <div><span class="ico">H</span>Home</div>
+              <div class="on"><span class="ico">B</span>Habits</div>
+              <div><span class="ico">P</span>Profile</div>
+            </div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>My Profile</figcaption>
+          <div class="phone">
+            <div class="pad stack">
+              <p class="h1">My Profile</p>
+              <p class="sec">Your answers</p>
+              <div class="details">▸ Your routine · 2 of 3 answered</div>
+              <div class="details">▸ Your home · 1 of 4 answered</div>
+              <div class="details">▸ Who lives with you · 0 of 3 answered</div>
+              <span class="btn">Save my answers</span>
+              <p class="sec">Your place</p>
+              <div class="card">
+                Pune, Maharashtra · <u>Forget this place</u>
+              </div>
+              <p class="sec">Saved plans</p>
+              <div class="card small">
+                No saved plans yet. Save one from Today.
+              </div>
+              <p class="sec">Your data</p>
+              <span class="btn">Delete my saved data</span>
+              <p class="small">
+                <u>Privacy</u> · <u>Sources and limitations</u>
+              </p>
+            </div>
+            <div class="bottombar">
+              <div><span class="ico">☀</span>Today</div>
+              <div><span class="ico">A</span>Ask</div>
+              <div><span class="ico">H</span>Home</div>
+              <div><span class="ico">B</span>Habits</div>
+              <div class="on"><span class="ico">P</span>Profile</div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 6. LANDING -->
+    <section class="screen">
+      <h2>6. Landing: eight sections</h2>
+      <p>
+        Benefits before plumbing. Two buttons in the hero, one at the end.
+        Screenshots are real captures of the new app, labelled as past
+        screenshots with their date. Built after Today, so the screenshots show
+        the new design.
+      </p>
+      <div class="desk dark">
+        <div class="land two">
+          <div class="stack">
+            <h3 style="font-size: 40px; line-height: 1.05">
+              The air around you matters.
+            </h3>
+            <p class="small" style="font-size: 15px">
+              Understand your city's air quality. Discover smarter daily
+              routines. Make better choices for your home and community.
+            </p>
+            <div class="row" style="gap: 10px">
+              <span class="btn primary">Check My Air</span>
+              <span class="btn" style="border-color: var(--text)"
+                >Meet Your Assistant</span
+              >
+            </div>
+            <div class="small">Or search a city</div>
+            <div class="input" style="max-width: 320px">
+              Search for a city or area in India
+            </div>
+          </div>
+          <div class="shot">
+            [Screenshot of the new Today page]<br />"A past screenshot of the
+            dashboard for <span class="ph">[place, date]</span>. Open the
+            dashboard for current values."
+          </div>
+        </div>
+        <div class="land two">
+          <div>
+            <h3>Understand your air</h3>
+            <p class="small">
+              One sentence on today's forecast, the "Model forecast" label, and
+              every number one tap away.
+            </p>
+          </div>
+          <div class="shot">[Screenshot: verdict + details open]</div>
+        </div>
+        <div class="land two">
+          <div>
+            <h3>Your personal daily plan</h3>
+            <p class="small">Existing chapter.</p>
+          </div>
+          <div class="card">
+            <h4>Check conditions before outdoor exercise</h4>
+            <p>
+              Before a long or hard outdoor session, check local air-quality
+              updates and advisories.
+            </p>
+          </div>
+        </div>
+        <div class="land two">
+          <div>
+            <h3>Improve indoor air</h3>
+            <p class="small">Existing chapter.</p>
+          </div>
+          <div class="card"><h4>Use the kitchen exhaust while cooking</h4></div>
+        </div>
+        <div class="land two">
+          <div>
+            <h3>Sustainable everyday choices</h3>
+            <p class="small">Existing chapter.</p>
+          </div>
+          <div class="card"><h4>Combine trips and avoid idling</h4></div>
+        </div>
+        <div class="land two">
+          <div>
+            <h3>Explainable AI</h3>
+            <p class="small">
+              Existing "See why" chapter, with "Why?" open: reason, inputs,
+              sources, caveat.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Run your air purifier where people spend most time</h4>
+            <div class="why">▾ Why? [open]</div>
+          </div>
+        </div>
+        <div class="land">
+          <h3>How AirAware works</h3>
+          <div class="flow">
+            <span>CAMS global model</span>→<span>Open-Meteo</span>→<span
+              >AirAware server</span
+            >→<span>Your screen</span>
+          </div>
+          <p class="small" style="margin-top: 12px">
+            Forecasts are model estimates, not station measurements, and not the
+            CPCB National AQI. Official CPCB observations are not connected yet.
+          </p>
+        </div>
+        <div class="land" style="border: 0">
+          <h3>Your city, the next two days</h3>
+          <span class="btn primary">Check My Air</span>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
