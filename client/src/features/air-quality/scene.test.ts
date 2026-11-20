@@ -124,6 +124,16 @@ describe('sceneFromConditions', () => {
     expect(glow(UNKNOWN, {})).toBe(false);
   });
 
+  // Final review: "known weather" means the sky and rain are known too; an
+  // unknown cover could be overcast, an unknown amount could be rain.
+  it('the glow needs a known sky and rain', () => {
+    const glow = (fields: Partial<WeatherNow>) =>
+      sceneFromConditions(WITHIN, weather(fields)).glow;
+    expect(glow({ cloudCoverPercent: null })).toBe(false);
+    expect(glow({ precipitationMm: null })).toBe(false);
+    expect(glow({})).toBe(true);
+  });
+
   // My call 2: weather cached before the field existed has no isDay.
   it('a weather object without isDay draws no glow', () => {
     const old: Partial<WeatherNow> = weather();

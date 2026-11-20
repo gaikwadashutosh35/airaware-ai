@@ -51,7 +51,15 @@ export function sceneFromConditions(
     // Rain wins: one animated layer at most.
     heat: !rain && (weather?.temperatureC ?? -Infinity) >= HOT_C,
     fog: (weather?.visibilityM ?? Infinity) < FOG_M,
-    // A missing isDay (weather cached before the field) counts as unknown.
-    glow: weather?.isDay === true && air !== 'unknown' && !rain && clouds < 3,
+    // Daylight on a known sky: a known day (a missing isDay, from weather
+    // cached before the field, counts as unknown), known cover and rain
+    // amount, no overcast or rain, and known air.
+    glow:
+      weather?.isDay === true &&
+      weather.cloudCoverPercent !== null &&
+      weather.precipitationMm !== null &&
+      air !== 'unknown' &&
+      !rain &&
+      clouds < 3,
   };
 }
