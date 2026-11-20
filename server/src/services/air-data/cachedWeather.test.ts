@@ -17,6 +17,7 @@ function hourOf(now: Date): WeatherNow {
     precipitationProbability: 10,
     cloudCoverPercent: 20,
     visibilityM: 20000,
+    isDay: true,
     retrievedAt: now.toISOString(),
   };
 }

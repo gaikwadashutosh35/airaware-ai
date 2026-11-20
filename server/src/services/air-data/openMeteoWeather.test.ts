@@ -51,7 +51,7 @@ describe('fetchWeather', () => {
     expect(url.searchParams.get('latitude')).toBe('18.52');
     expect(url.searchParams.get('longitude')).toBe('73.86');
     expect(url.searchParams.get('hourly')).toBe(
-      'temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility',
+      'temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day',
     );
     expect(url.searchParams.get('timeformat')).toBe('unixtime');
     expect(url.searchParams.get('forecast_hours')).toBe('3');
@@ -66,8 +66,20 @@ describe('fetchWeather', () => {
       precipitationProbability: 20,
       cloudCoverPercent: 85,
       visibilityM: 24140,
+      isDay: null,
       retrievedAt: NOW.toISOString(),
     });
+  });
+
+  // Cityscape D3: is_day is a point value for the hour, so it comes from
+  // this hour's row (unlike the precipitation sums).
+  it('reads day and night for the hour', async () => {
+    respond(body(T10, { is_day: [1, 0, 0] }));
+    expect((await fetchWeather(18.52, 73.86, NOW))?.isDay).toBe(true);
+    respond(body(T10, { is_day: [0, 1, 1] }));
+    expect((await fetchWeather(18.52, 73.86, NOW))?.isDay).toBe(false);
+    respond(body());
+    expect((await fetchWeather(18.52, 73.86, NOW))?.isDay).toBeNull();
   });
 
   // Review A2 #1: Open-Meteo sums precipitation (and its chance) over the

@@ -117,6 +117,8 @@ export interface WeatherNow {
   precipitationProbability: number | null;
   cloudCoverPercent: number | null;
   visibilityM: number | null;
+  // Open-Meteo's is_day for this hour: true by day, false at night.
+  isDay: boolean | null;
   retrievedAt: string;
 }
 

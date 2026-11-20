@@ -14,6 +14,7 @@ const VARIABLES = [
   'precipitation_probability',
   'cloud_cover',
   'visibility',
+  'is_day',
 ] as const;
 
 const column = z.array(z.number().nullable()).optional();
@@ -26,6 +27,7 @@ const rawWeather = z
       precipitation_probability: column,
       cloud_cover: column,
       visibility: column,
+      is_day: column,
     }),
   })
   .refine(({ hourly }) =>
@@ -70,6 +72,8 @@ export async function fetchWeather(
     precipitationProbability: at('precipitation_probability', i + 1),
     cloudCoverPercent: at('cloud_cover'),
     visibilityM: at('visibility'),
+    // A point value for this hour (1 day, 0 night), unlike the sums above.
+    isDay: at('is_day') === null ? null : at('is_day') === 1,
     retrievedAt: now.toISOString(),
   };
 }

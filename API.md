@@ -134,6 +134,7 @@ interface WeatherNow {
   precipitationProbability: number | null;
   cloudCoverPercent: number | null;
   visibilityM: number | null;
+  isDay: boolean | null; // Open-Meteo is_day for this hour
   retrievedAt: string;
 }
 

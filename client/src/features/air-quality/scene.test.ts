@@ -32,6 +32,7 @@ const weather = (fields: Partial<WeatherNow> = {}): WeatherNow => ({
   precipitationProbability: 0,
   cloudCoverPercent: 0,
   visibilityM: 20000,
+  isDay: true,
   retrievedAt: '2026-11-18T10:05:00.000Z',
   ...fields,
 });

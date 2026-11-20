@@ -73,6 +73,8 @@ export const forecastFixture: ForecastData = {
     precipitationProbability: 10,
     cloudCoverPercent: 30,
     visibilityM: 24140,
+    // 17:00 UTC is 22:30 in Pune.
+    isDay: false,
     retrievedAt: '2026-11-17T17:05:00.000Z',
   },
 };
