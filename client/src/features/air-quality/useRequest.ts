@@ -14,7 +14,7 @@ export type RequestState<T> =
 export function useRequest<T>(
   key: string | null,
   load: (signal: AbortSignal) => Promise<T>,
-): { state: RequestState<T>; retry: () => void } {
+): { state: RequestState<T>; retry: () => void; previous: T | null } {
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<{
     token: string;
@@ -63,5 +63,13 @@ export function useRequest<T>(
         ? settled.state
         : { status: 'loading' };
 
-  return { state, retry: () => setAttempt((n) => n + 1) };
+  // While a retry for the same key loads, the data it will replace.
+  const previous =
+    state.status === 'loading' &&
+    settled?.state.status === 'ready' &&
+    settled.token.slice(0, settled.token.lastIndexOf('#')) === key
+      ? settled.state.data
+      : null;
+
+  return { state, retry: () => setAttempt((n) => n + 1), previous };
 }

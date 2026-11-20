@@ -1,7 +1,9 @@
 import type {
   AirAssessment,
+  ForecastData,
   WeatherNow,
 } from '../../../../shared/contracts.ts';
+import { NEAR_YOU } from '../location/place.ts';
 
 // The skyline's look, from the server's 24-hour check only (cityscape D1):
 // no averages, ratios or thresholds of our own.
@@ -62,4 +64,33 @@ export function sceneFromConditions(
       !rain &&
       clouds < 3,
   };
+}
+
+// The app backdrop with nothing to show: no place yet, or the forecast
+// failed. Neutral, so it implies nothing about the air.
+export const NEUTRAL: Scene = {
+  air: 'unknown',
+  clouds: 0,
+  rain: false,
+  heat: false,
+  fog: false,
+  glow: false,
+};
+
+// What the app backdrop draws (backdrop design §5.2). `shown` is the ready
+// forecast, or the one a same-place reload will replace; null with
+// `loading` is a place's first load, drawn as the still silhouette.
+export function backdropScene(
+  shown: ForecastData | null,
+  loading: boolean,
+): Scene | null {
+  if (shown) return sceneFromConditions(shown.airCheck, shown.weather);
+  return loading ? null : NEUTRAL;
+}
+
+// The footer's word on where the backdrop's look comes from (§5.5).
+export function backdropNote(placeLabel: string, stale: boolean): string {
+  const where =
+    placeLabel === NEAR_YOU ? 'near you (approximate)' : `for ${placeLabel}`;
+  return `Background: model forecast ${where}.${stale ? ' Not current.' : ''}`;
 }

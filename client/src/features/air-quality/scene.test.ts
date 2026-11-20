@@ -3,7 +3,14 @@ import type {
   AirAssessment,
   WeatherNow,
 } from '../../../../shared/contracts.ts';
-import { sceneFromConditions } from './scene.ts';
+import { forecastFixture } from '../../test/fixtures.ts';
+import { NEAR_YOU } from '../location/place.ts';
+import {
+  NEUTRAL,
+  backdropNote,
+  backdropScene,
+  sceneFromConditions,
+} from './scene.ts';
 
 const air = (pm25: number | null): AirAssessment => ({
   level: pm25 === null ? 'unknown' : pm25 > 60 ? 'elevated' : 'not_elevated',
@@ -172,6 +179,46 @@ describe('sceneFromConditions', () => {
       expect(weatherOf(scenes[1]!)).toEqual(weatherOf(scenes[0]!));
       expect(weatherOf(scenes[2]!)).toEqual(weatherOf(scenes[0]!));
     }
+  });
+
+  // Backdrop design §5.2.
+  it('backdrop: the silhouette only while a first forecast loads', () => {
+    expect(backdropScene(null, true)).toBeNull();
+  });
+
+  it('backdrop: neutral with no forecast or on error', () => {
+    expect(backdropScene(null, false)).toEqual(NEUTRAL);
+    expect(NEUTRAL).toEqual({
+      air: 'unknown',
+      clouds: 0,
+      rain: false,
+      heat: false,
+      fog: false,
+      glow: false,
+    });
+  });
+
+  it('backdrop: a shown forecast draws its scene, even while reloading', () => {
+    const s = {
+      ...forecastFixture,
+      airCheck: ABOVE,
+      weather: weather({ cloudCoverPercent: 60 }),
+    };
+    const expected = sceneFromConditions(s.airCheck, s.weather);
+    expect(backdropScene(s, false)).toEqual(expected);
+    expect(backdropScene(s, true)).toEqual(expected);
+  });
+
+  it('backdrop note', () => {
+    expect(backdropNote('Pune, Maharashtra', false)).toBe(
+      'Background: model forecast for Pune, Maharashtra.',
+    );
+    expect(backdropNote('Pune, Maharashtra', true)).toBe(
+      'Background: model forecast for Pune, Maharashtra. Not current.',
+    );
+    expect(backdropNote(NEAR_YOU, false)).toBe(
+      'Background: model forecast near you (approximate).',
+    );
   });
 
   it('unknown fields add no weather', () => {
