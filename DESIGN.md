@@ -76,16 +76,18 @@ Do not use these colors as the only indicators. Every AQI/status signal also nee
 6. **See why.** Show recommendation explanation and source references.
 7. **CTA.** Bring users into the actual app.
 
-## 7. Dashboard information hierarchy
+## 7. Today information hierarchy
 
-1. Location and last updated/source line.
-2. Observation card (only if valid observed data exists).
-3. Forecast panel (visually separate).
-4. Pollutant breakdown with units.
-5. Personalized plan CTA and summary.
-6. Indoor air suggestions.
-7. Sustainable swaps.
-8. Data limitations/source panel.
+Today answers "How is my air?" first, then "What should I do?" (assistant redesign, Phase 6):
+
+1. A greeting by device time, then the H1 "Today in {place}".
+2. The scene and weather strip, then the verdict (the largest text), its word tag, "Model forecast · Open-Meteo · updated {time}", the "Not current" banner when stale (never hidden), and the caveat.
+3. "Your recommendation for today": one plan card with "Why this recommendation?". "See your full day" folds the rest of the plan and "Save plan".
+4. "What would you like help with?": four choices.
+5. "Ask AirAware anything".
+6. "Air quality details", closed: the PM2.5 figure, the forecast panel, the forecast location, the CPCB line, the 24-hour method, and sources with limitations.
+
+From `lg`, the verdict sits on the left and the recommendation on the right; the rest runs full width below. Official observations, once connected, stay visibly separate from the model forecast. A saved plan opens in My Profile, never on Today.
 
 Never show a large AQI number if its index type is ambiguous. If only PM2.5 is available, show PM2.5 concentration with units instead of inventing a CPCB AQI.
 
@@ -111,7 +113,12 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `AppShell`: the frame for every `/app` page.
   - `AppNav`: one `<nav aria-label="Main">`. It is a bottom bar on phones, inline in the navy top bar from `md`, and marks the current page with `aria-current="page"`, an elevated pill and a teal icon.
   - `PlaceChip`: the place button and a native modal `<dialog>` holding `LocationSearch` and `UseMyLocation`.
-  - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans.
+  - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans. An opened plan shows below the list under its snapshot banner, with "Close", which returns focus to its Open button.
+  - `TodayLead`: the scene, weather strip, verdict (`h2`), word tag, provenance line, stale banner and caveat.
+  - `DailyPlanSection`: builds by itself while Today is shown (no plan, changed answers, or a plan over an hour old by the device clock), never twice at once. After an error it waits for "Try again". It shows the top card, with the full day in a `<details>`.
+  - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family hand their topic to Ask in memory.
+  - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. The question goes to Ask in memory, never into the address.
+  - `AirDetails`: one closed `<details>` with every number, unit, time and source behind the verdict. The 24-hour limits come from the server's check.
   - `Welcome`: three steps for a first visit.
     - One `h1` per step, with "Step N of 3"; focus moves to the heading.
     - Choices are native checkboxes and radios styled as 44 px chips (`has-checked:`, plus a tick, so never colour alone), in `fieldset`s.

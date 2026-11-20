@@ -1,7 +1,7 @@
 # AirAware AI — User Guide
 
 **Getting around:** five places, in the bar at the bottom on a phone or at the top on a computer:
-- **Today:** your air and your plan.
+- **Today:** how your air is, one recommendation, and ways to get help.
 - **Ask AirAware**, **My Home** and **Better Habits:** being built.
 - **My Profile:** your answers and saved plans.
 
@@ -17,18 +17,17 @@ Search for a city or area. You can use manual selection without sharing GPS. If 
 
 Once a place is chosen, the place button at the top shows it. Tap it, or **Change place**, to search again or use your location.
 
-## 2. Understand the data card
-Check:
-- Provider/source.
-- Observation or forecast label.
-- Date and time.
-- Pollutant and unit.
-- Station or model-grid information, if available.
-- Fresh/stale/unknown status.
+## 2. Today
+Today answers "How is my air?" first, from top to bottom:
+- **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · updated {time}". When the forecast is old, a "Not current" line sits under it.
+- **Your recommendation for today:** one suggestion. **Why this recommendation?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
+- **What would you like help with?** Outdoor activities, My home, My family and Greener habits.
+- **Ask AirAware anything:** type a question or pick a starter question.
+- **Air quality details**, closed until you open it: the PM2.5 figure, the chart and tables, the forecast location, how the 24-hour check works, and the sources and limitations.
 
 A forecast is not a station measurement. A pollutant concentration is not automatically the overall CPCB National AQI.
 
-The chart shows PM2.5 (solid line) and PM10 (dashed line) for the next 48 hours, with a written summary under it. The dotted "At load" line marks the hour the forecast loaded; the exact hourly values are in the table below it. If the page stays open for more than an hour, it says "Not current: retrieved more than an hour ago. Reload for the latest forecast."
+In Air quality details, the chart shows PM2.5 (solid line) and PM10 (dashed line) for the next 48 hours, with a written summary under it. The dotted "At load" line marks the hour the forecast loaded; the exact hourly values are in the table below it. If the page stays open for more than an hour, it says "Not current: retrieved more than an hour ago. Reload for the latest forecast."
 
 ## 3. Set optional preferences
 In **My Profile**, choose only the context you want to share. The answers stay while you move around the app, even unsaved:
@@ -40,16 +39,16 @@ In **My Profile**, choose only the context you want to share. The answers stay w
 
 You can skip optional fields. Do not enter diagnoses or medical records.
 
-## 4. Generate a daily plan
-Choose a place, answer any household questions you like, then press **Build my daily plan**. The plan uses the answers on screen; you don't have to save them. If you change an answer afterwards, the plan says so; build it again to use the new answers.
+## 4. Your daily plan
+Today builds the plan by itself once it shows a place, using the answers on screen; you don't have to save them. It builds again when you change an answer, and once the plan is more than an hour old. If a build fails, **Try again** appears.
 
-The plan shows, in order:
+Today shows the plan's top suggestion. **See your full day** shows, in order:
 - Who made it: our fixed rules, or AI that picked and timed our rules' advice (the advice text and sources are always ours).
-- The air notice.
-- The air check: the 24-hour forecast average for PM2.5 and PM10 against India's 24-hour limits. It is a model forecast for an area about 45 km wide, not a station measurement and not the CPCB AQI.
 - "Your day" (AI plans only), then Outdoors and travel, Indoor air and Sustainable swaps.
 
-Open **Why?** on any card to see the reason, whether it rests on today's forecast check or general guidance, which of your answers it used, its sources and any caveat. A plan older than an hour says so and offers to build it again.
+The air notice and the 24-hour air check are not repeated there: the verdict says the first, and Air quality details explains the second. The check compares the model forecast's 24-hour PM2.5 and PM10 averages with India's 24-hour limits. It is a model forecast for an area about 45 km wide, not a station measurement and not the CPCB AQI.
+
+Open **Why?** on any card to see the reason, whether it rests on today's forecast check or general guidance, which of your answers it used, its sources and any caveat. If the forecast behind a plan is more than an hour old, the plan says so until Today builds a new one.
 
 ## 5. Improve indoor air
 The Indoor air section covers ventilation, cooking smoke and purifiers in the context of both indoor sources and outdoor pollution. Do not assume closing or opening windows is always correct.
@@ -58,8 +57,8 @@ The Indoor air section covers ventilation, cooking smoke and purifiers in the co
 Choose practical habit changes that suit your life. Treat qualitative benefits as suggestions; do not assume a numeric emissions reduction unless a documented calculation is displayed.
 
 ## 7. Manage saved data
-- **Save plan** keeps the plan on this browser. The first save creates an anonymous account (no email, name or password).
-- **Saved plans**, in My Profile, lists them, newest first. **Open** shows one on Today under "Saved plan from …. This is a snapshot, not current air information."; **Back to today** returns to your current plan. **Delete** removes one plan after a confirmation. You can keep up to 20.
+- **Save plan**, under See your full day, keeps the plan on this browser. The first save creates an anonymous account (no email, name or password).
+- **Saved plans**, in My Profile, lists them, newest first. **Open** shows one below the list, under "Saved plan from …. This is a snapshot, not current air information."; **Close** puts it away. **Delete** removes one plan after a confirmation. You can keep up to 20.
 - **Delete my saved data** (in Your household) removes your account, saved answers and saved plans.
 
 ## 8. Privacy
