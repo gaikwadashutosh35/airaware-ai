@@ -5,6 +5,13 @@
 - **Ask AirAware**, **My Home** and **Better Habits:** being built.
 - **My Profile:** your answers and saved plans.
 
+**First visit:** three short steps (where, your day, your home), then Today. Steps 2 and 3 are optional and have **Skip**.
+- **Remember on this device** is off unless you tick it. Ticking it keeps your answers and the city you searched for, so next time Today opens straight away.
+- A location from **Use my location** is never kept.
+- **Forget this place**, in My Profile, removes a remembered place.
+
+If you arrive with a place already chosen, Today offers **Make it personal: 2 quick questions**.
+
 ## 1. Choose a location
 Search for a city or area. You can use manual selection without sharing GPS. If you choose browser geolocation, the browser will ask for permission.
 

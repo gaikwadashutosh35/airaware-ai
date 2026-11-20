@@ -46,6 +46,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Onboarding (Phase 5 of the assistant redesign):
+  - a first visit to `/app` gets three short steps: where, your day (office or school commute, outdoor exercise, work from home) and your home (cooking fuel, exhaust, purifier, busy road). Steps 2 and 3 can be skipped;
+  - "Remember on this device" (off by default) saves the answers and the searched place with the existing anonymous save, so the next visit opens Today. A device location is never saved;
+  - saved preferences gain an optional `place`, and PUT changes only the fields sent (`place: null` forgets);
+  - Today invites "Make it personal: 2 quick questions" when you arrive with a place;
+  - My Profile adds "Forget this place";
+  - Today's old no-place card is replaced by Welcome.
 - Navigation and app shell (Phase 2 of the assistant redesign):
   - every `/app` page shares one frame with five-item navigation (Today, Ask AirAware, My Home, Better Habits, My Profile). It is a bottom bar on phones and a navy top bar on larger screens, with a skip link and a phone-safe bottom inset;
   - a place button changes the place from any page, in a native dialog;
