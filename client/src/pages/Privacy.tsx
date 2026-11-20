@@ -60,9 +60,11 @@ function Privacy() {
         <Part
           title="What Supabase stores"
           items={[
-            'Only after you press "Save my answers" or "Save plan", in Supabase’s South Asia (Mumbai) region.',
+            'Only after you press "Save my answers" or "Save plan", or tick "Remember on this device", in Supabase’s South Asia (Mumbai) region.',
             'An anonymous account, with no email, name or password.',
-            'Your saved answers, and your saved plans with the place name you chose. No coordinates.',
+            'Your saved answers, and your saved plans with the place name you chose.',
+            'If you tick "Remember on this device": your answers and the city or area you searched for, with its coordinates rounded to about 1 km.',
+            'A place found with "Use my location" is never saved.',
             'Supabase’s sign-in service stores your IP address and browser type with the session. Supabase’s own logs may also record your IP address, and those entries are not removed when you delete your data.',
             'The project owner and Supabase, as the host, can access the database.',
           ]}
@@ -71,6 +73,7 @@ function Privacy() {
           title="How to delete"
           items={[
             '"Delete my saved data" removes your account, saved answers and saved plans.',
+            '"Forget this place" in My Profile removes a remembered place.',
             'You can delete single plans from the saved plans list.',
             'Clearing your browser data loses access to your saved data but does not delete it. Unused accounts are not removed automatically yet.',
           ]}
