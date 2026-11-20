@@ -54,15 +54,21 @@ describe('design system base', () => {
     );
   });
 
-  it('phones show no grey tap flash and no tap delay', () => {
-    // Final review: the flash goes only where the press scale replaces it, so
-    // a reduced-motion tap still gets the browser's own feedback.
-    const start = css.indexOf('@media (prefers-reduced-motion: no-preference)');
+  it('reduced-motion presses still show feedback, without movement', () => {
+    // Final review: Tailwind's preflight removes the phone tap highlight for
+    // everyone, so a reduced-motion press needs its own cue: a fade, no scale.
+    const start = css.indexOf('@media (prefers-reduced-motion: reduce)');
+    expect(start).toBeGreaterThan(-1);
     const block = css.slice(start, css.indexOf('\n  }', start));
     expect(block).toMatch(
-      /html\s*{[^}]*-webkit-tap-highlight-color: transparent;/,
+      /button:not\(:disabled\):active,\s*\.press:active\s*{[^}]*opacity: 0\.8;/,
     );
-    expect(css.split('-webkit-tap-highlight-color').length - 1).toBe(1);
+    expect(block).not.toContain('scale(');
+  });
+
+  it('phones have no tap delay', () => {
+    // The tap highlight itself is Tailwind preflight's, not ours.
+    expect(css).not.toContain('-webkit-tap-highlight-color');
     expect(css).toMatch(
       /a,\s*button,\s*summary,\s*input,\s*select,\s*label\s*{[^}]*touch-action: manipulation;/,
     );

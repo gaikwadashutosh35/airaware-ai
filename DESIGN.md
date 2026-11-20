@@ -120,7 +120,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 
 - **Press feedback:**
   - Enabled buttons, and links with the `press` class, scale to 0.97 while pressed (120 ms, `cubic-bezier(0.23, 1, 0.32, 1)`), only under `prefers-reduced-motion: no-preference`.
-  - With motion allowed, the shrink replaces the phone's grey tap highlight. With reduced motion the highlight stays, so taps still give feedback.
+  - With reduced motion, a pressed button fades to 80% opacity instead, with no movement. Tailwind's preflight already removes the phone tap highlight for everyone.
   - Phones have no double-tap delay (`touch-action: manipulation`).
 - The readout scene's rain is its only decorative motion: it animates `transform` only, falls for under 5 seconds and then rests, and is used as `motion-safe:animate-*`, so it stays still under reduced motion. The heat band is still.
 

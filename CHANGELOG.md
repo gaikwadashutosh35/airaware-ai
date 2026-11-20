@@ -49,7 +49,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Design system base (Phase 3 of the assistant redesign):
   - Inter is self-hosted: one Latin variable font file, 48 KB, OFL, under `client/public/fonts/`. It is preloaded and uses `font-display: swap`;
   - buttons shrink slightly while pressed, only when motion is welcome, and never when disabled;
-  - with motion allowed, the shrink replaces the phone's grey tap flash; with reduced motion the flash stays as feedback;
+  - with reduced motion, a pressed button fades slightly instead, so taps still give feedback;
   - phones have no double-tap delay;
   - a real favicon replaces the blank one;
   - a new `--color-elevated` token is added for the navigation bars to come.
