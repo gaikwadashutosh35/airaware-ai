@@ -4,9 +4,12 @@ import { expectNoAxeViolations } from '../test/axe.ts';
 import Landing from './Landing.tsx';
 import { LANDING_EXAMPLES } from './landingExamples.ts';
 
-const ACTION = "Check your area's air quality";
+const ACTION = 'Check My Air';
+const ASSISTANT = 'Meet Your Assistant';
+const SUBHEAD =
+  "Understand your city's air quality. Discover smarter daily routines. Make better choices for your home and community.";
 const HERO_ALT =
-  'Screenshot of the AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, the PM2.5 model forecast for one hour, the 24-hour check in words and its sources';
+  "Screenshot of AirAware's Today page on a phone, for Pune: the forecast verdict with its Model forecast label and the navigation bar";
 // Documented facts the page may state; any other digit would be invented.
 const REAL_FIGURES = [
   'PM2.5',
@@ -29,15 +32,23 @@ describe('Landing', () => {
     cleanup();
   });
 
-  it('has one main heading and the action once', () => {
+  it('has one main heading and both hero actions', () => {
     render(<Landing />);
 
     const h1s = screen.getAllByRole('heading', { level: 1 });
     expect(h1s).toHaveLength(1);
     expect(h1s[0]?.textContent).toBe('The air around you matters.');
+    expect(screen.getByText(SUBHEAD)).toBeDefined();
+    // The hero's and the closing section's.
     const actions = screen.getAllByRole('link', { name: ACTION });
-    expect(actions).toHaveLength(1);
+    expect(actions).toHaveLength(2);
     for (const link of actions) expect(link.getAttribute('href')).toBe('/app');
+    const assistant = screen.getAllByRole('link', { name: ASSISTANT });
+    expect(assistant).toHaveLength(1);
+    expect(assistant[0]?.getAttribute('href')).toBe('/app/ask');
+    expect(
+      screen.queryByRole('link', { name: "Check your area's air quality" }),
+    ).toBeNull();
   });
 
   it('tells the plan story in four chapters, in order', () => {
@@ -116,14 +127,16 @@ describe('Landing', () => {
     }
   });
 
-  it('puts the place search in the hero', () => {
+  it('puts the place search in the hero, after "Or search a city"', () => {
     render(<Landing />);
 
+    const lead = screen.getByText('Or search a city');
+    const search = screen.getByRole('combobox', {
+      name: 'Search for a city or area in India',
+    });
     expect(
-      screen.getByRole('combobox', {
-        name: 'Search for a city or area in India',
-      }),
-    ).toBeDefined();
+      lead.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('chapter numbers are decorative', () => {
@@ -175,7 +188,7 @@ describe('Landing', () => {
     const image = screen.getByAltText(HERO_ALT);
     const caption = image.closest('figure')?.querySelector('figcaption');
     expect(caption?.textContent).toBe(
-      'A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the dashboard for current values.',
+      'A past screenshot of Today for Pune, 20 Nov 2026. Open the app for current values.',
     );
     // Final review B2: the label comes first, so it is never below the fold
     // while the figure shows.

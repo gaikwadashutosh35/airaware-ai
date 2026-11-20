@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import readoutShot from '../assets/readout.jpg';
+import todayShot from '../assets/today-phone.jpg';
 import { Attribution } from '../components/Attribution.tsx';
 import { PlanCard } from '../features/daily-plan/PlanCard.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
@@ -15,7 +15,8 @@ function openDashboard(place: Place) {
   window.location.assign(`/app?${placeToSearch(place)}`);
 }
 
-const ACTION = "Check your area's air quality";
+const ACTION = 'Check My Air';
+const ASSISTANT = 'Meet Your Assistant';
 
 // The real path of a forecast value (a diagram of the actual system).
 const STEPS = [
@@ -45,6 +46,18 @@ function ActionLink() {
       className="press inline-flex min-h-12 items-center self-start rounded-full bg-primary px-6 font-semibold whitespace-nowrap text-bg transition duration-150 hover:bg-text"
     >
       {ACTION}
+    </a>
+  );
+}
+
+// The hero's second action: the primary link's outlined twin.
+function AssistantLink() {
+  return (
+    <a
+      href="/app/ask"
+      className="press inline-flex min-h-12 items-center self-start rounded-full border border-text px-6 font-semibold whitespace-nowrap transition duration-150 hover:bg-elevated"
+    >
+      {ASSISTANT}
     </a>
   );
 }
@@ -127,36 +140,43 @@ function Landing() {
       </header>
 
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-8 pb-20 sm:px-8 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:py-12">
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-8 pb-20 sm:px-8 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 lg:py-12">
           <div className="flex flex-col gap-6">
             <h1 className="text-5xl leading-[1.05] font-semibold tracking-tight sm:text-6xl lg:text-7xl">
               The air around you matters.
             </h1>
-            <p className="max-w-[34ch] text-xl text-text-muted">
-              Hourly pollution forecasts for Indian cities, with every source
-              shown.
+            <p className="max-w-[40ch] text-xl text-text-muted">
+              Understand your city's air quality. Discover smarter daily
+              routines. Make better choices for your home and community.
             </p>
-            <div className="max-w-md">
+            <div className="flex flex-wrap gap-3">
+              <ActionLink />
+              <AssistantLink />
+            </div>
+            <div className="flex max-w-md flex-col gap-2">
+              <p className="text-sm text-text-muted">Or search a city</p>
               <LocationSearch onSelect={openDashboard} />
             </div>
           </div>
+          {/* A phone screenshot at its own CSS size, so its text reads at
+              1:1; the caption shares its width. */}
           <figure
             data-slot="hero"
             data-kind="product"
-            className="flex flex-col gap-3"
+            className="mx-auto flex w-full max-w-[390px] flex-col gap-3"
           >
             {/* The label first, so it never sits below the fold while the
                 screenshot is read as today's air. */}
             <figcaption className="text-sm text-text-muted">
-              A past screenshot of the dashboard for Pune, 20 Nov 2026. Open the
-              dashboard for current values.
+              A past screenshot of Today for Pune, 20 Nov 2026. Open the app for
+              current values.
             </figcaption>
             <img
-              src={readoutShot}
-              width={972}
-              height={924}
+              src={todayShot}
+              width={390}
+              height={844}
               fetchPriority="high"
-              alt="Screenshot of the AirAware readout for Pune: a city skyline whose haze follows the 24-hour check, the PM2.5 model forecast for one hour, the 24-hour check in words and its sources"
+              alt="Screenshot of AirAware's Today page on a phone, for Pune: the forecast verdict with its Model forecast label and the navigation bar"
               className="h-auto w-full rounded-xl outline-1 -outline-offset-1 outline-rule-dark"
             />
           </figure>
