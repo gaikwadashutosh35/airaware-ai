@@ -125,7 +125,10 @@ function Landing() {
       <title>AirAware AI: hourly air-quality forecasts for Indian cities</title>
       <header>
         <div className="mx-auto flex min-h-16 max-w-6xl items-center px-4 sm:px-8">
-          <a href="/" className="text-lg font-semibold">
+          <a
+            href="/"
+            className="inline-flex min-h-11 items-center text-lg font-semibold"
+          >
             AirAware AI
           </a>
         </div>
@@ -294,7 +297,10 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-12 text-sm text-text-muted sm:px-8">
           <p className="text-base font-semibold text-text">AirAware AI</p>
           <Attribution />
-          <a href="/privacy" className="underline">
+          <a
+            href="/privacy"
+            className="inline-flex min-h-11 items-center self-start underline"
+          >
             Privacy
           </a>
         </div>

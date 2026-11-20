@@ -21,7 +21,10 @@ function Privacy() {
       <title>Privacy | AirAware AI</title>
       <header className="border-b border-rule">
         <div className="mx-auto flex min-h-16 max-w-5xl items-center px-4 sm:px-6">
-          <a href="/" className="text-lg font-semibold">
+          <a
+            href="/"
+            className="inline-flex min-h-11 items-center text-lg font-semibold"
+          >
             AirAware AI
           </a>
         </div>
@@ -101,7 +104,10 @@ function Privacy() {
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
           <Attribution />
-          <a href="/privacy" className="underline">
+          <a
+            href="/privacy"
+            className="inline-flex min-h-11 items-center self-start underline"
+          >
             Privacy
           </a>
         </div>

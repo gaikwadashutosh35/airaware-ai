@@ -88,7 +88,10 @@ export function PlanCard({
                     <ul className="list-disc pl-5">
                       {cited.map((source) => (
                         <li key={source.id}>
-                          <a href={source.url} className="underline">
+                          <a
+                            href={source.url}
+                            className="inline-flex min-h-11 items-center underline"
+                          >
                             {source.name}
                           </a>
                         </li>

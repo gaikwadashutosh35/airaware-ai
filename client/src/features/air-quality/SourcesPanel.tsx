@@ -22,7 +22,10 @@ export function SourcesPanel({
           <ul className="flex flex-col gap-3 text-sm">
             {sources.map((source) => (
               <li key={source.id} className="flex flex-col gap-1">
-                <a href={source.url} className="underline">
+                <a
+                  href={source.url}
+                  className="inline-flex min-h-11 items-center underline"
+                >
                   {source.name}
                 </a>
                 <span>

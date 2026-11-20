@@ -3,76 +3,12 @@
 // other word has a solid surface between it and the backdrop; the backdrop
 // stays put between pages.
 import { expect, test, type Page } from '@playwright/test';
-import type {
-  AirAssessment,
-  ForecastData,
-  WeatherNow,
-} from '../shared/contracts.ts';
-import { sourcesFixture } from '../client/src/test/fixtures.ts';
-import {
-  habitsGuidesFixture,
-  homeGuidesFixture,
-} from '../client/src/test/guideFixtures.ts';
-import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
+import type { WeatherNow } from '../shared/contracts.ts';
 import { expectNoAxeViolations } from './axe.ts';
-import { forecastAt, planAt, PUNE, routeApi } from './routes.ts';
+import { at, pastTheEdge, stub, visibleH1, type Level } from './layout.ts';
+import { PUNE } from './routes.ts';
 
-type Level = AirAssessment['level'];
-const CHECKS: Record<Exclude<Level, 'unknown'>, AirAssessment['checks']> = {
-  not_elevated: [
-    { pollutant: 'PM2_5', status: 'within_limit', average24h: 41.2, limit: 60 },
-    { pollutant: 'PM10', status: 'within_limit', average24h: 63.5, limit: 100 },
-  ],
-  elevated: [
-    { pollutant: 'PM2_5', status: 'above_limit', average24h: 78.4, limit: 60 },
-    { pollutant: 'PM10', status: 'within_limit', average24h: 91, limit: 100 },
-  ],
-};
-
-// Every request the app pages make, answered here, so the run spends none
-// of the shared limits: the forecast in the given look and weather, the
-// plan, the guides and the sources.
-async function stub(
-  page: Page,
-  level: Level = 'unknown',
-  weather: Partial<WeatherNow> = {},
-): Promise<void> {
-  const now = new Date();
-  // The recorded fixture is a full forecast, with its check and weather.
-  const base = forecastAt(now) as ForecastData;
-  await routeApi(page, {
-    forecast: {
-      data: {
-        ...base,
-        airCheck:
-          level === 'unknown'
-            ? base.airCheck
-            : {
-                level,
-                windowStart: base.hours[0]!.time,
-                checks: CHECKS[level],
-              },
-        weather: { ...base.weather!, time: base.hours[0]!.time, ...weather },
-      },
-    },
-    plan: { data: planAt(rulesPlanFixture, now) },
-  });
-  await page.route('**/api/v1/recommendations/guides**', (route) =>
-    route.fulfill({
-      json: {
-        data: route.request().url().includes('topic=habits')
-          ? habitsGuidesFixture
-          : homeGuidesFixture,
-      },
-    }),
-  );
-  await page.route('**/api/v1/air-quality/sources', (route) =>
-    route.fulfill({ json: { data: sourcesFixture } }),
-  );
-}
 const stubToday = (page: Page) => stub(page);
-
-const at = (path: string) => PUNE.replace('/app?', `${path}?`);
 
 // Visible text in `main` outside the title block with no opaque background
 // between it and `main`; its first 40 characters.
@@ -142,8 +78,6 @@ test('no text outside the title block rests on the scene: Welcome', async ({
   ).toBeVisible();
   expect(await textOnScene(page)).toEqual([]);
 });
-
-const visibleH1 = (page: Page) => page.locator('main h1:visible').first();
 
 test('the backdrop stays put between pages', async ({ page }) => {
   await stub(page, 'not_elevated', { cloudCoverPercent: 30 });
@@ -381,50 +315,6 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
       (el) => getComputedStyle(el).animationName,
     );
     expect(name).toBe(reducedMotion === 'reduce' ? 'none' : 'rain-fall');
-  });
-}
-
-// Final review: the page clips sideways overflow (html, body
-// overflow-x: clip), so scrollWidth always fits. Measure each element's
-// edges instead: nothing shown may reach past the screen unless an
-// ancestor that fits clips it. The backdrop overhangs by design.
-function pastTheEdge(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const width = document.documentElement.clientWidth;
-    const fits = (el: Element) => {
-      const r = el.getBoundingClientRect();
-      return r.left >= -0.5 && r.right <= width + 0.5;
-    };
-    const offenders: string[] = [];
-    for (const el of document.body.querySelectorAll('*')) {
-      // The backdrop overhangs by design; screen-reader-only text is
-      // clipped to nothing.
-      if (el.closest('[data-air], .sr-only') || !el.checkVisibility()) {
-        continue;
-      }
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0 || fits(el)) continue;
-      let clipped = false;
-      for (
-        let a = el.parentElement;
-        a && a !== document.body;
-        a = a.parentElement
-      ) {
-        if (
-          /hidden|clip|auto|scroll/.test(getComputedStyle(a).overflowX) &&
-          fits(a)
-        ) {
-          clipped = true;
-          break;
-        }
-      }
-      if (!clipped) {
-        offenders.push(
-          `${el.tagName.toLowerCase()} "${(el.textContent ?? '').trim().slice(0, 30)}" ${Math.round(r.left)}..${Math.round(r.right)}`,
-        );
-      }
-    }
-    return offenders;
   });
 }
 

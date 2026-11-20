@@ -250,7 +250,7 @@ function AppShell() {
         <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
           <a
             href="/"
-            className="shrink-0 text-lg font-semibold whitespace-nowrap"
+            className="inline-flex min-h-11 shrink-0 items-center text-lg font-semibold whitespace-nowrap"
           >
             AirAware AI
           </a>
@@ -454,7 +454,10 @@ function AppShell() {
             </p>
           )}
           <Attribution />
-          <a href="/privacy" className="underline">
+          <a
+            href="/privacy"
+            className="inline-flex min-h-11 items-center self-start underline"
+          >
             Privacy
           </a>
         </div>
