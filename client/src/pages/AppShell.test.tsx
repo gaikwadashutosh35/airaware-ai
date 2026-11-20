@@ -685,6 +685,46 @@ describe('AppShell', () => {
   });
 
   // Final review, Critical 1: the shell keeps the plan (spec §5).
+  // Final review, Important 1: a returning user's reload built with no
+  // answers, then again once the saved ones arrived.
+  it('a returning user builds once, with the saved answers', async () => {
+    session.available = true;
+    session.currentToken.mockResolvedValue('tok');
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    const saved = { routine: { outdoorExercise: true } };
+    const fetchSpy = routeFetch(ok(), (url) =>
+      url.pathname === '/api/v1/profile/preferences'
+        ? new Promise((resolve) => {
+            // A network round trip.
+            setTimeout(
+              () =>
+                resolve(
+                  Response.json({
+                    data: { context: saved, place: null, updatedAt: 'x' },
+                  }),
+                ),
+              200,
+            );
+          })
+        : undefined,
+    );
+    render(<AppShell />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    await flush();
+
+    const posts = planPosts(fetchSpy);
+    expect(posts).toHaveLength(1);
+    expect(JSON.parse(posts[0]?.[1]?.body as string).householdContext).toEqual(
+      saved,
+    );
+  });
+
   it('a built plan survives leaving Today', async () => {
     const fetchSpy = routeFetch(ok(), planRoutes());
     render(<AppShell />);

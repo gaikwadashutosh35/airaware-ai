@@ -207,6 +207,10 @@ export function DailyPlanSection({
           ) : (
             <p>{NO_CARD}</p>
           )}
+          {/* Who made it and the safety note stay in view (audit 3.3). */}
+          <p className="text-sm text-text-dark-muted">
+            {`${built.plan.generatedBy === 'ai' ? 'Made with AI' : 'Made by our rules'}. ${built.plan.safetyNote}`}
+          </p>
           {/* Instant open: it is opened often, so no animation. */}
           <details>
             <summary className="min-h-11 cursor-pointer py-2 font-semibold">

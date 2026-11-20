@@ -331,7 +331,9 @@ function AppShell() {
                 place={place}
                 context={context}
                 now={now}
-                active={page === 'today'}
+                // Not before saved answers load, or a returning user's
+                // plan is built twice, first without them.
+                active={page === 'today' && loaded}
                 onSaved={() => setListVersion((n) => n + 1)}
                 deletedPlanId={deletedPlanId}
               />

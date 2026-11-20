@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DailyPlan } from '../../../../shared/contracts.ts';
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import {
+  aiPlanFixture,
   rulesPlanFixture,
   unavailablePlanFixture,
 } from '../../test/planFixtures.ts';
@@ -265,6 +266,28 @@ describe('DailyPlanSection', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeDefined();
     await settle();
     expect(calls(spy, PLAN_PATH)).toHaveLength(1);
+  });
+
+  // Final review, Important 2 and 3: who made it and the safety note stay
+  // in view, not only inside "See your full day".
+  it('says who made it and gives the safety note beside the card', async () => {
+    routeFetch(() => planReply());
+    const { unmount } = renderSection();
+    await build();
+
+    const rules = screen.getByText(
+      `Made by our rules. ${rulesPlanFixture.safetyNote}`,
+    );
+    expect(rules.closest('details')).toBeNull();
+    unmount();
+
+    vi.restoreAllMocks();
+    routeFetch(() => planReply(aiPlanFixture));
+    renderSection();
+    const ai = await screen.findByText(
+      `Made with AI. ${aiPlanFixture.safetyNote}`,
+    );
+    expect(ai.closest('details')).toBeNull();
   });
 
   it('shows only the top card, with Why this recommendation?', async () => {
