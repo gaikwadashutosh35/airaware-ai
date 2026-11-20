@@ -1,10 +1,40 @@
+import { z } from 'zod';
 import type {
+  AskAnswer,
   AskTopic,
   GuideCard,
   HouseholdContext,
   RecommendationCandidate,
 } from '../../../../shared/contracts.ts';
+import type { CachedForecast } from '../air-data/cachedForecast.ts';
+import { toWriterInput } from '../ai/planOutput.ts';
+import { PROMPT_VERSION } from '../ai/prompts.ts';
+import { assessAir } from './airCheck.ts';
+import { placeSchema, type PlanRequest, type PlanWriter } from './dailyPlan.ts';
 import { ASK_GUIDES, guideSet } from './guides.ts';
+import { householdContextSchema } from './householdContext.ts';
+import { buildPlan } from './plan.ts';
+import { buildCandidates } from './rules.ts';
+
+export const ASK_TOPICS = [
+  'outdoors',
+  'windows',
+  'indoor',
+  'family',
+  'commuting',
+  'habits',
+] as const satisfies readonly AskTopic[];
+
+// Exactly one of a typed question or a topic (owner decision 1). Zod's
+// messages never repeat the input, so a 400 cannot echo the question.
+const base = {
+  place: placeSchema,
+  householdContext: householdContextSchema.optional(),
+};
+export const askRequestSchema = z.union([
+  z.strictObject({ question: z.string().trim().min(1).max(200), ...base }),
+  z.strictObject({ topic: z.enum(ASK_TOPICS), ...base }),
+]);
 
 // Ask AirAware (Phase 7): which cards answer each topic. The question never
 // reaches this file; only its topic does.
@@ -102,4 +132,65 @@ export function chooseCards(
         ),
     );
   return [...personal, ...general].slice(0, 3);
+}
+
+// An Ask summary must never read as a yes or no on safety (spec §7.4). The
+// plan's own checks already refuse "safe", "healthy" and numbers.
+const VERDICT =
+  /^\s*(yes|no)\b|\bgo ahead\b|\b(fine|ok|okay|alright) to\b|\b(good|bad) idea\b/i;
+
+export type Asker = (
+  topic: AskTopic | 'medical' | 'out_of_scope',
+  request: PlanRequest,
+  now: Date,
+) => Promise<AskAnswer>;
+
+// Builds an answer from the forecast check, the topic's cards and the
+// shared plan writer. It never receives the question: only its topic.
+export function createAsker(deps: {
+  forecast: CachedForecast;
+  write: PlanWriter | null;
+}): Asker {
+  return async (topic, { place, householdContext = {} }, now) => {
+    // A provider failure is not an error here: the answer says air is unknown.
+    const series = await deps
+      .forecast(place.latitude, place.longitude, now)
+      .catch(() => null);
+    const air = assessAir(series, now);
+    const candidates = buildCandidates(householdContext, air);
+    const notices = candidates.filter((c) => c.section === 'notice');
+    // Medical and out-of-scope answers show no cards and call no AI.
+    const answered = topic !== 'medical' && topic !== 'out_of_scope';
+    const cards = answered
+      ? chooseCards(topic, candidates, householdContext)
+      : [];
+
+    let ai =
+      answered && deps.write
+        ? await deps.write(toWriterInput(air, [...notices, ...cards]), now)
+        : null;
+    if (ai && VERDICT.test(ai.output.summary)) {
+      console.error('Ask summary failed: verdict');
+      ai = null;
+    }
+    // Our card order; the AI's featured order and "for you" lines are not used.
+    const plan = buildPlan({
+      label: place.label,
+      air,
+      forecast: series,
+      candidates: [...notices, ...cards],
+      ai: ai && { ...ai, promptVersion: PROMPT_VERSION },
+    });
+    return {
+      topic,
+      cards,
+      summary: plan.summary,
+      generatedBy: plan.generatedBy,
+      air,
+      forecast: plan.forecast,
+      notices,
+      sources: plan.sources,
+      safetyNote: plan.safetyNote,
+    };
+  };
 }
