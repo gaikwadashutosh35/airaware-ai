@@ -202,7 +202,7 @@ Response (shortened):
 { "data": { "topic": "habits", "groups": [{ "id": "waste", "heading": "Waste", "cards": [{ "id": "guide.no-open-burning", "personalRuleId": "swap.no-open-burning", "section": "swap", "priority": "medium", "title": "Don't burn waste or leaves", "text": "…", "reason": "…", "evidenceType": "general_suggestion", "sourceIds": ["swm-rules-2026", "mohfw-air-advisory-2025"], "inputsUsed": [] }] }], "sources": [{ "id": "swm-rules-2026", "name": "Solid Waste Management Rules, 2026 (Gazette of India)", "url": "https://static.pib.gov.in/…" }], "safetyNote": "General information only, not medical advice. Follow local public-health advisories." } }
 ```
 
-`personalRuleId` names the rule that gives the same advice personally; the app hides the guide card when today's plan shows that rule. Guide cards never enter a daily plan.
+`personalRuleId` names the rule that gives the same advice personally; My Home hides the guide card when today's plan shows that rule (Better Habits shows the guides only). Guide cards never enter a daily plan.
 
 ### `POST /api/v1/recommendations/daily-plan`
 

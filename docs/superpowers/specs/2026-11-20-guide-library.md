@@ -1,6 +1,6 @@
 # Guide Library (decision G1 A): wording and sources
 
-**Status:** draft for the owner's review, 20 Nov 2026. Once approved, this file fixes the guide cards' wording (DATA_GOVERNANCE.md §8): change it here first, then in `server/src/services/recommendations/guides.ts`.
+**Status:** approved by the owner on 20 Nov 2026 ("Approve, start Phase 8"). This file fixes the guide cards' wording (DATA_GOVERNANCE.md §8): change it here first, then in `server/src/services/recommendations/guides.ts`.
 
 **What a guide card is:** general guidance that applies on any day, with a neutral reason ("why it matters") and at least one cited source. It never uses the forecast, a pollutant value or a personal reason ("You said…"). In the app its "Based on" reads "general guidance", and its disclosure reads "Why it matters".
 

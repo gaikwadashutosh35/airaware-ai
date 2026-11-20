@@ -3,7 +3,7 @@
 **Getting around:** five places, in the bar at the bottom on a phone or at the top on a computer:
 - **Today:** how your air is, one recommendation, and ways to get help.
 - **My Home:** today's suggestions for your home, then ways to improve indoor air.
-- **Better Habits:** small swaps that cut smoke and exhaust.
+- **Better Habits:** small changes in travel, waste, cooking and energy use.
 - **Ask AirAware:** being built.
 - **My Profile:** your answers and saved plans.
 

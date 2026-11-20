@@ -56,7 +56,7 @@ const primaryClass =
   'min-h-11 rounded-md bg-primary px-4 font-medium text-text-dark disabled:opacity-60';
 
 // "Your recommendation for today": the plan's top card, with the full day
-// folded below. It builds by itself while Today is shown, from the chosen
+// folded below. It builds by itself while Today or My Home is shown, from the chosen
 // place and the answers on screen: when there is no plan yet, the answers
 // changed, or the plan is over an hour old (D3). Building never creates an
 // account; only "Save plan" does. The dashboard
@@ -75,7 +75,7 @@ export function DailyPlanSection({
   context: HouseholdContext;
   // The running clock, for the stale check.
   now: Date;
-  // True while Today is shown: the plan builds only then.
+  // True while Today or My Home is shown: the plan builds only then.
   active: boolean;
   onSaved: () => void;
   // The plan on screen, or null: My Home shows its indoor cards.
