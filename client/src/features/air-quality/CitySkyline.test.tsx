@@ -92,6 +92,9 @@ describe('CitySkyline', () => {
         'sm:h-[min(11rem,20vh)]',
         'bottom-[calc(3.5rem+env(safe-area-inset-bottom))]',
         'md:bottom-0',
+        // Final review: under 24rem tall a wrapped title can reach the
+        // band, so the city hides and the sky alone carries the look.
+        '[@media(max-height:24rem)]:hidden',
       ]) {
         expect(classes).toContain(name);
       }

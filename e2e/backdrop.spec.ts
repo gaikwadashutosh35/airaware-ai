@@ -314,17 +314,34 @@ for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
   });
 }
 
-test('a short landscape phone keeps the title off the city', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 640, height: 320 });
-  await stub(page, 'not_elevated');
-  await page.goto(PUNE);
-  await expect(visibleH1(page)).toBeVisible();
-  const title = (await visibleH1(page).boundingBox())!;
-  const city = (await page.locator('[data-layer="city"]').boundingBox())!;
-  expect(title.y + title.height).toBeLessThan(city.y);
-});
+// Final review: a long place wraps the title, which a short landscape
+// screen can push into the city band. Whenever the city shows, the title
+// must end above it.
+const LONG_PLACE =
+  'Pune Municipal Corporation Ward Office Twenty Three, Pune, Maharashtra';
+for (const [width, height] of [
+  [640, 320],
+  [667, 400],
+] as const) {
+  for (const label of ['Pune, Maharashtra', LONG_PLACE]) {
+    test(`a short landscape phone keeps the title off the city: ${width}x${height}, ${label.length} chars`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await stub(page, 'not_elevated');
+      await page.goto(
+        PUNE.replace('Pune%2C%20Maharashtra', encodeURIComponent(label)),
+      );
+      await expect(visibleH1(page)).toBeVisible();
+      const title = (await visibleH1(page).boundingBox())!;
+      const city = page.locator('[data-layer="city"]');
+      if (await city.isVisible()) {
+        const top = (await city.boundingBox())!.y;
+        expect(title.y + title.height).toBeLessThan(top);
+      }
+    });
+  }
+}
 
 for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
   test(`axe passes over the ${level} look`, async ({ page }) => {

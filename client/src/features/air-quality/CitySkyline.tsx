@@ -117,11 +117,13 @@ const tank = (cx: number, top: number) =>
 
 // The fixed full-screen backdrop and its layers (backdrop design §5.1). The
 // city band never takes over a fifth of the screen, and sits above the phone
-// bar (56 px plus the safe area) below md.
+// bar (56 px plus the safe area) below md. Under 24rem tall (a phone held
+// sideways) a wrapped title could reach the band, so the city hides and the
+// sky alone carries the look.
 const ROOT = 'pointer-events-none fixed inset-0 -z-10 overflow-hidden';
 const FILL = 'absolute inset-0 size-full';
 const CITY =
-  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0';
+  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:24rem)]:hidden';
 
 // The city's rows share one drawing box, stacked as layers so the veils
 // and fog can sit between them as HTML. Those fade in from the top of the
