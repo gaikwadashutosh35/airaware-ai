@@ -181,13 +181,14 @@ function Landing() {
           text="One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was updated. Every number, unit and source is one tap away, under Air quality details."
           caption="A past screenshot of Air quality details for Pune, 20 Nov 2026. Open the app for current values."
         >
+          {/* A phone capture, like the hero's, at most its own CSS size. */}
           <img
             src={detailsShot}
-            width={592}
-            height={599}
+            width={358}
+            height={616}
             loading="lazy"
             alt="Screenshot of the open Air quality details for Pune: the PM2.5 model forecast for one hour with its unit, and the 24-hour check in words"
-            className="h-auto w-full rounded-xl outline-1 -outline-offset-1 outline-rule-dark"
+            className="h-auto w-full max-w-[358px] rounded-xl outline-1 -outline-offset-1 outline-rule-dark"
           />
         </Chapter>
 

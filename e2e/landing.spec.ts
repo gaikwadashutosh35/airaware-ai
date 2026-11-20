@@ -62,6 +62,29 @@ test('step arrows point the way the steps run', async ({ page }) => {
   expect(await arrowsAt(page, 1280)).toEqual(['right', 'right', 'right']);
 });
 
+test('the details shot reads on a 320 px phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/');
+  const shot = page.getByRole('img', {
+    name: /^Screenshot of the open Air quality details/,
+  });
+  await shot.scrollIntoViewIfNeeded();
+  const size = await shot.evaluate(async (img: HTMLImageElement) => {
+    await img.decode();
+    return {
+      shown: img.getBoundingClientRect().width,
+      // A 2× capture: its own CSS size is half its pixels.
+      own: img.naturalWidth / 2,
+      file: img.naturalWidth / img.naturalHeight,
+      set: Number(img.getAttribute('width')) / Number(img.getAttribute('height')),
+    };
+  });
+
+  expect(size.shown / size.own).toBeGreaterThan(0.75);
+  // Its width and height match the file, so nothing shifts as it loads.
+  expect(size.set).toBeCloseTo(size.file, 2);
+});
+
 test('no movement under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
