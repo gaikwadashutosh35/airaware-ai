@@ -84,6 +84,9 @@ Responsible for navigation, forms, display, local UI state, accessibility, and c
   - `/app/ask`, `/app/home`, `/app/habits` and `/app/welcome` are the redesign pages, built in later phases;
   - `/app/profile` is My Profile.
 - `AppShell` holds the place, forecast, answers and saved-plan state, so moving between pages refetches nothing.
+- Today and My Profile stay mounted and are hidden when not shown, so a built plan, a build in progress and unsaved answers survive moving between pages.
+- After Back or Forward, the shell rewrites the address so its place matches the place on screen.
+- Nav links scroll to the top of the page.
 - A searched place travels in `?place=&lat=&lon=` on any app path. A device location never does.
 - The server (`app.ts`) and `netlify.toml` serve `index.html` for `/app/*`.
 

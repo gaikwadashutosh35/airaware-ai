@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { AppNav } from './AppNav.tsx';
 
@@ -14,6 +14,7 @@ const ITEMS = [
 describe('AppNav', () => {
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
     window.history.pushState({}, '', '/');
   });
 
@@ -43,7 +44,16 @@ describe('AppNav', () => {
     await expectNoAxeViolations(container);
   });
 
+  // Final review, Important 4: at 1024 px, long places wrapped the labels.
+  it('labels never wrap', () => {
+    render(<AppNav page="today" />);
+    for (const link of screen.getAllByRole('link')) {
+      expect(link.classList.contains('whitespace-nowrap')).toBe(true);
+    }
+  });
+
   it('navigates in place, keeping the place in the address', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     window.history.pushState({}, '', '/app?place=Pune&lat=18.52&lon=73.86');
     render(<AppNav page="today" />);
 

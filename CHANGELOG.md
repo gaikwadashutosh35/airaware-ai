@@ -50,7 +50,9 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - every `/app` page shares one frame with five-item navigation (Today, Ask AirAware, My Home, Better Habits, My Profile). It is a bottom bar on phones and a navy top bar on larger screens, with a skip link and a phone-safe bottom inset;
   - a place button changes the place from any page, in a native dialog;
   - the household answers and saved plans move to My Profile. Answers stay unsaved while you move around;
-  - moving between pages refetches nothing, and back and forward work;
+  - moving between pages refetches nothing, and a built plan survives it;
+  - back and forward work, and the address always names the place shown;
+  - nav links scroll to the top;
   - the server and Netlify serve the app on every `/app/*` path.
 - Design system base (Phase 3 of the assistant redesign):
   - Inter is self-hosted: one Latin variable font file, 48 KB, OFL, under `client/public/fonts/`. It is preloaded and uses `font-display: swap`;

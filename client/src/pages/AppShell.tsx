@@ -24,6 +24,7 @@ import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
 
 const TITLES = {
+  today: 'Air-quality dashboard',
   welcome: 'Welcome',
   ask: 'Ask AirAware',
   home: 'My Home',
@@ -32,12 +33,31 @@ const TITLES = {
 } as const;
 
 function AppShell() {
-  const page = appPage(usePath());
+  const path = usePath();
+  const page = appPage(path);
   // A searched place may arrive in the address (from the landing page or a
   // shared link).
   const [place, setPlace] = useState<Place | null>(() =>
     placeFromSearch(window.location.search),
   );
+  // The address query for the place shown ('' for none or a device
+  // location). Back and Forward land on older entries, so it is put back.
+  const [placeQuery, setPlaceQuery] = useState(() =>
+    placeFromSearch(window.location.search) ? window.location.search : '',
+  );
+  useEffect(() => {
+    function sync() {
+      if (window.location.search !== placeQuery) {
+        window.history.replaceState(
+          null,
+          '',
+          window.location.pathname + placeQuery,
+        );
+      }
+    }
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, [placeQuery]);
   // Running clock for stale checks.
   const now = useNow();
   // The household answers on screen, saved or not.
@@ -95,13 +115,9 @@ function AppShell() {
     setPlaceDialogOpen(false);
     setPlace(next);
     setOpened(null);
-    window.history.replaceState(
-      null,
-      '',
-      inAddress
-        ? `${window.location.pathname}?${placeToSearch(next)}`
-        : window.location.pathname,
-    );
+    const query = inAddress ? `?${placeToSearch(next)}` : '';
+    setPlaceQuery(query);
+    window.history.replaceState(null, '', window.location.pathname + query);
   }
 
   const cpcb =
@@ -111,6 +127,7 @@ function AppShell() {
 
   return (
     <>
+      <title>{`${TITLES[page]} | AirAware AI`}</title>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-20 focus:rounded-md focus:bg-surface-light focus:px-4 focus:py-3"
@@ -141,7 +158,9 @@ function AppShell() {
         tabIndex={-1}
         className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12"
       >
-        {page === 'profile' ? (
+        {/* Today and My Profile stay mounted, hidden when not shown, so a built
+            plan, a build in flight and unsaved answers survive moving pages. */}
+        <div hidden={page !== 'profile'} className="contents">
           <Profile
             context={context}
             onContextChange={setContext}
@@ -161,134 +180,133 @@ function AppShell() {
               setOpened((current) => (current?.id === id ? null : current));
             }}
           />
-        ) : page !== 'today' ? (
+        </div>
+        {page !== 'today' && page !== 'profile' && (
           <Placeholder title={TITLES[page]} />
-        ) : (
-          <>
-            <title>Air-quality dashboard | AirAware AI</title>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Air quality near you
-            </h1>
-            {/* Once a place is set, the place chip's dialog changes it. */}
-            {!place && (
-              <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-                <LocationSearch
-                  inputRef={searchRef}
-                  onSelect={(next) => choose(next, true)}
-                />
-                <UseMyLocation onLocateStart={locateStart} onLocate={locate} />
-              </div>
-            )}
+        )}
+        <div hidden={page !== 'today'} className="contents">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Air quality near you
+          </h1>
+          {/* Once a place is set, the place chip's dialog changes it. */}
+          {!place && (
+            <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+              <LocationSearch
+                inputRef={searchRef}
+                onSelect={(next) => choose(next, true)}
+              />
+              <UseMyLocation onLocateStart={locateStart} onLocate={locate} />
+            </div>
+          )}
 
-            {/* Air on the left, the plan on the right from lg; one column (air
+          {/* Air on the left, the plan on the right from lg; one column (air
             first) below it. */}
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-              <div className="flex min-w-0 flex-col gap-6">
-                {place ? (
-                  <>
-                    <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule p-4 sm:p-5">
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <h2
-                          ref={headingRef}
-                          tabIndex={-1}
-                          className="text-2xl font-semibold tracking-tight"
-                        >
-                          Air quality: {place.label}
-                        </h2>
-                        <p className="text-sm text-text-dark-muted">
-                          Forecast location: {place.latitude.toFixed(2)},{' '}
-                          {place.longitude.toFixed(2)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setPlaceDialogOpen(true)}
-                        className="min-h-11 rounded-md border border-text-dark px-4"
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+            <div className="flex min-w-0 flex-col gap-6">
+              {place ? (
+                <>
+                  <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule p-4 sm:p-5">
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <h2
+                        ref={headingRef}
+                        tabIndex={-1}
+                        className="text-2xl font-semibold tracking-tight"
                       >
-                        Change place
-                      </button>
-                    </section>
-                    {forecast.state.status === 'ready' ? (
-                      <>
-                        <AirReadout
-                          data={forecast.state.data.series}
-                          now={forecast.state.data.loadedAt}
-                          stale={isOlderThan(
-                            forecast.state.data.series.retrievedAt,
-                            now,
-                            60,
-                          )}
-                        />
-                        <ForecastPanel
-                          data={forecast.state.data.series}
-                          now={forecast.state.data.loadedAt}
-                        />
-                      </>
-                    ) : forecast.state.status === 'error' ? (
-                      <ErrorState
-                        error={forecast.state.error}
-                        onRetry={() => {
-                          // The card unmounts on retry; keep focus on the place.
-                          forecast.retry();
-                          headingRef.current?.focus();
-                        }}
-                        title="We couldn't load the forecast"
-                      />
-                    ) : (
-                      <Loading label="Loading forecast" band />
-                    )}
-                    <ObservationPanel note={cpcb?.limitations[0]} />
-                  </>
-                ) : (
-                  <div className="flex flex-col items-start gap-4 rounded-lg border border-rule p-6">
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 20 20"
-                      className="size-6 fill-text-dark-muted"
-                    >
-                      <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm3.5 3.5-2 5-5 2 2-5zM10 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
-                    </svg>
-                    <p className="max-w-prose text-text-dark-muted">
-                      Search for a place or use your location to see its
-                      air-quality forecast.
-                    </p>
+                        Air quality: {place.label}
+                      </h2>
+                      <p className="text-sm text-text-dark-muted">
+                        Forecast location: {place.latitude.toFixed(2)},{' '}
+                        {place.longitude.toFixed(2)}
+                      </p>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => searchRef.current?.focus()}
+                      onClick={() => setPlaceDialogOpen(true)}
                       className="min-h-11 rounded-md border border-text-dark px-4"
                     >
-                      Search for a place
+                      Change place
                     </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex min-w-0 flex-col gap-6">
-                <DailyPlanSection
-                  // A new place, or deleting saved data, starts the plan area afresh.
-                  key={`${place?.label}|${forecastKey}#${resets}`}
-                  place={place}
-                  context={context}
-                  now={now}
-                  onSaved={() => setListVersion((n) => n + 1)}
-                  opened={opened}
-                  onBackToToday={() => setOpened(null)}
-                  deletedPlanId={deletedPlanId}
-                />
-                <SourcesPanel
-                  sources={
-                    sources.state.status === 'ready' ? sources.state.data : null
-                  }
-                  forecastLimitations={
-                    forecast.state.status === 'ready'
-                      ? forecast.state.data.series.limitations
-                      : []
-                  }
-                />
-              </div>
+                  </section>
+                  {forecast.state.status === 'ready' ? (
+                    <>
+                      <AirReadout
+                        data={forecast.state.data.series}
+                        now={forecast.state.data.loadedAt}
+                        stale={isOlderThan(
+                          forecast.state.data.series.retrievedAt,
+                          now,
+                          60,
+                        )}
+                      />
+                      <ForecastPanel
+                        data={forecast.state.data.series}
+                        now={forecast.state.data.loadedAt}
+                      />
+                    </>
+                  ) : forecast.state.status === 'error' ? (
+                    <ErrorState
+                      error={forecast.state.error}
+                      onRetry={() => {
+                        // The card unmounts on retry; keep focus on the place.
+                        forecast.retry();
+                        headingRef.current?.focus();
+                      }}
+                      title="We couldn't load the forecast"
+                    />
+                  ) : (
+                    <Loading label="Loading forecast" band />
+                  )}
+                  <ObservationPanel note={cpcb?.limitations[0]} />
+                </>
+              ) : (
+                <div className="flex flex-col items-start gap-4 rounded-lg border border-rule p-6">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="size-6 fill-text-dark-muted"
+                  >
+                    <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm3.5 3.5-2 5-5 2 2-5zM10 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
+                  </svg>
+                  <p className="max-w-prose text-text-dark-muted">
+                    Search for a place or use your location to see its
+                    air-quality forecast.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => searchRef.current?.focus()}
+                    className="min-h-11 rounded-md border border-text-dark px-4"
+                  >
+                    Search for a place
+                  </button>
+                </div>
+              )}
             </div>
-          </>
-        )}
+
+            <div className="flex min-w-0 flex-col gap-6">
+              <DailyPlanSection
+                // A new place, or deleting saved data, starts the plan area afresh.
+                key={`${place?.label}|${forecastKey}#${resets}`}
+                place={place}
+                context={context}
+                now={now}
+                onSaved={() => setListVersion((n) => n + 1)}
+                opened={opened}
+                onBackToToday={() => setOpened(null)}
+                deletedPlanId={deletedPlanId}
+              />
+              <SourcesPanel
+                sources={
+                  sources.state.status === 'ready' ? sources.state.data : null
+                }
+                forecastLimitations={
+                  forecast.state.status === 'ready'
+                    ? forecast.state.data.series.limitations
+                    : []
+                }
+              />
+            </div>
+          </div>
+        </div>
       </main>
       {/* Bottom padding on phones keeps the footer clear of the nav bar. */}
       <footer className="border-t border-rule">

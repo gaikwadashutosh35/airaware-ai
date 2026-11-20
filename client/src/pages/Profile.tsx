@@ -21,7 +21,6 @@ export function Profile({
 }) {
   return (
     <>
-      <title>My Profile | AirAware AI</title>
       <h1 className="text-3xl font-semibold tracking-tight">My Profile</h1>
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <HouseholdPreferencesForm

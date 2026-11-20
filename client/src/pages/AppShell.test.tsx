@@ -126,7 +126,7 @@ async function choosePlace(optionIndex = 0) {
       name: 'Search for a city or area in India',
     })
   ) {
-    fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Change place: / }));
   }
   const input = screen.getByRole('combobox', {
     name: 'Search for a city or area in India',
@@ -155,6 +155,8 @@ describe('AppShell', () => {
   beforeAll(stubDialog);
 
   beforeEach(() => {
+    // jsdom has no scrolling; navigation scrolls to the top.
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-11-17T17:30:00Z'));
   });
@@ -578,6 +580,94 @@ describe('AppShell', () => {
       (screen.getByLabelText('Do you exercise outdoors?') as HTMLSelectElement)
         .value,
     ).toBe('yes');
+  });
+
+  // Final review, Critical 1: the shell keeps the plan (spec §5).
+  it('a built plan survives leaving Today', async () => {
+    const fetchSpy = routeFetch(ok(), planRoutes());
+    render(<AppShell />);
+    await choosePlace();
+    await buildPlan();
+    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
+
+    await goTo('My Profile');
+    await goTo('Today');
+
+    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
+    expect(
+      fetchSpy.mock.calls.filter(
+        ([input]) =>
+          urlOf(input).pathname === '/api/v1/recommendations/daily-plan',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('a plan still building finishes after leaving Today', async () => {
+    let reply: (response: Response) => void = () => {};
+    routeFetch(
+      ok(),
+      planRoutes(
+        () =>
+          new Promise((resolve) => {
+            reply = resolve;
+          }),
+      ),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Build my daily plan' }),
+    );
+
+    await goTo('Better Habits');
+    await act(async () => {
+      reply(Response.json({ data: rulesPlanFixture }));
+    });
+    await flush();
+    await goTo('Today');
+
+    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
+  });
+
+  // Final review, Important 2: a remount reloaded saved answers over a cleared one.
+  it('My Profile loads saved answers once', async () => {
+    session.available = true;
+    session.currentToken.mockResolvedValue('tok');
+    const fetchSpy = routeFetch(ok(), planRoutes());
+    render(<AppShell />);
+    await goTo('My Profile');
+    await flush();
+
+    await goTo('Today');
+    await goTo('My Profile');
+    await flush();
+
+    expect(
+      fetchSpy.mock.calls.filter(
+        ([input]) => urlOf(input).pathname === '/api/v1/profile/preferences',
+      ),
+    ).toHaveLength(1);
+  });
+
+  // Final review, Important 1.
+  it('after Back, the address names the place shown', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace(0);
+    const first = window.location.search;
+    await goTo('My Profile');
+    await choosePlace(1);
+    const second = window.location.search;
+    expect(second).not.toBe(first);
+
+    // Back lands on the older entry, which still holds the first place.
+    act(() => {
+      window.history.pushState(null, '', '/app' + first);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    expect(window.location.pathname).toBe('/app');
+    expect(window.location.search).toBe(second);
   });
 
   it('reads the place on any app path', async () => {

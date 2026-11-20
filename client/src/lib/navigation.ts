@@ -19,6 +19,8 @@ export function usePath(): string {
 // Keeps the query, so a searched place travels between pages.
 export function navigate(to: string): void {
   window.history.pushState(null, '', to + window.location.search);
+  // A new page starts at its top; Back and Forward keep the browser's scroll.
+  window.scrollTo(0, 0);
   window.dispatchEvent(new Event(NAVIGATED));
 }
 

@@ -57,7 +57,7 @@ export function AppNav({ page }: { page: AppPage }) {
               aria-label={name}
               aria-current={target === page ? 'page' : undefined}
               onClick={(event) => follow(event, href)}
-              className="press group flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs text-text-muted aria-[current=page]:font-semibold aria-[current=page]:text-text md:min-h-11 md:flex-row md:gap-2 md:rounded-full md:px-3 md:text-sm md:aria-[current=page]:bg-elevated"
+              className="press group flex min-h-14 whitespace-nowrap flex-col items-center justify-center gap-0.5 text-xs text-text-muted aria-[current=page]:font-semibold aria-[current=page]:text-text md:min-h-11 md:flex-row md:gap-2 md:rounded-full md:px-3 md:text-sm md:aria-[current=page]:bg-elevated"
             >
               <span className="flex h-7 w-12 items-center justify-center rounded-full group-aria-[current=page]:bg-elevated md:h-auto md:w-auto md:group-aria-[current=page]:bg-transparent">
                 <Icon

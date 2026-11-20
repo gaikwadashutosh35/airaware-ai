@@ -1,5 +1,5 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appPage, navigate, usePath } from './navigation.ts';
 
 function Probe() {
@@ -29,6 +29,17 @@ describe('navigation', () => {
 
     expect(screen.getByText('/app/profile')).toBeDefined();
     expect(window.location.search).toBe('?place=Pune&lat=18.52&lon=73.86');
+  });
+
+  // Final review, Important 3.
+  it('navigate scrolls to the top', () => {
+    const scroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    window.history.pushState({}, '', '/app');
+
+    navigate('/app/profile');
+
+    expect(scroll).toHaveBeenCalledWith(0, 0);
+    scroll.mockRestore();
   });
 
   it('back and forward switch pages without reloading', () => {
