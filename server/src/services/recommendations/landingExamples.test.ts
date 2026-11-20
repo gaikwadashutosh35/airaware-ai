@@ -67,12 +67,20 @@ describe('landing examples', () => {
     }
   });
 
+  // The registry also holds the guide library's sources (Phase 8), so the
+  // landing lists exactly the ones its examples cite, word for word.
   it("the landing sources are the rules' sources", () => {
-    expect(LANDING_SOURCES).toEqual(
-      Object.entries(SOURCE_REFERENCES).map(([id, source]) => ({
-        id,
-        ...source,
-      })),
+    const cited = new Set(
+      LANDING_EXAMPLES.flatMap((example) => example.candidate.sourceIds),
     );
+    expect(LANDING_SOURCES.map((source) => source.id).sort()).toEqual(
+      [...cited].sort(),
+    );
+    for (const source of LANDING_SOURCES) {
+      expect(source).toEqual({
+        id: source.id,
+        ...SOURCE_REFERENCES[source.id],
+      });
+    }
   });
 });

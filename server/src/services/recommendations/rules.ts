@@ -20,6 +20,48 @@ export const SOURCE_REFERENCES: Record<
     name: 'National Ambient Air Quality Standards (CPCB, 18 November 2009)',
     url: 'https://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf',
   },
+  // The guide library's sources, opened and checked on 20 Nov 2026
+  // (docs/superpowers/specs/2026-11-20-guide-library.md).
+  'mohfw-air-advisory-2025': {
+    name: 'Health Advisory on Air Pollution (Ministry of Health and Family Welfare, NCDC, 2025)',
+    url: 'https://ncdc.mohfw.gov.in/uploads/pdf/air2.pdf',
+  },
+  'who-household-air': {
+    name: 'Household air pollution (WHO fact sheet)',
+    url: 'https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health',
+  },
+  'epa-indoor-pm': {
+    name: 'Sources of Indoor Particulate Matter (US EPA)',
+    url: 'https://www.epa.gov/indoor-air-quality-iaq/sources-indoor-particulate-matter-pm',
+  },
+  'epa-air-cleaners': {
+    name: 'Guide to Air Cleaners in the Home (US EPA, 2018)',
+    url: 'https://www.epa.gov/sites/default/files/2018-07/documents/guide_to_air_cleaners_in_the_home_2nd_edition.pdf',
+  },
+  'epa-near-road-schools': {
+    name: 'Best Practices for Reducing Near-Road Pollution Exposure at Schools (US EPA, 2021)',
+    url: 'https://www.epa.gov/system/files/documents/2026-08/best-practices-for-reducing-near-road-pollution-exposure-at-schools.pdf',
+  },
+  'pib-grap-stage1-2026': {
+    name: 'CAQM invokes Stage-I of GRAP in Delhi-NCR (PIB, October 2026)',
+    url: 'https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2326133&reg=3&lang=1',
+  },
+  'swm-rules-2026': {
+    name: 'Solid Waste Management Rules, 2026 (Gazette of India)',
+    url: 'https://static.pib.gov.in/WriteReadData/specificdocs/documents/2026/jan/doc2026129773501.pdf',
+  },
+  'bee-star-label': {
+    name: 'Standards & Labelling (Bureau of Energy Efficiency)',
+    url: 'https://beeindia.gov.in/show_content.php?lang=1&level=1&ls_id=372&lid=322',
+  },
+  'pib-ac-default-2020': {
+    name: 'BEE Notifies New Energy Performance Standards for Air Conditioners (PIB, 6 January 2020)',
+    url: 'https://www.pib.gov.in/PressReleasePage.aspx?PRID=1598508',
+  },
+  'bee-domestic-tips': {
+    name: 'Tips for Energy Conservation for Domestic (Bureau of Energy Efficiency)',
+    url: 'https://beeindia.gov.in/sites/default/files/Download%20Tips%20for%20Energy%20Conservation%20for%20Domestic.pdf',
+  },
 };
 
 const LIMITS_REASON = `India's National Ambient Air Quality Standards (CPCB, 2009) set 24-hour limits of ${NAAQS_24H_LIMITS.PM2_5} ${UG_PER_M3} for PM2.5 and ${NAAQS_24H_LIMITS.PM10} ${UG_PER_M3} for PM10.`;
@@ -351,6 +393,9 @@ const RULES: Rule[] = [
     }),
   },
 ];
+
+// Every rule's id, for the guide library's checks.
+export const RULE_IDS: readonly string[] = RULES.map((rule) => rule.id);
 
 export function buildCandidates(
   context: HouseholdContext,

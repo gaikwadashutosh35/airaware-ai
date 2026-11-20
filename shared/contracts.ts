@@ -128,7 +128,20 @@ export interface ForecastData extends ForecastSeries {
   weather: WeatherNow | null;
 }
 
-export type SourceReferenceId = 'open-meteo' | 'cpcb-naaqs-2009';
+export type SourceReferenceId =
+  | 'open-meteo'
+  | 'cpcb-naaqs-2009'
+  // The guide library's sources (docs/superpowers/specs/2026-11-20-guide-library.md).
+  | 'mohfw-air-advisory-2025'
+  | 'who-household-air'
+  | 'epa-indoor-pm'
+  | 'epa-air-cleaners'
+  | 'epa-near-road-schools'
+  | 'pib-grap-stage1-2026'
+  | 'swm-rules-2026'
+  | 'bee-star-label'
+  | 'pib-ac-default-2020'
+  | 'bee-domestic-tips';
 
 // One piece of advice the rules engine allows. Phase 5's AI may reword or
 // order these; it may not add any.
@@ -172,6 +185,29 @@ export interface DailyPlan {
   }>;
   more: RecommendationCandidate[];
   sources: Array<{ id: SourceReferenceId; name: string; url: string }>;
+  safetyNote: string;
+}
+
+// The guide library (Phase 8): general cards with cited sources for My Home
+// and Better Habits. They never enter a daily plan.
+export type GuideTopic = 'home' | 'habits';
+
+export interface GuideCard extends RecommendationCandidate {
+  // The rule that gives the same advice personally; My Home hides this card
+  // when today's plan shows that rule.
+  personalRuleId?: string;
+}
+
+export interface GuideGroup {
+  id: string;
+  heading: string;
+  cards: GuideCard[];
+}
+
+export interface GuideSet {
+  topic: GuideTopic;
+  groups: GuideGroup[];
+  sources: DailyPlan['sources'];
   safetyNote: string;
 }
 
