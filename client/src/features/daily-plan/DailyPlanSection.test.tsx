@@ -236,11 +236,43 @@ describe('DailyPlanSection', () => {
     expect(onPlan).toHaveBeenNthCalledWith(1, null);
 
     await build();
-    expect(onPlan).toHaveBeenLastCalledWith(rulesPlanFixture);
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith(rulesPlanFixture),
+    );
 
     fireEvent.click(saveButton());
     await screen.findByText(SAVED);
-    expect(onPlan).toHaveBeenLastCalledWith(saved);
+    await waitFor(() => expect(onPlan).toHaveBeenLastCalledWith(saved));
+  });
+
+  // Final review, Important 1: My Home must not show a plan Today hides.
+  it('reports null while rebuilding and after a failed rebuild', async () => {
+    let builds = 0;
+    routeFetch(() =>
+      ++builds === 1 ? planReply() : errorReply(500, 'INTERNAL_ERROR'),
+    );
+    const { onPlan, update } = renderSection();
+    await build();
+    await waitFor(() =>
+      expect(onPlan).toHaveBeenLastCalledWith(rulesPlanFixture),
+    );
+
+    update({ context: { home: { airPurifier: true } } });
+    await screen.findByRole('heading', {
+      name: "We couldn't build your recommendation.",
+    });
+    await waitFor(() => expect(onPlan).toHaveBeenLastCalledWith(null));
+  });
+
+  it('reports null once the forecast behind the plan is stale', async () => {
+    routeFetch(() => planReply());
+    const { onPlan, update } = renderSection();
+    await build();
+
+    // 17:05 + 61 min.
+    update({ now: new Date('2026-11-17T18:06:00Z') });
+
+    await waitFor(() => expect(onPlan).toHaveBeenLastCalledWith(null));
   });
 
   it('never creates an account to build a plan', async () => {

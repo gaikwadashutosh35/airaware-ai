@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DailyPlan, HouseholdContext } from '../../../shared/contracts.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { homeGuidesFixture } from '../test/guideFixtures.ts';
-import { rulesPlanFixture } from '../test/planFixtures.ts';
+import { aiPlanFixture, rulesPlanFixture } from '../test/planFixtures.ts';
 import { MyHome } from './MyHome.tsx';
 
 const GUIDES = '/api/v1/recommendations/guides?topic=home';
@@ -100,6 +100,36 @@ describe('MyHome', () => {
     expect(screen.queryByRole('heading', { name: 'Indoor habits' })).toBeNull();
   });
 
+  // Final review, Important 2.
+  it("says who made today's cards", async () => {
+    routeGuides(guidesOk);
+    show(aiPlanFixture);
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    const today = screen.getByRole('region', {
+      name: 'Today, for your home',
+    });
+    expect(
+      within(today).getByText(`Made with AI. ${aiPlanFixture.safetyNote}`),
+    ).toBeDefined();
+  });
+
+  // Final review, finding 3: a guide must not contradict the person's answer.
+  it('no kitchen exhaust hides the exhaust guide', async () => {
+    routeGuides(guidesOk);
+    const { unmount } = show(null);
+    expect(
+      await screen.findByText('Use the kitchen exhaust while cooking'),
+    ).toBeDefined();
+    unmount();
+
+    show(null, { home: { kitchenExhaust: false } });
+    await screen.findByRole('heading', { name: 'Dust and cleaning' });
+    expect(
+      screen.queryByText('Use the kitchen exhaust while cooking'),
+    ).toBeNull();
+  });
+
   it('Near a busy road shows only after a yes', async () => {
     routeGuides(guidesOk);
     const { unmount } = show(null);
@@ -137,6 +167,10 @@ describe('MyHome', () => {
     ).toBeDefined();
     expect(
       screen.getByRole('region', { name: 'Today, for your home' }),
+    ).toBeDefined();
+    // Final review, Important 2: the safety note stays with today's cards.
+    expect(
+      screen.getByText(`Made by our rules. ${rulesPlanFixture.safetyNote}`),
     ).toBeDefined();
 
     fail = false;

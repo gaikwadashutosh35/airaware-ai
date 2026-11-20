@@ -38,7 +38,10 @@ export function MyHome({
   const shown = new Set(today.map((item) => item.candidate.id));
   const hide = (card: GuideCard) =>
     (card.personalRuleId !== undefined && shown.has(card.personalRuleId)) ||
-    (card.id === 'guide.busy-road' && context.home?.nearBusyRoad !== 'yes');
+    (card.id === 'guide.busy-road' && context.home?.nearBusyRoad !== 'yes') ||
+    // Never contradict an answer: no exhaust, no "use the exhaust".
+    (card.id === 'guide.kitchen-exhaust' &&
+      context.home?.kitchenExhaust === false);
 
   return (
     <>
@@ -59,6 +62,11 @@ export function MyHome({
               />
             ))}
           </div>
+          {/* As on Today: who made it, and the safety note, even when the
+              guides below fail to load. */}
+          <p className="text-sm text-text-dark-muted">
+            {`${plan.generatedBy === 'ai' ? 'Made with AI' : 'Made by our rules'}. ${plan.safetyNote}`}
+          </p>
         </section>
       )}
       <section aria-labelledby={waysId} className="flex flex-col gap-6">

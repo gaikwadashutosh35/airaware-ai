@@ -166,11 +166,15 @@ export function DailyPlanSection({
     (built === null ||
       JSON.stringify(context) !== built.builtWith ||
       isOlderThan(built.builtAt.toISOString(), now, 60));
-  // Null on mount (a new place), then each finished build or save.
+  // Only a current plan Today shows, so My Home never shows one Today hides:
+  // null on mount (a new place), while building, after an error, and once
+  // the forecast behind it is stale.
+  const currentPlan =
+    status.kind === 'idle' && built && !stale ? built.plan : null;
   const reportPlan = useEffectEvent((plan: DailyPlan | null) => onPlan?.(plan));
   useEffect(() => {
-    reportPlan(built?.plan ?? null);
-  }, [built]);
+    reportPlan(currentPlan);
+  }, [currentPlan]);
   const startBuild = useEffectEvent(() => void build());
   useEffect(() => {
     if (!due) return;
