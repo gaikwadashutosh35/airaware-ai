@@ -118,7 +118,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `TodayLead`: the weather strip (the backdrop's words), verdict (`h2`), word tag, provenance line, stale banner and caveat.
   - `CitySkyline` (the app backdrop, adaptive cityscape):
     - **Where:** one fixed, full-screen, `aria-hidden` backdrop behind every `/app/*` page. `AppShell` draws it once and keeps it mounted between pages; it takes no clicks or focus.
-    - **Layers:** a sky gradient over the screen; the daylight glow and clouds under the header; the city band (far, middle and near rows, rooftop tanks, lit windows from 640 px) at the bottom, above the phone bar, never over a fifth of the screen high; veils and fog fading in from the band's top; rain over the whole screen; heat at the city's base.
+    - **Layers:** a sky gradient over the screen; the daylight glow and clouds under the header; the city band (far, middle and near rows, rooftop tanks, lit windows from 640 px) at the bottom, above the phone bar, never over a fifth of the screen high, and hidden on screens under 24rem tall, where a wrapped title could reach it (the sky alone carries the look there); veils and fog fading in from the band's top; rain over the whole screen; heat at the city's base.
     - **Air look:** only from `airCheck.level`. Within: a brighter blue sky. Above: a muted blue-grey sky and veils over the far and middle rows. Unknown: a neutral grey sky.
     - **Weather:** clouds, rain (forecast amount only), fog, heat and the glow (`weather.isDay`) follow only the weather.
     - **Stale:** keeps the last-known look. The footer adds "Not current." and Today keeps its banner. A same-place hourly reload keeps the look until the new forecast arrives.

@@ -58,7 +58,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - every section sits on a solid panel; only each page's title block rests on the sky, in the dark text colour;
   - rain falls over the whole screen, fog stays at the city's base, and the veils fade in from the city's top;
   - the footer says the background follows the model forecast for the place, and when it is not current;
-  - the hourly reload keeps the scene instead of flashing grey, and the band leaves Today's card, so the verdict sits higher on a phone.
+  - the hourly reload keeps the scene instead of flashing grey, and the band leaves Today's card, so the verdict sits higher on a phone;
+  - on screens under 24rem (384 px) tall, such as a phone held sideways, the city hides, so a long place name in the title never lands on it.
 - Landing (Phase 4 of the assistant redesign):
   - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;
   - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";
