@@ -44,6 +44,11 @@ The owner wants the scene to change automatically with conditions: haze, fog, po
 5. **The band** grows to about 128 px on phones and 176 px from `sm`.
 6. **Sources panel:** it gains the Open-Meteo weather source (CC BY 4.0) and one limitation line: "Weather is a model forecast for the same grid area; local showers can differ."
 
+*Amended (cityscape, 20 Nov 2026, `2026-11-20-adaptive-cityscape-design.md`):*
+- Rain needs a forecast amount (`precipitationMm ≥ 0.2`); a chance alone no longer draws streaks.
+- The thick-smog band is gone, with the five haze levels.
+- The sun disc is now a daylight glow, drawn only when `weather.isDay` is true, the air is known, and there is no rain or overcast.
+
 ## Non-goals
 
 - Day and night, wind, or air-quality advice based on the weather.

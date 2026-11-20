@@ -77,6 +77,8 @@ Success means judges get a polished, readable app in which every number and labe
   | air level `unknown` | — | neutral: flat grey, no sun, and the words "Air information unavailable" |
 
   The sky is never fully clear: level 1 still has haze.
+
+  *Amended (cityscape, 20 Nov 2026):* the five ratio levels are replaced by three looks taken straight from `airCheck.level` (within, above, unknown), so the scene makes no classification of its own. Within keeps a minimal veil on the far row. See `2026-11-20-adaptive-cityscape-design.md`.
 - **How the haze is drawn:** the far buildings fade first, then the nearer ones, and the sun dims. This is done with opacity on flat token-colour fills; blur filters are optional and must stay cheap.
 - **Accessibility:** the skyline is decorative (`aria-hidden`), and the readout's words carry the meaning. If anything drifts, it stops under `prefers-reduced-motion`. Text over or beside it keeps a contrast of 4.5:1 or better.
 - **Size:** a few kB of SVG, with no new dependency.

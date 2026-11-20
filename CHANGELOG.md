@@ -46,6 +46,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Adaptive cityscape (Today's scene):
+  - a layered city: sky gradient, daylight glow, soft clouds, far, middle and near rows with rooftop tanks and lit windows (windows from 640 px);
+  - its look follows only the server's `airCheck.level`: within, above or unknown. The five client-side haze levels and the smog band are gone;
+  - weather drives the rest: clouds by cover (a deck at 80 % or more), rain only from a forecast amount, fog, heat, and a glow only by day;
+  - the forecast's `weather` gains `isDay` (Open-Meteo `is_day`, same request);
+  - the clouds settle once over 4.8 s, then rest, and stay still under reduced motion;
+  - while the forecast loads, a still silhouette of the same city replaces the pulsing band.
 - Landing (Phase 4 of the assistant redesign):
   - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;
   - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";

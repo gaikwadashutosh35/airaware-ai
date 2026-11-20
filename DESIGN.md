@@ -116,6 +116,12 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `PlaceChip`: the place button and a native modal `<dialog>` holding `LocationSearch` and `UseMyLocation`.
   - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans. An opened plan shows below the list under its snapshot banner, with "Close", which returns focus to its Open button.
   - `TodayLead`: the scene, weather strip, verdict (`h2`), word tag, provenance line, stale banner and caveat.
+  - `CitySkyline` (the scene, adaptive cityscape):
+    - **Layers:** a decorative, `aria-hidden` band of sky gradient, daylight glow, clouds, far, middle and near building rows (rooftop tanks; lit windows from 640 px), veils, and fog, rain or heat.
+    - **Air look:** only from `airCheck.level`. Within: a brighter blue sky. Above: a muted blue-grey sky and veils over the far and middle rows. Unknown: a neutral grey sky.
+    - **Weather:** clouds, rain (forecast amount only), fog, heat and the glow (`weather.isDay`) follow only the weather.
+    - **Stale:** keeps the last-known look under the HTML "Not current" banner.
+    - **Loading:** a still silhouette of the same city.
   - `DailyPlanSection`: builds by itself while Today or My Home is shown (no plan, changed answers, or a plan over an hour old by the device clock), never twice at once. After an error it waits for "Try again". It shows the top card, with the full day in a `<details>`, and reports its state (nothing, building, an error with a retry, a stale plan, or the current one) for My Home, which shows the same states and never a stale plan as today's.
   - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family ask their topic through `useAsk` and open Ask.
   - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. Send asks through `useAsk` and opens Ask; the question never goes into the address.
@@ -146,7 +152,10 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - Phones have no double-tap delay (`touch-action: manipulation`).
 - A new Ask answer rises in: opacity 0 → 1 and `translate: 0 8px` → 0 over 200 ms with the same curve, from `@starting-style`, only under `prefers-reduced-motion: no-preference`. Browsers without `@starting-style` show it at once.
 - Landing sections after the hero rise in (opacity, 8 px `translate`) as they scroll into view, from `animation-timeline: view()`, only under `prefers-reduced-motion: no-preference` and where supported; otherwise they are still.
-- The readout scene's rain is its only decorative motion: it animates `transform` only, falls for under 5 seconds and then rests, and is used as `motion-safe:animate-*`, so it stays still under reduced motion. The heat band is still.
+- The scene's motion, `transform` only and `motion-safe:animate-*`, so it stays still under reduced motion:
+  - the rain falls for under 5 seconds, then rests;
+  - the clouds settle 16 px into place over 4.8 s once, then rest.
+  - The heat band and the buildings are still.
 
 ## 10. Responsive behavior
 
