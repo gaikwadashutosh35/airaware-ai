@@ -291,6 +291,19 @@ describe('Landing', () => {
     expect(text).not.toMatch(/\d/);
   });
 
+  // The motion itself is CSS (index.css `.reveal`), checked in a real
+  // browser by e2e/landing.spec.ts.
+  it('every section after the hero rises in', () => {
+    const { container } = render(<Landing />);
+
+    const [hero, ...rest] = container.querySelectorAll('main > section');
+    expect(hero?.classList.contains('reveal')).toBe(false);
+    expect(rest).toHaveLength(7);
+    for (const section of rest) {
+      expect(section.classList.contains('reveal')).toBe(true);
+    }
+  });
+
   it('has no axe violations', async () => {
     const { container } = render(<Landing />);
 

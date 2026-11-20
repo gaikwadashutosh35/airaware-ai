@@ -95,7 +95,7 @@ function Chapter({
   return (
     <section
       aria-labelledby={headingId}
-      className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:py-24"
+      className="reveal mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:py-24"
     >
       <div className={`flex flex-col gap-4 ${flip ? 'lg:order-2' : ''}`}>
         <Number n={number} />
@@ -219,7 +219,7 @@ function Landing() {
 
         <section
           aria-labelledby={worksId}
-          className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-24 sm:px-8 lg:py-36"
+          className="reveal mx-auto flex max-w-6xl flex-col gap-12 px-4 py-24 sm:px-8 lg:py-36"
         >
           <div className="flex flex-col gap-4">
             <h2
@@ -276,7 +276,7 @@ function Landing() {
 
         <section
           aria-labelledby={closingId}
-          className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-24 sm:px-8 lg:py-32"
+          className="reveal mx-auto flex max-w-6xl flex-col gap-8 px-4 py-24 sm:px-8 lg:py-32"
         >
           <h2
             id={closingId}
