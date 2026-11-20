@@ -253,18 +253,51 @@ Response (illustrative, shortened):
 - Rules-only plan: `generatedBy` `"rules"`; `model`, `promptVersion` and `summary` are `null`; `featured` lists every action in rules order with `period` and `forYou` `null`; `more` is empty.
 - `notices` always holds every notice; the air notice carries the model-forecast caveat.
 
-### `POST /api/v1/assistant/chat`
+### `POST /api/v1/assistant/answer`
 
-Request:
+Public, rate-limited endpoint behind Ask AirAware (Phase 7). Answers one question or one topic for one place, from the same forecast check, rules and guide cards as the daily plan. It is one question and one answer: there is no conversation history.
+
+Request (illustrative), with exactly one of `question` or `topic`:
 ```json
 {
-  "message": "How should I plan my morning walk?",
-  "locationLabel": "Pune",
-  "planId": null
+  "question": "Can I go for a morning walk today?",
+  "place": { "label": "Pune, Maharashtra", "latitude": 18.52, "longitude": 73.86 },
+  "householdContext": { "routine": { "outdoorExercise": true } }
 }
 ```
 
-Bound message length and conversation context. AI must not invent readings or give diagnosis/medication advice.
+**Request handling:**
+- `question`: trimmed, 1–200 characters. The server matches it against fixed word lists to pick a topic, or `medical` (checked first) or `out_of_scope`. The question itself is never logged, stored, echoed back or sent to Gemini or Claude: only the topic is used.
+- `topic`: one of `outdoors`, `windows`, `indoor`, `family`, `commuting`, `habits` (the topic chips).
+- Both or neither of `question` and `topic` → `400 VALIDATION_ERROR`.
+- `place` and `householdContext`: the same rules as the daily plan (label 1–120 characters with no control characters, coordinates with at most 2 decimal places).
+- Unknown fields → `400`. Malformed JSON → `400` "Malformed JSON body.". A body over 4 KB → `413 PAYLOAD_TOO_LARGE`.
+- Rate limit: it shares the daily plan's 10 requests per minute per IP (one counter for every route that can call the AI), on top of the 60 per minute on all of `/api/v1`. Over the limit → `429 RATE_LIMITED`.
+
+**Behaviour:**
+- Returns 200 for every valid request, whatever happens to the AI or Open-Meteo. An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Live air information unavailable" notice.
+- `medical` and `out_of_scope`: no AI call and no cards; the air check, notices, sources and safety note are still returned. The client shows the fixed medical or out-of-scope reply.
+- Any other topic: up to three cards, the household's own rules for that topic first (most important first), then general guide cards. A guide is never shown beside its personal twin, and the busy-road and kitchen-exhaust guides follow the same hide rules as My Home.
+- The 1–2 sentence `summary` comes from the daily plan's writer (prompt `daily-plan-v2`), so Ask and the daily plan share one daily AI budget and one 10-minute answers cache. A summary that reads as a yes or no on safety, or fails the plan's own checks, is dropped: `generatedBy` is then `"rules"` and `summary` `null`.
+
+Response (illustrative, shortened):
+```json
+{
+  "data": {
+    "topic": "outdoors",
+    "summary": "Particle levels are forecast above the national limit, so plan indoor exercise today.",
+    "generatedBy": "ai",
+    "cards": [{ "id": "exercise.indoor-alternative", "section": "action", "priority": "high", "title": "…", "text": "…", "reason": "…", "evidenceType": "data_driven_rule", "sourceIds": ["open-meteo", "cpcb-naaqs-2009"], "inputsUsed": ["routine.outdoorExercise", "air.level"], "caveat": "…" }],
+    "air": { "level": "elevated", "windowStart": "2026-11-18T10:00:00.000Z", "checks": [] },
+    "forecast": { "provider": "Open-Meteo", "dataKind": "model_forecast", "retrievedAt": "2026-11-18T10:05:00.000Z", "…": "…" },
+    "notices": [{ "id": "air.elevated", "section": "notice", "…": "…" }],
+    "sources": [{ "id": "open-meteo", "name": "Open-Meteo Air Quality API", "url": "https://open-meteo.com/en/docs/air-quality-api" }],
+    "safetyNote": "General information only, not medical advice. Follow local public-health advisories."
+  }
+}
+```
+
+The response has no `question`, `model` or `promptVersion` field.
 
 ### Saved data (as built, Phase 6)
 

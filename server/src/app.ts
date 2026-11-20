@@ -5,6 +5,7 @@ import pkg from '../package.json' with { type: 'json' };
 import { errorHandler } from './errors.ts';
 import { accountRouter } from './routes/account.ts';
 import { airQualityRouter } from './routes/airQuality.ts';
+import { assistantRouter } from './routes/assistant.ts';
 import { locationsRouter } from './routes/locations.ts';
 import { plansRouter } from './routes/plans.ts';
 import { preferencesRouter } from './routes/preferences.ts';
@@ -13,6 +14,7 @@ import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
 import { createCachedWeather } from './services/air-data/cachedWeather.ts';
 import type { GeneratePlan } from './services/ai/personalize.ts';
+import { createAsker } from './services/recommendations/ask.ts';
 import {
   createDailyPlanner,
   createPlanWriter,
@@ -122,6 +124,13 @@ export function createApp(options: AppOptions = {}): express.Express {
   app.use(
     '/api/v1/recommendations',
     recommendationsRouter({ planner, planLimit }),
+  );
+  app.use(
+    '/api/v1/assistant',
+    assistantRouter({
+      ask: createAsker({ forecast, write: writer }),
+      planLimit,
+    }),
   );
   const saved = options.saved ?? null;
   app.use('/api/v1/profile/preferences', preferencesRouter(saved));
