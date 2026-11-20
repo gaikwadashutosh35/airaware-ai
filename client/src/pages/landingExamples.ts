@@ -27,10 +27,10 @@ export const LANDING_SOURCES: DailyPlan['sources'] = [
   },
 ];
 
-// Chapters 3 to 6, in page order.
+// Sections 3 to 6, in page order.
 export const LANDING_EXAMPLES: readonly LandingExample[] = [
   {
-    heading: 'A plan for your day',
+    heading: 'Your personal daily plan',
     text: "Choose your place and, if you like, answer a few questions about your routine and home. Our fixed rules decide the advice; AI can arrange it into your day when it's available.",
     caption: 'Example from our rules.',
     candidate: {
@@ -48,7 +48,7 @@ export const LANDING_EXAMPLES: readonly LandingExample[] = [
     openWhy: false,
   },
   {
-    heading: 'Cleaner air at home',
+    heading: 'Improve indoor air',
     text: 'Indoor suggestions look at what you cook with and what burns inside, as well as the air outside.',
     caption: 'Example from our rules.',
     candidate: {
@@ -68,7 +68,7 @@ export const LANDING_EXAMPLES: readonly LandingExample[] = [
     openWhy: false,
   },
   {
-    heading: 'Small swaps, honestly',
+    heading: 'Sustainable everyday choices',
     text: "Practical habits that cut pollution for you and your neighbours. We never show an emissions saving we can't calculate.",
     caption: 'Example from our rules.',
     candidate: {
@@ -87,8 +87,8 @@ export const LANDING_EXAMPLES: readonly LandingExample[] = [
     openWhy: false,
   },
   {
-    heading: 'See why, every time',
-    text: 'Every suggestion opens to its reason, the answers and forecast check it used, its sources and its limits.',
+    heading: 'Explainable AI',
+    text: "AI can arrange our rules' suggestions and word them for your day, but it never decides them. Every suggestion opens to its reason, the answers and forecast check it used, its sources and its limits.",
     caption:
       "Example from our rules, for a day when the forecast is above India's 24-hour limit.",
     candidate: {

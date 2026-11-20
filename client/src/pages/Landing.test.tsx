@@ -10,6 +10,16 @@ const SUBHEAD =
   "Understand your city's air quality. Discover smarter daily routines. Make better choices for your home and community.";
 const HERO_ALT =
   "Screenshot of AirAware's Today page on a phone, for Pune: the forecast verdict with its Model forecast label and the navigation bar";
+const DETAILS_ALT =
+  'Screenshot of the open Air quality details for Pune: the PM2.5 model forecast for one hour with its unit, and the 24-hour check in words';
+const UNDERSTAND_TEXT =
+  "One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was updated. Every number, unit and source is one tap away, under Air quality details.";
+const EXPLAINABLE_TEXT =
+  "AI can arrange our rules' suggestions and word them for your day, but it never decides them. Every suggestion opens to its reason, the answers and forecast check it used, its sources and its limits.";
+const CHAPTERS = [
+  'Understand your air',
+  ...LANDING_EXAMPLES.map((e) => e.heading),
+];
 // Documented facts the page may state; any other digit would be invented.
 const REAL_FIGURES = [
   'PM2.5',
@@ -51,19 +61,37 @@ describe('Landing', () => {
     ).toBeNull();
   });
 
-  it('tells the plan story in four chapters, in order', () => {
+  it('tells the story in seven sections, in order', () => {
     render(<Landing />);
 
     expect(
       screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
     ).toEqual([
-      'Where every number comes from',
-      'A plan for your day',
-      'Cleaner air at home',
-      'Small swaps, honestly',
-      'See why, every time',
+      'Understand your air',
+      'Your personal daily plan',
+      'Improve indoor air',
+      'Sustainable everyday choices',
+      'Explainable AI',
+      'How AirAware works',
       'Your city, the next two days',
     ]);
+  });
+
+  it('shows the open details screenshot, labelled as past', () => {
+    render(<Landing />);
+
+    const chapter = screen.getByRole('region', { name: 'Understand your air' });
+    expect(within(chapter).getByText(UNDERSTAND_TEXT)).toBeDefined();
+    const image = within(chapter).getByAltText(DETAILS_ALT);
+    expect(image.getAttribute('loading')).toBe('lazy');
+    const caption = chapter.querySelector('figcaption');
+    expect(caption?.textContent).toBe(
+      'A past screenshot of Air quality details for Pune, 20 Nov 2026. Open the app for current values.',
+    );
+    expect(
+      caption!.compareDocumentPosition(image) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('shows a real rule card in each chapter, labelled as an example', () => {
@@ -104,10 +132,11 @@ describe('Landing', () => {
     }
   });
 
-  it('opens "Why?" on the see-why example, with its sources', () => {
+  it("Explainable AI keeps the card's reasons", () => {
     render(<Landing />);
 
-    const chapter = screen.getByRole('region', { name: 'See why, every time' });
+    const chapter = screen.getByRole('region', { name: 'Explainable AI' });
+    expect(within(chapter).getByText(EXPLAINABLE_TEXT)).toBeDefined();
     const why = chapter.querySelector('details');
     expect(why?.open).toBe(true);
     const example = LANDING_EXAMPLES[3];
@@ -142,8 +171,8 @@ describe('Landing', () => {
   it('chapter numbers are decorative', () => {
     render(<Landing />);
 
-    LANDING_EXAMPLES.forEach((example, i) => {
-      const chapter = screen.getByRole('region', { name: example.heading });
+    CHAPTERS.forEach((heading, i) => {
+      const chapter = screen.getByRole('region', { name: heading });
       const number = within(chapter).getByText(String(i + 1).padStart(2, '0'));
       expect(number.closest('[aria-hidden="true"]')).not.toBeNull();
     });
@@ -163,10 +192,11 @@ describe('Landing', () => {
       });
   });
 
-  it('explains where every number comes from, in order', () => {
+  it('explains how AirAware works, in order', () => {
     render(<Landing />);
 
-    const steps = screen.getByRole('list', {
+    const section = screen.getByRole('region', { name: 'How AirAware works' });
+    const steps = within(section).getByRole('list', {
       name: 'How a forecast reaches you',
     });
     expect(steps.tagName).toBe('OL');
@@ -180,6 +210,21 @@ describe('Landing', () => {
       'AirAware server',
       'Your screen',
     ]);
+    // A flow: steps 2-4 open with a decorative arrow before their number.
+    within(steps)
+      .getAllByRole('listitem')
+      .forEach((item, i) => {
+        const arrow = item.querySelector('svg[aria-hidden="true"]');
+        if (i === 0) {
+          expect(arrow).toBeNull();
+          return;
+        }
+        const number = within(item).getByText(String(i + 1).padStart(2, '0'));
+        expect(
+          arrow!.compareDocumentPosition(number) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      });
   });
 
   it('the hero screenshot is labelled as past, with its date', () => {
@@ -199,12 +244,13 @@ describe('Landing', () => {
   });
 
   it('states its limits plainly', () => {
-    const { container } = render(<Landing />);
+    render(<Landing />);
 
-    expect(container.textContent).toContain(
+    const section = screen.getByRole('region', { name: 'How AirAware works' });
+    expect(section.textContent).toContain(
       'Forecasts are model estimates, not station measurements, and not the CPCB National AQI.',
     );
-    expect(container.textContent).toContain(
+    expect(section.textContent).toContain(
       'Official CPCB observations are not connected yet.',
     );
   });
