@@ -50,6 +50,8 @@ Automated scans do not prove full accessibility conformance.
 
 ## Results (Phase 8, 2026-11-19)
 
+_Superseded by the Phase 9 results below where they differ: the `/app` walk here predates the redesign._
+
 **axe in a real browser** (Chromium, colour contrast included, desktop and Pixel 7):
 - `/` and `/privacy`: no violations (`e2e/pages.spec.ts`, 4/4).
 - The dashboard's failure states and the full journey: no violations (`e2e/failures.spec.ts`, `e2e/journey.spec.ts`).
@@ -70,3 +72,55 @@ Focus order follows the visual order on every page.
 - the snapshot banner (focus moves to it on Open, and back to the plan heading on "Back to today").
 
 A screen-reader pass with a real reader has not been done yet.
+
+## Results (Phase 9, 2026-11-21)
+
+**Automated, in a real browser** (`e2e/responsive.spec.ts`, Chromium; the desktop project runs the set sizes, and the Pixel 7 project adds touch for the target, axe and forced-colour checks):
+- **Every page** (`/`, `/privacy`, `/app`, `/app/ask`, `/app/home`, `/app/habits`, `/app/profile`, `/app/welcome`) at 320×640, 640×400, 768×1024, 1024×768 and 1280×800:
+  - nothing reaches past the screen, measured by each element's edges (the page clips sideways overflow, so scroll width can't show it);
+  - exactly one `h1`.
+- **Touch targets of 44 px or more at 320** on every page. Links inside a sentence are exempt (WCAG 2.5.8). Fixed in Phase 9: the header wordmarks, the footer "Privacy" links and the source links.
+- **axe at 320** on every page: no violations.
+- **200 % text** (text enlarged, breakpoints fixed) at 1280: nothing past the screen and no clipped text.
+  - Fixed in Phase 9: from `lg` the top nav may wrap.
+  - The place chip caps at 200 px from `lg`, so at normal text the nav stays on one row.
+- **Wider text spacing** (WCAG 1.4.12) at 320: no clipped text on any page.
+- **Long places:** at 320×640, "Chhatrapati Sambhajinagar, Maharashtra" keeps the verdict above the bottom bar. A 70-character place keeps the header on screen at every size.
+- **Windows High Contrast** (forced colours, emulated):
+  - the backdrop steps aside;
+  - focus outlines show;
+  - the header's forced colours reach 4.5:1;
+  - axe passes with every rule except colour-contrast. That rule misreads forced colours in Chromium (it takes the authored `-webkit-text-fill-color`, not the painted colour), so the header's contrast is checked directly instead.
+
+**Keyboard walk** (Tab and Shift+Tab only, scripted in Chromium at 1280 and 390, every page and the place dialog):
+
+| Page | Stops | Traps | Focus visible | Shift+Tab steps back |
+|---|---|---|---|---|
+| `/` | 13 | None | Every stop | Yes |
+| `/privacy` | 3 | None | Every stop | Yes |
+| `/app` | 24 | None | Every stop | Yes |
+| `/app/ask` | 24 | None | Every stop | Yes |
+| `/app/home` | 16 | None | Every stop | Yes |
+| `/app/habits` | 16 | None | Every stop | Yes |
+| `/app/profile` | 22 | None | Every stop | Yes |
+| `/app/welcome` | 12 | None | Every stop | Yes |
+
+- **Order:** focus follows the screen and nothing is focused off screen.
+  - On phones the bottom nav comes right after the header (it sits in the header in the page's code), the same order as on desktop.
+  - Welcome starts at its step heading, as designed.
+- **Place dialog:**
+  - opening it from the chip puts focus inside;
+  - Tab cycles its controls (the search, "Use my location", "Close") and the document itself, never another control on the page;
+  - Escape closes it and focus returns to the chip.
+
+**Accessibility tree** (Playwright `ariaSnapshot`, every page at 1280):
+- **Landmarks:** banner, main and contentinfo on every page; navigation "Main" on the app pages.
+- **Headings:** one `h1`, with headings in order.
+- **Names:** no unnamed buttons or links.
+- **Backdrop:** absent from the tree.
+- **Live regions:** Ask's status line is present.
+- **Data labels:**
+  - "Model forecast" is on Today;
+  - with a stale forecast, both "Not current: …" and the footer's "… Not current." are in the tree.
+
+No real screen reader has been used yet.
