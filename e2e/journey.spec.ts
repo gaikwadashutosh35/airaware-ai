@@ -21,6 +21,20 @@ const SAVED = 'Saved on this browser. This is the plan as saved.';
 const DELETED = 'Deleted. Nothing is saved now.';
 const EMPTY_TOPIC = 'No suggestions in this area for your answers today.';
 
+// The whole suite shares the API's 60-a-minute limit per address, and the
+// specs before this one spend part of the minute. The journey alone stays
+// under it, so it waits out a used minute and starts on a full one. The
+// header is read from the page, so it is this browser's own count.
+async function startOnFreshMinute(page: Page): Promise<void> {
+  const header = await page.evaluate(async () =>
+    (await fetch('/api/v1/health')).headers.get('RateLimit'),
+  );
+  const match = /r=(\d+); t=(\d+)/.exec(header ?? '');
+  if (match && Number(match[1]) < 59) {
+    await page.waitForTimeout((Number(match[2]) + 1) * 1000);
+  }
+}
+
 // Deletes this browser's anonymous account if one is left. The token is
 // read from the page's own storage and never logged.
 async function deleteLeftoverAccount(page: Page): Promise<void> {
@@ -99,6 +113,7 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
   try {
     await test.step('1. open the app: a first visit gets Welcome', async () => {
       await page.goto('/app');
+      await startOnFreshMinute(page);
       await expect(
         page.getByRole('heading', {
           level: 1,

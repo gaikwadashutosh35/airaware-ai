@@ -42,7 +42,7 @@
   --color-rule-dark: #22344a;
   --color-focus: #1f6fd6;
 
-  /* The readout scene's only motion: transform-only, used as
+  /* The skyline's rain (the clouds' drift is below): transform-only, used as
      motion-safe:animate-* so reduced motion keeps it still. Rain falls for
      4.8 s, then rests (decorative motion stops within 5 s). One loop moves
      the streak grid one row down and half a column left, onto itself. */

@@ -46,7 +46,7 @@ Rules:
 
 - **Endpoint:** `https://api.open-meteo.com/v1/forecast`, a fixed constant. It is called by the server only, never the browser.
 - **Request:** the same 2-decimal coordinates as the air call, with `hourly=temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day`, `timeformat=unixtime` and `forecast_hours=3`.
-- **Use:** only the hour containing the request time. Precipitation and its probability are sums over the hour before each row, so that hour's values come from the next row. It drives the readout scene (clouds, rain, heat, fog) and one line of words.
+- **Use:** only the hour containing the request time. Precipitation and its probability are sums over the hour before each row, so that hour's values come from the next row; `is_day` comes from the row itself. It drives Today's skyline in `TodayLead` (clouds, rain, heat, fog, and the daylight glow when `is_day` is 1) and one line of words.
 - **Failure:** any failure gives `weather: null`, and the air forecast is unaffected. Logs name the host only, never the coordinates.
 - **Terms:** free tier, no key, CC BY 4.0 attribution ("Weather forecasts from Open-Meteo.com."), the same as the other Open-Meteo APIs.
 

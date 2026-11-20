@@ -51,7 +51,7 @@ The owner wants the scene to change automatically with conditions: haze, fog, po
 
 ## Non-goals
 
-- Day and night, wind, or air-quality advice based on the weather.
+- Wind, or air-quality advice based on the weather. (Day and night left this list with the cityscape amendment above: it adds the daylight glow only.)
 - Weather anywhere except the readout band and its line.
 - A weather page or history.
 

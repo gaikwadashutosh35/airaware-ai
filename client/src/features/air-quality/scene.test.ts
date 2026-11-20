@@ -52,6 +52,15 @@ describe('sceneFromConditions', () => {
     expect(sceneFromConditions(air(200), null).air).toBe('above');
   });
 
+  // A level that disagrees with its own averages and statuses: only reading
+  // the level passes, so ratio or status grading can't come back unseen.
+  it('the level wins over averages that disagree with it', () => {
+    const high: AirAssessment = { ...air(200), level: 'not_elevated' };
+    const low: AirAssessment = { ...air(10), level: 'elevated' };
+    expect(sceneFromConditions(high, null).air).toBe('within');
+    expect(sceneFromConditions(low, null).air).toBe('above');
+  });
+
   it('no weather adds no weather layers and no glow', () => {
     expect(sceneFromConditions(WITHIN, null)).toEqual({
       air: 'within',
