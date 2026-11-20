@@ -56,8 +56,8 @@ test('a first visit goes through Welcome to Today', async ({ page }) => {
   await expect(page).toHaveURL(/\/app\?place=Pune/);
   await expect(
     page.getByRole('heading', {
-      level: 2,
-      name: 'Air quality: Pune, Maharashtra',
+      level: 1,
+      name: 'Today in Pune, Maharashtra',
     }),
   ).toBeVisible();
   // The answers went into My Profile, unsaved.

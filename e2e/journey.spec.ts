@@ -116,8 +116,8 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
       await page.getByRole('button', { name: 'Skip' }).click();
       await expect(
         page.getByRole('heading', {
-          level: 2,
-          name: 'Air quality: Pune, Maharashtra',
+          level: 1,
+          name: 'Today in Pune, Maharashtra',
         }),
       ).toBeVisible();
     });

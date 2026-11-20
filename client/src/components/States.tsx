@@ -54,6 +54,7 @@ export function ErrorState({
   onRetry,
   fallback = 'Something went wrong loading the forecast.',
   title,
+  level = 3,
 }: {
   error: ApiError;
   onRetry: () => void;
@@ -61,13 +62,16 @@ export function ErrorState({
   fallback?: string;
   // Optional card heading, e.g. "We couldn't load the forecast".
   title?: string;
+  // The heading level where the card stands (2 at the top of Today).
+  level?: 2 | 3;
 }) {
+  const Heading = level === 2 ? 'h2' : 'h3';
   return (
     <div
       role="alert"
       className="flex flex-col items-start gap-3 rounded-lg border border-rule p-5 sm:p-6"
     >
-      {title && <h3 className="text-xl font-semibold">{title}</h3>}
+      {title && <Heading className="text-xl font-semibold">{title}</Heading>}
       <p>{errorMessage(error, fallback)}</p>
       <button
         type="button"

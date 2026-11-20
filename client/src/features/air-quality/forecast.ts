@@ -1,6 +1,7 @@
 import type {
   ForecastSeries,
   Pollutant,
+  WeatherNow,
 } from '../../../../shared/contracts.ts';
 
 export type ForecastHour = ForecastSeries['hours'][number];
@@ -61,3 +62,25 @@ export const POLLUTANTS: ReadonlyArray<{
   { key: 'O3', short: 'O₃', name: 'Ozone' },
   { key: 'CO', short: 'CO', name: 'Carbon monoxide' },
 ];
+
+// The hour's weather in words, from known values only, named by its time so
+// it never reads as current once the hour has passed. The scene above
+// draws the same facts; this line is what a screen reader hears.
+export function weatherLine(weather: WeatherNow | null): string {
+  if (!weather) return 'Weather unavailable';
+  const parts: string[] = [];
+  if (weather.temperatureC !== null) parts.push(`${weather.temperatureC} °C`);
+  if ((weather.precipitationMm ?? 0) >= 0.2) {
+    parts.push(`rain (${weather.precipitationMm} mm)`);
+  } else if ((weather.precipitationProbability ?? 0) >= 60) {
+    parts.push(`rain likely (${weather.precipitationProbability} %)`);
+  }
+  if (weather.cloudCoverPercent !== null) {
+    parts.push(`${weather.cloudCoverPercent} % cloud cover`);
+  }
+  if (weather.visibilityM !== null && weather.visibilityM < 1000) {
+    parts.push('visibility under 1 km');
+  }
+  const label = `Weather for ${formatTime(weather.time)}`;
+  return `${label}: ${parts.length ? parts.join(', ') : 'no values reported'}. Open-Meteo weather forecast.`;
+}

@@ -7,7 +7,7 @@ import type {
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { forecastFixture } from '../../test/fixtures.ts';
 import { AirReadout } from './AirReadout.tsx';
-import { formatDateTime, formatTime } from './forecast.ts';
+import { formatDateTime } from './forecast.ts';
 
 afterEach(cleanup);
 
@@ -23,8 +23,8 @@ const elevated: AirAssessment = {
   ],
 };
 
-function show(data: ForecastData = forecastFixture, stale = false) {
-  return render(<AirReadout data={data} now={NOW} stale={stale} />);
+function show(data: ForecastData = forecastFixture) {
+  return render(<AirReadout data={data} now={NOW} />);
 }
 
 describe('AirReadout', () => {
@@ -93,21 +93,11 @@ describe('AirReadout', () => {
     expect(container.textContent).toContain(
       'PM10: 24-hour average not available',
     );
-    expect(
-      container
-        .querySelector('svg[data-haze-level]')
-        ?.getAttribute('data-haze-level'),
-    ).toBe('3');
   });
 
   it('says when air information is unavailable', () => {
     const { container } = show();
     expect(container.textContent).toContain('Air information unavailable');
-    expect(
-      container
-        .querySelector('svg[data-haze-level]')
-        ?.getAttribute('data-haze-level'),
-    ).toBe('0');
   });
 
   it('keeps the source line', () => {
@@ -116,20 +106,6 @@ describe('AirReadout', () => {
     expect(container.textContent).toContain(
       'Open-Meteo, CAMS global atmospheric composition forecast',
     );
-  });
-
-  it('the stale banner says not current', () => {
-    const { container } = show(forecastFixture, true);
-    const stale = container.querySelector('[data-part="stale-banner"]');
-    expect(stale?.textContent).toBe(
-      'Not current: retrieved more than an hour ago. Reload for the latest forecast.',
-    );
-    expect(container.querySelector('svg[data-haze-level]')).not.toBeNull();
-    // Final review I5: the "not current" note is read before the figure.
-    expect(
-      stale!.compareDocumentPosition(screen.getByTestId('readout-pm25')) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
   });
 
   it('names the 24-hour window it checked', () => {
@@ -165,73 +141,6 @@ describe('AirReadout', () => {
     expect(container.textContent).toContain(
       'PM10: 24-hour average not available',
     );
-  });
-
-  it('the weather line names only known values', () => {
-    const { container } = show({
-      ...forecastFixture,
-      weather: {
-        ...forecastFixture.weather!,
-        temperatureC: 31,
-        precipitationProbability: 70,
-        precipitationMm: 0.4,
-        cloudCoverPercent: 85,
-        visibilityM: null,
-      },
-    });
-    expect(container.textContent).toContain(
-      `Weather for ${formatTime(forecastFixture.weather!.time)}: 31 °C, rain (0.4 mm), 85 % cloud cover. Open-Meteo weather forecast.`,
-    );
-    expect(container.textContent).not.toMatch(/visibility/i);
-  });
-
-  it('says rain is likely when only the chance is high', () => {
-    const { container } = show({
-      ...forecastFixture,
-      weather: {
-        ...forecastFixture.weather!,
-        temperatureC: 29,
-        precipitationMm: 0,
-        precipitationProbability: 70,
-        cloudCoverPercent: null,
-      },
-    });
-    expect(container.textContent).toContain(
-      `Weather for ${formatTime(forecastFixture.weather!.time)}: 29 °C, rain likely (70 %). Open-Meteo weather forecast.`,
-    );
-  });
-
-  // Review A2 #2: the line names its hour, so it never calls a past hour
-  // "this hour" while the page stays open.
-  it('the weather line names its hour, even with no values', () => {
-    const { container } = show({
-      ...forecastFixture,
-      weather: {
-        ...forecastFixture.weather!,
-        temperatureC: null,
-        precipitationMm: null,
-        precipitationProbability: null,
-        cloudCoverPercent: null,
-        visibilityM: null,
-      },
-    });
-    expect(container.textContent).toContain(
-      `Weather for ${formatTime(forecastFixture.weather!.time)}: no values reported. Open-Meteo weather forecast.`,
-    );
-    expect(container.textContent).not.toContain('this hour');
-  });
-
-  it('says when weather is unavailable', () => {
-    const { container } = show({ ...forecastFixture, weather: null });
-    expect(container.textContent).toContain('Weather unavailable');
-  });
-
-  it('the scene follows the weather', () => {
-    const { container } = show({
-      ...forecastFixture,
-      weather: { ...forecastFixture.weather!, precipitationMm: 1.2 },
-    });
-    expect(container.querySelector('[data-part="rain"]')).not.toBeNull();
   });
 
   it('never says AQI, safe or healthy', () => {

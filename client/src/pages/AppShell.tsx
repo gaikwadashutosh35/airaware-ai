@@ -28,6 +28,8 @@ import { getForecast, getSources, savePreferences } from '../services/api.ts';
 import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
 import { Welcome } from './Welcome.tsx';
+import { TodayLead } from '../features/today/TodayLead.tsx';
+import { greeting } from '../features/today/today.ts';
 
 // What is saved for a remembered place: label and 2-decimal coordinates.
 function toSaved(place: Place): SavedPlace {
@@ -285,9 +287,16 @@ function AppShell() {
           <Placeholder title={TITLES[page]} />
         )}
         <div hidden={page !== 'today'} className="contents">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Air quality near you
-          </h1>
+          <div className="flex flex-col gap-1">
+            {place && <p className="text-text-dark-muted">{greeting(now)}</p>}
+            <h1
+              ref={headingRef}
+              tabIndex={-1}
+              className="text-3xl font-semibold tracking-tight"
+            >
+              {place ? `Today in ${place.label}` : 'Today'}
+            </h1>
+          </div>
           {/* No place yet: saved answers are checked, then Welcome opens. */}
           {!place && !opened && <Loading label="Loading your place" />}
           {place && Object.keys(context).length === 0 && !inviteDismissed && (
@@ -318,38 +327,19 @@ function AppShell() {
             <div className="flex min-w-0 flex-col gap-6">
               {place ? (
                 <>
-                  <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule p-4 sm:p-5">
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <h2
-                        ref={headingRef}
-                        tabIndex={-1}
-                        className="text-2xl font-semibold tracking-tight"
-                      >
-                        Air quality: {place.label}
-                      </h2>
-                      <p className="text-sm text-text-dark-muted">
-                        Forecast location: {place.latitude.toFixed(2)},{' '}
-                        {place.longitude.toFixed(2)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setPlaceDialogOpen(true)}
-                      className="min-h-11 rounded-md border border-text-dark px-4"
-                    >
-                      Change place
-                    </button>
-                  </section>
                   {forecast.state.status === 'ready' ? (
                     <>
-                      <AirReadout
+                      <TodayLead
                         data={forecast.state.data.series}
-                        now={forecast.state.data.loadedAt}
                         stale={isOlderThan(
                           forecast.state.data.series.retrievedAt,
                           now,
                           60,
                         )}
+                      />
+                      <AirReadout
+                        data={forecast.state.data.series}
+                        now={forecast.state.data.loadedAt}
                       />
                       <ForecastPanel
                         data={forecast.state.data.series}
@@ -365,6 +355,7 @@ function AppShell() {
                         headingRef.current?.focus();
                       }}
                       title="We couldn't load the forecast"
+                      level={2}
                     />
                   ) : (
                     <Loading label="Loading forecast" band />

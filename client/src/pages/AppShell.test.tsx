@@ -219,8 +219,8 @@ describe('AppShell', () => {
     await choosePlace();
 
     const heading = screen.getByRole('heading', {
-      level: 2,
-      name: 'Air quality: Pune, Maharashtra',
+      level: 1,
+      name: 'Today in Pune, Maharashtra',
     });
     expect(document.activeElement).toBe(heading);
     expect(screen.getAllByText('Model forecast').length).toBeGreaterThan(0);
@@ -319,6 +319,7 @@ describe('AppShell', () => {
     });
 
     expect(screen.getByText(FORECAST_STALE)).toBeDefined();
+    expect(screen.getByText(FORECAST_STALE).closest('details')).toBeNull();
     // The figures stay at load time.
     expect(
       screen.getByText(
@@ -356,7 +357,7 @@ describe('AppShell', () => {
         name: 'Search for a city or area in India',
       }),
     ).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Change place: / }));
 
     expect(container.querySelector('dialog')?.open).toBe(true);
     expect(
@@ -371,20 +372,19 @@ describe('AppShell', () => {
     const { container } = render(<AppShell />);
     await choosePlace(0);
     const first = screen.getByRole('heading', {
-      level: 2,
-      name: /^Air quality: /,
+      level: 1,
+      name: /^Today in /,
     }).textContent;
 
     await choosePlace(1);
 
     expect(container.querySelector('dialog')?.open).toBe(false);
     expect(
-      screen.getByRole('heading', { level: 2, name: /^Air quality: / })
-        .textContent,
+      screen.getByRole('heading', { level: 1, name: /^Today in / }).textContent,
     ).not.toBe(first);
     expect(
       screen.getByRole('button', { name: /^Change place: / }).textContent,
-    ).not.toContain(first!.replace('Air quality: ', ''));
+    ).not.toContain(first!.replace('Today in ', ''));
   });
 
   it('air comes before the plan in reading order', async () => {
@@ -457,8 +457,8 @@ describe('AppShell', () => {
     // heading instead of falling back to the page top.
     expect(document.activeElement).toBe(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Pune, Maharashtra',
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
       }),
     );
     await act(async () => {
@@ -503,11 +503,28 @@ describe('AppShell', () => {
     ).toBeDefined();
   });
 
-  it('shows the coordinates the forecast is for', async () => {
+  it('no coordinates outside the details', async () => {
     window.history.replaceState(
       null,
       '',
       '/app?place=Delhi&lat=19.08&lon=72.88',
+    );
+    routeFetch(ok());
+    const { container } = render(<AppShell />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    const copy = container.cloneNode(true) as HTMLElement;
+    for (const details of copy.querySelectorAll('details')) details.remove();
+    expect(copy.textContent).not.toContain('19.08');
+  });
+
+  it('greets and names the place in the H1', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
     );
     routeFetch(ok());
     render(<AppShell />);
@@ -515,7 +532,38 @@ describe('AppShell', () => {
       await vi.advanceTimersByTimeAsync(0);
     });
 
-    expect(screen.getByText('Forecast location: 19.08, 72.88')).toBeDefined();
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1.textContent).toBe('Today in Pune, Maharashtra');
+    expect(
+      screen.getByText(/^Good (morning|afternoon|evening)$/),
+    ).toBeDefined();
+  });
+
+  it('a forecast error keeps the plan area', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(() =>
+      Promise.resolve(
+        Response.json(
+          { error: { code: 'PROVIDER_ERROR', message: 'Provider down.' } },
+          { status: 502 },
+        ),
+      ),
+    );
+    render(<AppShell />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(
+      screen.getByRole('heading', { name: "We couldn't load the forecast" }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Your daily plan' }),
+    ).toBeDefined();
   });
 
   it('credits Open-Meteo even when the source list fails', async () => {
@@ -684,8 +732,8 @@ describe('AppShell', () => {
 
     expect(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Pune, Maharashtra',
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
       }),
     ).toBeDefined();
   });
@@ -734,8 +782,8 @@ describe('AppShell', () => {
     expect(window.location.search).toContain('place=Pune');
     expect(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Pune, Maharashtra',
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
       }),
     ).toBeDefined();
   });
@@ -979,8 +1027,8 @@ describe('AppShell', () => {
 
     expect(document.activeElement).toBe(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Pune, Maharashtra',
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
       }),
     );
   });
@@ -1051,8 +1099,8 @@ describe('AppShell', () => {
 
     expect(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Pune, Maharashtra',
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
       }),
     ).toBeDefined();
     expect(window.location.search).toContain('place=Pune');
@@ -1079,8 +1127,8 @@ describe('AppShell', () => {
 
     expect(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Puneta, Rajasthan',
+        level: 1,
+        name: 'Today in Puneta, Rajasthan',
       }),
     ).toBeDefined();
     expect(screen.getByTestId('metric-PM2_5').textContent).toContain('99');
@@ -1259,8 +1307,8 @@ describe('AppShell', () => {
     });
 
     const heading = screen.getByRole('heading', {
-      level: 2,
-      name: 'Air quality: Pune, Maharashtra',
+      level: 1,
+      name: 'Today in Pune, Maharashtra',
     });
     expect(document.activeElement).not.toBe(heading);
     const call = forecastCalls(fetchSpy)[0];
@@ -1298,7 +1346,7 @@ describe('AppShell', () => {
     render(<AppShell />);
 
     // With a place set, "Use my location" is in the place dialog.
-    fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Change place: / }));
     fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
@@ -1307,8 +1355,8 @@ describe('AppShell', () => {
     expect(window.location.search).toBe('');
     expect(
       screen.getByRole('heading', {
-        level: 2,
-        name: 'Air quality: Near you (approximate)',
+        level: 1,
+        name: 'Today in Near you (approximate)',
       }),
     ).toBeDefined();
   });

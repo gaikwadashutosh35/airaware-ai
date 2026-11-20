@@ -113,3 +113,10 @@ export function checkText(check: PollutantCheck): string {
     check.status === 'above_limit' ? 'above the limit' : 'within the limit';
   return `${name}: 24-hour average ${check.average24h} μg/m³, ${limit}, ${status}`;
 }
+
+// Factual words for the air level, never reassurance.
+export const LEVEL_TAG = {
+  elevated: 'Above the limit',
+  not_elevated: 'Within the limit',
+  unknown: 'No data',
+} as const;

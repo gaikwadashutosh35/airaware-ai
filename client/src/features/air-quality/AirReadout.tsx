@@ -2,11 +2,8 @@ import { useId } from 'react';
 import type {
   ForecastData,
   PollutantCheck,
-  WeatherNow,
 } from '../../../../shared/contracts.ts';
-import { CitySkyline } from './CitySkyline.tsx';
 import { formatDateTime, formatTime, hourForNow } from './forecast.ts';
-import { sceneFromConditions } from './scene.ts';
 
 const SHORT = { PM2_5: 'PM2.5', PM10: 'PM10' } as const;
 
@@ -19,28 +16,6 @@ function checkText(check: PollutantCheck, unit: string): string {
   }
   const side = check.status === 'above_limit' ? 'above' : 'within';
   return `${name} 24-hour average ${check.average24h} ${unit}, ${side} the ${check.limit} ${unit} limit`;
-}
-
-// The hour's weather in words, from known values only, named by its time so
-// it never reads as current once the hour has passed. The scene above
-// draws the same facts; this line is what a screen reader hears.
-function weatherLine(weather: WeatherNow | null): string {
-  if (!weather) return 'Weather unavailable';
-  const parts: string[] = [];
-  if (weather.temperatureC !== null) parts.push(`${weather.temperatureC} °C`);
-  if ((weather.precipitationMm ?? 0) >= 0.2) {
-    parts.push(`rain (${weather.precipitationMm} mm)`);
-  } else if ((weather.precipitationProbability ?? 0) >= 60) {
-    parts.push(`rain likely (${weather.precipitationProbability} %)`);
-  }
-  if (weather.cloudCoverPercent !== null) {
-    parts.push(`${weather.cloudCoverPercent} % cloud cover`);
-  }
-  if (weather.visibilityM !== null && weather.visibilityM < 1000) {
-    parts.push('visibility under 1 km');
-  }
-  const label = `Weather for ${formatTime(weather.time)}`;
-  return `${label}: ${parts.length ? parts.join(', ') : 'no values reported'}. Open-Meteo weather forecast.`;
 }
 
 function Marker({ above }: { above: boolean }) {
@@ -62,19 +37,35 @@ function Marker({ above }: { above: boolean }) {
   );
 }
 
-// The dashboard's lead: this hour's PM2.5 (a model forecast, never an AQI),
-// the server's 24-hour check in words, the source, and a skyline whose haze
-// follows that check.
+// Old data is never shown as current (Today shows this under the verdict).
+export function StaleBanner() {
+  return (
+    <p
+      data-part="stale-banner"
+      className="flex items-start gap-2 rounded-md border border-warning bg-warning/15 px-3 py-2 font-semibold"
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        className="mt-0.5 size-5 flex-none fill-text-dark"
+      >
+        <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM9 5h2v4.6l3 1.8-1 1.7-4-2.4z" />
+      </svg>
+      Not current: retrieved more than an hour ago. Reload for the latest
+      forecast.
+    </p>
+  );
+}
+
+// Inside "Air quality details": this hour's PM2.5 (a model forecast, never
+// an AQI), the server's 24-hour check in words, and the source.
 export function AirReadout({
   data,
   now,
-  stale,
 }: {
   data: ForecastData;
   // When the forecast loaded: picks the hour shown.
   now: Date;
-  // Retrieved more than an hour ago, by the running clock.
-  stale: boolean;
 }) {
   const headingId = useId();
   const hour = hourForNow(data, now);
@@ -86,10 +77,6 @@ export function AirReadout({
       aria-labelledby={headingId}
       className="overflow-hidden rounded-lg border border-rule"
     >
-      <CitySkyline scene={sceneFromConditions(data.airCheck, data.weather)} />
-      <p className="border-b border-rule px-5 py-2 text-sm text-text-dark-muted sm:px-8">
-        {weatherLine(data.weather)}
-      </p>
       <div className="flex flex-col gap-4 p-5 sm:p-8">
         <div className="flex flex-col gap-1">
           <h3 id={headingId} className="text-xl font-semibold">
@@ -101,24 +88,6 @@ export function AirReadout({
             </p>
           )}
         </div>
-        {/* Read before the figure: stale data is never shown as current. */}
-        {stale && (
-          <p
-            data-part="stale-banner"
-            className="flex items-start gap-2 rounded-md border border-warning bg-warning/15 px-3 py-2 font-semibold"
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 20 20"
-              className="mt-0.5 size-5 flex-none fill-text-dark"
-            >
-              <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM9 5h2v4.6l3 1.8-1 1.7-4-2.4z" />
-            </svg>
-            Not current: retrieved more than an hour ago. Reload for the latest
-            forecast.
-          </p>
-        )}
-
         {/* A model without PM2.5 has no headline figure, never a blank one. */}
         {data.units.PM2_5 && (
           <p

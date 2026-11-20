@@ -2,7 +2,7 @@ import { useId, type ReactNode } from 'react';
 import type { DailyPlan } from '../../../../shared/contracts.ts';
 import { formatDateTime } from '../air-quality/forecast.ts';
 import { PlanCard } from './PlanCard.tsx';
-import { checkText, groupPlan, madeByLine } from './planDisplay.ts';
+import { checkText, groupPlan, madeByLine, LEVEL_TAG } from './planDisplay.ts';
 
 const MODEL_LINE =
   'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB AQI.';
@@ -37,13 +37,6 @@ function Part({
     </section>
   );
 }
-
-// Factual words for the air level, never reassurance.
-const LEVEL_TAG = {
-  elevated: 'Above the limit',
-  not_elevated: 'Within the limit',
-  unknown: 'No data',
-} as const;
 
 // A daily plan as the server built it: the air notice always first, then
 // the air check, "Your day" (AI plans only) and the three topics.
