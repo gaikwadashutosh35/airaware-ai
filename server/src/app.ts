@@ -118,7 +118,7 @@ export function createApp(options: AppOptions = {}): express.Express {
   const { clientDir } = options;
   if (clientDir) {
     app.use(express.static(clientDir));
-    app.get(['/app', '/privacy'], (_req, res) => {
+    app.get(['/app', '/app/*splat', '/privacy'], (_req, res) => {
       res.sendFile('index.html', { root: clientDir });
     });
   }

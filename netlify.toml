@@ -21,6 +21,11 @@
   status = 200
 
 [[redirects]]
+  from = "/app/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
   from = "/privacy"
   to = "/index.html"
   status = 200

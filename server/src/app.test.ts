@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
@@ -54,16 +55,30 @@ const clientDir = fileURLToPath(
 );
 
 describe('client pages', () => {
-  it.each(['/', '/app', '/app?place=Pune&lat=18.52&lon=73.86', '/privacy'])(
-    'serves the built client at %s',
-    async (path) => {
-      const res = await request(createApp({ clientDir })).get(path);
+  it.each([
+    '/',
+    '/app',
+    '/app?place=Pune&lat=18.52&lon=73.86',
+    '/app/profile',
+    '/app/ask?place=Pune&lat=18.52&lon=73.86',
+    '/privacy',
+  ])('serves the built client at %s', async (path) => {
+    const res = await request(createApp({ clientDir })).get(path);
 
-      expect(res.status).toBe(200);
-      expect(res.headers['content-type']).toMatch(/text\/html/);
-      expect(res.text).toContain('airaware-test-client');
-    },
-  );
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/);
+    expect(res.text).toContain('airaware-test-client');
+  });
+
+  it('Netlify serves the app on every /app path too', () => {
+    const toml = readFileSync(
+      fileURLToPath(new URL('../../netlify.toml', import.meta.url)),
+      'utf8',
+    );
+    expect(toml).toMatch(
+      /\[\[redirects\]\]\s*from = "\/app\/\*"\s*to = "\/index\.html"\s*status = 200/,
+    );
+  });
 
   it.each(['/api/v1/nope', '/nope'])(
     'keeps the JSON 404 for %s',
