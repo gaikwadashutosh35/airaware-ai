@@ -211,6 +211,30 @@ export interface GuideSet {
   safetyNote: string;
 }
 
+// Ask AirAware (Phase 7). The typed question only picks a topic on the
+// server; no answer ever carries it.
+export type AskTopic =
+  'outdoors' | 'windows' | 'indoor' | 'family' | 'commuting' | 'habits';
+
+export type AskRequest = {
+  place: { label: string; latitude: number; longitude: number };
+  householdContext?: HouseholdContext;
+} & ({ question: string } | { topic: AskTopic });
+
+export type AskAnswer = Pick<
+  DailyPlan,
+  | 'summary'
+  | 'generatedBy'
+  | 'air'
+  | 'forecast'
+  | 'notices'
+  | 'sources'
+  | 'safetyNote'
+> & {
+  topic: AskTopic | 'medical' | 'out_of_scope';
+  cards: RecommendationCandidate[];
+};
+
 // Saved data (Phase 6). Stored per anonymous Supabase user; a saved plan is
 // a snapshot from `savedAt`, never current air information.
 // A searched place the person asked to remember (D2). Never a device location.
