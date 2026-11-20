@@ -7,6 +7,7 @@ import type {
   LocationResult,
   SavedPlan,
   SavedPlanSummary,
+  PreferencesUpdate,
   SavedPreferences,
   SourceInfo,
 } from '../../../shared/contracts.ts';
@@ -126,13 +127,14 @@ export function getPreferences(
   return request('/api/v1/profile/preferences', signal, { token });
 }
 
+// Only the fields sent change; `place: null` forgets the remembered place.
 export function savePreferences(
   token: string,
-  context: HouseholdContext,
+  update: PreferencesUpdate,
 ): Promise<SavedPreferences> {
   return request('/api/v1/profile/preferences', undefined, {
     method: 'PUT',
-    body: context,
+    body: update,
     token,
   });
 }

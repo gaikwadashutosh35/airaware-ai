@@ -1,5 +1,8 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import type { HouseholdContext } from '../../../../shared/contracts.ts';
+import type {
+  HouseholdContext,
+  SavedPreferences,
+} from '../../../../shared/contracts.ts';
 import {
   currentToken,
   forgetSession,
@@ -35,6 +38,7 @@ export function HouseholdPreferencesForm({
   initial,
   onChange,
   onDeleted,
+  onLoaded,
 }: {
   // Answers already given this visit, so leaving the page keeps them.
   initial?: HouseholdContext;
@@ -42,6 +46,9 @@ export function HouseholdPreferencesForm({
   onChange?: (context: HouseholdContext) => void;
   // After "Delete everything" succeeded.
   onDeleted?: () => void;
+  // Once, after the first load attempt: what was saved, or null (saving not
+  // set up, no session, nothing saved, or the load failed).
+  onLoaded?: (saved: SavedPreferences | null) => void;
 } = {}) {
   // Answered questions only: a blank would hide a saved answer in the merge.
   const [answers, setAnswersState] = useState<Answers>(() =>
@@ -50,12 +57,14 @@ export function HouseholdPreferencesForm({
     ),
   );
   const onChangeRef = useRef(onChange);
+  const onLoadedRef = useRef(onLoaded);
   // The answers on screen, for merging a late load under them.
   const answersRef = useRef<Answers>(answers);
   // The saved-answers load, cancelled by "Delete everything".
   const loadRef = useRef<AbortController | null>(null);
   useEffect(() => {
     onChangeRef.current = onChange;
+    onLoadedRef.current = onLoaded;
   });
   function setAnswers(next: Answers) {
     answersRef.current = next;
@@ -73,7 +82,10 @@ export function HouseholdPreferencesForm({
   // Saved answers load only for an existing session: opening the page never
   // creates an account.
   useEffect(() => {
-    if (!savingAvailable) return;
+    if (!savingAvailable) {
+      onLoadedRef.current?.(null);
+      return;
+    }
     const controller = new AbortController();
     loadRef.current = controller;
     currentToken()
@@ -81,14 +93,18 @@ export function HouseholdPreferencesForm({
         token ? getPreferences(token, controller.signal) : null,
       )
       .then((saved) => {
+        if (controller.signal.aborted) return;
         // A late load fills in saved answers but never undoes one the
         // person already changed; a delete meanwhile cancels it.
-        if (saved && !controller.signal.aborted) {
+        if (saved) {
           setAnswers({ ...toAnswers(saved.context), ...answersRef.current });
         }
+        onLoadedRef.current?.(saved ?? null);
       })
       .catch(() => {
-        if (!controller.signal.aborted) setStatus(LOAD_FAILED);
+        if (controller.signal.aborted) return;
+        setStatus(LOAD_FAILED);
+        onLoadedRef.current?.(null);
       });
     return () => controller.abort();
   }, []);
@@ -104,7 +120,7 @@ export function HouseholdPreferencesForm({
     setStatus('');
     try {
       const token = await tokenForSave();
-      await savePreferences(token, toContext(answers));
+      await savePreferences(token, { context: toContext(answers) });
       setStatus(SAVED);
     } catch {
       setStatus(UNAVAILABLE);

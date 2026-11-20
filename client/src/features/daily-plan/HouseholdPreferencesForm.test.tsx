@@ -127,9 +127,44 @@ describe('HouseholdPreferencesForm', () => {
     expect(session.tokenForSave).toHaveBeenCalledTimes(1);
     const put = fetchSpy.mock.calls.find(([, init]) => init?.method === 'PUT');
     expect(put?.[0]).toBe('/api/v1/profile/preferences');
+    // Only the answers: a remembered place is left as it is (Phase 5).
     expect(JSON.parse(put?.[1]?.body as string)).toEqual({
-      routine: { outdoorExercise: true },
+      context: { routine: { outdoorExercise: true } },
     });
+  });
+
+  it('reports what it loaded', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    const saved = {
+      context: { home: { airPurifier: true } },
+      place: { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 },
+      updatedAt: '2026-11-18T10:00:00.000Z',
+    };
+    routeFetch(() => ok(saved));
+    const onLoaded = vi.fn();
+    render(<HouseholdPreferencesForm onLoaded={onLoaded} />);
+    await waitFor(() => expect(onLoaded).toHaveBeenCalledWith(saved));
+    expect(onLoaded).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports null with no session', async () => {
+    routeFetch(() => ok(null));
+    const onLoaded = vi.fn();
+    render(<HouseholdPreferencesForm onLoaded={onLoaded} />);
+    await waitFor(() => expect(onLoaded).toHaveBeenCalledWith(null));
+  });
+
+  it('reports null when the load fails', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch(() =>
+      Response.json(
+        { error: { code: 'SAVE_UNAVAILABLE', message: 'Not now.' } },
+        { status: 503 },
+      ),
+    );
+    const onLoaded = vi.fn();
+    render(<HouseholdPreferencesForm onLoaded={onLoaded} />);
+    await waitFor(() => expect(onLoaded).toHaveBeenCalledWith(null));
   });
 
   // Review Focus 1.
