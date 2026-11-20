@@ -51,14 +51,18 @@ describe('App', () => {
     await expectNoAxeViolations(container);
   });
 
-  it('shows the dashboard at /app', async () => {
+  // Phase 5: a first visit (no place, nothing saved) opens Welcome.
+  it('a first visit to /app opens Welcome', async () => {
     window.history.pushState({}, '', '/app');
 
     const { container } = render(<App />);
 
     expect(screen.getAllByRole('main')).toHaveLength(1);
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Air quality near you' }),
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Where should we check air quality?',
+      }),
     ).toBeDefined();
     await expectNoAxeViolations(container);
   });

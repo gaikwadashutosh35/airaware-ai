@@ -88,7 +88,7 @@ export function Profile({
                   </button>
                 </>
               )}
-              <p role="status">{status}</p>
+              <output className="block min-h-6">{status}</output>
             </section>
           )}
           <SavedPlansList
