@@ -20,8 +20,9 @@ describe('design system base', () => {
     );
     const file = readFileSync(`public${FONT}`);
     expect(file.subarray(0, 4).toString('latin1')).toBe('wOF2');
-    // A fallback font is scaled to Inter's x-height, so the swap barely moves text.
-    expect(css).toMatch(/body\s*{[^}]*font-size-adjust: from-font;/);
+    // Final review: `font-size-adjust: from-font` measured as a no-op in
+    // Chromium (Inter's x-height is unknown until it loads), so no claim of it.
+    expect(css).not.toContain('font-size-adjust');
   });
 
   it('the favicon is a real icon', () => {
@@ -54,9 +55,14 @@ describe('design system base', () => {
   });
 
   it('phones show no grey tap flash and no tap delay', () => {
-    expect(css).toMatch(
+    // Final review: the flash goes only where the press scale replaces it, so
+    // a reduced-motion tap still gets the browser's own feedback.
+    const start = css.indexOf('@media (prefers-reduced-motion: no-preference)');
+    const block = css.slice(start, css.indexOf('\n  }', start));
+    expect(block).toMatch(
       /html\s*{[^}]*-webkit-tap-highlight-color: transparent;/,
     );
+    expect(css.split('-webkit-tap-highlight-color').length - 1).toBe(1);
     expect(css).toMatch(
       /a,\s*button,\s*summary,\s*input,\s*select,\s*label\s*{[^}]*touch-action: manipulation;/,
     );

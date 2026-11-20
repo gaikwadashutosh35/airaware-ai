@@ -72,19 +72,12 @@
     background-color: var(--color-surface-light);
     color: var(--color-text-dark);
     font-family: var(--font-sans);
-    /* A fallback font takes Inter's x-height, so the swap barely moves text. */
-    font-size-adjust: from-font;
     font-synthesis: none;
     line-height: 1.55;
   }
 
-  /* Phones: no grey flash on tap (controls show their own states), no
-     double-tap-zoom wait, and a long press doesn't select a button label.
-     Links and body text stay selectable. */
-  html {
-    -webkit-tap-highlight-color: transparent;
-  }
-
+  /* Phones: no double-tap-zoom wait, and a long press doesn't select a
+     button label. Links and body text stay selectable. */
   a,
   button,
   summary,
@@ -100,8 +93,13 @@
 
   /* Press feedback (DESIGN.md §9): a slight shrink while pressed, only when
      motion is welcome. Disabled buttons stay still. `.press` gives a link
-     styled as a button the same feel. */
+     styled as a button the same feel. The phone's grey tap flash goes only
+     here, where the shrink replaces it; with reduced motion it stays. */
   @media (prefers-reduced-motion: no-preference) {
+    html {
+      -webkit-tap-highlight-color: transparent;
+    }
+
     button:not(:disabled),
     .press {
       transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);

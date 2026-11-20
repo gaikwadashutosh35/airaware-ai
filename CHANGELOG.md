@@ -47,9 +47,10 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
 - Design system base (Phase 3 of the assistant redesign):
-  - Inter is self-hosted: one Latin variable font file, 48 KB, OFL, under `client/public/fonts/`. It is preloaded and uses `font-display: swap`, and `font-size-adjust` keeps the fallback the same size;
+  - Inter is self-hosted: one Latin variable font file, 48 KB, OFL, under `client/public/fonts/`. It is preloaded and uses `font-display: swap`;
   - buttons shrink slightly while pressed, only when motion is welcome, and never when disabled;
-  - phones get no grey tap flash and no double-tap delay;
+  - with motion allowed, the shrink replaces the phone's grey tap flash; with reduced motion the flash stays as feedback;
+  - phones have no double-tap delay;
   - a real favicon replaces the blank one;
   - a new `--color-elevated` token is added for the navigation bars to come.
 - Readout states (Phase C of the Stitch redesign):
