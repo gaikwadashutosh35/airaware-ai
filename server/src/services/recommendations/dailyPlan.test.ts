@@ -2,8 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ModelForecast } from '../air-data/openMeteo.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import type { GeneratePlan } from '../ai/personalize.ts';
+import { toWriterInput } from '../ai/planOutput.ts';
 import { UG_PER_M3 } from './airCheck.ts';
-import { createDailyPlanner, type PlanRequest } from './dailyPlan.ts';
+import {
+  createDailyPlanner,
+  createPlanWriter,
+  type PlanRequest,
+} from './dailyPlan.ts';
+import { buildCandidates } from './rules.ts';
 
 const NOW = new Date('2026-11-18T10:30:00.000Z');
 const START = Date.UTC(2026, 10, 18, 10);
@@ -139,6 +145,63 @@ describe('createDailyPlanner', () => {
     );
     expect(answer).toHaveBeenCalledTimes(3);
     expect(later.generatedBy).toBe('ai');
+    errorSpy.mockRestore();
+  });
+
+  // Phase 7: plans and Ask share one writer, so one daily budget and one
+  // answers cache, and the spend bound holds across both.
+  it('one writer shares its budget with every caller', async () => {
+    answer.mockClear();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const writer = createPlanWriter({
+      generate: answer,
+      model: 'gemini-test',
+      aiCallsPerDay: 1,
+    });
+    const planner = createDailyPlanner({
+      forecast: forecastFrom(() => Promise.resolve(forecastSeries())),
+      generate: null,
+      model: null,
+      writer,
+    });
+
+    // Another caller (Ask) spends the day's one call on a different input.
+    const other = await writer!(
+      toWriterInput(
+        {
+          level: 'unknown',
+          windowStart: null,
+          checks: [
+            {
+              pollutant: 'PM2_5',
+              status: 'unknown',
+              average24h: null,
+              limit: 60,
+            },
+            {
+              pollutant: 'PM10',
+              status: 'unknown',
+              average24h: null,
+              limit: 100,
+            },
+          ],
+        },
+        buildCandidates(
+          {},
+          {
+            level: 'unknown',
+            windowStart: null,
+            checks: [],
+          },
+        ),
+      ),
+      NOW,
+    );
+    const plan = await planner(request, NOW);
+
+    expect(other?.model).toBe('gemini-test');
+    expect(answer).toHaveBeenCalledTimes(1);
+    expect(plan.generatedBy).toBe('rules');
     errorSpy.mockRestore();
   });
 

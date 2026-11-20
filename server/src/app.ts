@@ -13,7 +13,10 @@ import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
 import { createCachedWeather } from './services/air-data/cachedWeather.ts';
 import type { GeneratePlan } from './services/ai/personalize.ts';
-import { createDailyPlanner } from './services/recommendations/dailyPlan.ts';
+import {
+  createDailyPlanner,
+  createPlanWriter,
+} from './services/recommendations/dailyPlan.ts';
 import type { SavedStore } from './services/saved/store.ts';
 
 export interface AppOptions {
@@ -82,11 +85,18 @@ export function createApp(options: AppOptions = {}): express.Express {
     res.json({ status: 'ok', version: pkg.version });
   });
   const forecast = createCachedForecast();
-  const planner = createDailyPlanner({
-    forecast,
+  // One AI writer, so one daily budget and one answers cache, for every
+  // caller (plans now; Ask in Phase 7).
+  const writer = createPlanWriter({
     generate: options.generatePlan ?? null,
     model: options.aiModel ?? null,
     backup: options.backupPlan ?? null,
+  });
+  const planner = createDailyPlanner({
+    forecast,
+    generate: null,
+    model: null,
+    writer,
   });
   // One counter for every route that can call Gemini.
   const planLimit = rateLimit({

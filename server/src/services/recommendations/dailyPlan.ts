@@ -6,7 +6,11 @@ import type {
 import { createTtlCache } from '../air-data/cache.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import { personalize, type GeneratePlan } from '../ai/personalize.ts';
-import { toWriterInput, type PlanOutput } from '../ai/planOutput.ts';
+import {
+  toWriterInput,
+  type PlanOutput,
+  type PlanWriterInput,
+} from '../ai/planOutput.ts';
 import { PROMPT_VERSION } from '../ai/prompts.ts';
 import { assessAir } from './airCheck.ts';
 import { householdContextSchema } from './householdContext.ts';
@@ -59,17 +63,25 @@ export type DailyPlanner = (
   now: Date,
 ) => Promise<DailyPlan>;
 
-// Builds the daily plan for both the plan route and the save route, so a
-// saved plan is always one the server made.
-export function createDailyPlanner(deps: {
-  forecast: CachedForecast;
+interface WriterDeps {
   generate: GeneratePlan | null;
   model: string | null;
   // Asked only when Gemini gives no accepted answer.
   backup?: { generate: GeneratePlan; model: string } | null;
   // Calls allowed per writer per UTC day; past it, that writer is skipped.
   aiCallsPerDay?: number;
-}): DailyPlanner {
+}
+
+// An accepted AI answer for exactly this input, or null (rules only).
+export type PlanWriter = (
+  input: PlanWriterInput,
+  now: Date,
+) => Promise<{ output: PlanOutput; model: string } | null>;
+
+// The AI writers (Gemini, then the Claude backup), their daily budgets and
+// the cache of accepted answers. One is shared by plans and Ask (Phase 7),
+// so the daily spend bound holds across both. Null when none is configured.
+export function createPlanWriter(deps: WriterDeps): PlanWriter | null {
   // Gemini counts as configured only with both a generator and a model name.
   const writers: Writer[] = [];
   if (deps.generate && deps.model) {
@@ -80,8 +92,8 @@ export function createDailyPlanner(deps: {
     });
   }
   if (deps.backup) writers.push({ name: 'Claude', ...deps.backup });
+  if (!writers.length) return null;
 
-  const plans = createTtlCache<DailyPlan>(PLAN_TTL_MS, PLAN_MAX_ENTRIES);
   // Accepted answers, keyed by exactly what the writer was asked: a new
   // place label or nearby coordinates with the same air and advice reuse
   // one answer instead of buying another (Phase 8 audit).
@@ -109,6 +121,32 @@ export function createDailyPlanner(deps: {
       return writers[index]!.generate(input);
     };
 
+  return async (input, now) => {
+    const asked = JSON.stringify(input);
+    let answer = answers.get(asked, now.getTime()) ?? null;
+    for (let i = 0; !answer && i < writers.length; i++) {
+      const writer = writers[i]!;
+      const output = await personalize(input, counted(i, now), writer.name);
+      if (output) answer = { output, model: writer.model };
+    }
+    if (answer) answers.set(asked, answer, now.getTime());
+    return answer;
+  };
+}
+
+// Builds the daily plan for both the plan route and the save route, so a
+// saved plan is always one the server made.
+export function createDailyPlanner(
+  deps: WriterDeps & {
+    forecast: CachedForecast;
+    // The shared writer; without it the planner builds its own from deps.
+    writer?: PlanWriter | null;
+  },
+): DailyPlanner {
+  const write =
+    deps.writer !== undefined ? deps.writer : createPlanWriter(deps);
+  const plans = createTtlCache<DailyPlan>(PLAN_TTL_MS, PLAN_MAX_ENTRIES);
+
   return async ({ place, householdContext = {} }, now) => {
     // A provider failure is not an error here: the plan says air is unknown.
     const series = await deps
@@ -121,18 +159,9 @@ export function createDailyPlanner(deps: {
     const cached = plans.get(key, now.getTime());
     if (cached) return cached;
 
-    let answer: { output: PlanOutput; model: string } | null = null;
-    if (writers.length) {
-      const input = toWriterInput(air, candidates);
-      const asked = JSON.stringify(input);
-      answer = answers.get(asked, now.getTime()) ?? null;
-      for (let i = 0; !answer && i < writers.length; i++) {
-        const writer = writers[i]!;
-        const output = await personalize(input, counted(i, now), writer.name);
-        if (output) answer = { output, model: writer.model };
-      }
-      if (answer) answers.set(asked, answer, now.getTime());
-    }
+    const answer = write
+      ? await write(toWriterInput(air, candidates), now)
+      : null;
     const plan = buildPlan({
       label: place.label,
       air,
@@ -143,7 +172,7 @@ export function createDailyPlanner(deps: {
     // Fallback plans are not cached, so the next request retries the
     // writers and Open-Meteo instead of serving a degraded plan for 10
     // minutes.
-    if (series && (!writers.length || plan.generatedBy === 'ai')) {
+    if (series && (!write || plan.generatedBy === 'ai')) {
       plans.set(key, plan, now.getTime());
     }
     return plan;
