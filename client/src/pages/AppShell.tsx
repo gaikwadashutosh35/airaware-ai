@@ -119,7 +119,10 @@ function AppShell() {
       </a>
       <header className="on-dark bg-bg text-text">
         <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-          <a href="/" className="text-lg font-semibold">
+          <a
+            href="/"
+            className="shrink-0 text-lg font-semibold whitespace-nowrap"
+          >
             AirAware AI
           </a>
           <AppNav page={page} />
