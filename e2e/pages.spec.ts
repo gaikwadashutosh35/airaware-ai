@@ -6,7 +6,15 @@ import { expectNoAxeViolations } from './axe.ts';
 
 for (const path of ['/', '/privacy']) {
   test(`axe passes on ${path} in a real browser`, async ({ page }) => {
+    // The resting page: the landing's sections rise in on scroll and load at
+    // opacity 0, and axe skips anything at opacity 0, so every section must
+    // be fully shown or its contrast goes unchecked. The motion itself is
+    // checked in landing.spec.ts.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(path);
+    for (const section of await page.locator('main > section').all()) {
+      await expect(section).toHaveCSS('opacity', '1');
+    }
     await expectNoAxeViolations(page);
   });
 }
