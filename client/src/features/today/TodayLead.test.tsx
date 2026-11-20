@@ -143,21 +143,21 @@ describe('TodayLead', () => {
       weather: { ...forecastFixture.weather!, precipitationMm: 1.2 },
     });
     expect(container.querySelector('[data-part="rain"]')).not.toBeNull();
-    expect(container.querySelector('svg[data-haze-level]')).not.toBeNull();
+    expect(container.querySelector('svg[data-air]')).not.toBeNull();
   });
 
-  // Moved from AirReadout: the haze follows the 24-hour check.
-  it('the haze follows the air check', () => {
-    const haze = (airCheck: AirAssessment) => {
+  // Moved from AirReadout: the scene's look follows the 24-hour check.
+  it('the scene follows the air check', () => {
+    const look = (airCheck: AirAssessment) => {
       const { container, unmount } = show({ ...forecastFixture, airCheck });
       const level = container
-        .querySelector('svg[data-haze-level]')
-        ?.getAttribute('data-haze-level');
+        .querySelector('svg[data-air]')
+        ?.getAttribute('data-air');
       unmount();
       return level;
     };
     expect(
-      haze({
+      look({
         level: 'elevated',
         windowStart: null,
         checks: [
@@ -175,8 +175,8 @@ describe('TodayLead', () => {
           },
         ],
       }),
-    ).toBe('3');
-    expect(haze(forecastFixture.airCheck)).toBe('0');
+    ).toBe('above');
+    expect(look(forecastFixture.airCheck)).toBe('unknown');
   });
 
   it('never says AQI, safe or healthy', () => {

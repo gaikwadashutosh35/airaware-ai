@@ -2,23 +2,32 @@ import type {
   AirAssessment,
   WeatherNow,
 } from '../../../../shared/contracts.ts';
-import { hazeLevel, type HazeLevel } from './haze.ts';
 
-// What the readout's skyline draws. Every flag comes from forecast data:
-// haze and smog from the server's 24-hour air check, the rest from this
-// hour's weather. An unknown value adds nothing.
+// The skyline's look, from the server's 24-hour check only (cityscape D1):
+// no averages, ratios or thresholds of our own.
+export type SceneAir = 'within' | 'above' | 'unknown';
+
+const AIR: Record<AirAssessment['level'], SceneAir> = {
+  not_elevated: 'within',
+  elevated: 'above',
+  unknown: 'unknown',
+};
+
+// What the readout's skyline draws. `air` comes from the air check; every
+// other flag from this hour's weather. An unknown value adds nothing.
 export interface Scene {
-  haze: HazeLevel;
+  air: SceneAir;
   clouds: 0 | 1 | 2 | 3;
   rain: boolean;
   heat: boolean;
   fog: boolean;
-  smog: boolean;
+  // Daylight: a known day, sky and air, with no rain or overcast.
+  glow: boolean;
 }
 
 // Thresholds (design calls, 2026-11-19): a hot look, not a heat-wave claim.
+// Rain needs a forecast amount, never a chance alone (cityscape D4).
 const RAIN_MM = 0.2;
-const RAIN_CHANCE = 60;
 const HOT_C = 35;
 const FOG_M = 1000;
 
@@ -29,20 +38,20 @@ function cloudCount(cover: number | null): Scene['clouds'] {
 }
 
 export function sceneFromConditions(
-  air: AirAssessment,
+  check: AirAssessment,
   weather: WeatherNow | null,
 ): Scene {
-  const haze = hazeLevel(air);
-  const rain =
-    (weather?.precipitationMm ?? 0) >= RAIN_MM ||
-    (weather?.precipitationProbability ?? 0) >= RAIN_CHANCE;
+  const air = AIR[check.level];
+  const clouds = cloudCount(weather?.cloudCoverPercent ?? null);
+  const rain = (weather?.precipitationMm ?? 0) >= RAIN_MM;
   return {
-    haze,
-    clouds: cloudCount(weather?.cloudCoverPercent ?? null),
+    air,
+    clouds,
     rain,
     // Rain wins: one animated layer at most.
     heat: !rain && (weather?.temperatureC ?? -Infinity) >= HOT_C,
     fog: (weather?.visibilityM ?? Infinity) < FOG_M,
-    smog: haze === 5,
+    // A missing isDay (weather cached before the field) counts as unknown.
+    glow: weather?.isDay === true && air !== 'unknown' && !rain && clouds < 3,
   };
 }

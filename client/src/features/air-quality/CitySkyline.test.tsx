@@ -2,8 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { HazeLevel } from './haze.ts';
-import type { Scene } from './scene.ts';
+import type { Scene, SceneAir } from './scene.ts';
 import { CitySkyline } from './CitySkyline.tsx';
 
 afterEach(cleanup);
@@ -14,99 +13,184 @@ const css = readFileSync('src/index.css', 'utf8');
 
 function scene(fields: Partial<Scene> = {}): Scene {
   return {
-    haze: 2,
+    air: 'within',
     clouds: 0,
     rain: false,
     heat: false,
     fog: false,
-    smog: false,
+    glow: false,
     ...fields,
   };
 }
 
-function draw(fields: Partial<Scene> = {}) {
-  return render(<CitySkyline scene={scene(fields)} />).container;
+function draw(fields: Partial<Scene> | null = {}) {
+  return render(<CitySkyline scene={fields === null ? null : scene(fields)} />)
+    .container;
 }
 
-function opacityOf(container: HTMLElement, part: string) {
-  return Number(
-    container.querySelector(`[data-part="${part}"]`)?.getAttribute('opacity') ??
-      0,
+const part = (container: HTMLElement, name: string) =>
+  container.querySelector(`[data-part="${name}"]`);
+const opacityOf = (container: HTMLElement, name: string) =>
+  Number(part(container, name)?.getAttribute('opacity') ?? 0);
+// The class of the first stop of the gradient the sky is filled with.
+function topStop(container: HTMLElement): string {
+  const sky = part(container, 'sky');
+  const ref = /url\(#([^)]+)\)/.exec(sky?.getAttribute('fill') ?? '')?.[1];
+  const gradient = [...container.querySelectorAll('linearGradient')].find(
+    (g) => g.id === ref,
   );
+  return gradient?.querySelector('stop')?.getAttribute('class') ?? '';
+}
+
+// A token-only duration check, shared by the rain and the drift.
+function seconds(token: string) {
+  const value = new RegExp(`--animate-${token}:\\s*([^;]+);`).exec(css)?.[1];
+  const tokens = (value ?? '').split(/\s+/);
+  expect(tokens).not.toContain('infinite');
+  const one = Number.parseFloat(tokens.find((t) => /^[\d.]+s$/.test(t))!);
+  const runs = Number(tokens.find((t) => /^\d+$/.test(t)) ?? 1);
+  return one * runs;
 }
 
 describe('CitySkyline', () => {
-  it('is decorative and carries its level', () => {
-    const container = draw({ haze: 3 });
+  it('is decorative and carries its state', () => {
+    const container = draw({ air: 'above', clouds: 2 });
     const svg = container.querySelector('svg');
     expect(svg?.getAttribute('aria-hidden')).toBe('true');
-    expect(svg?.getAttribute('data-haze-level')).toBe('3');
-    expect(container.querySelector('text')).toBeNull();
+    expect(svg?.getAttribute('data-air')).toBe('above');
+    expect(svg?.getAttribute('data-clouds')).toBe('2');
+    expect(container.querySelector('text, [tabindex], a')).toBeNull();
   });
 
-  it('has no sun when there is no data', () => {
-    expect(draw({ haze: 0 }).querySelector('[data-part="sun"]')).toBeNull();
-  });
-
-  it('shows a sun when there is data', () => {
-    expect(draw({ haze: 1 }).querySelector('[data-part="sun"]')).not.toBeNull();
-  });
-
-  // Final review I4 (Phase A): "no data" must not look like heavy smog.
-  it('no data draws no haze', () => {
-    const container = draw({ haze: 0 });
-    expect(opacityOf(container, 'haze-front')).toBe(0);
-    expect(opacityOf(container, 'haze-mid')).toBe(0);
-  });
-
-  it('gets hazier as the level rises', () => {
-    const opacities = ([1, 2, 3, 4, 5] as HazeLevel[]).map((haze) =>
-      opacityOf(draw({ haze }), 'haze-front'),
+  // Cityscape D1: one look per server level, from tokens only.
+  it('the sky follows the air state', () => {
+    expect(topStop(draw({ air: 'within' }))).toContain(
+      'var(--color-secondary)_46%',
     );
-    for (let i = 1; i < opacities.length; i++) {
-      expect(opacities[i]!).toBeGreaterThan(opacities[i - 1]!);
+    expect(topStop(draw({ air: 'above' }))).toContain(
+      'var(--color-secondary)_14%',
+    );
+    const unknown = topStop(draw({ air: 'unknown' }));
+    expect(unknown).toContain('var(--color-rule)');
+    expect(unknown).not.toContain('secondary');
+    // Overcast mutes the top of the sky (weather, not air).
+    expect(topStop(draw({ air: 'within', clouds: 3 }))).toMatch(
+      /_45%,var\(--color-rule\)\)\]/,
+    );
+  });
+
+  it('veils follow the air state only', () => {
+    const veils = (air: SceneAir, clouds: Scene['clouds']) => {
+      const container = draw({ air, clouds });
+      return [
+        opacityOf(container, 'veil-far'),
+        part(container, 'veil-mid') && opacityOf(container, 'veil-mid'),
+      ];
+    };
+    expect(veils('within', 0)).toEqual([0.05, null]);
+    expect(veils('above', 0)).toEqual([0.42, 0.2]);
+    expect(veils('unknown', 0)).toEqual([0, null]);
+    for (const air of ['within', 'above', 'unknown'] as const) {
+      expect(veils(air, 3)).toEqual(veils(air, 0));
     }
-    expect(opacities[0]!).toBeGreaterThan(0);
   });
 
-  it('draws clouds by count', () => {
-    expect(
-      draw({ clouds: 2 }).querySelectorAll('[data-part="cloud"]'),
-    ).toHaveLength(2);
-    expect(draw().querySelectorAll('[data-part="cloud"]')).toHaveLength(0);
-  });
-
-  it('rain hides the sun and draws streaks', () => {
-    const container = draw({ rain: true });
-    expect(container.querySelector('[data-part="sun"]')).toBeNull();
-    expect(container.querySelectorAll('[data-part="rain"]')).toHaveLength(1);
-  });
-
-  it('heat draws a shimmer and a larger sun', () => {
+  it('the glow follows the scene', () => {
+    expect(part(draw({ glow: false }), 'glow')).toBeNull();
+    const within = draw({ air: 'within', glow: true });
+    const above = draw({ air: 'above', glow: true });
+    expect(opacityOf(above, 'glow')).toBeLessThan(opacityOf(within, 'glow'));
     const radius = (container: HTMLElement) =>
-      Number(
-        container.querySelector('[data-part="sun"]')?.getAttribute('r') ?? 0,
-      );
-    const hot = draw({ heat: true });
-    expect(radius(hot)).toBeGreaterThan(radius(draw()));
-    expect(hot.querySelectorAll('[data-part="shimmer"]')).toHaveLength(1);
+      Number(part(container, 'glow')?.getAttribute('r'));
+    expect(radius(draw({ glow: true, heat: true }))).toBeGreaterThan(
+      radius(within),
+    );
   });
 
-  it('fog and smog draw their own bands', () => {
-    expect(
-      draw({ fog: true }).querySelector('[data-part="fog"]'),
-    ).not.toBeNull();
-    expect(draw().querySelector('[data-part="fog"]')).toBeNull();
-    expect(
-      draw({ haze: 5, smog: true }).querySelector('[data-part="smog"]'),
-    ).not.toBeNull();
-    expect(draw().querySelector('[data-part="smog"]')).toBeNull();
+  it('clouds by count, with a deck when overcast', () => {
+    for (const clouds of [0, 1, 2, 3] as const) {
+      const container = draw({ clouds });
+      expect(container.querySelectorAll('[data-part="cloud"]')).toHaveLength(
+        clouds,
+      );
+      expect(part(container, 'cloud-deck') !== null).toBe(clouds === 3);
+    }
+  });
+
+  // Cityscape D2: the clouds settle once, then rest (WCAG 2.2.2).
+  it('clouds drift once, within five seconds', () => {
+    const clouds = part(draw({ clouds: 1 }), 'clouds');
+    expect(clouds?.getAttribute('class')).toMatch(/motion-safe:animate-drift/);
+    expect(clouds?.getAttribute('class')).not.toMatch(/(^|\s)animate-/);
+    expect(seconds('drift')).toBeLessThanOrEqual(5);
+  });
+
+  it('the same buildings in every air state', () => {
+    const buildings = (air: SceneAir) => {
+      const container = draw({ air });
+      return ['far', 'mid', 'near'].map(
+        (name) => part(container, name)?.outerHTML,
+      );
+    };
+    const within = buildings('within');
+    expect(within.every(Boolean)).toBe(true);
+    expect(buildings('above')).toEqual(within);
+    expect(buildings('unknown')).toEqual(within);
+  });
+
+  it('no smog in any state', () => {
+    for (const air of ['within', 'above', 'unknown'] as const) {
+      expect(part(draw({ air }), 'smog')).toBeNull();
+    }
+  });
+
+  it('windows are hidden on phones', () => {
+    expect(part(draw(), 'windows')?.getAttribute('class')).toContain(
+      'max-sm:hidden',
+    );
+  });
+
+  // 18 near buildings, a tank on every third.
+  it('rooftop tanks sit on the near row', () => {
+    expect(part(draw(), 'tanks')?.children).toHaveLength(6);
+  });
+
+  it('loading draws a still, neutral silhouette', () => {
+    const container = draw(null);
+    expect(container.querySelector('svg')?.getAttribute('data-air')).toBe(
+      'loading',
+    );
+    for (const name of ['glow', 'cloud', 'veil-far', 'rain', 'windows']) {
+      expect(part(container, name)).toBeNull();
+    }
+    expect(container.querySelector('[class*="animate-"]')).toBeNull();
+  });
+
+  it('each skyline uses its own ids', () => {
+    const { container } = render(
+      <>
+        <CitySkyline scene={scene({ glow: true })} />
+        <CitySkyline scene={scene({ glow: true })} />
+      </>,
+    );
+    const svgs = [...container.querySelectorAll('svg')];
+    const ids = svgs.map((svg) =>
+      [...svg.querySelectorAll('[id]')].map((el) => el.id),
+    );
+    expect(ids[0]!.length).toBeGreaterThan(0);
+    expect(ids[0]!.some((id) => ids[1]!.includes(id))).toBe(false);
+    svgs.forEach((svg, i) => {
+      for (const el of svg.querySelectorAll('[fill^="url(#"]')) {
+        const ref = /url\(#([^)]+)\)/.exec(el.getAttribute('fill')!)![1]!;
+        expect(ids[i]).toContain(ref);
+      }
+    });
   });
 
   it('animations only run when motion is welcome', () => {
-    const container = draw({ rain: true });
+    const container = draw({ rain: true, clouds: 1 });
     const animated = [...container.querySelectorAll('[class*="animate-"]')];
-    expect(animated.length).toBeGreaterThan(0);
+    expect(animated.length).toBeGreaterThan(1);
     for (const element of animated) {
       expect(element.getAttribute('class')).toMatch(/motion-safe:animate-/);
       expect(element.getAttribute('class')).not.toMatch(/(^|\s)animate-/);
@@ -115,19 +199,22 @@ describe('CitySkyline', () => {
 
   // Review A2 #4: decorative motion stops within 5 seconds (WCAG 2.2.2).
   it('the rain stops within five seconds', () => {
-    const value = /--animate-rain:\s*([^;]+);/.exec(css)?.[1] ?? '';
-    const tokens = value.split(/\s+/);
-    expect(tokens).not.toContain('infinite');
-    const seconds = Number.parseFloat(tokens.find((t) => /^[\d.]+s$/.test(t))!);
-    const runs = Number(tokens.find((t) => /^\d+$/.test(t)) ?? 1);
-    expect(seconds * runs).toBeLessThanOrEqual(5);
+    expect(seconds('rain')).toBeLessThanOrEqual(5);
   });
 
   // Review A2 #5: a flat band wider than the view looks the same at every
   // offset, so moving it costs frames and shows nothing.
   it('the heat band stays still', () => {
-    const shimmer = draw({ heat: true }).querySelector('[data-part="shimmer"]');
-    expect(shimmer?.getAttribute('class')).not.toMatch(/animate-/);
+    expect(
+      part(draw({ heat: true }), 'shimmer')?.getAttribute('class'),
+    ).not.toMatch(/animate-/);
+  });
+
+  it('rain draws streaks, and fog its band', () => {
+    expect(part(draw({ rain: true }), 'rain')).not.toBeNull();
+    expect(part(draw(), 'rain')).toBeNull();
+    expect(part(draw({ fog: true }), 'fog')).not.toBeNull();
+    expect(part(draw(), 'fog')).toBeNull();
   });
 
   // Review A2 minor a: one loop of the rain lands every visible streak on
