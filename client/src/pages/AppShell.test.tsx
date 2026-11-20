@@ -127,6 +127,13 @@ async function choosePlace(optionIndex = 0) {
   });
 }
 
+async function goTo(name: string) {
+  fireEvent.click(screen.getByRole('link', { name }));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+}
+
 describe('AppShell', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -496,6 +503,37 @@ describe('AppShell', () => {
     ).toBe('/privacy');
   });
 
+  it('Today has no household form', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+
+    expect(
+      screen.queryByRole('heading', { name: 'Your household (optional)' }),
+    ).toBeNull();
+    await goTo('My Profile');
+    expect(
+      screen.getByRole('heading', { name: 'Your household (optional)' }),
+    ).toBeDefined();
+  });
+
+  it('answers survive leaving My Profile', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await goTo('My Profile');
+    fireEvent.change(screen.getByLabelText('Do you exercise outdoors?'), {
+      target: { value: 'yes' },
+    });
+
+    await goTo('Today');
+    await goTo('My Profile');
+
+    expect(
+      (screen.getByLabelText('Do you exercise outdoors?') as HTMLSelectElement)
+        .value,
+    ).toBe('yes');
+  });
+
   it('skip link comes first and targets main', () => {
     routeFetch(ok());
     render(<AppShell />);
@@ -603,9 +641,11 @@ describe('AppShell', () => {
     render(<AppShell />);
     await choosePlace();
 
+    await goTo('My Profile');
     fireEvent.change(screen.getByLabelText('Do you have an air purifier?'), {
       target: { value: 'yes' },
     });
+    await goTo('Today');
     await buildPlan();
 
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
@@ -675,6 +715,7 @@ describe('AppShell', () => {
     await buildPlan();
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
 
+    await goTo('My Profile');
     fireEvent.click(
       screen.getByRole('button', { name: 'Delete my saved data' }),
     );
@@ -682,6 +723,7 @@ describe('AppShell', () => {
     await flush();
 
     expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
+    await goTo('Today');
     expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
   });
 
@@ -713,10 +755,12 @@ describe('AppShell', () => {
     };
   }
 
+  // My Profile lists saved plans; opening one shows it on Today.
   async function openSavedPlan() {
-    await flush();
+    await goTo('My Profile');
     fireEvent.click(screen.getByRole('button', { name: /^Open/ }));
     await flush();
+    expect(window.location.pathname).toBe('/app');
     expect(screen.getByText('Plan for Delhi')).toBeDefined();
   }
 
@@ -725,6 +769,7 @@ describe('AppShell', () => {
     routeFetch(ok(), withSavedPlan());
     render(<AppShell />);
     await openSavedPlan();
+    await goTo('My Profile');
     expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
 
     fireEvent.click(
@@ -735,6 +780,7 @@ describe('AppShell', () => {
 
     expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Saved plans' })).toBeNull();
+    await goTo('Today');
     expect(screen.queryByText('Plan for Delhi')).toBeNull();
   });
 

@@ -51,6 +51,14 @@ async function deleteLeftoverAccount(page: Page): Promise<void> {
   }
 }
 
+// The app's main navigation (bottom bar on phones, top bar on desktop).
+async function goTo(page: Page, name: string): Promise<void> {
+  await page
+    .getByRole('navigation', { name: 'Main' })
+    .getByRole('link', { name })
+    .click();
+}
+
 async function buildPlan(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Build my daily plan' }).click();
   await expect(page.getByText(/^Made (by our rules|with AI)/)).toBeVisible({
@@ -123,9 +131,11 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
       await expect(page.getByText(/^PM2\.5 ranges from/)).toBeVisible();
     });
 
-    await test.step('4. answer two household questions', async () => {
+    await test.step('4. answer two household questions in My Profile', async () => {
+      await goTo(page, 'My Profile');
       await page.getByLabel('Do you exercise outdoors?').selectOption('yes');
       await page.getByLabel('Do you have an air purifier?').selectOption('yes');
+      await goTo(page, 'Today');
     });
 
     await test.step('5. build the plan: made-by line and notice', async () => {
@@ -172,8 +182,9 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
       await savePlan(page);
     });
 
-    await test.step('10. reload: the saved list shows it', async () => {
+    await test.step('10. reload: My Profile lists it', async () => {
       await page.reload();
+      await goTo(page, 'My Profile');
       await expect(savedRows(page)).toHaveCount(1, { timeout: 30_000 });
       await expect(savedRows(page).first()).toContainText('Pune, Maharashtra');
     });
@@ -193,6 +204,7 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
         await other.goto(PUNE);
         await buildPlan(other);
         await savePlan(other);
+        await goTo(other, 'My Profile');
         await expect(savedRows(other)).toHaveCount(1, { timeout: 30_000 });
         await deleteEverything(other);
         await expect(

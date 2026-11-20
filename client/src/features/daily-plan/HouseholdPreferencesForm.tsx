@@ -32,18 +32,26 @@ const DELETED = 'Deleted. Nothing is saved now.';
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
 
 export function HouseholdPreferencesForm({
+  initial,
   onChange,
   onDeleted,
 }: {
+  // Answers already given this visit, so leaving the page keeps them.
+  initial?: HouseholdContext;
   // The answers on screen, saved or not: the daily plan uses them.
   onChange?: (context: HouseholdContext) => void;
   // After "Delete everything" succeeded.
   onDeleted?: () => void;
 } = {}) {
-  const [answers, setAnswersState] = useState<Answers>({});
+  // Answered questions only: a blank would hide a saved answer in the merge.
+  const [answers, setAnswersState] = useState<Answers>(() =>
+    Object.fromEntries(
+      Object.entries(toAnswers(initial ?? {})).filter(([, value]) => value),
+    ),
+  );
   const onChangeRef = useRef(onChange);
   // The answers on screen, for merging a late load under them.
-  const answersRef = useRef<Answers>({});
+  const answersRef = useRef<Answers>(answers);
   // The saved-answers load, cancelled by "Delete everything".
   const loadRef = useRef<AbortController | null>(null);
   useEffect(() => {

@@ -9,8 +9,6 @@ import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
 import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
-import { HouseholdPreferencesForm } from '../features/daily-plan/HouseholdPreferencesForm.tsx';
-import { SavedPlansList } from '../features/daily-plan/SavedPlansList.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import {
   placeFromSearch,
@@ -19,9 +17,10 @@ import {
 } from '../features/location/place.ts';
 import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
 import { isOlderThan, useNow } from '../lib/clock.ts';
-import { appPage, usePath } from '../lib/navigation.ts';
+import { appPage, navigate, usePath } from '../lib/navigation.ts';
 import { getForecast, getSources } from '../services/api.ts';
 import { Placeholder } from './Placeholder.tsx';
+import { Profile } from './Profile.tsx';
 
 const TITLES = {
   welcome: 'Welcome',
@@ -118,7 +117,27 @@ function AppShell() {
         tabIndex={-1}
         className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12"
       >
-        {page !== 'today' ? (
+        {page === 'profile' ? (
+          <Profile
+            context={context}
+            onContextChange={setContext}
+            onDeleted={() => {
+              setResets((n) => n + 1);
+              setOpened(null);
+              setListVersion((n) => n + 1);
+            }}
+            listVersion={listVersion}
+            onOpen={(plan) => {
+              // Today shows a saved plan as a snapshot (Phase 6 moves it here).
+              setOpened(plan);
+              navigate('/app');
+            }}
+            onPlanDeleted={(id) => {
+              setDeletedPlanId(id);
+              setOpened((current) => (current?.id === id ? null : current));
+            }}
+          />
+        ) : page !== 'today' ? (
           <Placeholder title={TITLES[page]} />
         ) : (
           <>
@@ -226,14 +245,6 @@ function AppShell() {
               </div>
 
               <div className="flex min-w-0 flex-col gap-6">
-                <HouseholdPreferencesForm
-                  onChange={setContext}
-                  onDeleted={() => {
-                    setResets((n) => n + 1);
-                    setOpened(null);
-                    setListVersion((n) => n + 1);
-                  }}
-                />
                 <DailyPlanSection
                   // A new place, or deleting saved data, starts the plan area afresh.
                   key={`${place?.label}|${forecastKey}#${resets}`}
@@ -244,16 +255,6 @@ function AppShell() {
                   opened={opened}
                   onBackToToday={() => setOpened(null)}
                   deletedPlanId={deletedPlanId}
-                />
-                <SavedPlansList
-                  version={listVersion}
-                  onOpen={setOpened}
-                  onDeleted={(id) => {
-                    setDeletedPlanId(id);
-                    setOpened((current) =>
-                      current?.id === id ? null : current,
-                    );
-                  }}
                 />
                 <SourcesPanel
                   sources={

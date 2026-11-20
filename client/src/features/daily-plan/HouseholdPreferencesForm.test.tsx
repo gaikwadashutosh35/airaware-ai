@@ -57,6 +57,34 @@ afterEach(() => {
 });
 
 describe('HouseholdPreferencesForm', () => {
+  it('the form starts from the answers it is given', async () => {
+    routeFetch(() => ok(null));
+    render(
+      <HouseholdPreferencesForm
+        initial={{
+          home: { airPurifier: true },
+          routine: { commuteMode: 'car' },
+        }}
+      />,
+    );
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+
+    expect(
+      (
+        screen.getByLabelText(
+          'Do you have an air purifier?',
+        ) as HTMLSelectElement
+      ).value,
+    ).toBe('yes');
+    expect(
+      (
+        screen.getByLabelText(
+          'How do you usually travel to work or college?',
+        ) as HTMLSelectElement
+      ).value,
+    ).toBe('car');
+  });
+
   // Review Focus 2.
   it('loading with no session creates no account', async () => {
     const fetchSpy = routeFetch(() => ok(null));
