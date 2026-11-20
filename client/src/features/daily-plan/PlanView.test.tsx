@@ -225,6 +225,33 @@ describe('PlanView', () => {
     expect(container.querySelector('details')?.open).toBe(true);
   });
 
+  it('can name its "Why?" for the recommendation', () => {
+    const candidate = rulesPlanFixture.featured[0].candidate;
+    render(
+      <PlanCard
+        item={{ candidate, forYou: null, period: null, compact: false }}
+        sources={rulesPlanFixture.sources}
+        level={3}
+        whyLabel="Why this recommendation?"
+      />,
+    );
+
+    expect(screen.getByText('Why this recommendation?')).toBeDefined();
+    expect(screen.queryByText('Why?')).toBeNull();
+  });
+
+  // Today shows the air in its verdict and details (Phase 6).
+  it('hideAir leaves out the air notice and the air check', () => {
+    render(<PlanView plan={rulesPlanFixture} hideAir />);
+
+    expect(screen.queryByRole('region', { name: /Air notice/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Air check' })).toBeNull();
+    expect(screen.queryByText(MODEL_LINE)).toBeNull();
+    expect(screen.getByText('Plan for Pune, Maharashtra')).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Indoor air' })).toBeDefined();
+    expect(screen.getByText(rulesPlanFixture.safetyNote)).toBeDefined();
+  });
+
   // Phase 8 review: a saved plan must not read as today's air.
   it('a saved snapshot says "that day", not "today"', () => {
     const plan: DailyPlan = {

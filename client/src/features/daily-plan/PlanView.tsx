@@ -43,10 +43,13 @@ function Part({
 export function PlanView({
   plan,
   snapshot = false,
+  hideAir = false,
 }: {
   plan: DailyPlan;
   // A saved plan: its labels say "that day", never "today".
   snapshot?: boolean;
+  // Today: the verdict and "Air quality details" already show the air.
+  hideAir?: boolean;
 }) {
   const { yourDay, topics } = groupPlan(plan);
   const { air, forecast } = plan;
@@ -64,7 +67,7 @@ export function PlanView({
         <p className="text-sm text-text-dark-muted">{madeByLine(plan)}</p>
       </div>
 
-      {plan.notices.length > 0 && (
+      {!hideAir && plan.notices.length > 0 && (
         <Part title="Air notice" tag={LEVEL_TAG[plan.air.level]}>
           {plan.notices.map((candidate) => (
             <PlanCard
@@ -79,29 +82,31 @@ export function PlanView({
         </Part>
       )}
 
-      <Part title="Air check">
-        <p>
-          {air.windowStart
-            ? `Next 24 hours from ${formatDateTime(air.windowStart)}`
-            : 'No complete 24-hour forecast window'}
-        </p>
-        <ul className="flex flex-col gap-1">
-          {air.checks.map((check) => (
-            <li key={check.pollutant}>{checkText(check)}</li>
-          ))}
-        </ul>
-        {forecast ? (
-          <>
-            <p className="text-sm">{MODEL_LINE}</p>
-            <p className="text-sm text-text-dark-muted">
-              Open-Meteo model forecast, retrieved{' '}
-              {formatDateTime(forecast.retrievedAt)}
-            </p>
-          </>
-        ) : (
-          <p className="text-sm">{NO_AIR}</p>
-        )}
-      </Part>
+      {!hideAir && (
+        <Part title="Air check">
+          <p>
+            {air.windowStart
+              ? `Next 24 hours from ${formatDateTime(air.windowStart)}`
+              : 'No complete 24-hour forecast window'}
+          </p>
+          <ul className="flex flex-col gap-1">
+            {air.checks.map((check) => (
+              <li key={check.pollutant}>{checkText(check)}</li>
+            ))}
+          </ul>
+          {forecast ? (
+            <>
+              <p className="text-sm">{MODEL_LINE}</p>
+              <p className="text-sm text-text-dark-muted">
+                Open-Meteo model forecast, retrieved{' '}
+                {formatDateTime(forecast.retrievedAt)}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm">{NO_AIR}</p>
+          )}
+        </Part>
+      )}
 
       {yourDay.length > 0 && (
         <Part title="Your day">

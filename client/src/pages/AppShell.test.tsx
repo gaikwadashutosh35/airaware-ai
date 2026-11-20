@@ -27,6 +27,7 @@ import {
   sourcesFixture,
 } from '../test/fixtures.ts';
 import { rulesPlanFixture } from '../test/planFixtures.ts';
+import { verdictFrom } from '../features/today/today.ts';
 import AppShell from './AppShell.tsx';
 
 type ForecastResponder = (latitude: string | null) => Promise<Response>;
@@ -59,7 +60,13 @@ function routeFetch(forecast: ForecastResponder, other?: OtherResponder) {
     if (url.pathname === '/api/v1/air-quality/sources') {
       return Promise.resolve(Response.json({ data: sourcesFixture }));
     }
-    return other?.(url, init) ?? forecast(url.searchParams.get('latitude'));
+    const answer = other?.(url, init);
+    if (answer) return answer;
+    // Today builds a plan by itself: a rules plan unless a test says otherwise.
+    if (url.pathname === '/api/v1/recommendations/daily-plan') {
+      return Promise.resolve(Response.json({ data: rulesPlanFixture }));
+    }
+    return forecast(url.searchParams.get('latitude'));
   });
 }
 
@@ -104,13 +111,19 @@ async function flush() {
   });
 }
 
+// The plan builds by itself once Today shows a place: let it finish.
 async function buildPlan() {
-  fireEvent.click(screen.getByRole('button', { name: 'Build my daily plan' }));
   await flush();
 }
 
 function ok(series: ForecastSeries = forecastFixture) {
   return () => Promise.resolve(Response.json({ data: series }));
+}
+
+function planPosts(fetchSpy: ReturnType<typeof routeFetch>) {
+  return fetchSpy.mock.calls.filter(
+    ([input]) => urlOf(input).pathname === '/api/v1/recommendations/daily-plan',
+  );
 }
 
 function forecastCalls(fetchSpy: ReturnType<typeof routeFetch>) {
@@ -397,7 +410,9 @@ describe('AppShell', () => {
     const nextDays = screen.getByRole('heading', {
       name: 'Your city, the next two days',
     });
-    const plan = screen.getByRole('heading', { name: 'Your daily plan' });
+    const plan = screen.getByRole('heading', {
+      name: 'Your recommendation for today',
+    });
     expect(
       readout.compareDocumentPosition(nextDays) &
         Node.DOCUMENT_POSITION_FOLLOWING,
@@ -539,30 +554,42 @@ describe('AppShell', () => {
     ).toBeDefined();
   });
 
-  it('a forecast error keeps the plan area', async () => {
+  it('a forecast error keeps the recommendation', async () => {
     window.history.replaceState(
       null,
       '',
       '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
     );
-    routeFetch(() =>
-      Promise.resolve(
-        Response.json(
-          { error: { code: 'PROVIDER_ERROR', message: 'Provider down.' } },
-          { status: 502 },
+    routeFetch(
+      () =>
+        Promise.resolve(
+          Response.json(
+            { error: { code: 'PROVIDER_ERROR', message: 'Provider down.' } },
+            { status: 502 },
+          ),
         ),
-      ),
+      planRoutes(),
     );
     render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
+    await buildPlan();
 
     expect(
       screen.getByRole('heading', { name: "We couldn't load the forecast" }),
     ).toBeDefined();
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Your daily plan' }),
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Your recommendation for today',
+      }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('heading', {
+        level: 3,
+        name: 'Consider an indoor alternative for exercise',
+      }),
     ).toBeDefined();
   });
 
@@ -661,9 +688,6 @@ describe('AppShell', () => {
     );
     render(<AppShell />);
     await choosePlace();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Build my daily plan' }),
-    );
 
     await goTo('Better Habits');
     await act(async () => {
@@ -1148,67 +1172,97 @@ describe('AppShell', () => {
     await buildPlan();
 
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
-    const post = fetchSpy.mock.calls.find(
-      ([input]) =>
-        urlOf(input).pathname === '/api/v1/recommendations/daily-plan',
-    );
-    expect(JSON.parse(post?.[1]?.body as string)).toEqual({
+    // Once on arrival, once more after the answers changed.
+    const posts = planPosts(fetchSpy);
+    expect(posts).toHaveLength(2);
+    expect(JSON.parse(posts[1]?.[1]?.body as string)).toEqual({
       place: { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 },
       householdContext: { home: { airPurifier: true } },
     });
     expect(session.tokenForSave).not.toHaveBeenCalled();
   });
 
-  it('clears the shown plan when a new place is chosen', async () => {
-    routeFetch(ok(), planRoutes());
+  it('builds afresh for a new place', async () => {
+    const fetchSpy = routeFetch(ok(), planRoutes());
     render(<AppShell />);
     await choosePlace(0);
     await buildPlan();
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
 
     await choosePlace(1);
+    await buildPlan();
 
-    expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
+    const posts = planPosts(fetchSpy);
+    expect(posts).toHaveLength(2);
+    const label = (i: number) =>
+      JSON.parse(posts[i]?.[1]?.body as string).place.label;
+    expect(label(1)).not.toBe(label(0));
   });
 
   // Review Focus 2.
   it('never shows an old place plan under a new place', async () => {
-    let reply: (response: Response) => void = () => {};
+    const replies: Array<(response: Response) => void> = [];
     routeFetch(
       ok(),
       planRoutes(
         () =>
           new Promise((resolve) => {
-            reply = resolve;
+            replies.push(resolve);
           }),
       ),
     );
     render(<AppShell />);
     await choosePlace(0);
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Build my daily plan' }),
-    );
 
     await choosePlace(1);
     await act(async () => {
-      reply(Response.json({ data: rulesPlanFixture }));
+      replies[0]!(Response.json({ data: rulesPlanFixture }));
     });
     await flush();
 
     expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
+    // The new place's own plan is still on its way.
+    expect(replies).toHaveLength(2);
     expect(
-      screen.getByRole('button', { name: 'Build my daily plan' }),
-    ).toHaveProperty('disabled', false);
+      screen.getByText('Building your plan. This can take up to 30 seconds.'),
+    ).toBeDefined();
+  });
+
+  it('a plan error offers Try again and keeps the verdict', async () => {
+    routeFetch(
+      ok(),
+      planRoutes(() =>
+        Promise.resolve(
+          Response.json(
+            { error: { code: 'INTERNAL_ERROR', message: 'x' } },
+            { status: 500 },
+          ),
+        ),
+      ),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await buildPlan();
+
     expect(
-      screen.queryByText('Building your plan. This can take up to 30 seconds.'),
-    ).toBeNull();
+      screen.getByRole('heading', {
+        name: "We couldn't build your recommendation.",
+      }),
+    ).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeDefined();
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: verdictFrom(forecastFixture.airCheck).title,
+      }),
+    ).toBeDefined();
   });
 
   // Review Focus 1 (the plan area part).
-  it('clears the shown plan after "Delete everything"', async () => {
+  it('starts the plan afresh after "Delete everything"', async () => {
     session.available = true;
     session.currentToken.mockResolvedValue('tok');
-    routeFetch(ok(), planRoutes());
+    const fetchSpy = routeFetch(ok(), planRoutes());
     render(<AppShell />);
     await choosePlace();
     await buildPlan();
@@ -1222,8 +1276,10 @@ describe('AppShell', () => {
     await flush();
 
     expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
+    expect(planPosts(fetchSpy)).toHaveLength(1);
     await goTo('Today');
-    expect(screen.queryByText(RULES_MADE_BY)).toBeNull();
+    await buildPlan();
+    expect(planPosts(fetchSpy)).toHaveLength(2);
   });
 
   // A session with one saved plan (Delhi); deleting the account ends it.

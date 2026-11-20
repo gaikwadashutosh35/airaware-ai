@@ -1,9 +1,15 @@
 // Phase 5: a first visit goes through Welcome to Today. "Remember" stays
 // unticked, so no account is created. Uses live Open-Meteo search.
 import { expect, test } from '@playwright/test';
+import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { expectNoAxeViolations } from './axe.ts';
 
 test('a first visit goes through Welcome to Today', async ({ page }) => {
+  // Today builds a plan on arrival; a test reply keeps the API's 10 plans a
+  // minute for the journey.
+  await page.route('**/api/v1/recommendations/daily-plan', (route) =>
+    route.fulfill({ json: { data: rulesPlanFixture } }),
+  );
   await page.goto('/app');
   await expect(
     page.getByRole('heading', {

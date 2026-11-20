@@ -372,6 +372,7 @@ function AppShell() {
                 place={place}
                 context={context}
                 now={now}
+                active={page === 'today'}
                 onSaved={() => setListVersion((n) => n + 1)}
                 opened={opened}
                 onBackToToday={() => setOpened(null)}

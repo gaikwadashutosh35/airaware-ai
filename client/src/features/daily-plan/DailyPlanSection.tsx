@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useId, useRef, useState } from 'react';
 import type {
   DailyPlan,
   HouseholdContext,
@@ -15,18 +15,19 @@ import {
   type PlanBody,
 } from '../../services/api.ts';
 import type { Place } from '../location/place.ts';
+import { topRecommendation } from '../today/today.ts';
 import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
+import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
 
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const READY = 'Your plan is ready.';
 const BUILD_FAILED = 'Something went wrong building your plan.';
-const CHANGED = 'Your answers changed. Build the plan again to use them.';
-const STALE =
-  'This plan was built more than an hour ago. Build it again for the latest forecast.';
+const STALE = 'This plan was built more than an hour ago.';
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
+const NO_CARD = 'No suggestions for your answers today.';
 
 interface Built {
   plan: DailyPlan;
@@ -49,14 +50,18 @@ const buttonClass =
 const primaryClass =
   'min-h-11 rounded-md bg-primary px-4 font-medium text-text-dark disabled:opacity-60';
 
-// "Your daily plan": builds from the chosen place and the answers on screen.
-// Building never creates an account; only "Save plan" does. The dashboard
+// "Your recommendation for today": the plan's top card, with the full day
+// folded below. It builds by itself while Today is shown, from the chosen
+// place and the answers on screen: when there is no plan yet, the answers
+// changed, or the plan is over an hour old (D3). Building never creates an
+// account; only "Save plan" does. The dashboard
 // remounts this section for a new place, so an old place's plan (or a late
 // reply for it) never shows under a new one.
 export function DailyPlanSection({
   place,
   context,
   now,
+  active,
   onSaved,
   opened,
   onBackToToday,
@@ -66,6 +71,8 @@ export function DailyPlanSection({
   context: HouseholdContext;
   // The running clock, for the stale check.
   now: Date;
+  // True while Today is shown: the plan builds only then.
+  active: boolean;
   onSaved: () => void;
   // A saved plan opened from the list: shown as a snapshot over the live
   // plan, which stays underneath for "Back to today".
@@ -85,7 +92,6 @@ export function DailyPlanSection({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const wasOpen = useRef(false);
   const headingId = useId();
-  const hintId = useId();
   const noteId = useId();
 
   useEffect(() => () => request.current?.abort(), []);
@@ -145,7 +151,8 @@ export function DailyPlanSection({
       setBuilt({
         ...built,
         plan: saved.plan,
-        builtAt: new Date(saved.savedAt),
+        // The device's clock, like `now`: the hour counts from the save.
+        builtAt: new Date(),
         savedId: saved.id,
       });
       setMessage(SAVED);
@@ -166,7 +173,23 @@ export function DailyPlanSection({
       now,
       60,
     );
-  const changed = built !== null && JSON.stringify(context) !== built.builtWith;
+  // Measured on the device's own clock, so a wrong clock cannot loop.
+  const due =
+    active &&
+    place !== null &&
+    status.kind === 'idle' &&
+    !saving &&
+    (built === null ||
+      JSON.stringify(context) !== built.builtWith ||
+      isOlderThan(built.builtAt.toISOString(), now, 60));
+  const startBuild = useEffectEvent(() => void build());
+  useEffect(() => {
+    if (!due) return;
+    // A tick later, so React's development double-run sends one request.
+    const timer = setTimeout(() => startBuild(), 0);
+    return () => clearTimeout(timer);
+  }, [due]);
+  const top = built ? topRecommendation(built.plan) : null;
   // Saved, and not deleted since: only then may the page say so.
   const isSaved = built?.savedId != null && built.savedId !== deletedPlanId;
   const shown = message === SAVED && !isSaved ? '' : message;
@@ -182,7 +205,7 @@ export function DailyPlanSection({
         tabIndex={-1}
         className="text-2xl font-semibold tracking-tight"
       >
-        Your daily plan
+        Your recommendation for today
       </h2>
       {opened ? (
         <>
@@ -207,55 +230,57 @@ export function DailyPlanSection({
         </>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              // Not during a save either: a rebuild then would sit under the
-              // save's "Saved" message.
-              disabled={!place || status.kind === 'building' || saving}
-              aria-describedby={place ? undefined : hintId}
-              onClick={() => void build()}
-              className={primaryClass}
-            >
-              Build my daily plan
-            </button>
-            {!place && (
-              <p id={hintId} className="text-sm">
-                Choose a place first.
-              </p>
-            )}
-          </div>
-
+          {!place && <p className="text-sm">Choose a place first.</p>}
           <output className="block min-h-6 text-sm">{shown}</output>
-          {status.kind === 'building' && <Loading label="Building your plan" />}
+          {status.kind === 'building' && (
+            <Loading label="Finding your recommendation…" />
+          )}
           {status.kind === 'error' && (
             <ErrorState
               error={status.error}
               onRetry={() => void build()}
               fallback={BUILD_FAILED}
+              title="We couldn't build your recommendation."
             />
           )}
           {status.kind === 'idle' && built && (
             <>
-              {changed && <p className="font-semibold">{CHANGED}</p>}
               {stale && <p className="font-semibold">{STALE}</p>}
-              <PlanView plan={built.plan} />
-              {!isSaved && (
-                <div className="flex flex-col items-start gap-2">
-                  <button
-                    type="button"
-                    disabled={!savingAvailable || saving}
-                    aria-describedby={noteId}
-                    onClick={() => void save()}
-                    className={primaryClass}
-                  >
-                    Save plan
-                  </button>
-                  <p id={noteId} className="text-sm">
-                    {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
-                  </p>
-                </div>
+              {top ? (
+                <PlanCard
+                  item={top}
+                  sources={built.plan.sources}
+                  level={3}
+                  whyLabel="Why this recommendation?"
+                />
+              ) : (
+                <p>{NO_CARD}</p>
               )}
+              {/* Instant open: it is opened often, so no animation. */}
+              <details>
+                <summary className="min-h-11 cursor-pointer py-2 font-semibold">
+                  See your full day
+                </summary>
+                <div className="flex flex-col gap-6 pt-2">
+                  <PlanView plan={built.plan} hideAir />
+                  {!isSaved && (
+                    <div className="flex flex-col items-start gap-2">
+                      <button
+                        type="button"
+                        disabled={!savingAvailable || saving}
+                        aria-describedby={noteId}
+                        onClick={() => void save()}
+                        className={primaryClass}
+                      >
+                        Save plan
+                      </button>
+                      <p id={noteId} className="text-sm">
+                        {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </details>
             </>
           )}
         </>

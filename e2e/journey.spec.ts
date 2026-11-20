@@ -1,7 +1,9 @@
 // The live journey (TESTING_QA.md §7, steps 1–12) against real Open-Meteo
 // and real Supabase. Limits it stays under, per run (desktop + phone):
-// - 8 plan requests (users A and B each build and save, per project), under
-//   the API's 10 per minute;
+// - 10 plan requests (5 per project: user A builds, rebuilds after its
+//   answers change, and saves; user B builds and saves), within the API's
+//   10 per minute even if both projects land in one minute. Reloads happen
+//   on My Profile, where the hidden Today builds nothing;
 // - 4 anonymous sign-ins, under Supabase's 30 per hour.
 // Every account it creates is deleted again, by the UI or, if a step
 // failed first, by the cleanup below.
@@ -17,8 +19,6 @@ import { PUNE } from './routes.ts';
 
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const DELETED = 'Deleted. Nothing is saved now.';
-const MODEL_LINE =
-  'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB AQI.';
 const EMPTY_TOPIC = 'No suggestions in this area for your answers today.';
 
 // Deletes this browser's anonymous account if one is left. The token is
@@ -59,11 +59,10 @@ async function goTo(page: Page, name: string): Promise<void> {
     .click();
 }
 
+// The plan builds by itself: once it is shown, open its full day.
 async function buildPlan(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Build my daily plan' }).click();
-  await expect(page.getByText(/^Made (by our rules|with AI)/)).toBeVisible({
-    timeout: 60_000,
-  });
+  await page.getByText('See your full day').click({ timeout: 60_000 });
+  await expect(page.getByText(/^Made (by our rules|with AI)/)).toBeVisible();
 }
 
 async function savePlan(page: Page): Promise<void> {
@@ -140,26 +139,30 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
       await goTo(page, 'My Profile');
       await page.getByLabel('Do you exercise outdoors?').selectOption('yes');
       await page.getByLabel('Do you have an air purifier?').selectOption('yes');
+      // Today rebuilds the plan once, with the new answers.
+      const rebuilt = page.waitForResponse(
+        (response) =>
+          response.url().endsWith('/api/v1/recommendations/daily-plan') &&
+          (response.request().postData() ?? '').includes('"airPurifier":true'),
+        { timeout: 60_000 },
+      );
       await goTo(page, 'Today');
+      await rebuilt;
     });
 
-    await test.step('5. build the plan: made-by line and notice', async () => {
+    await test.step('5. the recommendation and its made-by line', async () => {
+      await expect(
+        page.getByRole('heading', { name: 'Your recommendation for today' }),
+      ).toBeVisible();
       await buildPlan(page);
-      await expect(
-        page
-          .getByRole('region', { name: 'Air notice' })
-          .getByRole('article')
-          .first(),
-      ).toBeVisible();
-      await expect(page.getByText(MODEL_LINE)).toBeVisible();
     });
 
-    await test.step('6. open a "Why?" panel', async () => {
-      const notice = page.getByRole('region', { name: 'Air notice' });
-      await notice.locator('summary').first().click();
-      await expect(
-        notice.locator('details[open]').getByText('Reason', { exact: true }),
-      ).toBeVisible();
+    await test.step('6. open "Why this recommendation?"', async () => {
+      const why = page.locator('details', {
+        has: page.locator('summary', { hasText: 'Why this recommendation?' }),
+      });
+      await why.locator('summary').click();
+      await expect(why.getByText('Reason', { exact: true })).toBeVisible();
     });
 
     await test.step('7. the indoor section', async () => {
@@ -188,8 +191,8 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
     });
 
     await test.step('10. reload: My Profile lists it', async () => {
-      await page.reload();
       await goTo(page, 'My Profile');
+      await page.reload();
       await expect(savedRows(page)).toHaveCount(1, { timeout: 30_000 });
       await expect(savedRows(page).first()).toContainText('Pune, Maharashtra');
     });

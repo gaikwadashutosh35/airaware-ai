@@ -1,9 +1,11 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -35,12 +37,11 @@ const PLAN_PATH = '/api/v1/recommendations/daily-plan';
 const RULES_MADE_BY =
   'Made by our rules. AI personalisation is unavailable right now.';
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
-const CHANGED = 'Your answers changed. Build the plan again to use them.';
-const PLAN_STALE =
-  'This plan was built more than an hour ago. Build it again for the latest forecast.';
+const PLAN_STALE = 'This plan was built more than an hour ago.';
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
+const TOP = 'Consider an indoor alternative for exercise';
 
 const place = {
   label: 'Pune, Maharashtra',
@@ -75,6 +76,12 @@ const savedReply = (plan: DailyPlan, savedAt = at.toISOString()) =>
 const calls = (spy: ReturnType<typeof routeFetch>, path: string) =>
   spy.mock.calls.filter(([input]) => input === path);
 
+// Lets a scheduled build start and its reply settle.
+const settle = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
 type Props = ComponentProps<typeof DailyPlanSection>;
 
 function renderSection(props: Partial<Props> = {}) {
@@ -85,6 +92,7 @@ function renderSection(props: Partial<Props> = {}) {
       place={place}
       context={{}}
       now={at}
+      active
       onSaved={onSaved}
       opened={null}
       onBackToToday={onBackToToday}
@@ -109,12 +117,10 @@ const snapshot = {
   plan: { ...rulesPlanFixture, place: { label: 'Delhi' } },
 };
 
-const buildButton = () =>
-  screen.getByRole('button', { name: 'Build my daily plan' });
 const saveButton = () => screen.getByRole('button', { name: 'Save plan' });
 
+// The plan builds by itself: wait until it is shown.
 async function build() {
-  fireEvent.click(buildButton());
   await screen.findByText(RULES_MADE_BY);
 }
 
@@ -125,20 +131,19 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
 describe('DailyPlanSection', () => {
-  it('needs a place first', () => {
+  it('waits for a place', async () => {
+    const spy = routeFetch(() => planReply());
     renderSection({ place: null });
+    await settle();
 
-    const button = buildButton();
-    expect(button).toHaveProperty('disabled', true);
-    const hint = document.getElementById(
-      button.getAttribute('aria-describedby') ?? '',
-    );
-    expect(hint?.textContent).toBe('Choose a place first.');
+    expect(screen.getByText('Choose a place first.')).toBeDefined();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(0);
   });
 
   it('sends the place with 2 decimals and the answers on screen', async () => {
@@ -160,24 +165,73 @@ describe('DailyPlanSection', () => {
     routeFetch(() => new Promise<Response>((resolve) => (reply = resolve)));
     renderSection();
 
-    fireEvent.click(buildButton());
-
-    expect(screen.getByRole('status').textContent).toBe(LOADING);
+    expect(await screen.findByText(LOADING)).toBeDefined();
+    expect(screen.getByText('Finding your recommendation…')).toBeDefined();
     reply(planReply());
     expect(await screen.findByText(RULES_MADE_BY)).toBeDefined();
     expect(screen.queryByText(LOADING)).toBeNull();
   });
 
-  // Review Focus 3.
-  it('sends one request for a double click', async () => {
+  // Review Focus 1.
+  it('builds once when Today opens', async () => {
     const spy = routeFetch(() => planReply());
-    renderSection();
+    const { update } = renderSection({ active: false });
+    await settle();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(0);
 
-    fireEvent.click(buildButton());
-    fireEvent.click(buildButton());
-    await screen.findByText(RULES_MADE_BY);
+    update({ active: true });
+    await build();
+    // To My Profile and back.
+    update({ active: false });
+    update({ active: true });
+    await settle();
 
     expect(calls(spy, PLAN_PATH)).toHaveLength(1);
+  });
+
+  // Review Focus 1.
+  it('rebuilds once after answers change', async () => {
+    const answers = { home: { airPurifier: true } };
+    const spy = routeFetch(() => planReply());
+    const { update } = renderSection();
+    await build();
+
+    // The answers change on My Profile, while Today is hidden.
+    update({ active: false, context: answers });
+    await settle();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(1);
+
+    update({ active: true, context: answers });
+    await waitFor(() => expect(calls(spy, PLAN_PATH)).toHaveLength(2));
+    await build();
+    await settle();
+
+    expect(calls(spy, PLAN_PATH)).toHaveLength(2);
+    const [, init] = calls(spy, PLAN_PATH)[1]!;
+    expect(JSON.parse(init?.body as string).householdContext).toEqual(answers);
+  });
+
+  // Review Focus 1: at most one build an hour, by the device's clock.
+  it('rebuilds once the plan is more than an hour old', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(at);
+    const spy = routeFetch(() => planReply(unavailablePlanFixture));
+    const { update } = renderSection();
+    await build();
+
+    vi.setSystemTime(minutesAfter(at, 59));
+    update({ now: minutesAfter(at, 59) });
+    await settle();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(1);
+
+    vi.setSystemTime(minutesAfter(at, 62));
+    update({ now: minutesAfter(at, 62) });
+    await waitFor(() => expect(calls(spy, PLAN_PATH)).toHaveLength(2));
+    await build();
+    await settle();
+
+    expect(calls(spy, PLAN_PATH)).toHaveLength(2);
+    expect(screen.queryByText(PLAN_STALE)).toBeNull();
   });
 
   it('never creates an account to build a plan', async () => {
@@ -199,7 +253,6 @@ describe('DailyPlanSection', () => {
     });
     renderSection();
 
-    fireEvent.click(buildButton());
     expect(
       await screen.findByText('Too many requests. Try again in a minute.'),
     ).toBeDefined();
@@ -209,30 +262,68 @@ describe('DailyPlanSection', () => {
     expect(calls(spy, PLAN_PATH)).toHaveLength(2);
   });
 
-  it('uses plan wording for other errors', async () => {
-    routeFetch(() => errorReply(500, 'INTERNAL_ERROR'));
+  it('a plan error offers Try again, never an automatic retry', async () => {
+    const spy = routeFetch(() => errorReply(500, 'INTERNAL_ERROR'));
     renderSection();
 
-    fireEvent.click(buildButton());
-
     expect(
-      await screen.findByText('Something went wrong building your plan.'),
+      await screen.findByRole('heading', {
+        level: 3,
+        name: "We couldn't build your recommendation.",
+      }),
+    ).toBeDefined();
+    expect(
+      screen.getByText('Something went wrong building your plan.'),
+    ).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeDefined();
+    await settle();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(1);
+  });
+
+  it('shows only the top card, with Why this recommendation?', async () => {
+    routeFetch(() => planReply());
+    const { container } = renderSection();
+    await build();
+
+    const shown = [...container.querySelectorAll('article')].filter(
+      (card) => !card.closest('details'),
+    );
+    expect(shown).toHaveLength(1);
+    expect(
+      within(shown[0]!).getByRole('heading', { level: 3 }).textContent,
+    ).toBe(TOP);
+    expect(
+      within(shown[0]!).getByText('Why this recommendation?'),
     ).toBeDefined();
   });
 
-  it('says when the answers changed since the plan was built', async () => {
+  it('the full day is folded and keeps Save plan', async () => {
     routeFetch(() => planReply());
-    const { update } = renderSection({ context: {} });
+    renderSection();
     await build();
-    expect(screen.queryByText(CHANGED)).toBeNull();
 
-    update({ context: { home: { airPurifier: true } } });
-    expect(screen.getByText(CHANGED)).toBeDefined();
-
-    update({ context: {} });
-    expect(screen.queryByText(CHANGED)).toBeNull();
+    const fullDay = screen.getByText('See your full day').closest('details')!;
+    expect(fullDay.open).toBe(false);
+    expect(
+      within(fullDay).getByText('Plan for Pune, Maharashtra'),
+    ).toBeDefined();
+    expect(within(fullDay).getByText('Save plan')).toBeDefined();
+    expect(within(fullDay).queryByText('Air notice')).toBeNull();
+    expect(within(fullDay).queryByText('Air check')).toBeNull();
   });
 
+  it('says when no card fits the answers', async () => {
+    routeFetch(() =>
+      planReply({ ...rulesPlanFixture, featured: [], more: [] }),
+    );
+    renderSection();
+
+    expect(
+      await screen.findByText('No suggestions for your answers today.'),
+    ).toBeDefined();
+  });
+
+  // The forecast can pass an hour before the plan does: it is marked.
   it('says the plan is old once its forecast passes an hour', async () => {
     routeFetch(() => planReply());
     const { update } = renderSection();
@@ -242,20 +333,6 @@ describe('DailyPlanSection', () => {
     // 17:05 + 61 min.
     update({ now: new Date('2026-11-17T18:06:00Z') });
 
-    expect(screen.getByText(PLAN_STALE)).toBeDefined();
-    expect(buildButton()).toHaveProperty('disabled', false);
-  });
-
-  it('falls back to the build time when the plan has no forecast', async () => {
-    routeFetch(() => planReply(unavailablePlanFixture));
-    const start = new Date();
-    const { update } = renderSection({ now: start });
-    await build();
-    expect(screen.queryByText(PLAN_STALE)).toBeNull();
-
-    update({ now: minutesAfter(start, 59) });
-    expect(screen.queryByText(PLAN_STALE)).toBeNull();
-    update({ now: minutesAfter(start, 62) });
     expect(screen.getByText(PLAN_STALE)).toBeDefined();
   });
 
@@ -286,23 +363,30 @@ describe('DailyPlanSection', () => {
     expect(onSaved).toHaveBeenCalledTimes(1);
   });
 
-  it('treats a saved plan as old an hour after it was saved', async () => {
-    const start = new Date();
-    routeFetch((path) =>
+  it('counts the hour from the save', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(at);
+    const spy = routeFetch((path) =>
       path === PLAN_PATH
         ? planReply(unavailablePlanFixture)
-        : savedReply(unavailablePlanFixture, start.toISOString()),
+        : savedReply(unavailablePlanFixture),
     );
-    const { update } = renderSection({ now: start });
-    await screen.findByRole('button', { name: 'Build my daily plan' });
-    fireEvent.click(buildButton());
-    await screen.findByText(RULES_MADE_BY);
+    const { update } = renderSection();
+    await build();
+
+    vi.setSystemTime(minutesAfter(at, 30));
     fireEvent.click(saveButton());
     await screen.findByText(SAVED);
 
-    update({ now: minutesAfter(start, 61) });
+    vi.setSystemTime(minutesAfter(at, 61));
+    update({ now: minutesAfter(at, 61) });
+    await settle();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(1);
+    expect(screen.getByText(SAVED)).toBeDefined();
 
-    expect(screen.getByText(PLAN_STALE)).toBeDefined();
+    vi.setSystemTime(minutesAfter(at, 91));
+    update({ now: minutesAfter(at, 91) });
+    await waitFor(() => expect(calls(spy, PLAN_PATH)).toHaveLength(2));
   });
 
   // Review Focus 3.
@@ -362,7 +446,8 @@ describe('DailyPlanSection', () => {
   });
 
   // Review Focus 4.
-  it('shows a saved plan under the snapshot banner, focused', () => {
+  it('shows a saved plan under the snapshot banner, focused', async () => {
+    routeFetch(() => planReply());
     // Long after it was saved: a snapshot never shows the stale line.
     renderSection({ opened: snapshot, now: new Date('2026-11-19T12:00:00Z') });
 
@@ -372,6 +457,7 @@ describe('DailyPlanSection', () => {
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Save plan' })).toBeNull();
     expect(screen.queryByText(PLAN_STALE)).toBeNull();
+    await settle();
   });
 
   // Review Focus 4.
@@ -393,23 +479,27 @@ describe('DailyPlanSection', () => {
 
   // Final review #1: a rebuild during a save could leave "Saved" under an
   // unsaved plan.
-  it('keeps Build disabled while a save runs', async () => {
-    routeFetch((path) =>
+  it('rebuilds only after a save finishes', async () => {
+    const spy = routeFetch((path) =>
       path === PLAN_PATH ? planReply() : savedReply(rulesPlanFixture),
     );
     let signIn!: (token: string) => void;
     session.tokenForSave.mockReturnValue(
       new Promise<string>((resolve) => (signIn = resolve)),
     );
-    renderSection();
+    const { update } = renderSection();
     await build();
 
     fireEvent.click(saveButton());
+    update({ context: { home: { airPurifier: true } } });
+    await settle();
+    expect(calls(spy, PLAN_PATH)).toHaveLength(1);
 
-    expect(buildButton()).toHaveProperty('disabled', true);
     signIn('tok');
-    expect(await screen.findByText(SAVED)).toBeDefined();
-    expect(buildButton()).toHaveProperty('disabled', false);
+    await waitFor(() => expect(calls(spy, PLAN_PATH)).toHaveLength(2));
+    await build();
+    expect(screen.queryByText(SAVED)).toBeNull();
+    expect(saveButton()).toBeDefined();
   });
 
   // Final review #2: deleting the plan just saved ends the "Saved" claim.
@@ -431,14 +521,16 @@ describe('DailyPlanSection', () => {
   });
 
   // Final review #3: "Back to today" must not drop keyboard focus.
-  it('puts focus on the plan heading after "Back to today"', () => {
+  it('puts focus on the section heading after "Back to today"', async () => {
+    routeFetch(() => planReply());
     const { update } = renderSection({ opened: snapshot });
 
     update({ opened: null });
 
     expect(document.activeElement).toBe(
-      screen.getByRole('heading', { name: 'Your daily plan' }),
+      screen.getByRole('heading', { name: 'Your recommendation for today' }),
     );
+    await settle();
   });
 
   // Final review #4: one live region that stays, so building and the
@@ -449,8 +541,7 @@ describe('DailyPlanSection', () => {
     renderSection();
     const status = screen.getByRole('status');
 
-    fireEvent.click(buildButton());
-    expect(status.textContent).toBe(LOADING);
+    await waitFor(() => expect(status.textContent).toBe(LOADING));
     reply(planReply());
     await screen.findByText(RULES_MADE_BY);
 
