@@ -297,7 +297,7 @@ Response (illustrative, shortened):
 }
 ```
 
-The response has no `question`, `model` or `promptVersion` field.
+A guide card also carries `personalRuleId`, as in the guides route. The response has no `question`, `model` or `promptVersion` field.
 
 ### Saved data (as built, Phase 6)
 

@@ -1,5 +1,7 @@
 import type {
   ApiErrorBody,
+  AskAnswer,
+  AskRequest,
   DailyPlan,
   ErrorCode,
   ForecastData,
@@ -174,6 +176,14 @@ export function buildDailyPlan(
     method: 'POST',
     body,
   });
+}
+
+// Ask AirAware: a typed question travels only in this POST body.
+export function askAirAware(
+  body: AskRequest,
+  signal?: AbortSignal,
+): Promise<AskAnswer> {
+  return request('/api/v1/assistant/answer', signal, { method: 'POST', body });
 }
 
 // The server builds and saves the plan for this request.

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ApiError,
+  askAirAware,
   buildDailyPlan,
   deletePlan,
   getForecast,
@@ -145,6 +146,23 @@ describe('api client', () => {
     expect(new Headers(init?.headers).get('Authorization')).toBeNull();
     expect(JSON.parse(init?.body as string)).toEqual(body);
     expect(plan).toEqual({ generatedBy: 'rules' });
+  });
+
+  it('posts a question to Ask, in the body only', async () => {
+    const fetchSpy = respondWith({ data: { topic: 'outdoors' } });
+    const body = {
+      question: 'Can I go for a morning walk today?',
+      place: { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 },
+    };
+
+    const answer = await askAirAware(body);
+
+    const [path, init] = fetchSpy.mock.calls[0]!;
+    expect(path).toBe('/api/v1/assistant/answer');
+    expect(init?.method).toBe('POST');
+    expect(new Headers(init?.headers).get('Authorization')).toBeNull();
+    expect(JSON.parse(init?.body as string)).toEqual(body);
+    expect(answer).toEqual({ topic: 'outdoors' });
   });
 
   it('a 204 reply resolves undefined', async () => {

@@ -232,7 +232,8 @@ export type AskAnswer = Pick<
   | 'safetyNote'
 > & {
   topic: AskTopic | 'medical' | 'out_of_scope';
-  cards: RecommendationCandidate[];
+  // The household's rule cards, then guide cards (which carry personalRuleId).
+  cards: Array<RecommendationCandidate | GuideCard>;
 };
 
 // Saved data (Phase 6). Stored per anonymous Supabase user; a saved plan is
