@@ -243,12 +243,13 @@ function Landing() {
               >
                 <div className="flex items-center gap-2">
                   {/* The flow from the step before: down while the cards
-                      stack, right once they sit in a row. */}
+                      stack, right once they sit in a row, none in the 2×2
+                      grid between. */}
                   {i > 0 && (
                     <>
                       <ArrowDown
                         aria-hidden="true"
-                        className="size-5 text-primary lg:hidden"
+                        className="size-5 text-primary md:hidden"
                       />
                       <ArrowRight
                         aria-hidden="true"

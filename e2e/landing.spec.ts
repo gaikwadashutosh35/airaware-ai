@@ -38,6 +38,30 @@ test('sections rise in as they scroll into view', async ({ page }) => {
   expect((await styleOf(page)).opacity).toBe('1');
 });
 
+// The arrows the forecast steps show at a screen width, in order.
+async function arrowsAt(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 900 });
+  return page
+    .getByRole('list', { name: 'How a forecast reaches you' })
+    .locator('svg')
+    .evaluateAll((arrows) =>
+      arrows
+        .filter((arrow) => getComputedStyle(arrow).display !== 'none')
+        .map((arrow) =>
+          arrow.classList.contains('lucide-arrow-down') ? 'down' : 'right',
+        ),
+    );
+}
+
+test('step arrows point the way the steps run', async ({ page }) => {
+  await page.goto('/');
+
+  expect(await arrowsAt(page, 390)).toEqual(['down', 'down', 'down']);
+  // A 2×2 grid has no one direction, so the numbers carry the order.
+  expect(await arrowsAt(page, 900)).toEqual([]);
+  expect(await arrowsAt(page, 1280)).toEqual(['right', 'right', 'right']);
+});
+
 test('no movement under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
