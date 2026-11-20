@@ -73,6 +73,14 @@ describe('design system base', () => {
     );
   });
 
+  it('a modal dialog never scrolls the page behind it', () => {
+    // modern-web-guidance `dialog`: both rules are needed.
+    expect(css).toMatch(/dialog:modal\s*{[^}]*overscroll-behavior: contain;/);
+    expect(css).toMatch(
+      /dialog::backdrop\s*{[^}]*overflow: hidden;[^}]*overscroll-behavior: contain;/,
+    );
+  });
+
   it('phones have no tap delay', () => {
     // The tap highlight itself is Tailwind preflight's, not ours.
     expect(css).not.toContain('-webkit-tap-highlight-color');

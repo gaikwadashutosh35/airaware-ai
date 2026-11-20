@@ -8,10 +8,19 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import type { ForecastSeries } from '../../../shared/contracts.ts';
 import { formatTime } from '../features/air-quality/forecast.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
+import { stubDialog } from '../test/dialog.ts';
 import {
   forecastFixture,
   searchFixture,
@@ -111,6 +120,14 @@ function forecastCalls(fetchSpy: ReturnType<typeof routeFetch>) {
 }
 
 async function choosePlace(optionIndex = 0) {
+  // Once a place is set, Today's search moves into the place dialog.
+  if (
+    !screen.queryByRole('combobox', {
+      name: 'Search for a city or area in India',
+    })
+  ) {
+    fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
+  }
   const input = screen.getByRole('combobox', {
     name: 'Search for a city or area in India',
   });
@@ -135,6 +152,8 @@ async function goTo(name: string) {
 }
 
 describe('AppShell', () => {
+  beforeAll(stubDialog);
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-11-17T17:30:00Z'));
@@ -327,18 +346,45 @@ describe('AppShell', () => {
     expect(text).not.toMatch(/\bAQI\b/);
   });
 
-  it('the Change button moves focus to the place search', async () => {
+  it('Today hides the search once a place is set; Change place opens the dialog', async () => {
     routeFetch(ok());
-    render(<AppShell />);
+    const { container } = render(<AppShell />);
 
     await choosePlace();
+    expect(
+      screen.queryByRole('combobox', {
+        name: 'Search for a city or area in India',
+      }),
+    ).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
 
-    expect(document.activeElement).toBe(
+    expect(container.querySelector('dialog')?.open).toBe(true);
+    expect(
       screen.getByRole('combobox', {
         name: 'Search for a city or area in India',
       }),
-    );
+    ).toBeDefined();
+  });
+
+  it('choosing a place in the dialog closes it and loads that place', async () => {
+    routeFetch(ok());
+    const { container } = render(<AppShell />);
+    await choosePlace(0);
+    const first = screen.getByRole('heading', {
+      level: 2,
+      name: /^Air quality: /,
+    }).textContent;
+
+    await choosePlace(1);
+
+    expect(container.querySelector('dialog')?.open).toBe(false);
+    expect(
+      screen.getByRole('heading', { level: 2, name: /^Air quality: / })
+        .textContent,
+    ).not.toBe(first);
+    expect(
+      screen.getByRole('button', { name: /^Change place: / }).textContent,
+    ).not.toContain(first!.replace('Air quality: ', ''));
   });
 
   it('air comes before the plan in reading order', async () => {
@@ -846,6 +892,8 @@ describe('AppShell', () => {
     routeFetch(ok());
     render(<AppShell />);
 
+    // With a place set, "Use my location" is in the place dialog.
+    fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
     fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);

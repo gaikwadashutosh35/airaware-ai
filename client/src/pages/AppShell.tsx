@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HouseholdContext, SavedPlan } from '../../../shared/contracts.ts';
 import { AppNav } from '../components/AppNav.tsx';
+import { PlaceChip } from '../components/PlaceChip.tsx';
 import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
 import { AirReadout } from '../features/air-quality/AirReadout.tsx';
@@ -56,6 +57,8 @@ function AppShell() {
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
+  // The place chip's dialog; Today's "Change place" opens it too.
+  const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
   const sources = useRequest('sources', (signal) => getSources(signal));
   // Keyed by the coordinates actually sent (2 decimals).
   const forecastKey = place
@@ -77,9 +80,19 @@ function AppShell() {
   }, [place]);
 
   // Searched places go in the address; a device location never does.
+  function locateStart() {
+    awaitingLocation.current = true;
+  }
+
+  function locate(next: Place) {
+    // A place picked since the click wins over a late answer.
+    if (awaitingLocation.current) choose(next, false);
+  }
+
   function choose(next: Place, inAddress: boolean) {
     awaitingLocation.current = false;
     focusResult.current = true;
+    setPlaceDialogOpen(false);
     setPlace(next);
     setOpened(null);
     window.history.replaceState(
@@ -110,6 +123,14 @@ function AppShell() {
             AirAware AI
           </a>
           <AppNav page={page} />
+          <PlaceChip
+            label={place?.label}
+            open={placeDialogOpen}
+            onOpenChange={setPlaceDialogOpen}
+            onChoose={(next) => choose(next, true)}
+            onLocateStart={locateStart}
+            onLocate={locate}
+          />
         </div>
       </header>
       <main
@@ -145,21 +166,16 @@ function AppShell() {
             <h1 className="text-3xl font-semibold tracking-tight">
               Air quality near you
             </h1>
-            <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-              <LocationSearch
-                inputRef={searchRef}
-                onSelect={(next) => choose(next, true)}
-              />
-              <UseMyLocation
-                onLocateStart={() => {
-                  awaitingLocation.current = true;
-                }}
-                onLocate={(next) => {
-                  // A place picked since the click wins over a late answer.
-                  if (awaitingLocation.current) choose(next, false);
-                }}
-              />
-            </div>
+            {/* Once a place is set, the place chip's dialog changes it. */}
+            {!place && (
+              <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+                <LocationSearch
+                  inputRef={searchRef}
+                  onSelect={(next) => choose(next, true)}
+                />
+                <UseMyLocation onLocateStart={locateStart} onLocate={locate} />
+              </div>
+            )}
 
             {/* Air on the left, the plan on the right from lg; one column (air
             first) below it. */}
@@ -183,7 +199,7 @@ function AppShell() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => searchRef.current?.focus()}
+                        onClick={() => setPlaceDialogOpen(true)}
                         className="min-h-11 rounded-md border border-text-dark px-4"
                       >
                         Change place

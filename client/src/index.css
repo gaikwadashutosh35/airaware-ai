@@ -91,6 +91,16 @@
     user-select: none;
   }
 
+  /* A modal dialog never scrolls the page behind it. */
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
   /* Phones: scrolling to a focused control clears the fixed bottom nav
      (WCAG 2.4.11 focus not obscured). */
   @media (width < 48rem) {
