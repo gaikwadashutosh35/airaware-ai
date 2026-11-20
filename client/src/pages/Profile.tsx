@@ -1,17 +1,20 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type {
   HouseholdContext,
   SavedPlace,
   SavedPlan,
   SavedPreferences,
 } from '../../../shared/contracts.ts';
+import { formatDateTime } from '../features/air-quality/forecast.ts';
 import { HouseholdPreferencesForm } from '../features/daily-plan/HouseholdPreferencesForm.tsx';
+import { PlanView } from '../features/daily-plan/PlanView.tsx';
 import { SavedPlansList } from '../features/daily-plan/SavedPlansList.tsx';
 
 const FORGET_FAILED = 'Nothing was changed. Try again in a moment.';
 
 // My Profile: the household answers, the remembered place and saved plans.
 // The shell keeps the answers, so they survive leaving this page unsaved.
+// A saved plan opens here, below the list, as a snapshot (spec §7.7).
 export function Profile({
   formKey,
   context,
@@ -21,7 +24,6 @@ export function Profile({
   onForget,
   onDeleted,
   listVersion,
-  onOpen,
   onPlanDeleted,
 }: {
   // Bumped after Welcome, so the form shows its answers.
@@ -33,12 +35,28 @@ export function Profile({
   onForget: () => Promise<void>;
   onDeleted: () => void;
   listVersion: number;
-  onOpen: (plan: SavedPlan) => void;
   onPlanDeleted: (id: string) => void;
 }) {
   const placeHeadingId = useId();
   const placeHeadingRef = useRef<HTMLHeadingElement>(null);
   const [status, setStatus] = useState('');
+  const [opened, setOpened] = useState<SavedPlan | null>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // The plan opens below the list: take focus there, so it is never lost.
+  useEffect(() => {
+    if (opened) bannerRef.current?.focus();
+  }, [opened]);
+
+  function close() {
+    const id = opened?.id;
+    setOpened(null);
+    // Back to the Open button that showed it.
+    [...(listRef.current?.querySelectorAll<HTMLElement>('[data-open]') ?? [])]
+      .find((button) => button.dataset.open === id)
+      ?.focus();
+  }
 
   async function forget() {
     setStatus('');
@@ -61,7 +79,10 @@ export function Profile({
           onChange={onContextChange}
           onLoaded={onLoaded}
           skipLoad={formKey > 0}
-          onDeleted={onDeleted}
+          onDeleted={() => {
+            setOpened(null);
+            onDeleted();
+          }}
         />
         <div className="flex flex-col gap-6">
           {(remembered || status) && (
@@ -92,11 +113,38 @@ export function Profile({
               <output className="block min-h-6">{status}</output>
             </section>
           )}
-          <SavedPlansList
-            version={listVersion}
-            onOpen={onOpen}
-            onDeleted={onPlanDeleted}
-          />
+          <div ref={listRef} className="contents">
+            <SavedPlansList
+              version={listVersion}
+              onOpen={setOpened}
+              onDeleted={(id) => {
+                setOpened((current) => (current?.id === id ? null : current));
+                onPlanDeleted(id);
+              }}
+            />
+          </div>
+          {opened && (
+            <div className="flex flex-col gap-4">
+              <div
+                ref={bannerRef}
+                tabIndex={-1}
+                className="flex flex-col items-start gap-3 border-l-4 border-text-dark pl-4"
+              >
+                <p className="font-semibold">
+                  Saved plan from {formatDateTime(opened.savedAt)}. This is a
+                  snapshot, not current air information.
+                </p>
+                <button
+                  type="button"
+                  onClick={close}
+                  className="min-h-11 rounded-md border border-text-dark px-4"
+                >
+                  Close
+                </button>
+              </div>
+              <PlanView plan={opened.plan} snapshot />
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -150,6 +150,7 @@ export function SavedPlansList({
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
+                    data-open={plan.id}
                     onClick={() => void open(plan.id)}
                     className={buttonClass}
                   >

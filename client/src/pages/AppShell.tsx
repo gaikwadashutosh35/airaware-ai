@@ -3,7 +3,6 @@ import type {
   HouseholdContext,
   PreferencesUpdate,
   SavedPlace,
-  SavedPlan,
   SavedPreferences,
 } from '../../../shared/contracts.ts';
 import { AppNav } from '../components/AppNav.tsx';
@@ -80,8 +79,6 @@ function AppShell() {
   const [context, setContext] = useState<HouseholdContext>({});
   // Bumped by "Delete everything": the plan area starts afresh.
   const [resets, setResets] = useState(0);
-  // A saved plan opened from the list, shown as a snapshot.
-  const [opened, setOpened] = useState<SavedPlan | null>(null);
   // Bumped after a save or a delete: the saved list loads again.
   const [listVersion, setListVersion] = useState(0);
   // The last plan deleted from the list, so the plan area stops calling
@@ -106,10 +103,10 @@ function AppShell() {
 
   // Today with no place: once saved answers are checked, Welcome opens.
   useEffect(() => {
-    if (page === 'today' && !place && !opened && loaded) {
+    if (page === 'today' && !place && loaded) {
       navigate('/app/welcome', { replace: true });
     }
-  }, [page, place, opened, loaded]);
+  }, [page, place, loaded]);
   const sources = useRequest('sources', (signal) => getSources(signal));
   // Keyed by the coordinates actually sent (2 decimals).
   const forecastKey = place
@@ -145,7 +142,6 @@ function AppShell() {
     focusResult.current = true;
     setPlaceDialogOpen(false);
     setPlace(next);
-    setOpened(null);
     const query = inAddress ? `?${placeToSearch(next)}` : '';
     setPlaceQuery(query);
     window.history.replaceState(null, '', window.location.pathname + query);
@@ -254,20 +250,11 @@ function AppShell() {
             onForget={forgetPlace}
             onDeleted={() => {
               setResets((n) => n + 1);
-              setOpened(null);
               setListVersion((n) => n + 1);
               setRemembered(null);
             }}
             listVersion={listVersion}
-            onOpen={(plan) => {
-              // Today shows a saved plan as a snapshot (Phase 6 moves it here).
-              setOpened(plan);
-              navigate('/app');
-            }}
-            onPlanDeleted={(id) => {
-              setDeletedPlanId(id);
-              setOpened((current) => (current?.id === id ? null : current));
-            }}
+            onPlanDeleted={setDeletedPlanId}
           />
         </div>
         {page === 'welcome' && !loaded && (
@@ -300,7 +287,7 @@ function AppShell() {
             </h1>
           </div>
           {/* No place yet: saved answers are checked, then Welcome opens. */}
-          {!place && !opened && <Loading label="Loading your place" />}
+          {!place && <Loading label="Loading your place" />}
           {place && Object.keys(context).length === 0 && !inviteDismissed && (
             <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule p-4">
               <a
@@ -367,8 +354,6 @@ function AppShell() {
                 now={now}
                 active={page === 'today'}
                 onSaved={() => setListVersion((n) => n + 1)}
-                opened={opened}
-                onBackToToday={() => setOpened(null)}
                 deletedPlanId={deletedPlanId}
               />
             </div>

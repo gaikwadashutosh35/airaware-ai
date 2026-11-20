@@ -10,7 +10,6 @@ import {
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DailyPlan } from '../../../../shared/contracts.ts';
-import { formatDateTime } from '../air-quality/forecast.ts';
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import {
   rulesPlanFixture,
@@ -86,7 +85,6 @@ type Props = ComponentProps<typeof DailyPlanSection>;
 
 function renderSection(props: Partial<Props> = {}) {
   const onSaved = vi.fn();
-  const onBackToToday = vi.fn();
   const all = (more: Partial<Props>) => (
     <DailyPlanSection
       place={place}
@@ -94,8 +92,6 @@ function renderSection(props: Partial<Props> = {}) {
       now={at}
       active
       onSaved={onSaved}
-      opened={null}
-      onBackToToday={onBackToToday}
       {...props}
       {...more}
     />
@@ -104,18 +100,9 @@ function renderSection(props: Partial<Props> = {}) {
   return {
     ...utils,
     onSaved,
-    onBackToToday,
     update: (more: Partial<Props>) => utils.rerender(all(more)),
   };
 }
-
-const BANNER = (savedAt: string) =>
-  `Saved plan from ${formatDateTime(savedAt)}. This is a snapshot, not current air information.`;
-const snapshot = {
-  id: 'p1',
-  savedAt: '2026-11-18T10:40:00.000Z',
-  plan: { ...rulesPlanFixture, place: { label: 'Delhi' } },
-};
 
 const saveButton = () => screen.getByRole('button', { name: 'Save plan' });
 
@@ -445,38 +432,6 @@ describe('DailyPlanSection', () => {
     expect(screen.getByText("Saving isn't set up on this site.")).toBeDefined();
   });
 
-  // Review Focus 4.
-  it('shows a saved plan under the snapshot banner, focused', async () => {
-    routeFetch(() => planReply());
-    // Long after it was saved: a snapshot never shows the stale line.
-    renderSection({ opened: snapshot, now: new Date('2026-11-19T12:00:00Z') });
-
-    const banner = screen.getByText(BANNER(snapshot.savedAt));
-    expect(document.activeElement?.contains(banner)).toBe(true);
-    expect(screen.getByText('Plan for Delhi')).toBeDefined();
-    expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
-    expect(screen.queryByRole('button', { name: 'Save plan' })).toBeNull();
-    expect(screen.queryByText(PLAN_STALE)).toBeNull();
-    await settle();
-  });
-
-  // Review Focus 4.
-  it('brings the live plan back after "Back to today"', async () => {
-    routeFetch(() => planReply());
-    const { update, onBackToToday } = renderSection();
-    await build();
-    expect(screen.getByText('Plan for Pune, Maharashtra')).toBeDefined();
-
-    update({ opened: snapshot });
-    expect(screen.queryByText('Plan for Pune, Maharashtra')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Back to today' }));
-    expect(onBackToToday).toHaveBeenCalledTimes(1);
-
-    update({ opened: null });
-    expect(screen.getByText('Plan for Pune, Maharashtra')).toBeDefined();
-    expect(saveButton()).toBeDefined();
-  });
-
   // Final review #1: a rebuild during a save could leave "Saved" under an
   // unsaved plan.
   it('rebuilds only after a save finishes', async () => {
@@ -518,19 +473,6 @@ describe('DailyPlanSection', () => {
     update({ deletedPlanId: 'p1' });
     expect(screen.queryByText(SAVED)).toBeNull();
     expect(saveButton()).toBeDefined();
-  });
-
-  // Final review #3: "Back to today" must not drop keyboard focus.
-  it('puts focus on the section heading after "Back to today"', async () => {
-    routeFetch(() => planReply());
-    const { update } = renderSection({ opened: snapshot });
-
-    update({ opened: null });
-
-    expect(document.activeElement).toBe(
-      screen.getByRole('heading', { name: 'Your recommendation for today' }),
-    );
-    await settle();
   });
 
   // Final review #4: one live region that stays, so building and the

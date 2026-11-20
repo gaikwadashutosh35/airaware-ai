@@ -2,9 +2,7 @@ import { useEffect, useEffectEvent, useId, useRef, useState } from 'react';
 import type {
   DailyPlan,
   HouseholdContext,
-  SavedPlan,
 } from '../../../../shared/contracts.ts';
-import { formatDateTime } from '../air-quality/forecast.ts';
 import { ErrorState, Loading } from '../../components/States.tsx';
 import { isOlderThan } from '../../lib/clock.ts';
 import { savingAvailable, tokenForSave } from '../../lib/supabase.ts';
@@ -44,8 +42,6 @@ interface Built {
 type Status =
   { kind: 'idle' } | { kind: 'building' } | { kind: 'error'; error: ApiError };
 
-const buttonClass =
-  'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
 // The main action in each state: teal fill, dark text (contrast about 9:1).
 const primaryClass =
   'min-h-11 rounded-md bg-primary px-4 font-medium text-text-dark disabled:opacity-60';
@@ -63,8 +59,6 @@ export function DailyPlanSection({
   now,
   active,
   onSaved,
-  opened,
-  onBackToToday,
   deletedPlanId = null,
 }: {
   place: Place | null;
@@ -74,10 +68,6 @@ export function DailyPlanSection({
   // True while Today is shown: the plan builds only then.
   active: boolean;
   onSaved: () => void;
-  // A saved plan opened from the list: shown as a snapshot over the live
-  // plan, which stays underneath for "Back to today".
-  opened: SavedPlan | null;
-  onBackToToday: () => void;
   // The last plan deleted from the list: if it is the one saved here, the
   // plan on screen is no longer saved.
   deletedPlanId?: string | null;
@@ -88,21 +78,10 @@ export function DailyPlanSection({
   // The one live region: building, ready, and save results.
   const [message, setMessage] = useState('');
   const request = useRef<AbortController | null>(null);
-  const bannerRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const wasOpen = useRef(false);
   const headingId = useId();
   const noteId = useId();
 
   useEffect(() => () => request.current?.abort(), []);
-
-  // The list sits below the plan: move focus to what just opened, and back
-  // to this section when the snapshot closes, so it is never lost.
-  useEffect(() => {
-    if (opened) bannerRef.current?.focus();
-    else if (wasOpen.current) headingRef.current?.focus();
-    wasOpen.current = opened !== null;
-  }, [opened]);
 
   async function build() {
     if (!place) return;
@@ -199,90 +178,60 @@ export function DailyPlanSection({
       aria-labelledby={headingId}
       className="flex flex-col gap-4 rounded-lg border border-rule p-5 sm:p-6"
     >
-      <h2
-        id={headingId}
-        ref={headingRef}
-        tabIndex={-1}
-        className="text-2xl font-semibold tracking-tight"
-      >
+      <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
         Your recommendation for today
       </h2>
-      {opened ? (
+      {!place && <p className="text-sm">Choose a place first.</p>}
+      <output className="block min-h-6 text-sm">{shown}</output>
+      {status.kind === 'building' && (
+        <Loading label="Finding your recommendation…" />
+      )}
+      {status.kind === 'error' && (
+        <ErrorState
+          error={status.error}
+          onRetry={() => void build()}
+          fallback={BUILD_FAILED}
+          title="We couldn't build your recommendation."
+        />
+      )}
+      {status.kind === 'idle' && built && (
         <>
-          <div
-            ref={bannerRef}
-            tabIndex={-1}
-            className="flex flex-col items-start gap-3 border-l-4 border-text-dark pl-4"
-          >
-            <p className="font-semibold">
-              Saved plan from {formatDateTime(opened.savedAt)}. This is a
-              snapshot, not current air information.
-            </p>
-            <button
-              type="button"
-              onClick={onBackToToday}
-              className={buttonClass}
-            >
-              Back to today
-            </button>
-          </div>
-          <PlanView plan={opened.plan} snapshot />
-        </>
-      ) : (
-        <>
-          {!place && <p className="text-sm">Choose a place first.</p>}
-          <output className="block min-h-6 text-sm">{shown}</output>
-          {status.kind === 'building' && (
-            <Loading label="Finding your recommendation…" />
-          )}
-          {status.kind === 'error' && (
-            <ErrorState
-              error={status.error}
-              onRetry={() => void build()}
-              fallback={BUILD_FAILED}
-              title="We couldn't build your recommendation."
+          {stale && <p className="font-semibold">{STALE}</p>}
+          {top ? (
+            <PlanCard
+              item={top}
+              sources={built.plan.sources}
+              level={3}
+              whyLabel="Why this recommendation?"
             />
+          ) : (
+            <p>{NO_CARD}</p>
           )}
-          {status.kind === 'idle' && built && (
-            <>
-              {stale && <p className="font-semibold">{STALE}</p>}
-              {top ? (
-                <PlanCard
-                  item={top}
-                  sources={built.plan.sources}
-                  level={3}
-                  whyLabel="Why this recommendation?"
-                />
-              ) : (
-                <p>{NO_CARD}</p>
-              )}
-              {/* Instant open: it is opened often, so no animation. */}
-              <details>
-                <summary className="min-h-11 cursor-pointer py-2 font-semibold">
-                  See your full day
-                </summary>
-                <div className="flex flex-col gap-6 pt-2">
-                  <PlanView plan={built.plan} hideAir />
-                  {!isSaved && (
-                    <div className="flex flex-col items-start gap-2">
-                      <button
-                        type="button"
-                        disabled={!savingAvailable || saving}
-                        aria-describedby={noteId}
-                        onClick={() => void save()}
-                        className={primaryClass}
-                      >
-                        Save plan
-                      </button>
-                      <p id={noteId} className="text-sm">
-                        {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
-                      </p>
-                    </div>
-                  )}
+          {/* Instant open: it is opened often, so no animation. */}
+          <details>
+            <summary className="min-h-11 cursor-pointer py-2 font-semibold">
+              See your full day
+            </summary>
+            <div className="flex flex-col gap-6 pt-2">
+              <PlanView plan={built.plan} hideAir />
+              {!isSaved && (
+                <div className="flex flex-col items-start gap-2">
+                  <button
+                    type="button"
+                    disabled={!savingAvailable || saving}
+                    aria-describedby={noteId}
+                    onClick={() => void save()}
+                    className={primaryClass}
+                  >
+                    Save plan
+                  </button>
+                  <p id={noteId} className="text-sm">
+                    {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
+                  </p>
                 </div>
-              </details>
-            </>
-          )}
+              )}
+            </div>
+          </details>
         </>
       )}
     </section>

@@ -18,7 +18,10 @@ import {
   vi,
 } from 'vitest';
 import type { ForecastSeries } from '../../../shared/contracts.ts';
-import { formatTime } from '../features/air-quality/forecast.ts';
+import {
+  formatDateTime,
+  formatTime,
+} from '../features/air-quality/forecast.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { stubDialog } from '../test/dialog.ts';
 import {
@@ -1330,27 +1333,31 @@ describe('AppShell', () => {
         );
       }
       if (url.pathname === '/api/v1/plans/p1') {
-        return Promise.resolve(Response.json({ data: saved }));
+        return Promise.resolve(
+          init?.method === 'DELETE'
+            ? new Response(null, { status: 204 })
+            : Response.json({ data: saved }),
+        );
       }
       return plans(url, init);
     };
   }
 
-  // My Profile lists saved plans; opening one shows it on Today.
+  // My Profile lists saved plans; opening one shows it there (spec §7.7).
   async function openSavedPlan() {
     await goTo('My Profile');
     fireEvent.click(screen.getByRole('button', { name: /^Open/ }));
     await flush();
-    expect(window.location.pathname).toBe('/app');
+    expect(window.location.pathname).toBe('/app/profile');
     expect(screen.getByText('Plan for Delhi')).toBeDefined();
   }
+  const SNAPSHOT = `Saved plan from ${formatDateTime('2026-11-17T10:00:00.000Z')}. This is a snapshot, not current air information.`;
 
   // Review Focus 1.
   it('hides the list and closes the snapshot after "Delete everything"', async () => {
     routeFetch(ok(), withSavedPlan());
     render(<AppShell />);
     await openSavedPlan();
-    await goTo('My Profile');
     expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
 
     fireEvent.click(
@@ -1361,19 +1368,46 @@ describe('AppShell', () => {
 
     expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Saved plans' })).toBeNull();
-    await goTo('Today');
     expect(screen.queryByText('Plan for Delhi')).toBeNull();
+    expect(screen.queryByText(SNAPSHOT)).toBeNull();
   });
 
-  it('closes a snapshot when a new place is chosen', async () => {
+  it('Open shows the saved plan inside My Profile with Close', async () => {
     routeFetch(ok(), withSavedPlan());
     render(<AppShell />);
     await openSavedPlan();
 
-    await choosePlace();
+    const banner = screen.getByText(SNAPSHOT);
+    expect(document.activeElement?.contains(banner)).toBe(true);
+    expect(screen.getByRole('button', { name: 'Close' })).toBeDefined();
+    // Today never holds a saved plan.
+    expect(screen.queryByRole('button', { name: 'Back to today' })).toBeNull();
+  });
 
+  it("Close returns focus to the plan's Open button", async () => {
+    routeFetch(ok(), withSavedPlan());
+    render(<AppShell />);
+    await openSavedPlan();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByText(SNAPSHOT)).toBeNull();
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /^Open/ }),
+    );
+  });
+
+  it('deleting the open plan closes it', async () => {
+    routeFetch(ok(), withSavedPlan());
+    render(<AppShell />);
+    await openSavedPlan();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Delete ?plan for/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete plan' }));
+    await flush();
+
+    expect(screen.queryByText(SNAPSHOT)).toBeNull();
     expect(screen.queryByText('Plan for Delhi')).toBeNull();
-    expect(screen.queryByText(/This is a snapshot/)).toBeNull();
   });
 
   it('opens the place given in the address without moving focus', async () => {
