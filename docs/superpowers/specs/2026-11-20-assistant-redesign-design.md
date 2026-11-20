@@ -282,6 +282,12 @@ Eight sections, on the dark theme:
 
 **Motion:** scroll reveals (opacity, plus an 8 px rise) use the CSS `animation-timeline: view()` under `@supports` and `motion-safe`. Without support, nothing moves.
 
+*Amended (Phase 4, owner decisions of 20 Nov 2026):*
+- The hero's screenshot is Today in the phone view, 390 px wide, shown at its real size.
+- Section 2's screenshot is the open "Air quality details", because the verdict and the details sit too far apart for one screenshot; the hero shot already shows the verdict.
+- Section 6 keeps the name "Explainable AI", with the text "AI can arrange our rules' suggestions and word them for your day, but it never decides them. Every suggestion opens to its reason, the answers and forecast check it used, its sources and its limits."
+- The captions say "Today", not "dashboard".
+
 ## 8. Copy rules
 
 | Air check (`air.level`) | Verdict (existing rule titles) | Plain explanation |

@@ -58,7 +58,7 @@ Automated scans do not prove full accessibility conformance.
 
 | Page | Focus order | Focus visible | Traps |
 |---|---|---|---|
-| `/` | wordmark → place search → the four example "Why?" panels → the two source links in the open example → "Check your area's air quality" → footer links (Open-Meteo.com, Privacy) → wraps to the top | Yes. A blue ring on the dark page; the light-theme ring inside the light example panels | None |
+| `/` | wordmark → "Check My Air" → "Meet Your Assistant" → place search → the four example "Why?" panels → the two source links in the open example → "Check My Air" → footer links (Open-Meteo.com, Privacy) → wraps to the top | Yes. A blue ring on the dark page; the light-theme ring inside the light example panels | None |
 | `/app`, with a plan built | place search → Use my location → Hourly forecast → the 10 household questions → Save my answers → Delete my saved data → Build my daily plan → each card's "Why?" → Save plan → source links → footer links → wraps | Yes (checked on Build my daily plan). After building, the live region says "Your plan is ready." | None |
 | `/privacy` | heading → Open-Meteo.com → Privacy → wordmark → wraps | Yes | None |
 

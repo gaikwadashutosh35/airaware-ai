@@ -46,6 +46,12 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Landing (Phase 4 of the assistant redesign):
+  - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;
+  - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";
+  - both screenshots are real captures from 20 Nov 2026, labelled as past; the old readout screenshot is gone;
+  - sections after the hero rise in as they scroll into view (CSS `animation-timeline: view()`), and stay still under reduced motion or without support;
+  - `e2e/landing.spec.ts` checks the reveal, reduced motion and where the hero buttons lead on a first visit.
 - Ask AirAware (Phase 7 of the assistant redesign):
   - `/app/ask`: six topic chips, five starter questions and a 200-character question box; a chip or starter asks at once;
   - `POST /api/v1/assistant/answer` takes a question or a topic. The question only picks a topic on the server (fixed word lists, medical first) and is never logged, stored, echoed or sent to an AI writer;

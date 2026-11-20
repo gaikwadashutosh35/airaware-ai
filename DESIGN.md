@@ -16,7 +16,7 @@ Create a trustworthy environmental technology product. Use the storytelling qual
 - Bold headline and concise supporting copy.
 - Alternating story chapters explaining product capabilities.
 - Product screenshots and real UI visualizations.
-- Strong CTA: “Check your area's air quality”.
+- Strong CTAs: “Check My Air” and “Meet Your Assistant”.
 
 ### Application dashboard
 - Prioritize information readability over atmosphere.
@@ -68,13 +68,14 @@ Do not use these colors as the only indicators. Every AQI/status signal also nee
 
 ## 6. Marketing homepage story
 
-1. **Hero — “The air around you matters.”** Explain the product and invite location exploration. Use an original atmospheric urban visualization; decorative particles must not pretend to represent sensor measurements.
-2. **Understand your air.** Introduce readings, pollutant values, provider labels, and timestamps.
-3. **Turn information into a routine.** Show a daily plan that responds to user context.
-4. **Make indoor choices clearer.** Explain indoor source-control and ventilation trade-offs.
-5. **Choose practical swaps.** Present realistic low-emission habits without unsupported impact figures.
-6. **See why.** Show recommendation explanation and source references.
-7. **CTA.** Bring users into the actual app.
+Eight sections (assistant redesign, Phase 4). Every screenshot is a real capture of the app, labelled as a past screenshot with its date, before the image.
+
+1. **Hero — “The air around you matters.”** One line on what AirAware does, “Check My Air” (`/app`), “Meet Your Assistant” (`/app/ask`), then the place search under “Or search a city”. Beside them, a phone screenshot of Today at its real size.
+2. **Understand your air.** The verdict and the “Model forecast” label in plain words, with a screenshot of the open “Air quality details”.
+3. **Your personal daily plan**, 4. **Improve indoor air**, 5. **Sustainable everyday choices:** each with a real rule card, labelled “Example from our rules”.
+6. **Explainable AI.** AI arranges and words the rules' suggestions but never decides them; the example's “Why?” is open, with its sources.
+7. **How AirAware works.** The 4 real steps as a flow, then the limits: model estimates, not station measurements, not the CPCB National AQI; observations not connected.
+8. **Your city, the next two days.** “Check My Air” again.
 
 ## 7. Today information hierarchy
 
@@ -144,6 +145,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - With reduced motion, a pressed button fades to 80% opacity instead, with no movement. Tailwind's preflight already removes the phone tap highlight for everyone.
   - Phones have no double-tap delay (`touch-action: manipulation`).
 - A new Ask answer rises in: opacity 0 → 1 and `translate: 0 8px` → 0 over 200 ms with the same curve, from `@starting-style`, only under `prefers-reduced-motion: no-preference`. Browsers without `@starting-style` show it at once.
+- Landing sections after the hero rise in (opacity, 8 px `translate`) as they scroll into view, from `animation-timeline: view()`, only under `prefers-reduced-motion: no-preference` and where supported; otherwise they are still.
 - The readout scene's rain is its only decorative motion: it animates `transform` only, falls for under 5 seconds and then rests, and is used as `motion-safe:animate-*`, so it stays still under reduced motion. The heat band is still.
 
 ## 10. Responsive behavior
