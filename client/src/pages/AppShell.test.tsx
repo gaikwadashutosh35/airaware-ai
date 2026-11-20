@@ -244,7 +244,7 @@ describe('AppShell', () => {
       screen.getByText(`Values for ${formatTime('2026-11-17T17:00:00.000Z')}`),
     ).toBeDefined();
     expect(
-      screen.getByText('Official CPCB observation unavailable'),
+      screen.getByText('Official CPCB observations are not connected yet.'),
     ).toBeDefined();
     expect(
       screen.getByText(
@@ -351,6 +351,7 @@ describe('AppShell', () => {
     // name, are the only allowed mentions; longest first.
     const text = [
       'We do not calculate the CPCB National AQI',
+      "We don't calculate an AQI",
       'Not the CPCB National AQI',
       'CPCB National AQI',
     ].reduce(
@@ -400,26 +401,51 @@ describe('AppShell', () => {
     ).not.toContain(first!.replace('Today in ', ''));
   });
 
-  it('air comes before the plan in reading order', async () => {
+  it('reads verdict, recommendation, help, ask, then the details', async () => {
     routeFetch(ok());
     render(<AppShell />);
 
     await choosePlace();
+    await flush();
 
-    const readout = screen.getByRole('heading', { name: 'Model forecast' });
-    const nextDays = screen.getByRole('heading', {
-      name: 'Your city, the next two days',
-    });
-    const plan = screen.getByRole('heading', {
-      name: 'Your recommendation for today',
-    });
+    const order = [
+      screen.getByRole('heading', {
+        level: 2,
+        name: verdictFrom(forecastFixture.airCheck).title,
+      }),
+      screen.getByRole('heading', { name: 'Your recommendation for today' }),
+      screen.getByRole('heading', { name: 'What would you like help with?' }),
+      screen.getByRole('heading', { name: 'Ask AirAware anything' }),
+      screen.getByText('Air quality details'),
+      screen.getByText('Your city, the next two days'),
+    ];
+    for (let i = 1; i < order.length; i++) {
+      expect(
+        order[i - 1]!.compareDocumentPosition(order[i]!) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
     expect(
-      readout.compareDocumentPosition(nextDays) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      screen.getByText('Your city, the next two days').closest('details'),
+    ).not.toBeNull();
+  });
+
+  it('the ask box opens Ask with the question kept out of the address', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Ask about your air, home or day' }),
+      { target: { value: 'Should I run the purifier tonight?' } },
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await flush();
+
     expect(
-      nextDays.compareDocumentPosition(plan) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      screen.getByRole('heading', { level: 1, name: 'Ask AirAware' }),
+    ).toBeDefined();
+    expect(window.location.href).not.toMatch(/purifier/i);
   });
 
   it('shows the forecast limitations once, in the sources panel', async () => {

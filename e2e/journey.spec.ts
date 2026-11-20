@@ -121,12 +121,13 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
       ).toBeVisible();
     });
 
-    await test.step('3. data kind, source and time labels', async () => {
+    await test.step('3. data kind, source and time labels, in the details', async () => {
+      await page.getByText('Air quality details').click();
       await expect(
         page.getByRole('heading', { name: 'Model forecast' }),
       ).toBeVisible({ timeout: 30_000 });
       await expect(
-        page.getByText('Official CPCB observation unavailable'),
+        page.getByText('Official CPCB observations are not connected yet.'),
       ).toBeVisible();
       await expect(page.getByText(/Retrieved /).first()).toBeVisible();
       await expect(

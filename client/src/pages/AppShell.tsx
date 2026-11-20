@@ -10,10 +10,6 @@ import { AppNav } from '../components/AppNav.tsx';
 import { PlaceChip } from '../components/PlaceChip.tsx';
 import { Attribution } from '../components/Attribution.tsx';
 import { ErrorState, Loading } from '../components/States.tsx';
-import { AirReadout } from '../features/air-quality/AirReadout.tsx';
-import { ForecastPanel } from '../features/air-quality/ForecastPanel.tsx';
-import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
-import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
 import {
@@ -28,8 +24,11 @@ import { getForecast, getSources, savePreferences } from '../services/api.ts';
 import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
 import { Welcome } from './Welcome.tsx';
+import { AirDetails } from '../features/today/AirDetails.tsx';
+import { AskBox } from '../features/today/AskBox.tsx';
+import { HelpChoices } from '../features/today/HelpChoices.tsx';
 import { TodayLead } from '../features/today/TodayLead.tsx';
-import { greeting } from '../features/today/today.ts';
+import { greeting, type AskIntent } from '../features/today/today.ts';
 
 // What is saved for a remembered place: label and 2-decimal coordinates.
 function toSaved(place: Place): SavedPlace {
@@ -90,6 +89,9 @@ function AppShell() {
   const [deletedPlanId, setDeletedPlanId] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
+  // A help topic or typed question for Ask (Phase 7 reads it). In memory
+  // only: never in the address.
+  const askIntent = useRef<AskIntent | null>(null);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
   // The place chip's dialog; Today's "Change place" opens it too.
@@ -337,14 +339,6 @@ function AppShell() {
                           60,
                         )}
                       />
-                      <AirReadout
-                        data={forecast.state.data.series}
-                        now={forecast.state.data.loadedAt}
-                      />
-                      <ForecastPanel
-                        data={forecast.state.data.series}
-                        now={forecast.state.data.loadedAt}
-                      />
                     </>
                   ) : forecast.state.status === 'error' ? (
                     <ErrorState
@@ -360,7 +354,6 @@ function AppShell() {
                   ) : (
                     <Loading label="Loading forecast" band />
                   )}
-                  <ObservationPanel note={cpcb?.limitations[0]} />
                 </>
               ) : null}
             </div>
@@ -378,18 +371,39 @@ function AppShell() {
                 onBackToToday={() => setOpened(null)}
                 deletedPlanId={deletedPlanId}
               />
-              <SourcesPanel
+            </div>
+          </div>
+          {place && (
+            <>
+              <HelpChoices
+                onAsk={(topic) => {
+                  askIntent.current = { topic };
+                }}
+              />
+              <AskBox
+                onAsk={(question) => {
+                  askIntent.current = { question };
+                }}
+              />
+              <AirDetails
+                data={
+                  forecast.state.status === 'ready'
+                    ? forecast.state.data.series
+                    : null
+                }
+                loadedAt={
+                  forecast.state.status === 'ready'
+                    ? forecast.state.data.loadedAt
+                    : now
+                }
+                place={place}
                 sources={
                   sources.state.status === 'ready' ? sources.state.data : null
                 }
-                forecastLimitations={
-                  forecast.state.status === 'ready'
-                    ? forecast.state.data.series.limitations
-                    : []
-                }
+                cpcbNote={cpcb?.limitations[0]}
               />
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </main>
       {/* Bottom padding on phones keeps the footer clear of the nav bar. */}

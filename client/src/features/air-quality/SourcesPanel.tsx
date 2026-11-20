@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import type { SourceInfo } from '../../../../shared/contracts.ts';
-import { LIMITATIONS } from './limitations.ts';
+import { mergedLimitations } from '../today/today.ts';
 
 export function SourcesPanel({
   sources,
@@ -40,7 +40,7 @@ export function SourcesPanel({
       <div className="flex flex-col gap-2">
         <h3 className="font-semibold">Limitations</h3>
         <ul className="list-disc pl-5 text-sm">
-          {[...LIMITATIONS, ...forecastLimitations].map((limitation) => (
+          {mergedLimitations(forecastLimitations).map((limitation) => (
             <li key={limitation}>{limitation}</li>
           ))}
         </ul>

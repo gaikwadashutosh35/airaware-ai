@@ -16,7 +16,7 @@ function limitationItems() {
 describe('SourcesPanel', () => {
   afterEach(cleanup);
 
-  it('always lists the four fixed limitations, then the forecast ones', () => {
+  it("lists the forecast's limitations word for word, then the app's own", () => {
     render(
       <SourcesPanel
         sources={sourcesFixture}
@@ -30,10 +30,18 @@ describe('SourcesPanel', () => {
       "The 24-hour check compares a model forecast with India's 24-hour limits; official compliance is judged on measured station data over a year.",
       'AI personalisation can be unavailable; plans then use our fixed rules only.',
     ]);
+    // The two app lines the forecast's own lines don't cover.
     expect(limitationItems()).toEqual([
-      ...LIMITATIONS,
       ...forecastFixture.limitations,
+      LIMITATIONS[2],
+      LIMITATIONS[3],
     ]);
+  });
+
+  it("without a forecast, lists the app's four", () => {
+    render(<SourcesPanel sources={sourcesFixture} forecastLimitations={[]} />);
+
+    expect(limitationItems()).toEqual(LIMITATIONS);
   });
 
   it('lists sources with licence and connection state', () => {

@@ -1,0 +1,75 @@
+import { Footprints, House, Leaf, Users, type LucideIcon } from 'lucide-react';
+import { useId } from 'react';
+import { navigate } from '../../lib/navigation.ts';
+import type { AskIntent } from './today.ts';
+
+type Topic = NonNullable<AskIntent['topic']>;
+
+const CHOICES: Array<{
+  title: string;
+  line: string;
+  to: string;
+  topic?: Topic;
+  Icon: LucideIcon;
+}> = [
+  {
+    title: 'Outdoor activities',
+    line: 'Walks, exercise, commutes',
+    to: '/app/ask',
+    topic: 'outdoors',
+    Icon: Footprints,
+  },
+  {
+    title: 'My home',
+    line: 'Cooking, windows, purifiers',
+    to: '/app/home',
+    Icon: House,
+  },
+  {
+    title: 'My family',
+    line: 'Children, older adults, school runs',
+    to: '/app/ask',
+    topic: 'family',
+    Icon: Users,
+  },
+  {
+    title: 'Greener habits',
+    line: 'Small swaps that cut smoke and exhaust',
+    to: '/app/habits',
+    Icon: Leaf,
+  },
+];
+
+// "What would you like help with?": four ways in. Outdoor and Family open
+// Ask with their topic held in memory, never in the address.
+export function HelpChoices({ onAsk }: { onAsk: (topic: Topic) => void }) {
+  const headingId = useId();
+  return (
+    <section aria-labelledby={headingId} className="flex flex-col gap-3">
+      <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
+        What would you like help with?
+      </h2>
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {CHOICES.map(({ title, line, to, topic, Icon }) => (
+          <li key={title}>
+            <a
+              href={to}
+              onClick={(event) => {
+                event.preventDefault();
+                if (topic) onAsk(topic);
+                navigate(to);
+              }}
+              className="press flex h-full min-h-11 items-start gap-3 rounded-lg border border-rule p-4 hover:border-text-dark"
+            >
+              <Icon aria-hidden="true" className="mt-0.5 size-5 flex-none" />
+              <span className="flex flex-col gap-1">
+                <span className="font-semibold">{title}</span>
+                <span className="text-sm text-text-dark-muted">{line}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
