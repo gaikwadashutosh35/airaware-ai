@@ -61,7 +61,7 @@ The owner wants the scene to change automatically with conditions: haze, fog, po
 - "Smoke" or any cause named for the pollution.
 - The air forecast failing, or slowing much, because of the weather call.
 - Motion that ignores reduced-motion settings, or animation that drops frames.
-- Text placed on top of the scene.
+- Text placed on top of the scene. *Amended (backdrop, 20 Nov 2026): only each page's title block may rest on the sky, checked at 4.5:1; never on the city or fog.*
 
 ## Constraints
 

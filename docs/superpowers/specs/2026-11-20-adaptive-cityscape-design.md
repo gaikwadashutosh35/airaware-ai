@@ -3,6 +3,7 @@
 **Status:** approved by the owner on 20 Nov 2026, "Approve as recommended". That covers D1 (a), D2 (a), D3 (a), including the one nullable `weather.isDay` field, D4 (a) and the calls below.
 **Brief:** `AirAware_AI_Adaptive_Cityscape_Background_Spec.md` (repo root).
 **Comparison sheet:** `docs/superpowers/specs/2026-11-20-cityscape-states.html` (open it in a browser). It draws every state from the same geometry.
+**Amended (backdrop, 20 Nov 2026, `2026-11-20-cityscape-backdrop-design.md`):** the scene is now a fixed backdrop behind every app page, not a band in Today's card. The looks, thresholds and motion here are unchanged. §3's rejection of "the scene behind the text" is replaced by solid panels and a checked title block.
 
 ## 1. What exists today (verified in code)
 

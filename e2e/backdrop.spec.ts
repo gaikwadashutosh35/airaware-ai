@@ -180,8 +180,8 @@ test('the backdrop stays put between pages', async ({ page }) => {
 });
 
 // The lowest contrast between the title block's text colours and every
-// colour that can pass behind it: each sky stop alone, and each cloud,
-// deck, glow centre and rain streak over each sky stop.
+// colour that can pass behind it: each sky stop alone, each cloud, deck and
+// glow centre over each sky stop, and a rain streak over all of those.
 function titleContrast(page: Page) {
   return page.evaluate(() => {
     const canvas = document.createElement('canvas');
@@ -223,7 +223,7 @@ function titleContrast(page: Page) {
     )) {
       const style = getComputedStyle(el);
       layers.push({
-        name: 'cloud',
+        name: el.matches('[data-part="cloud-deck"]') ? 'deck' : 'cloud',
         color: rgb(style.fill),
         alpha: Number(style.opacity),
       });
@@ -244,12 +244,23 @@ function titleContrast(page: Page) {
         alpha: Number(getComputedStyle(streak.parentElement!).opacity),
       });
     }
-    const behind = [
+    // Clouds, the deck and the glow over each sky stop; then rain over each
+    // of those and over the bare sky, since a streak can cross any of them.
+    const rain = layers.filter((l) => l.name === 'rain');
+    const bases = [
       ...skies.map((color) => ({ name: 'sky', color })),
-      ...skies.flatMap((base) =>
-        layers.map((l) => ({
-          name: l.name,
-          color: over(l.color, l.alpha, base),
+      ...skies.flatMap((sky) =>
+        layers
+          .filter((l) => l.name !== 'rain')
+          .map((l) => ({ name: l.name, color: over(l.color, l.alpha, sky) })),
+      ),
+    ];
+    const behind = [
+      ...bases,
+      ...bases.flatMap((base) =>
+        rain.map((r) => ({
+          name: `rain over ${base.name}`,
+          color: over(r.color, r.alpha, base.color),
         })),
       ),
     ];
@@ -278,6 +289,7 @@ const SKIES: Array<Partial<WeatherNow>> = [
   { precipitationMm: 1, cloudCoverPercent: 30, isDay: true }, // rain
   { precipitationMm: 0, cloudCoverPercent: 90, isDay: true }, // deck
   { precipitationMm: 0, cloudCoverPercent: 30, isDay: true }, // glow
+  { precipitationMm: 1, cloudCoverPercent: 90, isDay: true }, // rain, deck
 ];
 
 for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {

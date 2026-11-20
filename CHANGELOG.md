@@ -53,6 +53,12 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - the forecast's `weather` gains `isDay` (Open-Meteo `is_day`, same request);
   - the clouds settle once over 4.8 s, then rest, and stay still under reduced motion;
   - while the forecast loads, a still silhouette of the same city replaces the pulsing band.
+- Cityscape backdrop (the scene behind every app page):
+  - the adaptive scene is now the background of Today, Ask, My Home, Better Habits, My Profile and onboarding, drawn once and kept between pages;
+  - every section sits on a solid panel; only each page's title block rests on the sky, in the dark text colour;
+  - rain falls over the whole screen, fog stays at the city's base, and the veils fade in from the city's top;
+  - the footer says the background follows the model forecast for the place, and when it is not current;
+  - the hourly reload keeps the scene instead of flashing grey, and the band leaves Today's card, so the verdict sits higher on a phone.
 - Landing (Phase 4 of the assistant redesign):
   - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;
   - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";

@@ -53,6 +53,7 @@ Automated scans do not prove full accessibility conformance.
 **axe in a real browser** (Chromium, colour contrast included, desktop and Pixel 7):
 - `/` and `/privacy`: no violations (`e2e/pages.spec.ts`, 4/4).
 - The dashboard's failure states and the full journey: no violations (`e2e/failures.spec.ts`, `e2e/journey.spec.ts`).
+- The app backdrop (20 Nov 2026): decorative (`aria-hidden`, no focus, no clicks). Every word sits on a solid panel except each page's title block, which is `text-dark` and passes 4.5:1 against every colour that can pass behind it in each look. A browser check finds any text left on the scene, and axe passes over the within, above and unknown looks (`e2e/backdrop.spec.ts`).
 
 **Keyboard walk** (Tab and Shift+Tab only, built-in browser, Vite dev build):
 
