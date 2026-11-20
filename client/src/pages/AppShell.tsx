@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import type { HouseholdContext, SavedPlan } from '../../../shared/contracts.ts';
+import type {
+  HouseholdContext,
+  PreferencesUpdate,
+  SavedPlace,
+  SavedPlan,
+  SavedPreferences,
+} from '../../../shared/contracts.ts';
 import { AppNav } from '../components/AppNav.tsx';
 import { PlaceChip } from '../components/PlaceChip.tsx';
 import { Attribution } from '../components/Attribution.tsx';
@@ -10,18 +16,27 @@ import { ObservationPanel } from '../features/air-quality/ObservationPanel.tsx';
 import { SourcesPanel } from '../features/air-quality/SourcesPanel.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
-import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import {
   placeFromSearch,
   placeToSearch,
   type Place,
 } from '../features/location/place.ts';
-import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
 import { isOlderThan, useNow } from '../lib/clock.ts';
 import { appPage, navigate, usePath } from '../lib/navigation.ts';
-import { getForecast, getSources } from '../services/api.ts';
+import { currentToken, tokenForSave } from '../lib/supabase.ts';
+import { getForecast, getSources, savePreferences } from '../services/api.ts';
 import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
+import { Welcome } from './Welcome.tsx';
+
+// What is saved for a remembered place: label and 2-decimal coordinates.
+function toSaved(place: Place): SavedPlace {
+  return {
+    label: place.label,
+    latitude: Number(place.latitude.toFixed(2)),
+    longitude: Number(place.longitude.toFixed(2)),
+  };
+}
 
 const TITLES = {
   today: 'Air-quality dashboard',
@@ -72,13 +87,25 @@ function AppShell() {
   // that plan saved.
   const [deletedPlanId, setDeletedPlanId] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  // The place search, focused by the place bar's "Change place".
-  const searchRef = useRef<HTMLInputElement>(null);
   const focusResult = useRef(false);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
   // The place chip's dialog; Today's "Change place" opens it too.
   const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
+  // Onboarding (D2): the form's first load of saved answers has finished;
+  // the searched place remembered on this device; a key that remounts the
+  // form with Welcome's answers; the Today invite, dismissed for the visit.
+  const [loaded, setLoaded] = useState(false);
+  const [remembered, setRemembered] = useState<SavedPlace | null>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [inviteDismissed, setInviteDismissed] = useState(false);
+
+  // Today with no place: once saved answers are checked, Welcome opens.
+  useEffect(() => {
+    if (page === 'today' && !place && !opened && loaded) {
+      navigate('/app/welcome', { replace: true });
+    }
+  }, [page, place, opened, loaded]);
   const sources = useRequest('sources', (signal) => getSources(signal));
   // Keyed by the coordinates actually sent (2 decimals).
   const forecastKey = place
@@ -93,11 +120,11 @@ function AppShell() {
   // After the user picks a place, move focus to the result so keyboard and
   // screen-reader users land on it; a place from the address keeps focus put.
   useEffect(() => {
-    if (place && focusResult.current) {
+    if (place && focusResult.current && page === 'today') {
       focusResult.current = false;
       headingRef.current?.focus();
     }
-  }, [place]);
+  }, [place, page]);
 
   // Searched places go in the address; a device location never does.
   function locateStart() {
@@ -118,6 +145,57 @@ function AppShell() {
     const query = inAddress ? `?${placeToSearch(next)}` : '';
     setPlaceQuery(query);
     window.history.replaceState(null, '', window.location.pathname + query);
+    // A remembered place follows a new searched one; never a device location.
+    if (remembered && inAddress) void rememberPlace(next);
+  }
+
+  // The form's first load: a remembered place opens Today directly.
+  function restore(saved: SavedPreferences | null) {
+    setLoaded(true);
+    setRemembered(saved?.place ?? null);
+    if (saved?.place && !place) {
+      const query = `?${placeToSearch(saved.place)}`;
+      setPlace(saved.place);
+      setPlaceQuery(query);
+      window.history.replaceState(null, '', window.location.pathname + query);
+    }
+  }
+
+  async function rememberPlace(next: Place) {
+    try {
+      const token = await currentToken();
+      if (!token) return;
+      const saved = toSaved(next);
+      await savePreferences(token, { place: saved });
+      setRemembered(saved);
+    } catch {
+      // The old place stays remembered; nothing else depends on it.
+    }
+  }
+
+  async function forgetPlace() {
+    const token = await currentToken();
+    if (token) await savePreferences(token, { place: null });
+    setRemembered(null);
+  }
+
+  // Rejects when the save fails, so Welcome can say so.
+  async function finishWelcome({
+    context: next,
+    remember,
+  }: {
+    context: HouseholdContext;
+    remember: boolean;
+  }) {
+    if (remember) {
+      const update: PreferencesUpdate = { context: next };
+      if (place && placeQuery) update.place = toSaved(place);
+      await savePreferences(await tokenForSave(), update);
+      if (update.place) setRemembered(update.place);
+    }
+    setContext(next);
+    setFormKey((key) => key + 1);
+    navigate('/app');
   }
 
   const cpcb =
@@ -162,12 +240,17 @@ function AppShell() {
             plan, a build in flight and unsaved answers survive moving pages. */}
         <div hidden={page !== 'profile'} className="contents">
           <Profile
+            formKey={formKey}
             context={context}
             onContextChange={setContext}
+            onLoaded={restore}
+            remembered={remembered}
+            onForget={forgetPlace}
             onDeleted={() => {
               setResets((n) => n + 1);
               setOpened(null);
               setListVersion((n) => n + 1);
+              setRemembered(null);
             }}
             listVersion={listVersion}
             onOpen={(plan) => {
@@ -181,21 +264,45 @@ function AppShell() {
             }}
           />
         </div>
-        {page !== 'today' && page !== 'profile' && (
+        {page === 'welcome' && (
+          <Welcome
+            place={place}
+            placeIsSearched={placeQuery !== ''}
+            context={context}
+            onChoosePlace={(next) => choose(next, true)}
+            onLocateStart={locateStart}
+            onLocate={locate}
+            onFinish={finishWelcome}
+          />
+        )}
+        {page !== 'today' && page !== 'profile' && page !== 'welcome' && (
           <Placeholder title={TITLES[page]} />
         )}
         <div hidden={page !== 'today'} className="contents">
           <h1 className="text-3xl font-semibold tracking-tight">
             Air quality near you
           </h1>
-          {/* Once a place is set, the place chip's dialog changes it. */}
-          {!place && (
-            <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-              <LocationSearch
-                inputRef={searchRef}
-                onSelect={(next) => choose(next, true)}
-              />
-              <UseMyLocation onLocateStart={locateStart} onLocate={locate} />
+          {/* No place yet: saved answers are checked, then Welcome opens. */}
+          {!place && !opened && <Loading label="Loading your place" />}
+          {place && Object.keys(context).length === 0 && !inviteDismissed && (
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule p-4">
+              <a
+                href="/app/welcome"
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigate('/app/welcome');
+                }}
+                className="press inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-bg"
+              >
+                Make it personal: 2 quick questions
+              </a>
+              <button
+                type="button"
+                onClick={() => setInviteDismissed(true)}
+                className="min-h-11 rounded-md border border-text-dark px-4"
+              >
+                Not now
+              </button>
             </div>
           )}
 
@@ -258,28 +365,7 @@ function AppShell() {
                   )}
                   <ObservationPanel note={cpcb?.limitations[0]} />
                 </>
-              ) : (
-                <div className="flex flex-col items-start gap-4 rounded-lg border border-rule p-6">
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 20 20"
-                    className="size-6 fill-text-dark-muted"
-                  >
-                    <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm3.5 3.5-2 5-5 2 2-5zM10 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
-                  </svg>
-                  <p className="max-w-prose text-text-dark-muted">
-                    Search for a place or use your location to see its
-                    air-quality forecast.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => searchRef.current?.focus()}
-                    className="min-h-11 rounded-md border border-text-dark px-4"
-                  >
-                    Search for a place
-                  </button>
-                </div>
-              )}
+              ) : null}
             </div>
 
             <div className="flex min-w-0 flex-col gap-6">

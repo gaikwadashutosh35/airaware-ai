@@ -95,20 +95,25 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
 }, testInfo) => {
   test.setTimeout(240_000);
   try {
-    await test.step('1. open the app', async () => {
+    await test.step('1. open the app: a first visit gets Welcome', async () => {
       await page.goto('/app');
       await expect(
-        page.getByRole('heading', { level: 1, name: 'Air quality near you' }),
+        page.getByRole('heading', {
+          level: 1,
+          name: 'Where should we check air quality?',
+        }),
       ).toBeVisible();
     });
 
-    await test.step('2. search Pune and pick it', async () => {
+    await test.step('2. search Pune, pick it, skip to Today', async () => {
       await page
         .getByRole('combobox', { name: 'Search for a city or area in India' })
         .fill('Pune');
       await page
         .getByRole('option', { name: 'Pune, Maharashtra', exact: true })
         .click();
+      await page.getByRole('button', { name: 'Skip' }).click();
+      await page.getByRole('button', { name: 'Skip' }).click();
       await expect(
         page.getByRole('heading', {
           level: 2,

@@ -119,14 +119,28 @@ function forecastCalls(fetchSpy: ReturnType<typeof routeFetch>) {
   );
 }
 
-async function choosePlace(optionIndex = 0) {
-  // Once a place is set, Today's search moves into the place dialog.
+const WELCOME_1 = 'Where should we check air quality?';
+
+async function choosePlace(optionIndex = 0, { skipWelcome = true } = {}) {
+  // Let a saved-answers check and any redirect settle first.
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  // Without a place the app opens Welcome; once a place is set, the search
+  // lives in the place dialog.
+  const onWelcome = screen.queryByRole('heading', {
+    level: 1,
+    name: WELCOME_1,
+  });
   if (
+    !onWelcome &&
     !screen.queryByRole('combobox', {
       name: 'Search for a city or area in India',
     })
   ) {
-    fireEvent.click(screen.getByRole('button', { name: /^Change place: / }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /^(Change place: |Choose a place$)/ }),
+    );
   }
   const input = screen.getByRole('combobox', {
     name: 'Search for a city or area in India',
@@ -142,6 +156,13 @@ async function choosePlace(optionIndex = 0) {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
   });
+  if (onWelcome && skipWelcome) {
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+  }
 }
 
 async function goTo(name: string) {
@@ -172,46 +193,23 @@ describe('AppShell', () => {
     session.tokenForSave.mockReset().mockResolvedValue('tok');
   });
 
-  it('asks for a place before loading any forecast', async () => {
+  // Phase 5: with no place, Welcome replaces the old no-place card.
+  it('with no place and no session, Today sends you to Welcome', async () => {
+    const before = window.history.length;
     const fetchSpy = routeFetch(ok());
-    const { container } = render(<AppShell />);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    expect(
-      screen.getByText(
-        'Search for a place or use your location to see its air-quality forecast.',
-      ),
-    ).toBeDefined();
-    expect(forecastCalls(fetchSpy)).toHaveLength(0);
-    vi.useRealTimers();
-    await expectNoAxeViolations(container);
-  });
-
-  it('the no-place card focuses the search', async () => {
-    routeFetch(ok());
     render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
 
+    expect(window.location.pathname).toBe('/app/welcome');
+    expect(window.history.length).toBe(before);
     expect(
-      screen.getByText(
-        'Search for a place or use your location to see its air-quality forecast.',
-      ),
+      screen.getByRole('heading', { level: 1, name: WELCOME_1 }),
     ).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Search for a place' }));
-    expect(document.activeElement).toBe(
-      screen.getByRole('combobox', {
-        name: 'Search for a city or area in India',
-      }),
-    );
-
-    await choosePlace();
-    expect(
-      screen.queryByRole('button', { name: 'Search for a place' }),
-    ).toBeNull();
+    expect(forecastCalls(fetchSpy)).toHaveLength(0);
+    vi.useRealTimers();
+    await expectNoAxeViolations(document.body);
   });
 
   it('shows the labelled model forecast for the chosen place', async () => {
@@ -690,6 +688,212 @@ describe('AppShell', () => {
         name: 'Air quality: Pune, Maharashtra',
       }),
     ).toBeDefined();
+  });
+
+  const SAVED_PUNE = {
+    label: 'Pune, Maharashtra',
+    latitude: 18.52,
+    longitude: 73.86,
+  };
+
+  // A session whose saved preferences are `saved`; PUT bodies are recorded.
+  function withSaved(saved: unknown, puts: unknown[] = []): OtherResponder {
+    session.available = true;
+    session.currentToken.mockResolvedValue('tok');
+    const plans = planRoutes();
+    return (url, init) => {
+      if (url.pathname === '/api/v1/profile/preferences') {
+        if (init?.method === 'PUT') {
+          const body = JSON.parse(init.body as string);
+          puts.push(body);
+          return Promise.resolve(
+            Response.json({
+              data: { context: {}, place: null, updatedAt: 'x', ...body },
+            }),
+          );
+        }
+        return Promise.resolve(Response.json({ data: saved }));
+      }
+      if (url.pathname === '/api/v1/plans') {
+        return Promise.resolve(Response.json({ data: [] }));
+      }
+      return plans(url, init);
+    };
+  }
+
+  it('a remembered place opens Today without Welcome', async () => {
+    window.history.replaceState(null, '', '/app');
+    routeFetch(
+      ok(),
+      withSaved({ context: {}, place: SAVED_PUNE, updatedAt: 'x' }),
+    );
+    render(<AppShell />);
+    await flush();
+
+    expect(window.location.pathname).toBe('/app');
+    expect(window.location.search).toContain('place=Pune');
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Pune, Maharashtra',
+      }),
+    ).toBeDefined();
+  });
+
+  it('Welcome starts from the saved answers', async () => {
+    routeFetch(
+      ok(),
+      withSaved({
+        context: { routine: { outdoorExercise: true } },
+        place: null,
+        updatedAt: 'x',
+      }),
+    );
+    render(<AppShell />);
+    await flush();
+    await choosePlace(0, { skipWelcome: false });
+
+    expect(
+      (
+        screen.getByRole('checkbox', {
+          name: 'Outdoor exercise',
+        }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+  });
+
+  it('finishing with Remember saves the answers and the searched place', async () => {
+    const puts: unknown[] = [];
+    routeFetch(ok(), withSaved(null, puts));
+    session.currentToken.mockResolvedValue(null);
+    render(<AppShell />);
+    await flush();
+    await choosePlace(0, { skipWelcome: false });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Outdoor exercise' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Remember on this device' }),
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'See my air' }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(session.tokenForSave).toHaveBeenCalledTimes(1);
+    expect(puts).toEqual([
+      {
+        context: { routine: { outdoorExercise: true } },
+        place: SAVED_PUNE,
+      },
+    ]);
+    expect(window.location.pathname).toBe('/app');
+  });
+
+  it('a device location is never saved', async () => {
+    const puts: unknown[] = [];
+    routeFetch(ok(), withSaved(null, puts));
+    session.currentToken.mockResolvedValue(null);
+    Object.defineProperty(navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: (
+          success: (p: {
+            coords: { latitude: number; longitude: number };
+          }) => void,
+        ) => success({ coords: { latitude: 18.519571, longitude: 73.855347 } }),
+      },
+      configurable: true,
+    });
+    render(<AppShell />);
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Remember on this device' }),
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'See my air' }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(puts).toEqual([{ context: {} }]);
+    expect(window.location.search).toBe('');
+  });
+
+  it('a new searched place replaces the remembered one', async () => {
+    const puts: unknown[] = [];
+    window.history.replaceState(null, '', '/app');
+    routeFetch(
+      ok(),
+      withSaved({ context: {}, place: SAVED_PUNE, updatedAt: 'x' }, puts),
+    );
+    render(<AppShell />);
+    await flush();
+    await choosePlace(1);
+    await flush();
+
+    expect(puts).toEqual([
+      {
+        place: { label: 'Puneta, Rajasthan', latitude: 26.3, longitude: 76.29 },
+      },
+    ]);
+  });
+
+  it('Forget this place clears it', async () => {
+    const puts: unknown[] = [];
+    window.history.replaceState(null, '', '/app');
+    routeFetch(
+      ok(),
+      withSaved({ context: {}, place: SAVED_PUNE, updatedAt: 'x' }, puts),
+    );
+    render(<AppShell />);
+    await flush();
+    await goTo('My Profile');
+    expect(
+      screen.getByText('Remembered place: Pune, Maharashtra'),
+    ).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Forget this place' }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(puts).toEqual([{ place: null }]);
+    expect(
+      screen.getByText('This place is no longer remembered.'),
+    ).toBeDefined();
+  });
+
+  it('the invite opens Welcome at step 2; Not now hides it', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+
+    fireEvent.click(
+      screen.getByRole('link', { name: 'Make it personal: 2 quick questions' }),
+    );
+    expect(window.location.pathname).toBe('/app/welcome');
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'What does your typical day look like?',
+      }),
+    ).toBeDefined();
+
+    await goTo('Today');
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
+    expect(
+      screen.queryByRole('link', {
+        name: 'Make it personal: 2 quick questions',
+      }),
+    ).toBeNull();
   });
 
   it('skip link comes first and targets main', () => {

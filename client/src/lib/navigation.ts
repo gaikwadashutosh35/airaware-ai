@@ -17,8 +17,11 @@ export function usePath(): string {
 }
 
 // Keeps the query, so a searched place travels between pages.
-export function navigate(to: string): void {
-  window.history.pushState(null, '', to + window.location.search);
+// `replace` swaps the current entry, so Back skips a redirect.
+export function navigate(to: string, { replace = false } = {}): void {
+  const url = to + window.location.search;
+  if (replace) window.history.replaceState(null, '', url);
+  else window.history.pushState(null, '', url);
   // A new page starts at its top; Back and Forward keep the browser's scroll.
   window.scrollTo(0, 0);
   window.dispatchEvent(new Event(NAVIGATED));
