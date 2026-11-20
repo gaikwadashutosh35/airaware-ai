@@ -123,6 +123,21 @@
     .press:active {
       transform: scale(0.97);
     }
+
+    /* A new Ask answer rises into place (opacity and translate only).
+       Browsers without @starting-style just show it. */
+    .ask-answer {
+      transition:
+        opacity 200ms cubic-bezier(0.23, 1, 0.32, 1),
+        translate 200ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @starting-style {
+      .ask-answer {
+        opacity: 0;
+        translate: 0 8px;
+      }
+    }
   }
 
   h1,

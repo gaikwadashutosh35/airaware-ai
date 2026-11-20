@@ -58,6 +58,14 @@ export function answeredCount(context: HouseholdContext): number {
   return Object.values(toAnswers(context)).filter(Boolean).length;
 }
 
+// "8:15 AM": a forecast's retrieval time, as Today shows it.
+export function clockTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 // The AI summary, else the verdict's approved explanation (no new copy).
 export function shortAnswer(answer: AskAnswer): string {
   return answer.summary ?? verdictFrom(answer.air).explanation;
