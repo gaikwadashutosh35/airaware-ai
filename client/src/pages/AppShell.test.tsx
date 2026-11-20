@@ -580,6 +580,28 @@ describe('AppShell', () => {
     ).toBe('yes');
   });
 
+  it('reads the place on any app path', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    expect(
+      screen.getByRole('button', { name: 'Change place: Pune, Maharashtra' }),
+    ).toBeDefined();
+
+    await goTo('Today');
+
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Air quality: Pune, Maharashtra',
+      }),
+    ).toBeDefined();
+  });
+
   it('skip link comes first and targets main', () => {
     routeFetch(ok());
     render(<AppShell />);
