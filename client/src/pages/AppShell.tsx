@@ -22,6 +22,7 @@ import { isOlderThan, useNow } from '../lib/clock.ts';
 import { appPage, navigate, usePath } from '../lib/navigation.ts';
 import { currentToken, tokenForSave } from '../lib/supabase.ts';
 import { getForecast, getSources, savePreferences } from '../services/api.ts';
+import { BetterHabits } from './BetterHabits.tsx';
 import { MyHome } from './MyHome.tsx';
 import { Placeholder } from './Placeholder.tsx';
 import { Profile } from './Profile.tsx';
@@ -289,9 +290,8 @@ function AppShell() {
           />
         )}
         {page === 'home' && <MyHome plan={todayPlan} context={context} />}
-        {page === 'ask' || page === 'habits' ? (
-          <Placeholder title={TITLES[page]} />
-        ) : null}
+        {page === 'habits' && <BetterHabits />}
+        {page === 'ask' && <Placeholder title={TITLES[page]} />}
         <div hidden={page !== 'today'} className="contents">
           <div className="flex flex-col gap-1">
             {place && <p className="text-text-dark-muted">{greeting(now)}</p>}

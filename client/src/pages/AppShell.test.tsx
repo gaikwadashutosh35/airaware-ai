@@ -777,6 +777,23 @@ describe('AppShell', () => {
     );
   });
 
+  it('/app/habits shows Better Habits', async () => {
+    window.history.replaceState(null, '', '/app/habits');
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Better Habits' }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Energy use' }),
+    ).toBeDefined();
+    expect(
+      screen.queryByText('This part of AirAware is on its way.'),
+    ).toBeNull();
+  });
+
   it('/app/home shows My Home, not the placeholder', async () => {
     window.history.replaceState(
       null,
