@@ -119,6 +119,9 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family hand their topic to Ask in memory.
   - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. The question goes to Ask in memory, never into the address.
   - `AirDetails`: one closed `<details>` with every number, unit, time and source behind the verdict. The 24-hour limits come from the server's check.
+  - `GuideGroups`: the guide library's groups, each heading at a given level (2 on Better Habits, 3 on My Home) with its `PlanCard`s one level below and "Why it matters", then the safety note. A group left empty by its `hide` filter is left out.
+  - `MyHome`: "Today, for your home" (the plan's indoor cards, full size) before "Ways to improve indoor air". A guide whose `personalRuleId` is on screen is hidden; "Near a busy road" needs a yes.
+  - `BetterHabits`: the habit groups at level 2, with no savings figures.
   - `Welcome`: three steps for a first visit.
     - One `h1` per step, with "Step N of 3"; focus moves to the heading.
     - Choices are native checkboxes and radios styled as 44 px chips (`has-checked:`, plus a tick, so never colour alone), in `fieldset`s.

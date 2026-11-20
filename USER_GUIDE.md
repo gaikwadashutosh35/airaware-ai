@@ -2,7 +2,9 @@
 
 **Getting around:** five places, in the bar at the bottom on a phone or at the top on a computer:
 - **Today:** how your air is, one recommendation, and ways to get help.
-- **Ask AirAware**, **My Home** and **Better Habits:** being built.
+- **My Home:** today's suggestions for your home, then ways to improve indoor air.
+- **Better Habits:** small swaps that cut smoke and exhaust.
+- **Ask AirAware:** being built.
 - **My Profile:** your answers and saved plans.
 
 **First visit:** three short steps (where, your day, your home), then Today. Steps 2 and 3 are optional and have **Skip**.
@@ -50,11 +52,14 @@ The air notice and the 24-hour air check are not repeated there: the verdict say
 
 Open **Why?** on any card to see the reason, whether it rests on today's forecast check or general guidance, which of your answers it used, its sources and any caveat. If the forecast behind a plan is more than an hour old, the plan says so until Today builds a new one.
 
-## 5. Improve indoor air
-The Indoor air section covers ventilation, cooking smoke and purifiers in the context of both indoor sources and outdoor pollution. Do not assume closing or opening windows is always correct.
+## 5. My Home
+- **Today, for your home:** the indoor suggestions from today's plan, when there are any. My Home builds the plan too, if Today hasn't yet.
+- **Ways to improve indoor air:** general guides in groups: Cooking and smoke, Ventilation, Dust and cleaning, Indoor habits, Filtration, and Near a busy road (only if you said your home is near one). A guide that repeats one of today's suggestions is left out.
 
-## 6. Explore sustainable swaps
-Choose practical habit changes that suit your life. Treat qualitative benefits as suggestions; do not assume a numeric emissions reduction unless a documented calculation is displayed.
+Open **Why it matters** on any card for its reason and sources. The guides cite public sources such as India's Ministry of Health air-pollution advisory, WHO and the US EPA. They consider indoor sources and the air outside together: do not assume closing or opening windows is always correct.
+
+## 6. Better Habits
+General guides in four groups: Daily commuting and vehicle idling, Waste, Cooking, and Energy use. Each has **Why it matters** and its sources. Choose the changes that suit your life. The app never states how much pollution a change saves, because it has no documented way to calculate it.
 
 ## 7. Manage saved data
 - **Save plan**, under See your full day, keeps the plan on this browser. The first save creates an anonymous account (no email, name or password).

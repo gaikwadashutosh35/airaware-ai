@@ -46,6 +46,12 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - A Supabase keep-alive workflow runs every 3 days.
   - A nightly `pg_cron` job deletes anonymous accounts unused for 30 days.
   - The Playwright suite runs against any address with `E2E_BASE_URL`.
+- Guide library, My Home and Better Habits (Phase 8 of the assistant redesign):
+  - 17 general guide cards with neutral reasons and 10 cited sources (MoHFW, WHO, US EPA, CAQM/PIB, the Solid Waste Management Rules 2026, BEE), each opened and checked; wording fixed by `docs/superpowers/specs/2026-11-20-guide-library.md`;
+  - `GET /api/v1/recommendations/guides?topic=home|habits`, outside the plan limit and cached for an hour; guide cards never enter a plan;
+  - My Home: "Today, for your home" from today's plan, then "Ways to improve indoor air" in six groups; a guide repeating one of today's cards is hidden, and "Near a busy road" shows only after a yes;
+  - Better Habits: commuting and idling, waste, cooking and energy use;
+  - the plan also builds while My Home is open.
 - Today (Phase 6 of the assistant redesign):
   - a greeting and "Today in {place}", then the verdict in one sentence with its word tag, "Model forecast · Open-Meteo · updated {time}", the "Not current" banner when stale, and the caveat;
   - "Your recommendation for today" builds by itself: when Today shows a place, after the answers change, and once the plan is over an hour old. One card with "Why this recommendation?"; "See your full day" folds the rest and "Save plan". "Build my daily plan" is gone; "Try again" stays for errors;
