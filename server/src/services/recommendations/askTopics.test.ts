@@ -73,6 +73,37 @@ describe('classify', () => {
     expect(classify('my son has asthma, can he play outside?')).toBe('medical');
   });
 
+  // Final review, Important 1: everyday health words, not only diagnoses.
+  it('everyday health questions are medical', () => {
+    for (const question of [
+      'My son is sick, can he play outside?',
+      'My daughter has a sore throat, can she go to school?',
+      'My mother has trouble breathing, can she go for a walk?',
+      'I have difficulty breathing on smoggy days',
+      'Does smog cause breathing problems?',
+      "I can't breathe well, should I stay in?",
+      'I have a headache, should I go for a run?',
+      'I feel unwell, can I go jogging?',
+      'My grandmother has diabetes, can she walk in the park?',
+      'Can my dad go out? He is a heart patient',
+      'My father has a heart problem, can he walk?',
+      'My eyes are burning, should I go outside?',
+      'I get burning eyes on the way to work',
+      'Itchy eyes after cycling to work',
+      'Can I exercise with a migraine?',
+      'I feel nauseous after my commute',
+      'I feel dizzy outdoors',
+      'My aunt has cancer, can she open the windows?',
+    ]) {
+      expect(classify(question), question).toBe('medical');
+    }
+    // "I'll" loses its apostrophe, and must not read as "ill".
+    expect(classify("I'll walk to the park later")).toBe('outdoors');
+    expect(classify('Keep an eye on the forecast for my walk')).toBe(
+      'outdoors',
+    );
+  });
+
   it('near misses are not medical', () => {
     expect(classify('Is it safe to walk today?')).toBe('outdoors');
     expect(classify('healthy habits')).toBe('habits');
