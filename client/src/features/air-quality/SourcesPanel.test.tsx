@@ -49,7 +49,7 @@ describe('SourcesPanel', () => {
 
     expect(
       screen.getByRole('heading', {
-        level: 2,
+        level: 3,
         name: 'Sources and limitations',
       }),
     ).toBeDefined();

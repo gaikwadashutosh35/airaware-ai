@@ -26,6 +26,7 @@ export function AirDetails({
   // The CPCB source's own limitation, once the source list loaded.
   cpcbNote?: string;
 }) {
+  const headingId = useId();
   const methodId = useId();
   // India's limits as the server's check used them, never retyped.
   const limits = data?.airCheck.checks
@@ -33,41 +34,48 @@ export function AirDetails({
     .join(' and ');
 
   return (
-    <details className="rounded-lg border border-rule">
-      <summary className="min-h-11 cursor-pointer px-5 py-3 text-lg font-semibold sm:px-6">
+    <div>
+      {/* The outline's heading. Not inside <summary>: JAWS and TalkBack expose
+          summary as a button and drop headings in it. */}
+      <h2 id={headingId} className="sr-only">
         Air quality details
-      </summary>
-      <div className="flex flex-col gap-6 border-t border-rule p-5 sm:p-6">
-        {data && (
-          <>
-            <p className="text-sm">
-              {`Forecast location: ${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}`}
-            </p>
-            <AirReadout data={data} now={loadedAt} />
-            <ForecastPanel data={data} now={loadedAt} />
-          </>
-        )}
-        <div className="flex flex-col gap-1">
-          <p>Official CPCB observations are not connected yet.</p>
-          {cpcbNote && (
-            <p className="text-sm text-text-dark-muted">{cpcbNote}</p>
+      </h2>
+      <details className="rounded-lg border border-rule">
+        <summary className="min-h-11 cursor-pointer px-5 py-3 text-lg font-semibold sm:px-6">
+          Air quality details
+        </summary>
+        <div className="flex flex-col gap-6 border-t border-rule p-5 sm:p-6">
+          {data && (
+            <>
+              <p className="text-sm">
+                {`Forecast location: ${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}`}
+              </p>
+              <AirReadout data={data} now={loadedAt} />
+              <ForecastPanel data={data} now={loadedAt} />
+            </>
           )}
+          <div className="flex flex-col gap-1">
+            <p>Official CPCB observations are not connected yet.</p>
+            {cpcbNote && (
+              <p className="text-sm text-text-dark-muted">{cpcbNote}</p>
+            )}
+          </div>
+          {data && (
+            <section aria-labelledby={methodId} className="flex flex-col gap-2">
+              <h3 id={methodId} className="text-xl font-semibold">
+                How the 24-hour check works
+              </h3>
+              <p>
+                {`India's 24-hour limits are ${limits}. We compare the model forecast's 24-hour averages with them. We don't calculate an AQI.`}
+              </p>
+            </section>
+          )}
+          <SourcesPanel
+            sources={sources}
+            forecastLimitations={data?.limitations ?? []}
+          />
         </div>
-        {data && (
-          <section aria-labelledby={methodId} className="flex flex-col gap-2">
-            <h3 id={methodId} className="text-xl font-semibold">
-              How the 24-hour check works
-            </h3>
-            <p>
-              {`India's 24-hour limits are ${limits}. We compare the model forecast's 24-hour averages with them. We don't calculate an AQI.`}
-            </p>
-          </section>
-        )}
-        <SourcesPanel
-          sources={sources}
-          forecastLimitations={data?.limitations ?? []}
-        />
-      </div>
-    </details>
+      </details>
+    </div>
   );
 }

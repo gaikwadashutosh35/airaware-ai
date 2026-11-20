@@ -75,6 +75,32 @@ describe('AirDetails', () => {
     expect(within(details).getByText('Sources and limitations')).toBeDefined();
   });
 
+  // A heading inside <summary> is dropped by some screen readers, so the
+  // details get their own h2 and the parts sit one level below it.
+  it('heads the details at level 2, with the parts below', () => {
+    show();
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Air quality details' }),
+    ).toBeDefined();
+    for (const name of [
+      'Model forecast',
+      'How the 24-hour check works',
+      'Sources and limitations',
+    ]) {
+      expect(
+        screen.getByRole('heading', { level: 3, name, hidden: true }),
+      ).toBeDefined();
+    }
+    expect(
+      screen.getByRole('heading', {
+        level: 4,
+        name: 'Limitations',
+        hidden: true,
+      }),
+    ).toBeDefined();
+  });
+
   it('the details hold every number with its unit', () => {
     const { container } = show();
     const details = container.querySelector('details')!;

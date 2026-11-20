@@ -41,10 +41,13 @@ export function placeFromSearch(search: string): Place | null {
   return { label, latitude, longitude };
 }
 
+// A device location's label.
+export const NEAR_YOU = 'Near you (approximate)';
+
 // About 1 km: enough for a ~45 km model grid, never a precise location.
 export function placeFromPosition(latitude: number, longitude: number): Place {
   return {
-    label: 'Near you (approximate)',
+    label: NEAR_YOU,
     latitude: Math.round(latitude * 100) / 100,
     longitude: Math.round(longitude * 100) / 100,
   };

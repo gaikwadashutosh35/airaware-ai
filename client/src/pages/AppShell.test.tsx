@@ -448,7 +448,7 @@ describe('AppShell', () => {
       screen.getByRole('heading', { name: 'Your recommendation for today' }),
       screen.getByRole('heading', { name: 'What would you like help with?' }),
       screen.getByRole('heading', { name: 'Ask AirAware anything' }),
-      screen.getByText('Air quality details'),
+      screen.getByRole('heading', { name: 'Air quality details' }),
       screen.getByText('Your city, the next two days'),
     ];
     for (let i = 1; i < order.length; i++) {
@@ -1570,7 +1570,7 @@ describe('AppShell', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: 'Today in Near you (approximate)',
+        name: 'Today near you (approximate)',
       }),
     ).toBeDefined();
   });

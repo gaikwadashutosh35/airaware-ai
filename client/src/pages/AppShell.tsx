@@ -12,6 +12,7 @@ import { ErrorState, Loading } from '../components/States.tsx';
 import { useRequest } from '../features/air-quality/useRequest.ts';
 import { DailyPlanSection } from '../features/daily-plan/DailyPlanSection.tsx';
 import {
+  NEAR_YOU,
   placeFromSearch,
   placeToSearch,
   type Place,
@@ -294,7 +295,11 @@ function AppShell() {
               tabIndex={-1}
               className="text-3xl font-semibold tracking-tight"
             >
-              {place ? `Today in ${place.label}` : 'Today'}
+              {place
+                ? place.label === NEAR_YOU
+                  ? 'Today near you (approximate)'
+                  : `Today in ${place.label}`
+                : 'Today'}
             </h1>
           </div>
           {/* No place yet: saved answers are checked, then Welcome opens. */}

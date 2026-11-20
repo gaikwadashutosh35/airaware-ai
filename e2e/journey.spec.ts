@@ -125,7 +125,7 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
     });
 
     await test.step('3. data kind, source and time labels, in the details', async () => {
-      await page.getByText('Air quality details').click();
+      await page.locator('summary', { hasText: 'Air quality details' }).click();
       await expect(
         page.getByRole('heading', { name: 'Model forecast' }),
       ).toBeVisible({ timeout: 30_000 });
