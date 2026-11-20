@@ -91,6 +91,14 @@
     user-select: none;
   }
 
+  /* Phones: scrolling to a focused control clears the fixed bottom nav
+     (WCAG 2.4.11 focus not obscured). */
+  @media (width < 48rem) {
+    html {
+      scroll-padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
   /* Press feedback (DESIGN.md §9): a slight shrink while pressed, only when
      motion is welcome. Disabled buttons stay still. `.press` gives a link
      styled as a button the same feel. (Tailwind's preflight already removes

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { readFileSync } from 'node:fs';
 import {
   act,
   cleanup,
@@ -16,7 +18,7 @@ import {
   sourcesFixture,
 } from '../test/fixtures.ts';
 import { rulesPlanFixture } from '../test/planFixtures.ts';
-import Dashboard from './Dashboard.tsx';
+import AppShell from './AppShell.tsx';
 
 type ForecastResponder = (latitude: string | null) => Promise<Response>;
 
@@ -125,7 +127,7 @@ async function choosePlace(optionIndex = 0) {
   });
 }
 
-describe('Dashboard', () => {
+describe('AppShell', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-11-17T17:30:00Z'));
@@ -144,7 +146,7 @@ describe('Dashboard', () => {
 
   it('asks for a place before loading any forecast', async () => {
     const fetchSpy = routeFetch(ok());
-    const { container } = render(<Dashboard />);
+    const { container } = render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
@@ -161,7 +163,7 @@ describe('Dashboard', () => {
 
   it('the no-place card focuses the search', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
@@ -186,7 +188,7 @@ describe('Dashboard', () => {
 
   it('shows the labelled model forecast for the chosen place', async () => {
     routeFetch(ok());
-    const { container } = render(<Dashboard />);
+    const { container } = render(<AppShell />);
 
     await choosePlace();
 
@@ -219,7 +221,7 @@ describe('Dashboard', () => {
     const series = structuredClone(forecastFixture);
     series.hours[0]!.values.PM10 = null;
     routeFetch(ok(series));
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -228,7 +230,7 @@ describe('Dashboard', () => {
 
   it('leads with PM2.5 as the headline figure', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -245,7 +247,7 @@ describe('Dashboard', () => {
     delete series.units.PM2_5;
     for (const hour of series.hours) delete hour.values.PM2_5;
     routeFetch(ok(series));
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -255,7 +257,7 @@ describe('Dashboard', () => {
 
   it('lists every hour in the forecast table', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -281,7 +283,7 @@ describe('Dashboard', () => {
 
   it('says the forecast is old once it passes an hour, without a reload', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
     await choosePlace();
     expect(screen.queryByText(FORECAST_STALE)).toBeNull();
 
@@ -301,7 +303,7 @@ describe('Dashboard', () => {
 
   it('never shows an AQI number', async () => {
     routeFetch(ok());
-    const { container } = render(<Dashboard />);
+    const { container } = render(<AppShell />);
 
     await choosePlace();
 
@@ -320,7 +322,7 @@ describe('Dashboard', () => {
 
   it('the Change button moves focus to the place search', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
     fireEvent.click(screen.getByRole('button', { name: 'Change place' }));
@@ -334,7 +336,7 @@ describe('Dashboard', () => {
 
   it('air comes before the plan in reading order', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -354,7 +356,7 @@ describe('Dashboard', () => {
 
   it('shows the forecast limitations once, in the sources panel', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -384,7 +386,7 @@ describe('Dashboard', () => {
           : Response.json({ data: forecastFixture }),
       ),
     );
-    const { container } = render(<Dashboard />);
+    const { container } = render(<AppShell />);
 
     await choosePlace();
     expect(screen.getByText('Forecast provider unavailable.')).toBeDefined();
@@ -427,7 +429,7 @@ describe('Dashboard', () => {
         ),
       ),
     );
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -439,7 +441,7 @@ describe('Dashboard', () => {
 
   it('blames the connection, not the provider, when offline', async () => {
     routeFetch(() => Promise.reject(new TypeError('Failed to fetch')));
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -455,7 +457,7 @@ describe('Dashboard', () => {
       '/app?place=Delhi&lat=19.08&lon=72.88',
     );
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
@@ -472,7 +474,7 @@ describe('Dashboard', () => {
         },
       ),
     );
-    render(<Dashboard />);
+    render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
@@ -484,7 +486,7 @@ describe('Dashboard', () => {
 
   it('links to the privacy page from the footer', () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     const footer = screen.getByRole('contentinfo');
     expect(
@@ -492,6 +494,49 @@ describe('Dashboard', () => {
         .getByRole('link', { name: 'Privacy' })
         .getAttribute('href'),
     ).toBe('/privacy');
+  });
+
+  it('skip link comes first and targets main', () => {
+    routeFetch(ok());
+    render(<AppShell />);
+
+    const skip = screen.getAllByRole('link')[0]!;
+    expect(skip.textContent).toBe('Skip to content');
+    const target = document.querySelector(skip.getAttribute('href')!);
+    expect(target?.tagName).toBe('MAIN');
+  });
+
+  it('keeps the forecast when moving between pages', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    const fetchSpy = routeFetch(ok());
+    render(<AppShell />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    fireEvent.click(screen.getByRole('link', { name: 'My Profile' }));
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'My Profile' }),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole('link', { name: 'Today' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(
+      screen.getByRole('heading', { name: 'Model forecast' }),
+    ).toBeDefined();
+    expect(forecastCalls(fetchSpy)).toHaveLength(1);
+  });
+
+  it('the head allows safe areas and a navy theme colour', () => {
+    const html = readFileSync('index.html', 'utf8').replace(/\s+/g, ' ');
+    expect(html).toContain('viewport-fit=cover');
+    expect(html).toContain('<meta name="theme-color" content="#080f1c" />');
   });
 
   it('ignores a late device location after the user picked a place', async () => {
@@ -507,7 +552,7 @@ describe('Dashboard', () => {
       configurable: true,
     });
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
     await choosePlace();
@@ -535,7 +580,7 @@ describe('Dashboard', () => {
           })
         : Promise.resolve(Response.json({ data: other })),
     );
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace(0);
     await choosePlace(1);
@@ -555,7 +600,7 @@ describe('Dashboard', () => {
 
   it('builds the plan from the answers on screen without saving them', async () => {
     const fetchSpy = routeFetch(ok(), planRoutes());
-    render(<Dashboard />);
+    render(<AppShell />);
     await choosePlace();
 
     fireEvent.change(screen.getByLabelText('Do you have an air purifier?'), {
@@ -577,7 +622,7 @@ describe('Dashboard', () => {
 
   it('clears the shown plan when a new place is chosen', async () => {
     routeFetch(ok(), planRoutes());
-    render(<Dashboard />);
+    render(<AppShell />);
     await choosePlace(0);
     await buildPlan();
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
@@ -599,7 +644,7 @@ describe('Dashboard', () => {
           }),
       ),
     );
-    render(<Dashboard />);
+    render(<AppShell />);
     await choosePlace(0);
     fireEvent.click(
       screen.getByRole('button', { name: 'Build my daily plan' }),
@@ -625,7 +670,7 @@ describe('Dashboard', () => {
     session.available = true;
     session.currentToken.mockResolvedValue('tok');
     routeFetch(ok(), planRoutes());
-    render(<Dashboard />);
+    render(<AppShell />);
     await choosePlace();
     await buildPlan();
     expect(screen.getByText(RULES_MADE_BY)).toBeDefined();
@@ -678,7 +723,7 @@ describe('Dashboard', () => {
   // Review Focus 1.
   it('hides the list and closes the snapshot after "Delete everything"', async () => {
     routeFetch(ok(), withSavedPlan());
-    render(<Dashboard />);
+    render(<AppShell />);
     await openSavedPlan();
     expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
 
@@ -695,7 +740,7 @@ describe('Dashboard', () => {
 
   it('closes a snapshot when a new place is chosen', async () => {
     routeFetch(ok(), withSavedPlan());
-    render(<Dashboard />);
+    render(<AppShell />);
     await openSavedPlan();
 
     await choosePlace();
@@ -711,7 +756,7 @@ describe('Dashboard', () => {
       '/app?place=Pune%2C+Maharashtra&lat=18.52&lon=73.86',
     );
     const fetchSpy = routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
@@ -727,7 +772,7 @@ describe('Dashboard', () => {
 
   it('puts a searched place in the address', async () => {
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     await choosePlace();
 
@@ -753,7 +798,7 @@ describe('Dashboard', () => {
       configurable: true,
     });
     routeFetch(ok());
-    render(<Dashboard />);
+    render(<AppShell />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
     await act(async () => {

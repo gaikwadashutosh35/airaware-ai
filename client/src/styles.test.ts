@@ -66,6 +66,13 @@ describe('design system base', () => {
     expect(block).not.toContain('scale(');
   });
 
+  it('focus never hides behind the phone nav bar', () => {
+    // WCAG 2.4.11: scrolling to a focused control clears the fixed bottom bar.
+    expect(css).toMatch(
+      /@media \(width < 48rem\)\s*{\s*html\s*{\s*scroll-padding-bottom: calc\(4rem \+ env\(safe-area-inset-bottom, 0px\)\);/,
+    );
+  });
+
   it('phones have no tap delay', () => {
     // The tap highlight itself is Tailwind preflight's, not ours.
     expect(css).not.toContain('-webkit-tap-highlight-color');
