@@ -76,7 +76,8 @@ test('the details shot reads on a 320 px phone', async ({ page }) => {
       // A 2× capture: its own CSS size is half its pixels.
       own: img.naturalWidth / 2,
       file: img.naturalWidth / img.naturalHeight,
-      set: Number(img.getAttribute('width')) / Number(img.getAttribute('height')),
+      set:
+        Number(img.getAttribute('width')) / Number(img.getAttribute('height')),
     };
   });
 
