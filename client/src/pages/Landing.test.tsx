@@ -33,7 +33,7 @@ const REAL_FIGURES = [
   // From the real rule cards and their source's date.
   '24-hour',
   '18 November 2009',
-  // The hero screenshot's capture date.
+  // The screenshots' capture date.
   '20 Nov 2026',
 ];
 
@@ -289,6 +289,12 @@ describe('Landing', () => {
     let text = copy.textContent ?? '';
     for (const figure of REAL_FIGURES) text = text.replaceAll(figure, '');
     expect(text).not.toMatch(/\d/);
+  });
+
+  it('never says safe, healthy or clean air', () => {
+    const { container } = render(<Landing />);
+
+    expect(container.textContent).not.toMatch(/\bsafe|healthy|clean air/i);
   });
 
   // The motion itself is CSS (index.css `.reveal`), checked in a real
