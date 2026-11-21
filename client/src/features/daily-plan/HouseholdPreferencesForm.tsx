@@ -77,6 +77,20 @@ export function HouseholdPreferencesForm({
     setAnswersState(next);
     onChangeRef.current?.(toContext(next));
   }
+  // Answers given elsewhere (Ask AirAware's questions back) join the form,
+  // so Save keeps them and a late load never undoes them. The shell already
+  // has them: no onChange.
+  useEffect(() => {
+    const incoming = Object.entries(toAnswers(initial ?? {})).filter(
+      ([, value]) => value,
+    );
+    if (incoming.every(([id, value]) => answersRef.current[id] === value)) {
+      return;
+    }
+    const next = { ...answersRef.current, ...Object.fromEntries(incoming) };
+    answersRef.current = next;
+    setAnswersState(next);
+  }, [initial]);
   const [status, setStatus] = useState(savingAvailable ? '' : NOT_SET_UP);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);

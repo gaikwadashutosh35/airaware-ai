@@ -57,6 +57,106 @@ afterEach(() => {
 });
 
 describe('HouseholdPreferencesForm', () => {
+  // Guided chat (Task 2): an answer given in Ask AirAware reaches My Profile.
+  const exercise = () =>
+    screen.getByLabelText<HTMLSelectElement>('Do you exercise outdoors?');
+  const commute = () =>
+    screen.getByLabelText<HTMLSelectElement>(
+      'How do you usually travel to work or college?',
+    );
+
+  it('an answer given elsewhere shows in the form', async () => {
+    routeFetch(() => ok(null));
+    const { rerender } = render(<HouseholdPreferencesForm initial={{}} />);
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+
+    rerender(
+      <HouseholdPreferencesForm
+        initial={{ routine: { outdoorExercise: true } }}
+      />,
+    );
+    expect(exercise().value).toBe('yes');
+  });
+
+  it('Save keeps an answer given elsewhere', async () => {
+    const fetchSpy = routeFetch((method) =>
+      method === 'PUT'
+        ? ok({ context: {}, updatedAt: '2026-11-18T10:00:00.000Z' })
+        : ok(null),
+    );
+    const { rerender } = render(<HouseholdPreferencesForm initial={{}} />);
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+    rerender(
+      <HouseholdPreferencesForm
+        initial={{ routine: { outdoorExercise: true } }}
+      />,
+    );
+
+    fireEvent.click(saveButton());
+    expect(await screen.findByText(SAVED)).toBeDefined();
+    const put = fetchSpy.mock.calls.find(([, init]) => init?.method === 'PUT');
+    expect(JSON.parse(put?.[1]?.body as string)).toEqual({
+      context: { routine: { outdoorExercise: true } },
+    });
+  });
+
+  // Review Focus 2.
+  it('a late saved-answers load does not undo an answer given elsewhere', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    let reply!: (response: Response) => void;
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(
+        () => new Promise<Response>((resolve) => (reply = resolve)),
+      );
+    const onChange = vi.fn();
+    const onLoaded = vi.fn();
+    const form = (initial: object) => (
+      <HouseholdPreferencesForm
+        initial={initial}
+        onChange={onChange}
+        onLoaded={onLoaded}
+      />
+    );
+    const { rerender } = render(form({}));
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+
+    rerender(form({ routine: { outdoorExercise: true } }));
+    reply(
+      ok({
+        context: { routine: { outdoorExercise: false, commuteMode: 'car' } },
+        updatedAt: '2026-11-18T10:00:00.000Z',
+      }),
+    );
+    await waitFor(() => expect(onLoaded).toHaveBeenCalledTimes(1));
+
+    expect(exercise().value).toBe('yes');
+    expect(commute().value).toBe('car');
+    expect(onChange.mock.lastCall?.[0]).toEqual({
+      routine: { outdoorExercise: true, commuteMode: 'car' },
+    });
+  });
+
+  it('a change from the form itself is not echoed back', async () => {
+    routeFetch(() => ok(null));
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <HouseholdPreferencesForm initial={{}} onChange={onChange} />,
+    );
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+
+    fireEvent.change(exercise(), { target: { value: 'yes' } });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    rerender(
+      <HouseholdPreferencesForm
+        initial={onChange.mock.lastCall?.[0]}
+        onChange={onChange}
+      />,
+    );
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(exercise().value).toBe('yes');
+  });
+
   it('the form starts from the answers it is given', async () => {
     routeFetch(() => ok(null));
     render(
