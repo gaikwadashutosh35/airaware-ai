@@ -4,6 +4,7 @@
 // keyboard. It measures that a ring is drawn, not how clear it looks:
 // that is still a person's call (ACCESSIBILITY.md).
 import { expect, test, type Page } from '@playwright/test';
+import { rulesAskFixture } from '../client/src/test/askFixtures.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
 import { at, stub } from './layout.ts';
 
@@ -95,6 +96,48 @@ for (const path of PATHS) {
     expect((await focused(page))?.label).toBe(stops[1]?.label);
   });
 }
+
+// Guided chat: a question back is reached in visual order, with a ring on
+// each stop, and Skip hands focus to the line that replaces it.
+test('Ask by keyboard: a question back, then Skip', async ({ page }) => {
+  await load(page, '/app/ask');
+  await page.route('**/api/v1/assistant/answer', (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          ...rulesAskFixture,
+          followUps: [{ field: 'routine.outdoorExercise', changes: ['yes'] }],
+        },
+      },
+    }),
+  );
+  await page
+    .getByRole('button', { name: 'Outdoor activities', exact: true })
+    .focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    page.getByRole('group', { name: 'Do you exercise outdoors?' }),
+  ).toBeVisible();
+
+  const labels: string[] = [];
+  for (let i = 0; i < 40 && !labels.includes('button:Skip'); i++) {
+    await page.keyboard.press('Tab');
+    const stop = await focused(page);
+    if (!stop) continue;
+    expect(stop.ring, stop.label).toBe(true);
+    expect(stop.onScreen, stop.label).toBe(true);
+    labels.push(stop.label);
+  }
+  const index = (label: string) => labels.indexOf(label);
+  expect(index('button:Yes')).toBeGreaterThan(-1);
+  expect(index('button:Yes')).toBeLessThan(index('button:No'));
+  expect(index('button:No')).toBeLessThan(index('button:Skip'));
+
+  await page.keyboard.press('Enter');
+  await expect(
+    page.getByText('Skipped. You can answer it in My Profile any time.'),
+  ).toBeFocused();
+});
 
 test('the place dialog by keyboard: search, choose, Escape', async ({
   page,

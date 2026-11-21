@@ -1,6 +1,6 @@
 // Ask AirAware in a real browser: the forecast, plan and Ask replies are
 // test replies; the page is the real build.
-import { expect, test, type Request } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 import { aiAskFixture } from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { expectNoAxeViolations } from './axe.ts';
@@ -46,13 +46,87 @@ test('an Ask answer, with the API stubbed', async ({ page }) => {
   // A topic chip answers at once.
   await page.getByRole('button', { name: 'Indoor air', exact: true }).click();
   await expect(
-    page.getByRole('heading', { level: 2, name: 'Indoor air', exact: true }),
+    page.getByRole('heading', {
+      level: 2,
+      name: 'You asked: Indoor air',
+      exact: true,
+    }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Indoor air', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
   expect(asked).toHaveLength(2);
   expect(asked[1]!.postDataJSON()).toMatchObject({ topic: 'indoor' });
   expect(page.url()).not.toContain('purifier');
   await expectNoAxeViolations(page);
+});
+
+// Guided chat: a question back, answered or not.
+async function offeringExercise(page: Page): Promise<Request[]> {
+  const now = new Date();
+  await routeApi(page, {
+    forecast: { data: forecastAt(now) },
+    plan: { data: planAt(rulesPlanFixture, now) },
+    answer: {
+      data: {
+        ...planAt(aiAskFixture, now),
+        topic: 'outdoors',
+        followUps: [{ field: 'routine.outdoorExercise', changes: ['yes'] }],
+      },
+    },
+  });
+  const asked: Request[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/assistant/answer') {
+      asked.push(request);
+    }
+  });
+  await page.goto(PUNE.replace('/app?', '/app/ask?'));
+  await page
+    .getByRole('button', { name: 'Outdoor activities', exact: true })
+    .click();
+  await expect(
+    page.getByRole('group', { name: 'Do you exercise outdoors?' }),
+  ).toBeVisible();
+  return asked;
+}
+
+test('a question back, answered, asks again with the answer', async ({
+  page,
+}) => {
+  const asked = await offeringExercise(page);
+  await expectNoAxeViolations(page);
+
+  await page
+    .getByRole('group', { name: 'Do you exercise outdoors?' })
+    .getByRole('button', { name: 'Yes' })
+    .click();
+
+  await expect(page.getByText('You answered: Yes.')).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'You answered: Yes' }),
+  ).toBeVisible();
+  await expect.poll(() => asked.length).toBe(2);
+  expect(asked[1]!.postDataJSON()).toMatchObject({
+    topic: 'outdoors',
+    householdContext: { routine: { outdoorExercise: true } },
+  });
+  await expect(
+    page.getByRole('group', { name: 'Do you exercise outdoors?' }),
+  ).toHaveCount(0);
+  await expectNoAxeViolations(page);
+});
+
+test('an answer that changes nothing sends no request', async ({ page }) => {
+  const asked = await offeringExercise(page);
+
+  await page
+    .getByRole('group', { name: 'Do you exercise outdoors?' })
+    .getByRole('button', { name: 'No' })
+    .click();
+
+  await expect(
+    page
+      .locator('article.ask-answer')
+      .last()
+      .getByText("Noted. That doesn't change today's advice."),
+  ).toBeVisible();
+  expect(asked).toHaveLength(1);
 });

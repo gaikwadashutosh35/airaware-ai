@@ -96,3 +96,52 @@ for (const [name, answer] of Object.entries({
     expectCopyRules(await pageText(page));
   });
 }
+
+// Guided chat: the greeting, a question back, Skip, an answer that changes
+// nothing, and the lines that replace a question back.
+test('no banned words: the guided chat', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  const answer = {
+    ...rulesAskFixture,
+    followUps: [
+      { field: 'routine.outdoorExercise', changes: ['yes'] },
+      { field: 'routine.commuteMode', changes: ['walk'] },
+    ],
+  };
+  await page.route('**/api/v1/assistant/answer', (route) =>
+    route.fulfill({ json: { data: answer } }),
+  );
+  await page.goto(PUNE.replace('/app?', '/app/ask?'));
+  expectCopyRules(await pageText(page));
+
+  const chip = page.getByRole('button', {
+    name: 'Outdoor activities',
+    exact: true,
+  });
+  await chip.click();
+  const exercise = page.getByRole('group', {
+    name: 'Do you exercise outdoors?',
+  });
+  await expect(exercise).toBeVisible();
+  expectCopyRules(await pageText(page));
+
+  await exercise.getByRole('button', { name: 'Skip' }).click();
+  await expect(
+    page.getByText('Skipped. You can answer it in My Profile any time.'),
+  ).toBeVisible();
+  await chip.click();
+  const commute = page.getByRole('group', {
+    name: 'How do you usually travel to work or college?',
+  });
+  await expect(commute).toBeVisible();
+  await commute.getByRole('button', { name: 'Car' }).click();
+  await expect(page.getByText('You answered: Car.')).toBeVisible();
+  await expect(
+    page
+      .locator('article.ask-answer')
+      .last()
+      .getByText("Noted. That doesn't change today's advice."),
+  ).toBeVisible();
+  expectCopyRules(await pageText(page));
+});

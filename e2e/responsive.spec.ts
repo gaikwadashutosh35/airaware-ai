@@ -10,7 +10,10 @@ import {
   smallTargets,
   stub,
 } from './layout.ts';
-import { aiAskFixture } from '../client/src/test/askFixtures.ts';
+import {
+  aiAskFixture,
+  rulesAskFixture,
+} from '../client/src/test/askFixtures.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
 import { PUNE } from './routes.ts';
 
@@ -359,18 +362,21 @@ test.describe('forced colours: chosen chips show', () => {
     expect(await plain.evaluate(outlined)).toBe(false);
   });
 
-  test('a pressed Ask topic has an outline', async ({ page }) => {
+  // Guided chat: the pressed topic is gone; your message is a dark bubble,
+  // and its edge must survive forced colours.
+  test('your Ask message keeps its edge', async ({ page }) => {
     await page.goto(PUNE.replace('/app?', '/app/ask?'));
     await page
       .getByRole('button', { name: 'Outdoor activities', exact: true })
       .click();
-    const pressed = page.locator('button[aria-pressed="true"]');
-    await expect(pressed).toHaveCount(1);
-    // Off the button, so the focus ring isn't what shows.
-    await page.locator('main h1:visible').first().click();
-    expect(await pressed.evaluate(outlined)).toBe(true);
-    const plain = page.locator('button[aria-pressed="false"]').first();
-    expect(await plain.evaluate(outlined)).toBe(false);
+    const mine = page.locator('article.ask-answer h2').first();
+    await expect(mine).toBeVisible();
+    const edge = await mine.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { width: parseFloat(s.borderTopWidth), color: s.borderTopColor };
+    });
+    expect(edge.width).toBeGreaterThan(0);
+    expect(edge.color).not.toBe('rgba(0, 0, 0, 0)');
   });
 });
 
@@ -445,6 +451,31 @@ test.describe('other states on a 320 px phone', () => {
       .getByRole('button', { name: 'Outdoor activities', exact: true })
       .click();
     await expect(page.locator('article.ask-answer')).toBeVisible();
+    await fits(page);
+  });
+
+  // Guided chat: six commute answers wrap on a 320 px phone.
+  test('an Ask answer with a question back', async ({ page }) => {
+    await stub(page, 'not_elevated');
+    await page.route('**/api/v1/assistant/answer', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            ...rulesAskFixture,
+            followUps: [{ field: 'routine.commuteMode', changes: ['walk'] }],
+          },
+        },
+      }),
+    );
+    await page.goto(PUNE.replace('/app?', '/app/ask?'));
+    await page
+      .getByRole('button', { name: 'Outdoor activities', exact: true })
+      .click();
+    await expect(
+      page.getByRole('group', {
+        name: 'How do you usually travel to work or college?',
+      }),
+    ).toBeVisible();
     await fits(page);
   });
 });

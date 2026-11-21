@@ -66,6 +66,22 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - with text at 200 % the header row scrolls sideways instead of pushing the nav and the place chip off the screen; at normal text the header is unchanged;
   - in Windows High Contrast the backdrop steps aside, focus shows, the header reads, and the highlighted place suggestion, chosen Welcome chips and pressed Ask topics get an outline;
   - the keyboard walk and accessibility tree were checked on every page, and the owner ran a 12-item real-phone checklist (`docs/REAL_PHONE_CHECKLIST.md`).
+- Guided chat (Ask AirAware, 21 Nov):
+  - Ask is a conversation, oldest first:
+    - it opens with "Good morning. I'm AirAware. …", the topics and the starters;
+    - your messages and AirAware's replies are bubbles;
+    - the question box comes last;
+    - the pressed-topic tick is gone.
+  - Questions back, worked out on the server:
+    - after a topic answer, AirAware may ask one My Profile question, but only when an answer would change today's cards (today's air and the three-card cap included);
+    - the answer goes to the answers on screen, so Today's plan, My Home and My Profile use it too, and My Profile's Save keeps it;
+    - an answer that changes nothing is "Noted. That doesn't change today's advice." without a request;
+    - Skip is remembered for the visit.
+  - The newest reply ends with "You could also ask:" and 2–3 starters.
+  - What stays the same:
+    - the AI still never reads what people type;
+    - the answer gains `followUps` (API.md);
+    - My Profile's form now follows answers given elsewhere, and a late load never undoes them.
 - Review and release (Phase 10 of the assistant redesign):
   - a browser review of every page and state at 320, 768 and 1280, scored against `DESIGN.md`'s acceptance checklist in `docs/QA_REPORT.md`;
   - `e2e/copy.spec.ts` keeps the banned words ("safe", "healthy", "clean air", "good air", "bad air", a stray "AQI") off every page and state;

@@ -192,6 +192,8 @@ A `<details>` element. When open, it holds the existing parts, unchanged in cont
 
 ### 7.4 Ask AirAware (`/app/ask`)
 
+*Amended (21 Nov): Ask is now a guided chat, see `2026-11-21-ask-guided-chat-design.md`. It adds a greeting, the conversation oldest first, questions back and suggestions, and drops the pressed-topic tick. The typed question's path and the AI input are unchanged.*
+
 **Layout:**
 - The heading "Ask AirAware", then a context line: "Using: the {place} model forecast, updated {time} · {n} of 10 answers". It links to My Profile.
 - Without a place, the inline search comes first.
