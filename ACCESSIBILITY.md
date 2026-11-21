@@ -123,4 +123,9 @@ A screen-reader pass with a real reader has not been done yet.
   - "Model forecast" is on Today;
   - with a stale forecast, both "Not current: …" and the footer's "… Not current." are in the tree.
 
-No real screen reader has been used yet.
+**Real phone** (21 Nov 2026, the owner's own phone, over home Wi-Fi to the Vite dev server):
+- The owner ran the 12 items in `docs/REAL_PHONE_CHECKLIST.md` and reported "All fine": tap feedback, no stuck hover, notch and home-bar spacing, the city at the end of Today, no zoom and no keyboard covering the inputs, scrolling, long press, the status bar colour, the sideways look, rain (on Bhubaneswar, where rain was forecast that hour), and the place dialog.
+- The report didn't say whether the optional item 12 (TalkBack or VoiceOver) was tried, so it isn't counted here.
+- "Use my location" needs HTTPS and is still to be checked on the live site.
+
+No real screen reader has been confirmed yet.
