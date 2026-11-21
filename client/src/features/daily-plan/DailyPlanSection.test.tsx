@@ -138,7 +138,7 @@ describe('DailyPlanSection', () => {
 
     expect(
       screen.getByText(
-        /^Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated /,
+        /^Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated /,
       ),
     ).toBeDefined();
   });
@@ -148,7 +148,9 @@ describe('DailyPlanSection', () => {
     renderSection();
     await build();
 
-    expect(screen.queryByText(/^Based on:/)).toBeNull();
+    expect(
+      screen.queryByText(/ · Model forecast · Open-Meteo · updated /),
+    ).toBeNull();
   });
 
   it('waits for a place', async () => {

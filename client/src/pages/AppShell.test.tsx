@@ -991,7 +991,7 @@ describe('AppShell', () => {
     // air it used.
     expect(
       screen.getByText(
-        /^Based on: .* · Model forecast · Open-Meteo · updated /,
+        /^Today: Forecast .* · Model forecast · Open-Meteo · updated /,
       ),
     ).toBeDefined();
   });
@@ -1015,7 +1015,11 @@ describe('AppShell', () => {
         name: 'Consider an indoor alternative for exercise',
       }),
     ).toBeDefined();
-    expect(screen.queryByText(/^Based on:/)).toBeNull();
+    expect(
+      screen.queryByText(
+        /^Today: Forecast .* · Model forecast · Open-Meteo · updated /,
+      ),
+    ).toBeNull();
   });
 
   it('credits Open-Meteo even when the source list fails', async () => {

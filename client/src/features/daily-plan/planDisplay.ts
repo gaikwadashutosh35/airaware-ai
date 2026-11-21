@@ -143,10 +143,12 @@ export const LEVEL_TAG = {
 export const NO_AIR = 'Air information is unavailable for this plan.';
 
 // The air a plan used, for where no verdict is on the page (Phase 10 final
-// review): never an air-based card without its kind, source and time.
+// review): never an air-based card without its kind, source and time. An
+// incomplete forecast gives no verdict, so it says so, as Today does.
 export function planAirLine(
   air: AirAssessment,
   forecast: NonNullable<DailyPlan['forecast']>,
 ): string {
-  return `Based on: ${verdictFrom(air).title} · Model forecast · ${forecast.provider} · updated ${clockTime(forecast.retrievedAt)}`;
+  if (air.level === 'unknown') return NO_AIR;
+  return `Today: ${verdictFrom(air).title} · Model forecast · ${forecast.provider} · updated ${clockTime(forecast.retrievedAt)}`;
 }

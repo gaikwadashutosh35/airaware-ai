@@ -120,8 +120,15 @@ describe('planAirLine', () => {
   it('names the verdict, data kind, provider and update time', () => {
     const forecast = rulesPlanFixture.forecast!;
     expect(planAirLine(rulesPlanFixture.air, forecast)).toBe(
-      `Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated ${clockTime(forecast.retrievedAt)}`,
+      `Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated ${clockTime(forecast.retrievedAt)}`,
     );
+  });
+
+  // An incomplete forecast gives no verdict: say so, as Today does.
+  it('says air information is unavailable when the level is unknown', () => {
+    expect(
+      planAirLine(unavailablePlanFixture.air, rulesPlanFixture.forecast!),
+    ).toBe('Air information is unavailable for this plan.');
   });
 });
 
