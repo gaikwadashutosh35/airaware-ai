@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import type {
+  AirAssessment,
   AskAnswer,
   AskTopic,
+  FollowUp,
   GuideCard,
   HouseholdContext,
   RecommendationCandidate,
@@ -134,6 +136,89 @@ export function chooseCards(
   return [...personal, ...general].slice(0, 3);
 }
 
+// Guided chat (spec 2026-11-21 §5.2): the household questions AirAware may
+// ask back per topic, in order. Never "may be more sensitive" (Profile only).
+export const FOLLOW_UPS: Record<AskTopic, readonly string[]> = {
+  outdoors: ['routine.outdoorExercise', 'routine.commuteMode'],
+  windows: ['home.nearBusyRoad', 'home.kitchenExhaust'],
+  indoor: [
+    'home.cookingFuel',
+    'home.kitchenExhaust',
+    'home.airPurifier',
+    'home.nearBusyRoad',
+  ],
+  family: [
+    'householdNeeds.includesChildren',
+    'householdNeeds.includesOlderAdults',
+    'routine.schoolCommute',
+  ],
+  commuting: ['routine.commuteMode', 'routine.schoolCommute'],
+  habits: ['routine.commuteMode', 'home.cookingFuel'],
+};
+
+// Each question's answers as My Profile writes them: 'boolean' is Yes/No.
+export const FIELD_VALUES: Record<string, readonly string[] | 'boolean'> = {
+  'routine.commuteMode': [
+    'walk',
+    'cycle',
+    'two_wheeler',
+    'car',
+    'public_transport',
+    'work_from_home',
+  ],
+  'routine.outdoorExercise': 'boolean',
+  'routine.schoolCommute': 'boolean',
+  'home.nearBusyRoad': ['yes', 'no', 'unknown'],
+  'home.cookingFuel': [
+    'lpg',
+    'electric',
+    'biomass',
+    'other',
+    'prefer_not_to_say',
+  ],
+  'home.kitchenExhaust': 'boolean',
+  'home.airPurifier': 'boolean',
+  'householdNeeds.includesChildren': 'boolean',
+  'householdNeeds.includesOlderAdults': 'boolean',
+};
+
+// The answers with one more given; 'yes'/'no' are true/false for a Yes/No
+// question.
+export function withAnswer(
+  context: HouseholdContext,
+  field: string,
+  value: string,
+): HouseholdContext {
+  const [group, key] = field.split('.') as [string, string];
+  const groups = context as Record<string, Record<string, unknown> | undefined>;
+  const answer = FIELD_VALUES[field] === 'boolean' ? value === 'yes' : value;
+  return { ...groups, [group]: { ...groups[group], [key]: answer } };
+}
+
+// The topic's unanswered questions whose answers would change today's cards
+// (today's air and the three-card cap included). Rules only, no AI call.
+export function followUpsFor(
+  topic: AskTopic,
+  context: HouseholdContext,
+  air: AirAssessment,
+): FollowUp[] {
+  const ids = (c: HouseholdContext) =>
+    chooseCards(topic, buildCandidates(c, air), c)
+      .map((card) => card.id)
+      .join();
+  const now = ids(context);
+  const groups = context as Record<string, Record<string, unknown> | undefined>;
+  return FOLLOW_UPS[topic].flatMap((field) => {
+    const [group, key] = field.split('.') as [string, string];
+    if (groups[group]?.[key] !== undefined) return [];
+    const values = FIELD_VALUES[field];
+    const changes = (values === 'boolean' ? ['yes', 'no'] : values!).filter(
+      (value) => ids(withAnswer(context, field, value)) !== now,
+    );
+    return changes.length ? [{ field, changes }] : [];
+  });
+}
+
 // An Ask summary must never read as a yes or no on safety (spec §7.4). The
 // plan's own checks already refuse "safe", "healthy" and numbers.
 const VERDICT =
@@ -191,6 +276,7 @@ export function createAsker(deps: {
       notices,
       sources: plan.sources,
       safetyNote: plan.safetyNote,
+      followUps: answered ? followUpsFor(topic, householdContext, air) : [],
     };
   };
 }

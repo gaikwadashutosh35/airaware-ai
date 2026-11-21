@@ -70,6 +70,7 @@ describe('POST /api/v1/assistant/answer', () => {
     expect(Object.keys(res.body.data).sort()).toEqual([
       'air',
       'cards',
+      'followUps',
       'forecast',
       'generatedBy',
       'notices',

@@ -280,6 +280,11 @@ Request (illustrative), with exactly one of `question` or `topic`:
 - `medical` and `out_of_scope`: no AI call and no cards; the air check, notices, sources and safety note are still returned. The client shows the fixed medical or out-of-scope reply.
 - Any other topic: up to three cards, the household's own rules for that topic first (most important first), then general guide cards. A guide is never shown beside its personal twin, and the busy-road and kitchen-exhaust guides follow the same hide rules as My Home.
 - The 1–2 sentence `summary` comes from the daily plan's writer (prompt `daily-plan-v2`), so Ask and the daily plan share one daily AI budget and one 10-minute answers cache. A summary that reads as a yes or no on safety, or fails the plan's own checks, is dropped: `generatedBy` is then `"rules"` and `summary` `null`.
+- `followUps` (guided chat, 21 Nov): the topic's unanswered household questions whose answers would change this answer's cards today. Today's air and the three-card cap both count.
+  - Each item is `{ field, changes }`. `field` is a My Profile field id. `changes` lists the answers that would change the cards: `"yes"`/`"no"` for a Yes/No question, else the option value.
+  - Items come in a fixed order per topic, worked out from the rules only, with no AI call.
+  - `[]` for `medical` and `out_of_scope`.
+  - "May be more sensitive" is never offered.
 
 Response (illustrative, shortened):
 ```json
@@ -293,7 +298,8 @@ Response (illustrative, shortened):
     "forecast": { "provider": "Open-Meteo", "dataKind": "model_forecast", "retrievedAt": "2026-11-18T10:05:00.000Z", "…": "…" },
     "notices": [{ "id": "air.elevated", "section": "notice", "…": "…" }],
     "sources": [{ "id": "open-meteo", "name": "Open-Meteo Air Quality API", "url": "https://open-meteo.com/en/docs/air-quality-api" }],
-    "safetyNote": "General information only, not medical advice. Follow local public-health advisories."
+    "safetyNote": "General information only, not medical advice. Follow local public-health advisories.",
+    "followUps": [{ "field": "routine.outdoorExercise", "changes": ["yes"] }, { "field": "routine.commuteMode", "changes": ["walk", "cycle", "two_wheeler"] }]
   }
 }
 ```

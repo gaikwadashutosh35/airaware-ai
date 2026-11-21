@@ -9,6 +9,7 @@ import type { AskAnswer } from '../../../shared/contracts.ts';
 
 // "Outdoor activities", no AI writer: the verdict explains.
 export const rulesAskFixture: AskAnswer = {
+  followUps: [],
   topic: 'outdoors',
   cards: [
     {
@@ -129,6 +130,7 @@ export const rulesAskFixture: AskAnswer = {
 
 // "Indoor air" with an AI summary (the summary string is test text).
 export const aiAskFixture: AskAnswer = {
+  followUps: [],
   topic: 'indoor',
   cards: [
     {
@@ -242,6 +244,7 @@ export const aiAskFixture: AskAnswer = {
 
 // A medical question: no AI call, no cards.
 export const medicalAskFixture: AskAnswer = {
+  followUps: [],
   topic: 'medical',
   cards: [],
   summary: null,
@@ -311,6 +314,7 @@ export const medicalAskFixture: AskAnswer = {
 
 // An out-of-scope question: no AI call, no cards.
 export const outOfScopeAskFixture: AskAnswer = {
+  followUps: [],
   topic: 'out_of_scope',
   cards: [],
   summary: null,
@@ -380,6 +384,7 @@ export const outOfScopeAskFixture: AskAnswer = {
 
 // "Outdoor activities" when the forecast failed: air unknown, no time.
 export const unknownAirAskFixture: AskAnswer = {
+  followUps: [],
   topic: 'outdoors',
   cards: [
     {

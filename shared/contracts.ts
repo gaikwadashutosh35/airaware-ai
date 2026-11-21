@@ -223,6 +223,14 @@ export type AskRequest = {
   householdContext?: HouseholdContext;
 } & ({ question: string } | { topic: AskTopic });
 
+// A household question AirAware may ask back (guided chat): a My Profile
+// field id, and the answers ('yes'/'no' or option values) that would change
+// today's cards.
+export interface FollowUp {
+  field: string;
+  changes: string[];
+}
+
 export type AskAnswer = Pick<
   DailyPlan,
   | 'summary'
@@ -236,6 +244,8 @@ export type AskAnswer = Pick<
   topic: AskTopic | 'medical' | 'out_of_scope';
   // The household's rule cards, then guide cards (which carry personalRuleId).
   cards: Array<RecommendationCandidate | GuideCard>;
+  // Empty for medical and out-of-scope answers.
+  followUps: FollowUp[];
 };
 
 // Saved data (Phase 6). Stored per anonymous Supabase user; a saved plan is

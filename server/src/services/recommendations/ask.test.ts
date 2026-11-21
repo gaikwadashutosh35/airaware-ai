@@ -9,12 +9,25 @@ import type { ModelForecast } from '../air-data/openMeteo.ts';
 import type { GeneratePlan } from '../ai/personalize.ts';
 import { toWriterInput } from '../ai/planOutput.ts';
 import { UG_PER_M3, assessAir } from './airCheck.ts';
-import { TOPIC_CARDS, chooseCards, createAsker } from './ask.ts';
+import {
+  FIELD_VALUES,
+  FOLLOW_UPS,
+  TOPIC_CARDS,
+  chooseCards,
+  createAsker,
+  followUpsFor,
+  withAnswer,
+} from './ask.ts';
 import { classify } from './askTopics.ts';
 import { createPlanWriter, type PlanWriter } from './dailyPlan.ts';
 import { SAFETY_NOTE } from './plan.ts';
 import { ASK_GUIDES, guideSet } from './guides.ts';
+import { householdContextSchema } from './householdContext.ts';
 import { RULE_IDS, SOURCE_REFERENCES, buildCandidates } from './rules.ts';
+import {
+  FIELDS,
+  fieldId,
+} from '../../../../client/src/features/daily-plan/householdFields.ts';
 
 const TOPICS: AskTopic[] = [
   'outdoors',
@@ -177,6 +190,110 @@ describe('chooseCards', () => {
   });
 });
 
+// --- Follow-up questions (guided chat, Task 1) ---
+
+const unknownAir: AirAssessment = {
+  level: 'unknown',
+  windowStart: null,
+  checks: [
+    { pollutant: 'PM2_5', status: 'unknown', average24h: null, limit: 60 },
+    { pollutant: 'PM10', status: 'unknown', average24h: null, limit: 100 },
+  ],
+};
+const offered = (
+  topic: AskTopic,
+  context: HouseholdContext,
+  a: AirAssessment,
+) => followUpsFor(topic, context, a).map((f) => f.field);
+
+describe('followUpsFor', () => {
+  it("every follow-up can change its topic's cards from no answers", () => {
+    for (const [topic, fields] of Object.entries(FOLLOW_UPS) as Array<
+      [AskTopic, readonly string[]]
+    >) {
+      for (const field of fields) {
+        const somewhere = [air('elevated'), air('not_elevated')].some((a) =>
+          offered(topic, {}, a).includes(field),
+        );
+        expect(somewhere, `${topic} ${field}`).toBe(true);
+      }
+    }
+  });
+
+  it('children and older adults are offered only above the limit', () => {
+    expect(offered('family', {}, air('elevated'))).toEqual(
+      expect.arrayContaining([
+        'householdNeeds.includesChildren',
+        'householdNeeds.includesOlderAdults',
+      ]),
+    );
+    expect(offered('family', {}, air('not_elevated'))).not.toContain(
+      'householdNeeds.includesChildren',
+    );
+  });
+
+  it('a kitchen without an exhaust changes Indoor air', () => {
+    const exhaust = followUpsFor('indoor', {}, air('not_elevated')).find(
+      (f) => f.field === 'home.kitchenExhaust',
+    );
+    expect(exhaust?.changes).toContain('no');
+  });
+
+  it('a rule hidden by the three-card cap is not a change', () => {
+    const context: HouseholdContext = {
+      home: { cookingFuel: 'biomass', kitchenExhaust: true, airPurifier: true },
+    };
+    expect(
+      chooseCards(
+        'indoor',
+        buildCandidates(context, air('elevated')),
+        context,
+      ).filter((c) => !c.id.startsWith('guide.')),
+    ).toHaveLength(3);
+    expect(offered('indoor', context, air('elevated'))).not.toContain(
+      'home.nearBusyRoad',
+    );
+  });
+
+  it('answered questions are left out', () => {
+    expect(
+      offered(
+        'outdoors',
+        { routine: { outdoorExercise: true } },
+        air('elevated'),
+      ),
+    ).not.toContain('routine.outdoorExercise');
+  });
+
+  // Review Focus 5.
+  it('unknown air offers only questions that change cards without air', () => {
+    expect(followUpsFor('family', {}, unknownAir)).toEqual([]);
+    expect(offered('indoor', {}, unknownAir)).toContain('home.kitchenExhaust');
+  });
+
+  it("follow-up values are My Profile's options and valid answers", () => {
+    const fields = new Map(FIELDS.map((f) => [fieldId(f), f]));
+    for (const ids of Object.values(FOLLOW_UPS)) {
+      expect(ids).not.toContain('householdNeeds.mayBeMoreSensitive');
+      for (const id of ids) {
+        const field = fields.get(id);
+        expect(field, id).toBeDefined();
+        const values = FIELD_VALUES[id];
+        if (field!.options) {
+          expect(values, id).toEqual(field!.options.map(([v]) => v));
+        } else {
+          expect(values, id).toBe('boolean');
+        }
+        for (const value of values === 'boolean' ? ['yes', 'no'] : values!) {
+          expect(() =>
+            householdContextSchema.parse(withAnswer({}, id, value)),
+          ).not.toThrow();
+        }
+      }
+    }
+  });
+});
+
 // --- The asker (Task 4) ---
 
 const NOW = new Date('2026-11-18T10:30:00.000Z');
@@ -331,6 +448,25 @@ describe('createAsker', () => {
       expect(answer.forecast?.retrievedAt).toBe(NOW.toISOString());
     }
     expect(generate).not.toHaveBeenCalled();
+  });
+
+  it('medical and out-of-scope answers offer no follow-ups', async () => {
+    const ask = createAsker({ forecast, write: null });
+    for (const topic of ['medical', 'out_of_scope'] as const) {
+      expect((await ask(topic, { place }, NOW)).followUps).toEqual([]);
+    }
+  });
+
+  it('a topic answer carries its follow-ups', async () => {
+    const answer = await createAsker({ forecast, write: null })(
+      'outdoors',
+      { place },
+      NOW,
+    );
+    expect(
+      answer.followUps.find((f) => f.field === 'routine.outdoorExercise')
+        ?.changes,
+    ).toContain('yes');
   });
 
   // Review Focus 4.
