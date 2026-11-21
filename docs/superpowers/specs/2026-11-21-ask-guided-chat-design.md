@@ -1,6 +1,6 @@
 # Ask AirAware as a guided chat — design
 
-**Status:** draft for the owner's approval, 21 Nov 2026.
+**Status:** approved by the owner, 21 Nov 2026.
 **Decided with the owner (21 Nov):**
 - A guided chat. The AI never reads what people type, so decision D1 (`2026-11-20-assistant-redesign-design.md` §4) and the Ask paragraph in `PRIVACY.md` stand unchanged.
 - An answer given in the chat counts everywhere: Today's plan, My Home and My Profile.
