@@ -69,7 +69,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Review and release (Phase 10 of the assistant redesign):
   - a browser review of every page and state at 320, 768 and 1280, scored against `DESIGN.md`'s acceptance checklist in `docs/QA_REPORT.md`;
   - `e2e/copy.spec.ts` keeps the banned words ("safe", "healthy", "clean air", "good air", "bad air", a stray "AQI") off every page and state;
-  - README and DEPLOYMENT claims corrected (forecasts only; the live site's checks).
+  - README and DEPLOYMENT claims corrected (forecasts only; the live site's checks);
+  - after review: the AI output check also bans "bad air"; where no verdict is on the page (Today while the forecast card failed or is loading, and My Home), the plan says which air it used: "Today: {verdict} · Model forecast · Open-Meteo · updated {time}", or "Air information is unavailable for this plan.".
 - Landing (Phase 4 of the assistant redesign):
   - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;
   - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";

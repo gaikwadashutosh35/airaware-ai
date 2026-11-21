@@ -4,11 +4,11 @@ Follows `TESTING_QA.md` §11. Each field says what was actually run; a field sti
 
 ```text
 Date: 21 Nov 2026
-Commit: dcebdaf (the run after the Task 4 fixes)
+Commit: 934678c (the run after the Task 4 fixes)
 Build: pass (npm run build)
 Typecheck: pass
 Lint: pass (oxlint --deny-warnings); format: pass
-Unit: server 320 passed, 5 skipped; client 457 passed
+Unit: server 320 passed, 5 skipped; client 458 passed
 API: in the server suite (route tests against the Express app)
 E2E: 294 passed, 82 skipped (desktop-only size runs in the phone project), local build on port 8090; live run in Task 5
 Accessibility: see ACCESSIBILITY.md "Results (Phase 9)"
@@ -16,7 +16,7 @@ CodeQL: (Task 5, after the push)
 SonarQube: (Task 5, after the push)
 Data provider and data kind: (Task 5, live)
 Timestamp/freshness: (Task 5, live)
-Critical issues: none. Task 4 review: 0 Critical, 0 Important; two Minors re-graded Important and fixed in dcebdaf ("bad air" in the AI check; the plan names its air where no verdict shows); 10 Minors deferred
+Critical issues: none. Task 4 review: 0 Critical, 0 Important; two Minors re-graded Important and fixed in dcebdaf and 934678c ("bad air" in the AI check; the plan names its air where no verdict shows); 10 Minors deferred. The new air line was seen by eye at 320 on My Home; 1280 and Today's split-failure state are covered by the unit tests and the e2e layout checks, not by eye
 Known limitations: (Task 5)
 Release decision: (Task 5)
 ```
