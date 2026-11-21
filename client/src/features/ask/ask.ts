@@ -59,8 +59,8 @@ export const ASK_COPY = {
   skipped: 'Skipped. You can answer it in My Profile any time.',
   noted: "Noted. That doesn't change today's advice.",
   alsoAsk: 'You could also ask:',
-  askedPrefix: 'You asked: ',
-  answeredPrefix: 'You answered: ',
+  askedPrefix: 'You asked:',
+  answeredPrefix: 'You answered:',
 } as const;
 
 export function answeredLine(label: string): string {

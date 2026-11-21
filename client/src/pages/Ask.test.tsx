@@ -4,13 +4,19 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HouseholdContext } from '../../../shared/contracts.ts';
+import type { AskAnswer, HouseholdContext } from '../../../shared/contracts.ts';
 import { ASK_COPY } from '../features/ask/ask.ts';
 import { useAsk } from '../features/ask/useAsk.ts';
 import { NEAR_YOU, type Place } from '../features/location/place.ts';
-import { aiAskFixture, medicalAskFixture } from '../test/askFixtures.ts';
+import { greeting } from '../features/today/today.ts';
+import {
+  aiAskFixture,
+  medicalAskFixture,
+  rulesAskFixture,
+} from '../test/askFixtures.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { Ask } from './Ask.tsx';
 
@@ -96,8 +102,17 @@ const input = () =>
   }) as HTMLInputElement;
 const button = (name: string) =>
   screen.getByRole('button', { name }) as HTMLButtonElement;
-const heading = (name: string) =>
-  screen.getByRole('heading', { level: 2, name });
+const heading = (name: string, said = 'You asked: ') =>
+  screen.getByRole('heading', { level: 2, name: `${said}${name}` });
+// An outdoors answer offering "Do you exercise outdoors?" (only Yes changes it).
+const offering: AskAnswer = {
+  ...rulesAskFixture,
+  followUps: [{ field: 'routine.outdoorExercise', changes: ['yes'] }],
+};
+const question = () =>
+  screen.getByRole('group', { name: 'Do you exercise outdoors?' });
+const before = (a: Element, b: Element) =>
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 function typeAndSend(question: string) {
   fireEvent.change(input(), { target: { value: question } });
   fireEvent.click(button('Send'));
@@ -169,7 +184,7 @@ describe('Ask page', () => {
     expect(button('Send')).toBeTruthy();
   });
 
-  it('a topic chip asks that topic at once and shows as pressed', async () => {
+  it('a topic chip asks that topic at once', async () => {
     show();
 
     fireEvent.click(button('Indoor air'));
@@ -177,9 +192,129 @@ describe('Ask page', () => {
 
     expect(sentBody(0)).toMatchObject({ topic: 'indoor' });
     expect(sentBody(0)).not.toHaveProperty('question');
-    expect(button('Indoor air').getAttribute('aria-pressed')).toBe('true');
-    expect(button('Commuting').getAttribute('aria-pressed')).toBe('false');
+    expect(button('Indoor air').hasAttribute('aria-pressed')).toBe(false);
     expect(heading('Indoor air')).toBeTruthy();
+  });
+
+  // Guided chat (Task 4).
+  it('opens with a greeting that holds the topics and starters', async () => {
+    const { container } = show();
+
+    const hello = screen.getByText(
+      `${greeting(NOW)}. ${ASK_COPY.greetingTail}`,
+    );
+    expect(before(hello, button('Indoor air'))).toBe(true);
+    expect(
+      before(
+        button('Indoor air'),
+        button('Can I go for a morning walk today?'),
+      ),
+    ).toBe(true);
+    expect(before(button('Can I go for a morning walk today?'), input())).toBe(
+      true,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it('the thread reads oldest first, then the question box', async () => {
+    show();
+
+    typeAndSend('First question');
+    await answer(aiAskFixture);
+    typeAndSend('Second question');
+    await answer(aiAskFixture);
+
+    expect(before(heading('First question'), heading('Second question'))).toBe(
+      true,
+    );
+    expect(before(heading('Second question'), input())).toBe(true);
+  });
+
+  it("a question back offers the field's own options and Skip", async () => {
+    const { container } = show({ context: {} });
+
+    fireEvent.click(button('Outdoor activities'));
+    await answer(offering);
+
+    const group = question();
+    expect(
+      within(group)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Yes', 'No', ASK_COPY.skip]);
+    expect(screen.getByText(ASK_COPY.followUpIntro)).toBeTruthy();
+    expect(screen.getByText(ASK_COPY.followUpNote)).toBeTruthy();
+    await expectNoAxeViolations(container);
+  });
+
+  it('answering shows "You answered: Yes." and a new reply at the end', async () => {
+    const { container } = show({ context: {} });
+    fireEvent.click(button('Outdoor activities'));
+    await answer(offering);
+
+    fireEvent.click(within(question()).getByRole('button', { name: 'Yes' }));
+
+    expect(screen.getByText('You answered: Yes.')).toBeTruthy();
+    expect(
+      screen.queryByRole('group', { name: 'Do you exercise outdoors?' }),
+    ).toBeNull();
+    expect(sentBody(1)).toMatchObject({ topic: 'outdoors' });
+    const reply = heading('Yes', 'You answered: ');
+    expect(document.activeElement).toBe(reply);
+    expect(before(heading('Outdoor activities'), reply)).toBe(true);
+    expect(before(reply, input())).toBe(true);
+    await answer(rulesAskFixture);
+    await expectNoAxeViolations(container);
+  });
+
+  it('an answer that changes nothing is noted in the status line', async () => {
+    show({ context: {} });
+    fireEvent.click(button('Outdoor activities'));
+    await answer(offering);
+
+    fireEvent.click(within(question()).getByRole('button', { name: 'No' }));
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(status()).toBe(ASK_COPY.noted);
+    const reply = heading('No', 'You answered: ').closest('article')!;
+    expect(within(reply).getByText(ASK_COPY.noted)).toBeTruthy();
+  });
+
+  it('Skip shows the skipped line and takes focus', async () => {
+    const { container } = show({ context: {} });
+    fireEvent.click(button('Outdoor activities'));
+    await answer(offering);
+
+    fireEvent.click(
+      within(question()).getByRole('button', { name: ASK_COPY.skip }),
+    );
+
+    expect(document.activeElement).toBe(screen.getByText(ASK_COPY.skipped));
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    await expectNoAxeViolations(container);
+  });
+
+  it('suggestions follow the newest topic answer', async () => {
+    show();
+    fireEvent.click(button('Outdoor activities'));
+    await answer(rulesAskFixture);
+
+    const reply = heading('Outdoor activities').closest('article')!;
+    expect(within(reply).getByText(ASK_COPY.alsoAsk)).toBeTruthy();
+    expect(
+      within(reply)
+        .getAllByRole('button')
+        .map((b) => b.textContent)
+        .filter((name) => name?.endsWith('?')),
+    ).toEqual([
+      'How can I reduce pollution while commuting?',
+      "What should I consider for my children's outdoor activities?",
+      'Is it a good idea to open my windows?',
+    ]);
+
+    typeAndSend(QUESTION);
+    await answer(aiAskFixture);
+    expect(within(reply).queryByText(ASK_COPY.alsoAsk)).toBeNull();
   });
 
   it('a starter asks its question at once', () => {

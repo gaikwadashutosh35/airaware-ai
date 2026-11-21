@@ -661,6 +661,65 @@ describe('AppShell', () => {
   });
 
   // Phase 7: Today hands questions and topics to Ask.
+  // Guided chat (Task 4): an answer given in Ask counts everywhere.
+  const offering = {
+    ...aiAskFixture,
+    topic: 'outdoors' as const,
+    followUps: [{ field: 'routine.outdoorExercise', changes: ['yes'] }],
+  };
+  const offeringRoutes: Parameters<typeof routeFetch>[1] = (url) =>
+    url.pathname === '/api/v1/assistant/answer'
+      ? Promise.resolve(Response.json({ data: offering }))
+      : undefined;
+  const exerciseQuestion = () =>
+    screen.queryByRole('group', { name: 'Do you exercise outdoors?' });
+
+  it("an answer given in Ask reaches My Profile and Today's plan", async () => {
+    const fetchSpy = routeFetch(ok(), offeringRoutes);
+    render(<AppShell />);
+    await choosePlace();
+    await goTo('Ask AirAware');
+    fireEvent.click(screen.getByRole('button', { name: 'Outdoor activities' }));
+    await flush();
+
+    fireEvent.click(
+      within(exerciseQuestion()!).getByRole('button', { name: 'Yes' }),
+    );
+    await flush();
+    expect(screen.getByText('You answered: Yes.')).toBeDefined();
+
+    await goTo('My Profile');
+    expect(
+      screen.getByLabelText<HTMLSelectElement>('Do you exercise outdoors?')
+        .value,
+    ).toBe('yes');
+    await goTo('Today');
+    await flush();
+    const last = planPosts(fetchSpy).at(-1);
+    expect(JSON.parse(last![1]!.body as string)).toMatchObject({
+      householdContext: { routine: { outdoorExercise: true } },
+    });
+  });
+
+  // Review Focus 4.
+  it('a question back disappears once My Profile answers it', async () => {
+    routeFetch(ok(), offeringRoutes);
+    render(<AppShell />);
+    await choosePlace();
+    await goTo('Ask AirAware');
+    fireEvent.click(screen.getByRole('button', { name: 'Outdoor activities' }));
+    await flush();
+    expect(exerciseQuestion()).not.toBeNull();
+
+    await goTo('My Profile');
+    fireEvent.change(screen.getByLabelText('Do you exercise outdoors?'), {
+      target: { value: 'no' },
+    });
+    await goTo('Ask AirAware');
+
+    expect(exerciseQuestion()).toBeNull();
+  });
+
   it("Today's ask box asks once, and the answer shows on Ask", async () => {
     const fetchSpy = routeFetch(ok());
     render(<AppShell />);
@@ -680,7 +739,7 @@ describe('AppShell', () => {
     expect(
       screen.getByRole('heading', {
         level: 2,
-        name: 'Should I run the purifier tonight?',
+        name: 'You asked: Should I run the purifier tonight?',
       }),
     ).toBeDefined();
     expect(screen.getByText(aiAskFixture.summary!)).toBeDefined();
@@ -702,7 +761,10 @@ describe('AppShell', () => {
       topic: 'outdoors',
     });
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Outdoor activities' }),
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'You asked: Outdoor activities',
+      }),
     ).toBeDefined();
   });
 
@@ -738,13 +800,16 @@ describe('AppShell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Indoor air' }));
     await flush();
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Indoor air' }),
+      screen.getByRole('heading', { level: 2, name: 'You asked: Indoor air' }),
     ).toBeDefined();
 
     await choosePlace(1);
 
     expect(
-      screen.queryByRole('heading', { level: 2, name: 'Indoor air' }),
+      screen.queryByRole('heading', {
+        level: 2,
+        name: 'You asked: Indoor air',
+      }),
     ).toBeNull();
   });
 

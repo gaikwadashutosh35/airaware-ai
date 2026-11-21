@@ -39,7 +39,7 @@ function entry(patch: Partial<Entry>): Entry {
 const ready = (answer: AskAnswer, echo = ECHO) =>
   entry({ echo, answer, status: 'ready' });
 const heading = (name = ECHO) =>
-  screen.getByRole('heading', { level: 2, name });
+  screen.getByRole('heading', { level: 2, name: `You asked: ${name}` });
 const button = (name: string) =>
   screen.getByRole('button', { name }) as HTMLButtonElement;
 
@@ -55,8 +55,13 @@ function show(
       now={now}
       focus={focus}
       busy={busy}
+      newest
+      pending={null}
       onRetry={onRetry}
       onTopic={onTopic}
+      onStarter={() => {}}
+      onAnswerFollowUp={() => {}}
+      onSkipFollowUp={() => {}}
     />,
   );
   return { ...view, onRetry, onTopic };

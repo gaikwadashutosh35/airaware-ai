@@ -1,25 +1,34 @@
-import { Check } from 'lucide-react';
 import { useEffect, useId, useRef } from 'react';
 import type { AskAnswer, AskTopic } from '../../../../shared/contracts.ts';
 import { ErrorState } from '../../components/States.tsx';
 import { isOlderThan } from '../../lib/clock.ts';
 import { StaleBanner } from '../air-quality/AirReadout.tsx';
 import { PlanCard } from '../daily-plan/PlanCard.tsx';
+import { fieldId } from '../daily-plan/householdFields.ts';
 import { verdictFrom } from '../today/today.ts';
-import { ASK_COPY, TOPICS, clockTime, shortAnswer } from './ask.ts';
+import {
+  ASK_COPY,
+  TOPICS,
+  answeredLine,
+  clockTime,
+  shortAnswer,
+  suggestionsFor,
+  type PendingFollowUp,
+} from './ask.ts';
 import type { AskEntry as Entry } from './useAsk.ts';
 
 const MUTED = 'text-sm text-text-dark-muted';
 
-// The six topics. On the page the latest answer's topic is pressed (a tick,
-// never colour alone); in an out-of-scope answer they are plain buttons.
+const CHIP =
+  'inline-flex min-h-11 items-center rounded-full border border-text-dark-muted px-4 disabled:opacity-60';
+const STARTER =
+  'min-h-11 rounded-full border border-rule px-4 text-left text-sm disabled:opacity-60';
+
+// The six topics, as plain buttons: the thread already shows what was asked.
 export function TopicChips({
-  pressed,
   busy,
   onTopic,
 }: {
-  // Omitted: buttons with no pressed state.
-  pressed?: AskTopic | null;
   busy: boolean;
   onTopic: (topic: AskTopic, label: string) => void;
 }) {
@@ -29,13 +38,39 @@ export function TopicChips({
         <li key={id}>
           <button
             type="button"
-            aria-pressed={pressed === undefined ? undefined : pressed === id}
             disabled={busy}
             onClick={() => onTopic(id, label)}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-text-dark-muted px-4 aria-pressed:border-text-dark aria-pressed:bg-text-dark aria-pressed:text-surface-light forced-colors:aria-pressed:outline-2 forced-colors:aria-pressed:-outline-offset-2 disabled:opacity-60"
+            className={CHIP}
           >
-            {pressed === id && <Check aria-hidden="true" className="size-4" />}
             {label}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Starter questions as buttons: the greeting's, and "You could also ask:".
+export function StarterButtons({
+  questions,
+  busy,
+  onStarter,
+}: {
+  questions: Array<{ question: string }>;
+  busy: boolean;
+  onStarter: (question: string) => void;
+}) {
+  return (
+    <ul className="flex flex-col items-start gap-2">
+      {questions.map(({ question }) => (
+        <li key={question}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onStarter(question)}
+            className={STARTER}
+          >
+            {question}
           </button>
         </li>
       ))}
@@ -110,69 +145,164 @@ function Answer({
   );
 }
 
-// One question and its answer. The heading takes focus when the answer is
-// new, and again after "Try again" (the error card goes away).
+// One exchange: your message, then AirAware's reply. Your message's heading
+// takes focus when the reply is new, and again after "Try again" (the error
+// card goes away). Only the newest reply carries the question back and the
+// suggestions.
 export function AskEntry({
   entry,
   now,
   focus,
   busy,
+  newest,
+  pending,
   onRetry,
   onTopic,
+  onStarter,
+  onAnswerFollowUp,
+  onSkipFollowUp,
 }: {
   entry: Entry;
   now: Date;
   focus: boolean;
   // Another answer is on its way.
   busy: boolean;
+  newest: boolean;
+  // The question back, when it belongs to this reply.
+  pending: PendingFollowUp | null;
   onRetry: (id: number) => void;
   onTopic: (topic: AskTopic, label: string) => void;
+  onStarter: (question: string) => void;
+  onAnswerFollowUp: (field: string, value: string, label: string) => void;
+  onSkipFollowUp: (field: string) => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const outcomeRef = useRef<HTMLParagraphElement>(null);
+  // Set by Skip: the skipped line takes focus once it shows.
+  const focusOutcome = useRef(false);
   const headingId = useId();
+  const answer = entry.status === 'ready' ? entry.answer : undefined;
+  const topic =
+    answer && answer.topic !== 'medical' && answer.topic !== 'out_of_scope'
+      ? answer.topic
+      : null;
 
   useEffect(() => {
     if (focus) headingRef.current?.focus();
   }, [focus]);
+  useEffect(() => {
+    if (entry.followUp && focusOutcome.current) {
+      focusOutcome.current = false;
+      outcomeRef.current?.focus();
+    }
+  }, [entry.followUp]);
 
   return (
     <article
       aria-labelledby={headingId}
       aria-busy={entry.status === 'thinking'}
-      className="ask-answer flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+      className="ask-answer flex flex-col gap-3"
     >
       <h2
         id={headingId}
         ref={headingRef}
         tabIndex={-1}
-        className="text-2xl font-semibold tracking-tight"
+        className="max-w-[85%] self-end rounded-2xl rounded-br-sm border border-transparent bg-text-dark px-4 py-3 text-lg font-semibold text-surface-light"
       >
+        <span className="sr-only">
+          {entry.said === 'answered'
+            ? ASK_COPY.answeredPrefix
+            : ASK_COPY.askedPrefix}
+        </span>{' '}
         {entry.echo}
       </h2>
-      {entry.status === 'thinking' && (
-        <>
-          <p className="text-text-dark-muted">{ASK_COPY.thinking}</p>
-          <div
-            aria-hidden="true"
-            className="h-4 w-3/4 animate-pulse rounded bg-text-dark/10 motion-reduce:animate-none"
+      <div className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+        {entry.note && <p>{entry.note}</p>}
+        {entry.status === 'thinking' && (
+          <>
+            <p className="text-text-dark-muted">{ASK_COPY.thinking}</p>
+            <div
+              aria-hidden="true"
+              className="h-4 w-3/4 animate-pulse rounded bg-text-dark/10 motion-reduce:animate-none"
+            />
+          </>
+        )}
+        {entry.status === 'error' && entry.error && (
+          <ErrorState
+            error={entry.error}
+            title={ASK_COPY.errorTitle}
+            fallback={ASK_COPY.errorFallback}
+            onRetry={() => {
+              onRetry(entry.id);
+              // The card goes away: keep focus on this exchange.
+              headingRef.current?.focus();
+            }}
           />
-        </>
-      )}
-      {entry.status === 'error' && entry.error && (
-        <ErrorState
-          error={entry.error}
-          title={ASK_COPY.errorTitle}
-          fallback={ASK_COPY.errorFallback}
-          onRetry={() => {
-            onRetry(entry.id);
-            // The card goes away: keep focus on this answer.
-            headingRef.current?.focus();
-          }}
-        />
-      )}
-      {entry.status === 'ready' && entry.answer && (
-        <Answer answer={entry.answer} now={now} busy={busy} onTopic={onTopic} />
-      )}
+        )}
+        {answer && (
+          <Answer answer={answer} now={now} busy={busy} onTopic={onTopic} />
+        )}
+        {pending && (
+          <div className="flex flex-col gap-2 border-t border-rule pt-3">
+            <p className={MUTED}>{ASK_COPY.followUpIntro}</p>
+            <fieldset>
+              <legend className="font-semibold">{pending.field.label}</legend>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {(
+                  pending.field.options ?? [
+                    ['yes', 'Yes'],
+                    ['no', 'No'],
+                  ]
+                ).map(([value, label]) => (
+                  <li key={value}>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() =>
+                        onAnswerFollowUp(fieldId(pending.field), value, label)
+                      }
+                      className={CHIP}
+                    >
+                      {label}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      focusOutcome.current = true;
+                      onSkipFollowUp(fieldId(pending.field));
+                    }}
+                    className={CHIP}
+                  >
+                    {ASK_COPY.skip}
+                  </button>
+                </li>
+              </ul>
+            </fieldset>
+            <p className={MUTED}>{ASK_COPY.followUpNote}</p>
+          </div>
+        )}
+        {entry.followUp && (
+          <p ref={outcomeRef} tabIndex={-1} className={MUTED}>
+            {entry.followUp.outcome === 'answered'
+              ? answeredLine(entry.followUp.label ?? '')
+              : ASK_COPY.skipped}
+          </p>
+        )}
+        {newest && topic && (
+          <div className="flex flex-col gap-2 border-t border-rule pt-3">
+            <p className="text-sm font-medium">{ASK_COPY.alsoAsk}</p>
+            <StarterButtons
+              questions={suggestionsFor(topic)}
+              busy={busy}
+              onStarter={onStarter}
+            />
+          </div>
+        )}
+      </div>
     </article>
   );
 }

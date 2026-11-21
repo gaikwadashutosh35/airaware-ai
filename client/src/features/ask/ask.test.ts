@@ -82,8 +82,8 @@ describe('Ask wording', () => {
       skipped: 'Skipped. You can answer it in My Profile any time.',
       noted: "Noted. That doesn't change today's advice.",
       alsoAsk: 'You could also ask:',
-      askedPrefix: 'You asked: ',
-      answeredPrefix: 'You answered: ',
+      askedPrefix: 'You asked:',
+      answeredPrefix: 'You answered:',
     });
     expect(answeredLine('Yes')).toBe('You answered: Yes.');
   });
