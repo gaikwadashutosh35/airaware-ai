@@ -113,22 +113,20 @@ export function pendingFollowUp(
     return null;
   }
   const answers = toAnswers(context);
+  // Answers changed elsewhere since this reply (My Profile): its offers were
+  // worked out against the old answers, so it asks nothing.
+  const asked = toAnswers(last.request?.householdContext ?? {});
+  if (JSON.stringify(answers) !== JSON.stringify(asked)) return null;
   // An older server (a rollback) sends none.
   for (const { field: id, changes } of answer.followUps ?? []) {
     const field = FIELDS.find((f) => fieldId(f) === id);
+    // Never asked back, whatever a server sends: My Profile only.
+    if (id === 'householdNeeds.mayBeMoreSensitive') continue;
     if (field && !answers[id] && !skipped.has(id)) {
       return { entryId: last.id, field, changes };
     }
   }
   return null;
-}
-
-// The current topic's starters first, the rest in their usual order.
-export function startersFor(topic: AskTopic | null): typeof STARTERS {
-  return [
-    ...STARTERS.filter((s) => s.topic === topic),
-    ...STARTERS.filter((s) => s.topic !== topic),
-  ];
 }
 
 // Household questions answered, out of 10; "No" and "Not sure" count.

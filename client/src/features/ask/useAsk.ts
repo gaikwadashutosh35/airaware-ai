@@ -31,6 +31,8 @@ export interface AskEntry {
   error?: ApiError;
   // A local reply's text.
   note?: string;
+  // A local reply's topic: its "You could also ask:" follows it.
+  topic?: AskTopic;
   // What became of this reply's question back.
   followUp?: {
     field: string;
@@ -189,6 +191,7 @@ export function useAsk(
         request: null,
         status: 'ready',
         note: ASK_COPY.noted,
+        topic: answer.topic,
       });
     }
   }

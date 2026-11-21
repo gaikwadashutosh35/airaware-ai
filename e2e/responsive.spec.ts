@@ -107,6 +107,42 @@ test('a long real place keeps the verdict above the bar', async ({ page }) => {
 // WCAG 1.4.4 and 1.4.12, on the desktop project (sizes are set by hand).
 test.describe('zoom and text spacing', () => {
   test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
+  // Guided chat: a thread with a question back (six commute answers).
+  test('text at 200 % still fits: an Ask question back', async ({ page }) => {
+    await page.setViewportSize({ width: 900, height: 800 });
+    await open(page, '/app/ask');
+    await page.route('**/api/v1/assistant/answer', (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            ...rulesAskFixture,
+            followUps: [{ field: 'routine.commuteMode', changes: ['walk'] }],
+          },
+        },
+      }),
+    );
+    await page
+      .getByRole('button', { name: 'Outdoor activities', exact: true })
+      .click();
+    await expect(
+      page.getByRole('group', {
+        name: 'How do you usually travel to work or college?',
+      }),
+    ).toBeVisible();
+    await page.addStyleTag({
+      content: 'html { font-size: 200% !important }',
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => getComputedStyle(document.documentElement).fontSize,
+        ),
+      )
+      .toBe('32px');
+    expect(await pastTheEdge(page)).toEqual([]);
+    expect(await clippedText(page)).toEqual([]);
+  });
+
   for (const path of PATHS) {
     // 200 % text: the root font size doubles, as browser text zoom does
     // for an app sized in rem. Final review: also below 1280, where the

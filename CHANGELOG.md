@@ -77,7 +77,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
     - the answer goes to the answers on screen, so Today's plan, My Home and My Profile use it too, and My Profile's Save keeps it;
     - an answer that changes nothing is "Noted. That doesn't change this answer." without a request;
     - Skip is remembered for the visit.
-  - The newest reply ends with "You could also ask:" and 2–3 starters.
+  - The newest reply ends with "You could also ask:" and 2–3 starters, a "Noted" reply included.
+  - A question back goes away once your answers change elsewhere, for example in My Profile, since it was worked out against the old answers.
   - What stays the same:
     - the AI still never reads what people type;
     - the answer gains `followUps` (API.md);

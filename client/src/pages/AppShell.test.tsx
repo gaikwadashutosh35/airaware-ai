@@ -701,6 +701,70 @@ describe('AppShell', () => {
     });
   });
 
+  // Review Focus 2, through the shell: saved answers that arrive after an
+  // answer given in Ask fill in around it and never undo it.
+  it('a late saved-answers load keeps an answer given in Ask', async () => {
+    session.available = true;
+    session.currentToken.mockResolvedValue('tok');
+    window.history.replaceState(
+      null,
+      '',
+      '/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    let release!: () => void;
+    const fetchSpy = routeFetch(ok(), (url, init) =>
+      url.pathname === '/api/v1/profile/preferences'
+        ? new Promise((resolve) => {
+            release = () =>
+              resolve(
+                Response.json({
+                  data: {
+                    context: {
+                      routine: { outdoorExercise: false, commuteMode: 'car' },
+                    },
+                    place: null,
+                    updatedAt: 'x',
+                  },
+                }),
+              );
+          })
+        : offeringRoutes!(url, init),
+    );
+    render(<AppShell />);
+    await flush();
+    fireEvent.click(screen.getByRole('button', { name: 'Outdoor activities' }));
+    await flush();
+    fireEvent.click(
+      within(exerciseQuestion()!).getByRole('button', { name: 'Yes' }),
+    );
+    await flush();
+
+    await act(async () => {
+      release();
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await flush();
+
+    await goTo('My Profile');
+    expect(
+      screen.getByLabelText<HTMLSelectElement>('Do you exercise outdoors?')
+        .value,
+    ).toBe('yes');
+    expect(
+      screen.getByLabelText<HTMLSelectElement>(
+        'How do you usually travel to work or college?',
+      ).value,
+    ).toBe('car');
+    await goTo('Today');
+    await flush();
+    const last = planPosts(fetchSpy).at(-1);
+    expect(JSON.parse(last![1]!.body as string)).toMatchObject({
+      householdContext: {
+        routine: { outdoorExercise: true, commuteMode: 'car' },
+      },
+    });
+  });
+
   // Review Focus 4.
   it('a question back disappears once My Profile answers it', async () => {
     routeFetch(ok(), offeringRoutes);

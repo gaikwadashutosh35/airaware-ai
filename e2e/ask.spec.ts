@@ -1,7 +1,10 @@
 // Ask AirAware in a real browser: the forecast, plan and Ask replies are
 // test replies; the page is the real build.
 import { expect, test, type Page, type Request } from '@playwright/test';
-import { aiAskFixture } from '../client/src/test/askFixtures.ts';
+import {
+  aiAskFixture,
+  rulesAskFixture,
+} from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { expectNoAxeViolations } from './axe.ts';
 import { forecastAt, planAt, PUNE, routeApi } from './routes.ts';
@@ -93,6 +96,14 @@ test('a question back, answered, asks again with the answer', async ({
 }) => {
   const asked = await offeringExercise(page);
   await expectNoAxeViolations(page);
+  // The answer asked again carries the exercise card the first one lacked.
+  await page.route('**/api/v1/assistant/answer', (route) =>
+    route.fulfill({
+      json: {
+        data: { ...planAt(rulesAskFixture, new Date()), followUps: [] },
+      },
+    }),
+  );
 
   await page
     .getByRole('group', { name: 'Do you exercise outdoors?' })
@@ -104,6 +115,12 @@ test('a question back, answered, asks again with the answer', async ({
     page.getByRole('heading', {
       level: 2,
       name: 'Your answer to "Do you exercise outdoors?": Yes',
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      level: 3,
+      name: 'Consider an indoor alternative for exercise',
     }),
   ).toBeVisible();
   await expect.poll(() => asked.length).toBe(2);

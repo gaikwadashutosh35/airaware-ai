@@ -183,10 +183,11 @@ export function AskEntry({
   const focusOutcome = useRef(false);
   const headingId = useId();
   const answer = entry.status === 'ready' ? entry.answer : undefined;
+  // A topic answer's topic, or the one a "Noted" reply follows.
   const topic =
     answer && answer.topic !== 'medical' && answer.topic !== 'out_of_scope'
       ? answer.topic
-      : null;
+      : (entry.topic ?? null);
 
   useEffect(() => {
     if (focus) headingRef.current?.focus();

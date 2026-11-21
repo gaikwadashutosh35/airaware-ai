@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { AskAnswer } from '../../../../shared/contracts.ts';
+import type {
+  AskAnswer,
+  HouseholdContext,
+} from '../../../../shared/contracts.ts';
 import {
   aiAskFixture,
   medicalAskFixture,
@@ -15,7 +18,6 @@ import {
   answerPrefix,
   pendingFollowUp,
   shortAnswer,
-  startersFor,
   suggestionsFor,
 } from './ask.ts';
 import type { AskEntry } from './useAsk.ts';
@@ -47,18 +49,6 @@ describe('Ask wording', () => {
         topic: 'commuting',
       },
     ]);
-  });
-
-  it("the current topic's starters come first", () => {
-    expect(startersFor('family').map((s) => s.topic)).toEqual([
-      'family',
-      'outdoors',
-      'windows',
-      'indoor',
-      'commuting',
-    ]);
-    expect(startersFor(null)).toEqual(STARTERS);
-    expect(startersFor('habits')).toEqual(STARTERS);
   });
 
   it('the fixed sentences, word for word', () => {
@@ -186,12 +176,41 @@ describe('pendingFollowUp', () => {
     ).toBeNull();
   });
 
-  it('skips a skipped, answered or unknown question for the next one', () => {
+  // Deferred minor: never asked back, even if a server offered it (Profile only).
+  it('never asks "may be more sensitive"', () => {
+    expect(
+      field([
+        entry(1, {
+          ...offering,
+          followUps: [
+            { field: 'householdNeeds.mayBeMoreSensitive', changes: ['yes'] },
+            offering.followUps[1]!,
+          ],
+        }),
+      ]),
+    ).toBe('commuteMode');
+  });
+
+  // Deferred minor: answers changed elsewhere (My Profile) since this reply,
+  // so its offers were worked out against old answers: the question goes.
+  it('a question back goes once the answers change elsewhere', () => {
+    const place = { label: 'Pune', latitude: 18.52, longitude: 73.86 };
+    const asked = (householdContext: HouseholdContext) =>
+      entry(1, offering, {
+        request: { topic: 'outdoors', place, householdContext },
+      });
+    expect(field([asked({})], {})).toBe('outdoorExercise');
+    expect(
+      field([asked({})], { routine: { outdoorExercise: false } }),
+    ).toBeNull();
+    expect(field([asked({})], { home: { airPurifier: true } })).toBeNull();
+    const purifier = { home: { airPurifier: true } };
+    expect(field([asked(purifier)], purifier)).toBe('outdoorExercise');
+  });
+
+  it('skips a skipped or unknown question for the next one', () => {
     const one = [entry(1, offering)];
     expect(field(one, {}, new Set(['routine.outdoorExercise']))).toBe(
-      'commuteMode',
-    );
-    expect(field(one, { routine: { outdoorExercise: false } })).toBe(
       'commuteMode',
     );
     expect(

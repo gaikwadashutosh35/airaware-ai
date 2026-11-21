@@ -286,6 +286,29 @@ describe('Ask page', () => {
     expect(within(reply).getByText(ASK_COPY.noted)).toBeTruthy();
   });
 
+  // Deferred minor: the thread never ends with nothing to tap.
+  it('after "Noted", the suggestions follow the note', async () => {
+    const { container } = show({ context: {} });
+    fireEvent.click(button('Outdoor activities'));
+    await answer(offering);
+
+    fireEvent.click(within(question()).getByRole('button', { name: 'No' }));
+
+    const note = heading(
+      'No',
+      'Your answer to "Do you exercise outdoors?": ',
+    ).closest('article')!;
+    expect(within(note).getByText(ASK_COPY.alsoAsk)).toBeTruthy();
+    expect(
+      within(note).getByRole('button', {
+        name: 'How can I reduce pollution while commuting?',
+      }),
+    ).toBeTruthy();
+    const earlier = heading('Outdoor activities').closest('article')!;
+    expect(within(earlier).queryByText(ASK_COPY.alsoAsk)).toBeNull();
+    await expectNoAxeViolations(container);
+  });
+
   it('Skip shows the skipped line and takes focus', async () => {
     const { container } = show({ context: {} });
     fireEvent.click(button('Outdoor activities'));
