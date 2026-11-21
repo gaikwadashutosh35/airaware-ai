@@ -3,6 +3,7 @@ import type {
   ForecastData,
   WeatherNow,
 } from '../../../../shared/contracts.ts';
+import { LEVEL_TAG } from '../daily-plan/planDisplay.ts';
 import { NEAR_YOU } from '../location/place.ts';
 
 // The skyline's look, from the server's 24-hour check only (cityscape D1):
@@ -88,9 +89,14 @@ export function backdropScene(
   return loading ? null : NEUTRAL;
 }
 
-// The footer's word on where the backdrop's look comes from (§5.5).
-export function backdropNote(placeLabel: string, stale: boolean): string {
+// The footer's word on where the backdrop's look comes from (§5.5), and its
+// level in words, so the sky's tint is never the only sign of it.
+export function backdropNote(
+  placeLabel: string,
+  level: AirAssessment['level'],
+  stale: boolean,
+): string {
   const where =
     placeLabel === NEAR_YOU ? 'near you (approximate)' : `for ${placeLabel}`;
-  return `Background: model forecast ${where}.${stale ? ' Not current.' : ''}`;
+  return `Background: model forecast ${where}. ${LEVEL_TAG[level]}.${stale ? ' Not current.' : ''}`;
 }

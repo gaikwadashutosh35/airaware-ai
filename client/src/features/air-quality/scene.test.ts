@@ -209,15 +209,17 @@ describe('sceneFromConditions', () => {
     expect(backdropScene(s, true)).toEqual(expected);
   });
 
+  // The backdrop review: the level in words, so the sky's tint is never
+  // the only sign of it on pages with no other air words.
   it('backdrop note', () => {
-    expect(backdropNote('Pune, Maharashtra', false)).toBe(
-      'Background: model forecast for Pune, Maharashtra.',
+    expect(backdropNote('Pune, Maharashtra', 'not_elevated', false)).toBe(
+      'Background: model forecast for Pune, Maharashtra. Within the limit.',
     );
-    expect(backdropNote('Pune, Maharashtra', true)).toBe(
-      'Background: model forecast for Pune, Maharashtra. Not current.',
+    expect(backdropNote('Pune, Maharashtra', 'elevated', true)).toBe(
+      'Background: model forecast for Pune, Maharashtra. Above the limit. Not current.',
     );
-    expect(backdropNote(NEAR_YOU, false)).toBe(
-      'Background: model forecast near you (approximate).',
+    expect(backdropNote(NEAR_YOU, 'unknown', false)).toBe(
+      'Background: model forecast near you (approximate). No data.',
     );
   });
 

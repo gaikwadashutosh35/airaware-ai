@@ -111,6 +111,8 @@ The mood on Ask, My Home, Better Habits and My Profile would otherwise show with
 - When stale, it continues: "Not current."
 - With no forecast, there is no line.
 
+**Amended (22 Nov 2026, owner's choice "Footer line"):** the line also names the level with the approved tag, "Background: model forecast for {place}. Within the limit." ("Above the limit", "No data"), then "Not current." when stale. On Better Habits, My Profile, Welcome and Ask before an answer, no other words named the level, so the sky's tint was its only sign. In the same fix, My Home joined Today and Ask in the hourly forecast reload: its plan rebuilds hourly, and its sky could disagree with the plan's air words.
+
 Cost if wrong: one more line in the footer.
 
 ### 5.6 Motion and performance

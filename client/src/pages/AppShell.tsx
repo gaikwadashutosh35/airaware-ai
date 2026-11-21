@@ -127,12 +127,14 @@ function AppShell() {
     series: await getForecast(place!.latitude, place!.longitude, signal),
     loadedAt: new Date(),
   }));
-  // An hour after it loaded (device clock), Today reloads the forecast, as
-  // the plan rebuilds then too, so the verdict and the recommendation rest on
-  // the same data; Ask too, so its "updated" time is never over an hour old.
-  // A failed load waits for "Try again".
+  // An hour after it loaded (device clock), Today and My Home reload the
+  // forecast, as the plan rebuilds hourly there too, so the verdict, the
+  // plan's air words and the backdrop refresh together (a plan rebuilt for
+  // changed answers fetches its own forecast in between); Ask too, so its
+  // "updated" time is never over an hour old. A failed load waits for
+  // "Try again".
   const forecastDue =
-    (page === 'today' || page === 'ask') &&
+    (page === 'today' || page === 'home' || page === 'ask') &&
     forecast.state.status === 'ready' &&
     isOlderThan(forecast.state.data.loadedAt.toISOString(), now, 60);
   const reloadForecast = useEffectEvent(() => forecast.retry());
@@ -453,6 +455,7 @@ function AppShell() {
             <p>
               {backdropNote(
                 place.label,
+                shown.airCheck.level,
                 isOlderThan(shown.retrievedAt, now, 60),
               )}
             </p>

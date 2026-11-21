@@ -443,13 +443,16 @@ describe('AppShell', () => {
     const root = backdrop();
     expect(root?.getAttribute('data-air')).toBe('above');
     expect(note()?.textContent).toBe(
-      'Background: model forecast for Pune, Maharashtra.',
+      'Background: model forecast for Pune, Maharashtra. Above the limit.',
     );
     expect(note()?.closest('footer')).not.toBeNull();
 
+    // A page with no other air words still names the level.
     await goTo('Better Habits');
     expect(backdrop()).toBe(root);
-    expect(note()).not.toBeNull();
+    expect(note()?.textContent).toBe(
+      'Background: model forecast for Pune, Maharashtra. Above the limit.',
+    );
   });
 
   it('the hourly reload keeps the backdrop and its note', async () => {
@@ -471,6 +474,29 @@ describe('AppShell', () => {
     expect(calls).toBe(2);
     expect(backdrop()?.getAttribute('data-air')).toBe('above');
     expect(note()?.textContent).toMatch(/ Not current\.$/);
+  });
+
+  // The backdrop review: My Home rebuilds its plan hourly, so its sky
+  // reloads with it and never contradicts the plan's air words.
+  it('the hourly reload refreshes the backdrop on My Home too', async () => {
+    let calls = 0;
+    routeFetch(() => (++calls === 1 ? ok(ABOVE)() : ok()()), planRoutes());
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    await goTo('My Home');
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(61 * 60_000);
+    });
+    await flush();
+    expect(calls).toBe(2);
+    expect(backdrop()?.getAttribute('data-air')).toBe('unknown');
+    // The fixture's retrievedAt is fixed, so it also reads "Not current."
+    expect(note()?.textContent).toMatch(
+      /^Background: model forecast for Pune, Maharashtra\. No data\./,
+    );
   });
 
   it('a failed forecast leaves a neutral backdrop', async () => {
