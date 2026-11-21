@@ -18,6 +18,17 @@
 - Ask before broad architecture changes, new paid services, data migrations, permission changes, destructive operations, or production deployment.
 - Keep the challenge's one-branch and under-10-MB repository rules in view.
 
+## Model routing
+
+- When delegating, use the `model-task-router` skill: it picks the subagent and model for each task.
+- The subagents in `.claude/agents/`:
+  - `repo-scout` (Haiku);
+  - `feature-implementer` and `test-engineer` (Sonnet);
+  - `security-reviewer` (Opus);
+  - `architecture-advisor` (Fable).
+- The main session keeps planning, rulings, commits and pushes.
+- Report which agents and models actually ran.
+
 ## Session start checklist
 
 1. Check `git status` and the current branch.
