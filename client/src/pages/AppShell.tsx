@@ -98,7 +98,7 @@ function AppShell() {
   const focusResult = useRef(false);
   // Ask's answers for the visit, here so they survive moving pages. A typed
   // question lives only in memory and the POST body, never in the address.
-  const ask = useAsk(place, context, resets);
+  const ask = useAsk(place, context, resets, setContext);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);
   // The place chip's dialog.

@@ -40,12 +40,14 @@ export function Ask({
 }) {
   const [question, setQuestion] = useState('');
   const inputId = useId();
-  const latest = ask.entries[0];
+  const latest = ask.entries.at(-1);
   // Answers already here when the page opens keep focus where it is.
   const [openedWith] = useState(latest?.id);
   const asked =
     latest?.answer?.topic ??
-    (latest && 'topic' in latest.request ? latest.request.topic : null);
+    (latest?.request && 'topic' in latest.request
+      ? latest.request.topic
+      : null);
   const topic: AskTopic | null =
     asked === 'medical' || asked === 'out_of_scope' ? null : asked;
 

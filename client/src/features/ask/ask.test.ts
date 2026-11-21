@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { AskAnswer } from '../../../../shared/contracts.ts';
 import {
   aiAskFixture,
+  medicalAskFixture,
   rulesAskFixture,
   unknownAirAskFixture,
 } from '../../test/askFixtures.ts';
@@ -9,9 +11,13 @@ import {
   STARTERS,
   TOPICS,
   answeredCount,
+  answeredLine,
+  pendingFollowUp,
   shortAnswer,
   startersFor,
+  suggestionsFor,
 } from './ask.ts';
+import type { AskEntry } from './useAsk.ts';
 
 describe('Ask wording', () => {
   it('the topic chips, in order', () => {
@@ -67,7 +73,19 @@ describe('Ask wording', () => {
       errorTitle: "We couldn't answer that",
       errorFallback: 'Something went wrong answering your question.',
       tryAgain: 'Try again',
+      greetingTail:
+        "I'm AirAware. Ask me about your day, your home or your commute.",
+      followUpIntro: 'One question so I can be more specific:',
+      followUpNote:
+        'This changes your answers for this visit. To keep them, save in My Profile.',
+      skip: 'Skip',
+      skipped: 'Skipped. You can answer it in My Profile any time.',
+      noted: "Noted. That doesn't change today's advice.",
+      alsoAsk: 'You could also ask:',
+      askedPrefix: 'You asked: ',
+      answeredPrefix: 'You answered: ',
     });
+    expect(answeredLine('Yes')).toBe('You answered: Yes.');
   });
 
   it('no fixed Ask string says safe, healthy, clean air or AQI', () => {
@@ -79,6 +97,100 @@ describe('Ask wording', () => {
     for (const text of strings) {
       expect(text).not.toMatch(/\bsafe|healthy|clean air|\baqi\b/i);
     }
+  });
+});
+
+// Guided chat (Task 3).
+describe('suggestionsFor', () => {
+  it('suggestions follow the topic map and never repeat the topic', () => {
+    expect(suggestionsFor('outdoors').map((s) => s.question)).toEqual([
+      'How can I reduce pollution while commuting?',
+      "What should I consider for my children's outdoor activities?",
+      'Is it a good idea to open my windows?',
+    ]);
+    expect(suggestionsFor('habits').map((s) => s.question)).toEqual([
+      'How can I reduce pollution while commuting?',
+      'How can I improve my indoor air?',
+    ]);
+    for (const { id } of TOPICS) {
+      const shown = suggestionsFor(id);
+      expect(shown.length, id).toBeGreaterThanOrEqual(2);
+      expect(
+        shown.every((s) => s.topic !== id),
+        id,
+      ).toBe(true);
+    }
+  });
+});
+
+describe('pendingFollowUp', () => {
+  const offering: AskAnswer = {
+    ...rulesAskFixture,
+    followUps: [
+      { field: 'routine.outdoorExercise', changes: ['yes'] },
+      { field: 'routine.commuteMode', changes: ['walk'] },
+    ],
+  };
+  const entry = (
+    id: number,
+    answer: AskAnswer,
+    more: Partial<AskEntry> = {},
+  ): AskEntry => ({
+    id,
+    echo: 'q',
+    said: 'asked',
+    request: null,
+    status: 'ready',
+    answer,
+    ...more,
+  });
+  const field = (
+    entries: AskEntry[],
+    context = {},
+    skipped = new Set<string>(),
+  ) => pendingFollowUp(entries, context, skipped)?.field.key ?? null;
+
+  it('a question back comes only from the newest topic answer', () => {
+    expect(pendingFollowUp([entry(1, offering)], {}, new Set())).toMatchObject({
+      entryId: 1,
+      field: { label: 'Do you exercise outdoors?' },
+      changes: ['yes'],
+    });
+    expect(field([entry(1, offering), entry(2, rulesAskFixture)])).toBeNull();
+    expect(
+      field([
+        entry(1, { ...medicalAskFixture, followUps: offering.followUps }),
+      ]),
+    ).toBeNull();
+    expect(field([entry(1, offering, { status: 'thinking' })])).toBeNull();
+    expect(
+      field([
+        entry(1, offering, {
+          followUp: { field: 'routine.outdoorExercise', outcome: 'skipped' },
+        }),
+      ]),
+    ).toBeNull();
+  });
+
+  it('skips a skipped, answered or unknown question for the next one', () => {
+    const one = [entry(1, offering)];
+    expect(field(one, {}, new Set(['routine.outdoorExercise']))).toBe(
+      'commuteMode',
+    );
+    expect(field(one, { routine: { outdoorExercise: false } })).toBe(
+      'commuteMode',
+    );
+    expect(
+      field([
+        entry(1, {
+          ...offering,
+          followUps: [
+            { field: 'home.nope', changes: ['yes'] },
+            offering.followUps[1]!,
+          ],
+        }),
+      ]),
+    ).toBe('commuteMode');
   });
 });
 

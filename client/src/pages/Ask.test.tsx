@@ -40,7 +40,7 @@ function Harness({
   updatedAt: string | null;
   context: HouseholdContext;
 }) {
-  const ask = useAsk(place, context, 0);
+  const ask = useAsk(place, context, 0, () => {});
   return (
     <Ask
       place={place}

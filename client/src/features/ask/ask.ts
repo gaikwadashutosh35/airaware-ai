@@ -5,8 +5,14 @@ import type {
   AskTopic,
   HouseholdContext,
 } from '../../../../shared/contracts.ts';
-import { toAnswers } from '../daily-plan/householdFields.ts';
+import {
+  FIELDS,
+  fieldId,
+  toAnswers,
+  type HouseholdField,
+} from '../daily-plan/householdFields.ts';
 import { verdictFrom } from '../today/today.ts';
+import type { AskEntry } from './useAsk.ts';
 
 export const TOPICS: Array<{ id: AskTopic; label: string }> = [
   { id: 'outdoors', label: 'Outdoor activities' },
@@ -43,7 +49,73 @@ export const ASK_COPY = {
   errorTitle: "We couldn't answer that",
   errorFallback: 'Something went wrong answering your question.',
   tryAgain: 'Try again',
+  // Guided chat (spec 2026-11-21).
+  greetingTail:
+    "I'm AirAware. Ask me about your day, your home or your commute.",
+  followUpIntro: 'One question so I can be more specific:',
+  followUpNote:
+    'This changes your answers for this visit. To keep them, save in My Profile.',
+  skip: 'Skip',
+  skipped: 'Skipped. You can answer it in My Profile any time.',
+  noted: "Noted. That doesn't change today's advice.",
+  alsoAsk: 'You could also ask:',
+  askedPrefix: 'You asked: ',
+  answeredPrefix: 'You answered: ',
 } as const;
+
+export function answeredLine(label: string): string {
+  return `You answered: ${label}.`;
+}
+
+// "You could also ask:": starters for nearby topics, never the one just
+// answered (no starter is about greener habits).
+const NEXT: Record<AskTopic, AskTopic[]> = {
+  outdoors: ['commuting', 'family', 'windows'],
+  windows: ['indoor', 'outdoors'],
+  indoor: ['windows', 'family'],
+  family: ['outdoors', 'commuting'],
+  commuting: ['outdoors', 'family'],
+  habits: ['commuting', 'indoor'],
+};
+
+export function suggestionsFor(topic: AskTopic): typeof STARTERS {
+  return NEXT[topic].flatMap((next) =>
+    STARTERS.filter((s) => s.topic === next),
+  );
+}
+
+// The question AirAware asks back, if any: only on the newest entry, when it
+// is a finished topic answer whose question back is not yet answered or
+// skipped. The first offered question still unanswered on screen, not
+// skipped this visit, and known to My Profile.
+export interface PendingFollowUp {
+  entryId: number;
+  field: HouseholdField;
+  changes: string[];
+}
+
+export function pendingFollowUp(
+  entries: AskEntry[],
+  context: HouseholdContext,
+  skipped: ReadonlySet<string>,
+): PendingFollowUp | null {
+  const last = entries.at(-1);
+  const answer = last?.answer;
+  if (!last || last.status !== 'ready' || last.followUp || !answer) {
+    return null;
+  }
+  if (answer.topic === 'medical' || answer.topic === 'out_of_scope') {
+    return null;
+  }
+  const answers = toAnswers(context);
+  for (const { field: id, changes } of answer.followUps) {
+    const field = FIELDS.find((f) => fieldId(f) === id);
+    if (field && !answers[id] && !skipped.has(id)) {
+      return { entryId: last.id, field, changes };
+    }
+  }
+  return null;
+}
 
 // The current topic's starters first, the rest in their usual order.
 export function startersFor(topic: AskTopic | null): typeof STARTERS {

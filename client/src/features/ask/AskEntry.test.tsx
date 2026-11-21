@@ -30,6 +30,7 @@ function entry(patch: Partial<Entry>): Entry {
   return {
     id: 1,
     echo: ECHO,
+    said: 'asked',
     request: { question: ECHO, place },
     status: 'ready',
     ...patch,

@@ -6,6 +6,7 @@ import type {
   HouseholdContext,
 } from '../../../../shared/contracts.ts';
 import { ApiError, askAirAware } from '../../services/api.ts';
+import { toAnswers, toContext } from '../daily-plan/householdFields.ts';
 import type { Place } from '../location/place.ts';
 import { ASK_COPY } from './ask.ts';
 
@@ -13,34 +14,57 @@ export type AskQuery = { question: string } | { topic: AskTopic };
 
 export interface AskEntry {
   id: number;
-  // The heading: the question typed, or the chip's label.
+  // Your message: the question typed, the chip's label, or the answer tapped.
   echo: string;
-  request: AskRequest;
+  said: 'asked' | 'answered';
+  // null: a local reply ("Noted…"); nothing was sent.
+  request: AskRequest | null;
   status: 'thinking' | 'ready' | 'error';
   answer?: AskAnswer;
   error?: ApiError;
+  // A local reply's text.
+  note?: string;
+  // What became of this reply's question back.
+  followUp?: {
+    field: string;
+    outcome: 'answered' | 'skipped';
+    label?: string;
+  };
 }
 
 const MAX_ENTRIES = 10;
 
-// Ask's answers for this visit (Phase 7): in memory only, newest first, one
-// request at a time. A new place or "Delete everything" starts afresh.
+interface Thread {
+  key: string | null;
+  entries: AskEntry[];
+  // Questions back skipped this visit.
+  skipped: ReadonlySet<string>;
+}
+
+// Ask's conversation for this visit (guided chat): in memory only, oldest
+// first, one request at a time. A new place or "Delete everything" starts
+// afresh. Answers to questions back go to the answers on screen, so Today's
+// plan, My Home and My Profile use them too.
 export function useAsk(
   place: Place | null,
   context: HouseholdContext,
   resets: number,
+  onContextChange: (next: HouseholdContext) => void,
 ) {
   const key = place
     ? `${resets}|${place.label}|${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`
     : null;
-  const [state, setState] = useState<{
-    key: string | null;
-    entries: AskEntry[];
-  }>({ key, entries: [] });
-  // A new key empties the list during render, so the old place's answers
+  const empty = (k: string | null): Thread => ({
+    key: k,
+    entries: [],
+    skipped: new Set(),
+  });
+  const [state, setState] = useState<Thread>(() => empty(key));
+  // A new key empties the thread during render, so the old place's answers
   // never show, even for one frame, and never come back.
-  if (state.key !== key) setState({ key, entries: [] });
-  const entries = state.key === key ? state.entries : [];
+  if (state.key !== key) setState(empty(key));
+  const thread = state.key === key ? state : empty(key);
+  const { entries, skipped } = thread;
   const thinking = entries.some((e) => e.status === 'thinking');
   const lastId = useRef(0);
 
@@ -49,12 +73,20 @@ export function useAsk(
     setState((s) =>
       s.key === sentKey
         ? {
-            key: s.key,
+            ...s,
             entries: s.entries.map((e) =>
               e.id === id ? { ...e, ...patch } : e,
             ),
           }
         : s,
+    );
+  }
+
+  function append(entry: AskEntry) {
+    setState((s) =>
+      s.key === key
+        ? { ...s, entries: [...s.entries, entry].slice(-MAX_ENTRIES) }
+        : { ...empty(key), entries: [entry] },
     );
   }
 
@@ -73,8 +105,15 @@ export function useAsk(
     }
   }
 
-  function send(query: AskQuery, echo: string) {
-    if (!place || !key || thinking) return;
+  // With the answers given: a re-ask after a question back carries the new
+  // answer, not the one from this render.
+  function sendWith(
+    query: AskQuery,
+    echo: string,
+    said: AskEntry['said'],
+    answers: HouseholdContext,
+  ) {
+    if (!place || !key) return;
     const request: AskRequest = {
       ...query,
       place: {
@@ -82,31 +121,90 @@ export function useAsk(
         latitude: Number(place.latitude.toFixed(2)),
         longitude: Number(place.longitude.toFixed(2)),
       },
-      householdContext: context,
+      householdContext: answers,
     };
     const entry: AskEntry = {
       id: ++lastId.current,
       echo,
+      said,
       request,
       status: 'thinking',
     };
-    setState((s) => ({
-      key,
-      entries: [entry, ...(s.key === key ? s.entries : [])].slice(
-        0,
-        MAX_ENTRIES,
-      ),
-    }));
+    append(entry);
     void run(key, entry.id, request);
+  }
+
+  function send(query: AskQuery, echo: string) {
+    if (thinking) return;
+    sendWith(query, echo, 'asked', context);
   }
 
   // Sends the entry's own body again.
   function retry(id: number) {
     const entry = entries.find((e) => e.id === id);
-    if (!key || !entry || entry.status !== 'error' || thinking) return;
+    if (!key || !entry?.request || entry.status !== 'error' || thinking) {
+      return;
+    }
     update(key, id, { status: 'thinking', error: undefined });
     void run(key, id, entry.request);
   }
 
-  return { entries, thinking, send, retry };
+  // Answers the question back on reply `entryId`: the answer joins the
+  // answers on screen; the topic is asked again only when the answer changes
+  // its cards, else AirAware notes it without a request.
+  function answerFollowUp(
+    entryId: number,
+    field: string,
+    value: string,
+    label: string,
+  ) {
+    const entry = entries.find((e) => e.id === entryId);
+    const answer = entry?.answer;
+    if (!key || thinking || !entry || entry.followUp || !answer) return;
+    if (answer.topic === 'medical' || answer.topic === 'out_of_scope') return;
+    const next = toContext({ ...toAnswers(context), [field]: value });
+    onContextChange(next);
+    update(key, entryId, { followUp: { field, outcome: 'answered', label } });
+    const changes =
+      answer.followUps.find((f) => f.field === field)?.changes ?? [];
+    if (changes.includes(value)) {
+      sendWith({ topic: answer.topic }, label, 'answered', next);
+    } else {
+      append({
+        id: ++lastId.current,
+        echo: label,
+        said: 'answered',
+        request: null,
+        status: 'ready',
+        note: ASK_COPY.noted,
+      });
+    }
+  }
+
+  function skipFollowUp(entryId: number, field: string) {
+    if (!key || thinking) return;
+    setState((s) =>
+      s.key === key
+        ? {
+            ...s,
+            skipped: new Set([...s.skipped, field]),
+            entries: s.entries.map((e) =>
+              e.id === entryId && !e.followUp
+                ? { ...e, followUp: { field, outcome: 'skipped' } }
+                : e,
+            ),
+          }
+        : s,
+    );
+  }
+
+  return {
+    entries,
+    thinking,
+    skipped,
+    send,
+    retry,
+    answerFollowUp,
+    skipFollowUp,
+  };
 }
