@@ -247,7 +247,10 @@ function AppShell() {
         Skip to content
       </a>
       <header className="on-dark bg-bg text-text">
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+        {/* With enlarged text the row can outgrow the screen: it scrolls
+            sideways then, so every control stays reachable. At normal text
+            the place chip shrinks first and nothing scrolls. */}
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 overflow-x-auto px-4 sm:px-6">
           <a
             href="/"
             className="inline-flex min-h-11 shrink-0 items-center text-lg font-semibold whitespace-nowrap"

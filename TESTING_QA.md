@@ -106,9 +106,9 @@ Repeat with data provider unavailable, stale response, and AI provider unavailab
 - **`e2e/responsive.spec.ts`:**
   - every page at 320, 640, 768, 1024 and 1280 px: nothing past the screen edge, one `h1`;
   - 44 px targets and axe at 320, on desktop and Pixel 7;
-  - 200 % text and WCAG text spacing;
-  - long place names;
-  - forced colours: no backdrop, a focus outline, the header's contrast, and axe without its colour-contrast rule, which misreads forced colours in Chromium.
+  - 200 % text (at 900, 1024 and 1280) and WCAG text spacing;
+  - long place names, and the header with a desktop scrollbar's width taken (headless Chromium hides scrollbars, so a right margin on body stands in);
+  - forced colours: no backdrop, a focus outline, the header's contrast, the highlighted place suggestion's outline, and axe without its colour-contrast rule, which misreads forced colours in Chromium.
 - **`e2e/backdrop.spec.ts`:**
   - no text outside the title block rests on the scene;
   - the title block's contrast over every sky;

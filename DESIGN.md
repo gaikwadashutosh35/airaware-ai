@@ -172,10 +172,10 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 - **Guarded by `e2e/responsive.spec.ts`** (Phase 9), on every page:
   - at 320, 640, 768, 1024 and 1280 px: nothing reaches past the screen, measured by each element's edges (the page clips sideways overflow, so scroll width can't show it), and exactly one `h1`;
   - at 320: 44 px targets, except links inside a sentence;
-  - at 1280: 200 % text, nothing clipped;
+  - at 900, 1024 and 1280: 200 % text, nothing clipped;
   - at 320: WCAG text spacing, nothing clipped;
-  - a long place keeps the header on screen and, at normal text, the top nav on one row.
-- **Top bar:** from `lg` the nav may wrap, which happens only when text is enlarged past the breakpoints. The place chip caps at 200 px from `lg`, so the row never runs short at normal text.
+  - a long place keeps the header on screen and, at normal text, the top nav on one row, also with a desktop scrollbar's width taken (simulated, since headless Chromium hides scrollbars).
+- **Top bar:** at normal text the place chip shrinks (its label truncates), so the nav always stays on one row. With text enlarged past the breakpoints, the header row scrolls sideways, so every control stays reachable.
 
 ## 11. Accessibility requirements
 

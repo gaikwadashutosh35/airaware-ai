@@ -39,12 +39,9 @@ export function AppNav({ page }: { page: AppPage }) {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-rule-dark bg-bg pb-[env(safe-area-inset-bottom,0px)] md:static md:ml-auto md:border-0 md:bg-transparent md:pb-0 lg:min-w-0"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-rule-dark bg-bg pb-[env(safe-area-inset-bottom,0px)] md:static md:ml-auto md:border-0 md:bg-transparent md:pb-0"
     >
-      {/* From lg the full labels fit with room to spare, so the list wraps
-          only when text is enlarged past the breakpoints (200 % text). Below
-          lg the place chip already shrinks to fit, so the list never wraps. */}
-      <ul className="grid grid-cols-5 md:flex md:gap-1 lg:flex-wrap">
+      <ul className="grid grid-cols-5 md:flex md:gap-1">
         {ITEMS.map(({ page: target, href, name, short, Icon }) => (
           <li key={target}>
             <a

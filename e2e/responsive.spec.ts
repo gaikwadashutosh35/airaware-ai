@@ -10,6 +10,7 @@ import {
   smallTargets,
   stub,
 } from './layout.ts';
+import { searchFixture } from '../client/src/test/fixtures.ts';
 import { PUNE } from './routes.ts';
 
 const PATHS = [
@@ -93,24 +94,33 @@ test.describe('zoom and text spacing', () => {
   test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
   for (const path of PATHS) {
     // 200 % text: the root font size doubles, as browser text zoom does
-    // for an app sized in rem.
-    test(`text at 200 % still fits: ${path}`, async ({ page }) => {
-      await page.setViewportSize({ width: 1280, height: 800 });
-      await open(page, path);
-      await page.addStyleTag({
-        content: 'html { font-size: 200% !important }',
+    // for an app sized in rem. Final review: also below 1280, where the
+    // short-label top bar (md) and the narrowest full-label bar (lg) live.
+    for (const [width, height] of [
+      [900, 800],
+      [1024, 768],
+      [1280, 800],
+    ] as const) {
+      test(`text at 200 % still fits: ${path} ${width}x${height}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        await open(page, path);
+        await page.addStyleTag({
+          content: 'html { font-size: 200% !important }',
+        });
+        // Measure only once the page really shows 200 % text.
+        await expect
+          .poll(() =>
+            page.evaluate(
+              () => getComputedStyle(document.documentElement).fontSize,
+            ),
+          )
+          .toBe('32px');
+        expect(await pastTheEdge(page)).toEqual([]);
+        expect(await clippedText(page)).toEqual([]);
       });
-      // Measure only once the page really shows 200 % text.
-      await expect
-        .poll(() =>
-          page.evaluate(
-            () => getComputedStyle(document.documentElement).fontSize,
-          ),
-        )
-        .toBe('32px');
-      expect(await pastTheEdge(page)).toEqual([]);
-      expect(await clippedText(page)).toEqual([]);
-    });
+    }
 
     test(`wider text spacing clips nothing: ${path}`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 640 });
@@ -221,4 +231,81 @@ test.describe('forced colours', () => {
       await expectNoAxeViolations(page, { skip: ['color-contrast'] });
     });
   }
+});
+
+// Final review: headless Chromium hides scrollbars, so a desktop's classic
+// 15-17 px scrollbar never narrows the page in the other tests. A right
+// margin on body narrows the page the same way while media queries keep
+// the window's width.
+test.describe('the header at normal text with a scrollbar', () => {
+  test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
+  for (const width of [1024, 1280]) {
+    for (const label of ['Thiruvananthapuram, Kerala', 'Mumbai, Maharashtra']) {
+      test(`one nav row, nothing past the screen: ${width}, ${label}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 800 });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await stub(page, 'not_elevated');
+        await page.goto(
+          PUNE.replace('Pune%2C%20Maharashtra', encodeURIComponent(label)),
+        );
+        await expect(page.locator('main h1:visible').first()).toBeVisible();
+        await page.addStyleTag({
+          content: 'body { margin-right: 17px !important }',
+        });
+        const tops = await page
+          .locator('nav[aria-label="Main"] li')
+          .evaluateAll((items) =>
+            items.map((li) => Math.round(li.getBoundingClientRect().top)),
+          );
+        expect(new Set(tops).size).toBe(1);
+        expect(await pastTheEdge(page)).toEqual([]);
+      });
+    }
+  }
+
+  // The metros' names fit the chip whole on a desktop.
+  test('a metro name shows whole in the chip at 1280', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await stub(page, 'not_elevated');
+    await page.goto(
+      PUNE.replace(
+        'Pune%2C%20Maharashtra',
+        encodeURIComponent('Mumbai, Maharashtra'),
+      ),
+    );
+    const label = page.locator('header .truncate');
+    await expect(label).toHaveText('Mumbai, Maharashtra');
+    const [scroll, client] = await label.evaluate((el) => [
+      el.scrollWidth,
+      el.clientWidth,
+    ]);
+    expect(scroll).toBeLessThanOrEqual(client);
+  });
+});
+
+// Final review: in Windows High Contrast the highlighted place suggestion
+// must still show which one Enter will pick.
+test('forced colours: the highlighted suggestion shows', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
+  await page.route('**/api/v1/locations/search**', (route) =>
+    route.fulfill({ json: { data: searchFixture } }),
+  );
+  await page.goto('/app/welcome');
+  const box = page.getByRole('combobox', {
+    name: 'Search for a city or area in India',
+  });
+  await box.fill('Pune');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  await box.press('ArrowDown');
+  const selected = page.locator('[role="option"][aria-selected="true"]');
+  await expect(selected).toHaveCount(1);
+  const outline = await selected.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
+  });
+  expect(outline.style).not.toBe('none');
+  expect(outline.width).toBeGreaterThan(0);
 });

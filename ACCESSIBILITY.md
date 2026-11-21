@@ -81,15 +81,16 @@ A screen-reader pass with a real reader has not been done yet.
   - exactly one `h1`.
 - **Touch targets of 44 px or more at 320** on every page. Links inside a sentence are exempt (WCAG 2.5.8). Fixed in Phase 9: the header wordmarks, the footer "Privacy" links and the source links.
 - **axe at 320** on every page: no violations.
-- **200 % text** (text enlarged, breakpoints fixed) at 1280: nothing past the screen and no clipped text.
-  - Fixed in Phase 9: from `lg` the top nav may wrap.
-  - The place chip caps at 200 px from `lg`, so at normal text the nav stays on one row.
+- **200 % text** (text enlarged, breakpoints fixed) at 900, 1024 and 1280: nothing past the screen and no clipped text.
+  - Fixed in Phase 9: the header row scrolls sideways when enlarged text makes it outgrow the screen, so the nav and the place chip stay reachable.
+  - At normal text nothing scrolls: the chip shrinks and the nav stays on one row, also with a desktop scrollbar's width taken.
 - **Wider text spacing** (WCAG 1.4.12) at 320: no clipped text on any page.
 - **Long places:** at 320×640, "Chhatrapati Sambhajinagar, Maharashtra" keeps the verdict above the bottom bar. A 70-character place keeps the header on screen at every size.
 - **Windows High Contrast** (forced colours, emulated):
   - the backdrop steps aside;
   - focus outlines show;
   - the header's forced colours reach 4.5:1;
+  - the highlighted place suggestion gets an outline (fixed in Phase 9; it was marked by colour alone, which forced colours remove);
   - axe passes with every rule except colour-contrast. That rule misreads forced colours in Chromium (it takes the authored `-webkit-text-fill-color`, not the painted colour), so the header's contrast is checked directly instead.
 
 **Keyboard walk** (Tab and Shift+Tab only, scripted in Chromium at 1280 and 390, every page and the place dialog):
