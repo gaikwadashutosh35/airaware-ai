@@ -93,6 +93,7 @@ function renderSection(props: Partial<Props> = {}) {
       context={{}}
       now={at}
       active
+      airShown
       onSaved={onSaved}
       onPlan={onPlan}
       {...props}
@@ -128,6 +129,28 @@ afterEach(() => {
 });
 
 describe('DailyPlanSection', () => {
+  // Phase 10 final review: while the forecast card failed or is loading, the
+  // top card may rest on air with no verdict on the page.
+  it('names the air the plan used when no verdict is shown', async () => {
+    routeFetch(() => planReply());
+    renderSection({ airShown: false });
+    await build();
+
+    expect(
+      screen.getByText(
+        /^Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated /,
+      ),
+    ).toBeDefined();
+  });
+
+  it('leaves the air to the verdict when it is shown', async () => {
+    routeFetch(() => planReply());
+    renderSection();
+    await build();
+
+    expect(screen.queryByText(/^Based on:/)).toBeNull();
+  });
+
   it('waits for a place', async () => {
     const spy = routeFetch(() => planReply());
     renderSection({ place: null });

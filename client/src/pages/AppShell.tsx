@@ -388,6 +388,7 @@ function AppShell() {
                 // Not before saved answers load, or a returning user's
                 // plan is built twice, first without them.
                 active={(page === 'today' || page === 'home') && loaded}
+                airShown={forecast.state.status === 'ready'}
                 onSaved={() => setListVersion((n) => n + 1)}
                 onPlan={setTodayPlan}
                 deletedPlanId={deletedPlanId}

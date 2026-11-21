@@ -5,12 +5,14 @@ import {
   rulesPlanFixture,
   unavailablePlanFixture,
 } from '../../test/planFixtures.ts';
+import { clockTime } from '../ask/ask.ts';
 import {
   basedOn,
   checkText,
   groupPlan,
   inputLabel,
   madeByLine,
+  planAirLine,
 } from './planDisplay.ts';
 
 const ids = (plan: DailyPlan) =>
@@ -108,6 +110,17 @@ describe('madeByLine', () => {
     );
     expect(madeByLine(aiPlanFixture)).toBe(
       'Made with AI (gemini-3.8-flash, prompt daily-plan-v1). The advice text and sources come from our fixed rules.',
+    );
+  });
+});
+
+// Phase 10 final review: where no verdict is on the page, a plan still says
+// which air it used, with its kind, provider and time.
+describe('planAirLine', () => {
+  it('names the verdict, data kind, provider and update time', () => {
+    const forecast = rulesPlanFixture.forecast!;
+    expect(planAirLine(rulesPlanFixture.air, forecast)).toBe(
+      `Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated ${clockTime(forecast.retrievedAt)}`,
     );
   });
 });

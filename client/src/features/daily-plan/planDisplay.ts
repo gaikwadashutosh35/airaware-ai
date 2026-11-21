@@ -1,12 +1,15 @@
 // How a daily plan is laid out on screen (Phase 7 design, "Plan display
 // rules"). Pure, so the rules are tested without rendering.
 import type {
+  AirAssessment,
   DailyPlan,
   PlanPeriod,
   PollutantCheck,
   RecommendationCandidate,
 } from '../../../../shared/contracts.ts';
 import type { ApiError } from '../../services/api.ts';
+import { clockTime } from '../ask/ask.ts';
+import { verdictFrom } from '../today/today.ts';
 import { FIELDS, fieldId } from './householdFields.ts';
 
 // What Today's plan area shows, for My Home (Phase 8): never a plan Today
@@ -138,3 +141,12 @@ export const LEVEL_TAG = {
 
 // A plan built without a forecast says so, word for word.
 export const NO_AIR = 'Air information is unavailable for this plan.';
+
+// The air a plan used, for where no verdict is on the page (Phase 10 final
+// review): never an air-based card without its kind, source and time.
+export function planAirLine(
+  air: AirAssessment,
+  forecast: NonNullable<DailyPlan['forecast']>,
+): string {
+  return `Based on: ${verdictFrom(air).title} · Model forecast · ${forecast.provider} · updated ${clockTime(forecast.retrievedAt)}`;
+}

@@ -123,7 +123,7 @@ const BANNED = [
   /breathing (problem|difficult|trouble)|trouble breathing/i,
   // Reassurance: within the limit is not clean or free of risk.
   /\b(low|little|minimal) risk\b|\bclean air\b|\bair is clean\b/i,
-  /\bgood (day|air)\b|air quality is good/i,
+  /\b(good|bad) air\b|\bgood day\b|air quality is good/i,
   /https?:|www\./i,
   /always (open|close)/i,
   /(open|close) all (the )?windows/i,

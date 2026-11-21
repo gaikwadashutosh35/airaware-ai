@@ -165,6 +165,8 @@ describe('checkPlanOutput', () => {
       'It is a good day for a run.',
       'Good air all day.',
       'Air quality is good today.',
+      // Phase 10 final review: the same rule bans "bad air".
+      'Expect bad air in the evening.',
     ];
     for (const sentence of banned) {
       expect(

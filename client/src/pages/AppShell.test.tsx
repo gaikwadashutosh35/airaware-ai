@@ -987,6 +987,35 @@ describe('AppShell', () => {
         name: 'Consider an indoor alternative for exercise',
       }),
     ).toBeDefined();
+    // Phase 10 final review: no verdict on the page, so the plan names the
+    // air it used.
+    expect(
+      screen.getByText(
+        /^Based on: .* · Model forecast · Open-Meteo · updated /,
+      ),
+    ).toBeDefined();
+  });
+
+  it('with the verdict shown, the plan leaves the air to it', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok(), planRoutes());
+    render(<AppShell />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await buildPlan();
+
+    expect(
+      screen.getByRole('heading', {
+        level: 3,
+        name: 'Consider an indoor alternative for exercise',
+      }),
+    ).toBeDefined();
+    expect(screen.queryByText(/^Based on:/)).toBeNull();
   });
 
   it('credits Open-Meteo even when the source list fails', async () => {

@@ -25,7 +25,12 @@ import { topRecommendation } from '../today/today.ts';
 import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
 import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
-import { NO_AIR, PLAN_STALE, type PlanReport } from './planDisplay.ts';
+import {
+  NO_AIR,
+  PLAN_STALE,
+  planAirLine,
+  type PlanReport,
+} from './planDisplay.ts';
 
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const READY = 'Your plan is ready.';
@@ -66,6 +71,7 @@ export function DailyPlanSection({
   context,
   now,
   active,
+  airShown,
   onSaved,
   onPlan,
   deletedPlanId = null,
@@ -76,6 +82,9 @@ export function DailyPlanSection({
   now: Date;
   // True while Today or My Home is shown: the plan builds only then.
   active: boolean;
+  // True while the forecast verdict is on the page; otherwise the plan names
+  // the air it used.
+  airShown: boolean;
   onSaved: () => void;
   // What this area shows (nothing, building, an error with a retry, a stale
   // plan or the current one): My Home mirrors it.
@@ -241,6 +250,11 @@ export function DailyPlanSection({
           {stale && <p className="font-semibold">{PLAN_STALE}</p>}
           {/* The full day hides the air check, so say it here. */}
           {!built.plan.forecast && <p className="font-semibold">{NO_AIR}</p>}
+          {built.plan.forecast && !airShown && (
+            <p className="text-sm text-text-dark-muted">
+              {planAirLine(built.plan.air, built.plan.forecast)}
+            </p>
+          )}
           {top ? (
             <PlanCard
               item={top}

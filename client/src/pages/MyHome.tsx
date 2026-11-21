@@ -5,7 +5,9 @@ import { useRequest } from '../features/air-quality/useRequest.ts';
 import { PlanCard } from '../features/daily-plan/PlanCard.tsx';
 import {
   groupPlan,
+  NO_AIR,
   PLAN_STALE,
+  planAirLine,
   type PlanReport,
 } from '../features/daily-plan/planDisplay.ts';
 import { GuideGroups } from '../features/guides/GuideGroups.tsx';
@@ -101,6 +103,10 @@ export function MyHome({
           )}
           {plan && cards.length > 0 && (
             <>
+              {/* No verdict on this page: say which air the cards rest on. */}
+              <p className="text-sm text-text-dark-muted">
+                {plan.forecast ? planAirLine(plan.air, plan.forecast) : NO_AIR}
+              </p>
               <div className="grid gap-4 md:grid-cols-2">
                 {cards.map((item) => (
                   <PlanCard

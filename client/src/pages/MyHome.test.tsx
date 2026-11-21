@@ -11,7 +11,11 @@ import { ApiError } from '../services/api.ts';
 import type { DailyPlan, HouseholdContext } from '../../../shared/contracts.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { homeGuidesFixture } from '../test/guideFixtures.ts';
-import { aiPlanFixture, rulesPlanFixture } from '../test/planFixtures.ts';
+import {
+  aiPlanFixture,
+  rulesPlanFixture,
+  unavailablePlanFixture,
+} from '../test/planFixtures.ts';
 import { MyHome } from './MyHome.tsx';
 
 const GUIDES = '/api/v1/recommendations/guides?topic=home';
@@ -50,6 +54,32 @@ afterEach(() => {
 });
 
 describe('MyHome', () => {
+  // Phase 10 final review: My Home never shows the verdict, so today's cards
+  // say which air they rest on, with its kind, provider and time.
+  it("today's cards name the air the plan used", async () => {
+    routeGuides(guidesOk);
+    show();
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    const today = screen.getByRole('region', { name: 'Today, for your home' });
+    expect(
+      within(today).getByText(
+        /^Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated /,
+      ),
+    ).toBeDefined();
+  });
+
+  it("today's cards say so when the plan had no air information", async () => {
+    routeGuides(guidesOk);
+    show(unavailablePlanFixture);
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    const today = screen.getByRole('region', { name: 'Today, for your home' });
+    expect(
+      within(today).getByText('Air information is unavailable for this plan.'),
+    ).toBeDefined();
+  });
+
   it("today's indoor cards come first, with Why it matters", async () => {
     routeGuides(guidesOk);
     show();
