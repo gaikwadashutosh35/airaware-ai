@@ -1,7 +1,7 @@
 // Phase 9: every page at phone, tablet and desktop widths. Nothing reaches
 // past the screen, one h1, taps of 44 px, and axe on a phone. Every request
 // is answered here, so the run spends none of the shared limits.
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { expectNoAxeViolations } from './axe.ts';
 import {
   clippedText,
@@ -51,6 +51,7 @@ test.describe('every size', () => {
         await page.setViewportSize({ width, height });
         await open(page, path);
         expect(await pastTheEdge(page)).toEqual([]);
+        expect(await clippedText(page)).toEqual([]);
         await expect(page.locator('h1:visible')).toHaveCount(1);
       });
     }
@@ -58,11 +59,13 @@ test.describe('every size', () => {
 });
 
 for (const path of PATHS) {
-  test(`touch targets are 44 px: ${path}`, async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 640 });
-    await open(page, path);
-    expect(await smallTargets(page)).toEqual([]);
-  });
+  for (const width of [320, 768]) {
+    test(`touch targets are 44 px: ${path} ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 320 ? 640 : 1024 });
+      await open(page, path);
+      expect(await smallTargets(page)).toEqual([]);
+    });
+  }
 
   test(`axe passes on a phone: ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
@@ -83,7 +86,15 @@ test('a long real place keeps the verdict above the bar', async ({ page }) => {
       encodeURIComponent('Chhatrapati Sambhajinagar, Maharashtra'),
     ),
   );
-  const verdict = page.locator('main section h2:visible').first();
+  // The verdict by its name, not the first h2 (the plan's heading shows
+  // while the forecast loads), and the long name really in the title.
+  await expect(page.locator('main h1:visible').first()).toContainText(
+    'Chhatrapati Sambhajinagar',
+  );
+  const verdict = page.getByRole('heading', {
+    level: 2,
+    name: /^Forecast (within|above)|unavailable/,
+  });
   await expect(verdict).toBeVisible();
   const bottom = (await verdict.boundingBox())!;
   const nav = (await page.locator('nav[aria-label="Main"]').boundingBox())!;
@@ -130,6 +141,12 @@ test.describe('zoom and text spacing', () => {
         content:
           '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important } p { margin-bottom: 2em !important }',
       });
+      // Measure only once the wider spacing really applies.
+      await expect
+        .poll(() =>
+          page.evaluate(() => getComputedStyle(document.body).wordSpacing),
+        )
+        .not.toBe('0px');
       expect(await clippedText(page)).toEqual([]);
     });
   }
@@ -149,7 +166,11 @@ test.describe('a long place in the header', () => {
       await page.goto(
         PUNE.replace('Pune%2C%20Maharashtra', encodeURIComponent(LONG_PLACE)),
       );
-      await expect(page.locator('main h1:visible').first()).toBeVisible();
+      // The long name really is in the chip and the title.
+      await expect(page.locator('header .truncate')).toHaveText(LONG_PLACE);
+      await expect(page.locator('main h1:visible').first()).toContainText(
+        LONG_PLACE,
+      );
       expect(await pastTheEdge(page)).toEqual([]);
       // At normal text the top bar (md and up) keeps its nav on one row:
       // the chip truncates instead (the nav wraps only for enlarged text).
@@ -350,5 +371,80 @@ test.describe('forced colours: chosen chips show', () => {
     expect(await pressed.evaluate(outlined)).toBe(true);
     const plain = page.locator('button[aria-pressed="false"]').first();
     expect(await plain.evaluate(outlined)).toBe(false);
+  });
+});
+
+// Final review: the size matrix sees one data state (current, within, a
+// ready plan, nothing open). These states get the same edge, clipping and
+// target checks on a 320 px phone.
+test.describe('other states on a 320 px phone', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.route('**/api/v1/locations/search**', (route) =>
+      route.fulfill({ json: { data: searchFixture } }),
+    );
+    await page.route('**/api/v1/assistant/answer', (route) =>
+      route.fulfill({ json: { data: aiAskFixture } }),
+    );
+  });
+  const fits = async (page: Page) => {
+    expect(await pastTheEdge(page)).toEqual([]);
+    expect(await clippedText(page)).toEqual([]);
+    expect(await smallTargets(page)).toEqual([]);
+  };
+
+  test('a stale, above-limit Today', async ({ page }) => {
+    await stub(page, 'elevated', {}, new Date(Date.now() - 2 * 3600_000));
+    await page.goto(PUNE);
+    await expect(page.getByText(/^Not current:/)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 2, name: /^Forecast above/ }),
+    ).toBeVisible();
+    await fits(page);
+  });
+
+  test('the forecast error card', async ({ page }) => {
+    await stub(page, 'not_elevated');
+    await page.route('**/api/v1/air-quality/forecast**', (route) =>
+      route.fulfill({
+        status: 502,
+        json: { error: { code: 'PROVIDER_ERROR', message: 'Test reply.' } },
+      }),
+    );
+    await page.goto(PUNE);
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await fits(page);
+  });
+
+  test('the place dialog with suggestions', async ({ page }) => {
+    await stub(page, 'not_elevated');
+    await page.goto(PUNE);
+    await page.getByRole('button', { name: /^Change place/ }).click();
+    await page
+      .getByRole('combobox', { name: 'Search for a city or area in India' })
+      .fill('Pune');
+    await expect(page.getByRole('option').first()).toBeVisible();
+    await fits(page);
+  });
+
+  test('Welcome steps 2 and 3', async ({ page }) => {
+    await stub(page, 'not_elevated');
+    await page.goto(PUNE.replace('/app?', '/app/welcome?'));
+    await expect(page.getByText('Step 2 of 3')).toBeVisible();
+    await fits(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByText('Step 3 of 3')).toBeVisible();
+    await fits(page);
+  });
+
+  test('an Ask answer', async ({ page }) => {
+    await stub(page, 'not_elevated');
+    await page.goto(PUNE.replace('/app?', '/app/ask?'));
+    await page
+      .getByRole('button', { name: 'Outdoor activities', exact: true })
+      .click();
+    await expect(page.locator('article.ask-answer')).toBeVisible();
+    await fits(page);
   });
 });

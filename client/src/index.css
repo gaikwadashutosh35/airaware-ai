@@ -86,6 +86,10 @@
     font-family: var(--font-sans);
     font-synthesis: none;
     line-height: 1.55;
+    /* A word too long for its line breaks rather than spilling out of its
+       box (enlarged text in a narrow column). It never fires at normal
+       text, where every word fits. */
+    overflow-wrap: break-word;
   }
 
   /* Phones: no double-tap-zoom wait, and a long press doesn't select a

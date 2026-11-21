@@ -112,7 +112,11 @@ A screen-reader pass with a real reader has not been done yet.
 - **Place dialog:**
   - opening it from the chip puts focus inside;
   - Tab cycles its controls (the search, "Use my location", "Close") and the document itself, never another control on the page;
-  - Escape closes it and focus returns to the chip.
+  - Escape closes it and focus returns to the chip;
+  - search, arrow and Enter choose a place with the keyboard alone.
+- **Welcome by keyboard:** choosing a place moves focus to step 2's heading, Space ticks a chip, Next opens step 3, and focus moves to its heading.
+- **Kept as `e2e/keyboard.spec.ts`,** so all of the above re-runs with the suite. It measures that a ring is drawn, not how clear it looks.
+- **Checked by eye** in the built-in browser with real Tab presses: rings on the wordmark, a nav pill and the place chip at 1024 (with a classic scrollbar); a bottom-bar item at 390; a help card and the Ask box at 1280. All were clearly visible and none was cut off.
 
 **Accessibility tree** (Playwright `ariaSnapshot`, every page at 1280):
 - **Landmarks:** banner, main and contentinfo on every page; navigation "Main" on the app pages.
@@ -127,6 +131,8 @@ A screen-reader pass with a real reader has not been done yet.
 **Real phone** (21 Nov 2026, the owner's own phone, over home Wi-Fi to the Vite dev server):
 - The owner ran the 12 items in `docs/REAL_PHONE_CHECKLIST.md` and reported "All fine": tap feedback, no stuck hover, notch and home-bar spacing, the city at the end of Today, no zoom and no keyboard covering the inputs, scrolling, long press, the status bar colour, the sideways look, rain (on Bhubaneswar, where rain was forecast that hour), and the place dialog.
 - The report didn't say whether the optional item 12 (TalkBack or VoiceOver) was tried, so it isn't counted here.
+- **Device:** the phone model, OS and browser weren't recorded (the checklist now asks for them).
+- That check ran before the final Phase 9 fixes, which made the header row scroll only under enlarged text and outlined chosen chips in High Contrast. A glance at the phone's bottom bar is due in Phase 10.
 - "Use my location" needs HTTPS and is still to be checked on the live site.
 
 No real screen reader has been confirmed yet.

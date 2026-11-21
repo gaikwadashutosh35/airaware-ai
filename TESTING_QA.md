@@ -104,8 +104,9 @@ Repeat with data provider unavailable, stale response, and AI provider unavailab
 
 **Layout and accessibility (Phase 9):** these answer every API call themselves (`e2e/layout.ts` `stub`), so they spend none of the shared rate limits.
 - **`e2e/responsive.spec.ts`:**
-  - every page at 320, 640, 768, 1024 and 1280 px: nothing past the screen edge, one `h1`;
-  - 44 px targets and axe at 320, on desktop and Pixel 7;
+  - every page at 320, 640, 768, 1024 and 1280 px: nothing past the screen edge (element boxes and each run of text), no text cut off or spilling, one `h1`;
+  - 44 px targets at 320 and 768 (including options, tabs, checkboxes and `tabindex="0"` controls), and axe at 320, on desktop and Pixel 7;
+  - other states on a 320 px phone: a stale above-limit Today, the forecast error card, the place dialog with suggestions, Welcome steps 2 and 3, and an Ask answer;
   - 200 % text (at 900, 1024 and 1280) and WCAG text spacing;
   - long place names, and the header with a desktop scrollbar's width taken (headless Chromium hides scrollbars, so a right margin on body stands in);
   - forced colours: no backdrop, a focus outline, the header's contrast, outlines on the highlighted place suggestion, chosen chips and pressed topics, and axe without its colour-contrast rule, which misreads forced colours in Chromium.
@@ -115,6 +116,9 @@ Repeat with data provider unavailable, stale response, and AI provider unavailab
   - the backdrop stays put between pages;
   - the rain layer moves as one box;
   - nothing reaches past a 320 px screen.
+- **`e2e/keyboard.spec.ts`:**
+  - Tab and Shift+Tab on every page: no traps, a ring on every stop, nothing focused off screen, Shift+Tab steps back;
+  - the place dialog and Welcome by keyboard alone.
 - **Real phone:** `docs/REAL_PHONE_CHECKLIST.md`, 12 items the owner runs on their own phone over home Wi-Fi (`npm run dev -w client -- --host`). "Use my location" needs HTTPS, so it is checked on the live site.
 
 ## 8. Accessibility QA

@@ -25,12 +25,21 @@ interface AxeWindow {
 }
 
 // Colour contrast is checked here, in a real browser (jsdom can't). `skip`
-// turns named rules off, only where a caller shows the rule misreads the
-// page (and checks the same thing another way).
+// can turn off colour-contrast only, and only under forced colours, where
+// axe misreads the painted colours (the caller checks contrast directly).
 export async function expectNoAxeViolations(
   page: Page,
-  { skip = [] }: { skip?: string[] } = {},
+  { skip = [] }: { skip?: Array<'color-contrast'> } = {},
 ): Promise<void> {
+  if (skip.length) {
+    const forced = await page.evaluate(
+      () => matchMedia('(forced-colors: active)').matches,
+    );
+    expect(
+      forced,
+      'colour-contrast may be skipped only under forced colours',
+    ).toBe(true);
+  }
   await page.evaluate(source);
   const violations = await page.evaluate(async (off) => {
     const { axe } = window as unknown as AxeWindow;

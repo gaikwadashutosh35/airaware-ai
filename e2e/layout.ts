@@ -33,8 +33,9 @@ export async function stub(
   page: Page,
   level: Level = 'unknown',
   weather: Partial<WeatherNow> = {},
+  // When the forecast was retrieved: two hours ago makes it stale.
+  now: Date = new Date(),
 ): Promise<void> {
-  const now = new Date();
   // The recorded fixture is a full forecast, with its check and weather.
   const base = forecastAt(now) as ForecastData;
   await routeApi(page, {
@@ -114,26 +115,65 @@ export function pastTheEdge(page: Page): Promise<string[]> {
         );
       }
     }
+    // Bare text can spill out of a box that fits (an unbreakable word), so
+    // each run of text is measured too.
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+    );
+    const range = document.createRange();
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const host = node.parentElement;
+      if (!host || !(node.textContent ?? '').trim()) continue;
+      if (host.closest('[data-air], .sr-only') || !host.checkVisibility()) {
+        continue;
+      }
+      range.selectNodeContents(node);
+      const out = [...range.getClientRects()].find(
+        (r) => r.width > 0 && (r.left < -0.5 || r.right > width + 0.5),
+      );
+      if (!out) continue;
+      let clipped = false;
+      for (
+        let a: Element | null = host;
+        a && a !== document.body;
+        a = a.parentElement
+      ) {
+        if (
+          /hidden|clip|auto|scroll/.test(getComputedStyle(a).overflowX) &&
+          fits(a)
+        ) {
+          clipped = true;
+          break;
+        }
+      }
+      if (!clipped) {
+        offenders.push(
+          `text "${(node.textContent ?? '').trim().slice(0, 30)}" ${Math.round(out.left)}..${Math.round(out.right)}`,
+        );
+      }
+    }
     return offenders;
   });
 }
 
 // Controls under 44 px (DESIGN.md: min-h-11): too short, or too narrow
-// unless they take typing. A link inside a sentence is exempt (WCAG 2.5.8's
-// inline exception); an input inside its label is measured as the label.
+// unless they take typing. A link shown inline inside a sentence is exempt
+// (WCAG 2.5.8's inline exception); a link styled as a block or control is
+// always measured. An input inside its label is measured as the label.
 export function smallTargets(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const MIN = 44 - 0.5;
     const offenders: string[] = [];
     const controls = document.querySelectorAll(
-      'a, button, input:not([type="hidden"]), select, textarea, summary, [role="button"], label:has(input)',
+      'a, button, input:not([type="hidden"]), select, textarea, summary, label:has(input), [role="button"], [role="link"], [role="option"], [role="tab"], [role="checkbox"], [role="radio"], [tabindex="0"]',
     );
     for (const el of controls) {
       if (el.closest('[data-air], .sr-only') || !el.checkVisibility()) {
         continue;
       }
       if (el.matches('input') && el.closest('label')) continue;
-      if (el.matches('a')) {
+      if (el.matches('a') && getComputedStyle(el).display === 'inline') {
         const block = el.parentElement?.closest('p, li');
         const own = (el.textContent ?? '').trim();
         if (block && (block.textContent ?? '').trim() !== own) continue;
@@ -154,9 +194,11 @@ export function smallTargets(page: Page): Promise<string[]> {
   });
 }
 
-// Text cut off by its own box: an element that hides overflow and holds
-// more than it shows. A deliberate ellipsis (`truncate`, whose full text is
-// the control's accessible name) is not a cut.
+// Text cut off by its own box (an element that hides overflow and holds
+// more than it shows), or spilling out of it (an element with its own text
+// whose content is wider than its box, overflow visible). A deliberate
+// ellipsis (`truncate`, whose full text is the control's accessible name)
+// is not a cut.
 export function clippedText(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const clips = (value: string) => value === 'hidden' || value === 'clip';
@@ -169,7 +211,15 @@ export function clippedText(page: Page): Promise<string[]> {
         clips(style.overflowX) && el.scrollWidth > el.clientWidth + 1;
       const tall =
         clips(style.overflowY) && el.scrollHeight > el.clientHeight + 1;
-      if (wide || tall) {
+      const ownText = [...el.childNodes].some(
+        (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim(),
+      );
+      const spills =
+        ownText &&
+        style.overflowX === 'visible' &&
+        el.clientWidth > 0 &&
+        el.scrollWidth > el.clientWidth + 1;
+      if (wide || tall || spills) {
         offenders.push(
           `${el.tagName.toLowerCase()} "${(el.textContent ?? '').trim().slice(0, 30)}" ${el.scrollWidth}/${el.clientWidth}x${el.scrollHeight}/${el.clientHeight}`,
         );
