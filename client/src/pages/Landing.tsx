@@ -62,7 +62,7 @@ function AssistantLink() {
 
 // "01"…: a decorative chapter or step number, hidden from screen readers so
 // headings read cleanly.
-function Number({ n }: { n: number }) {
+function Ordinal({ n }: { n: number }) {
   return (
     <span
       aria-hidden="true"
@@ -98,7 +98,7 @@ function Chapter({
       className="reveal mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:py-24"
     >
       <div className={`flex flex-col gap-4 ${flip ? 'lg:order-2' : ''}`}>
-        <Number n={number} />
+        <Ordinal n={number} />
         <h2
           id={headingId}
           className="text-4xl font-semibold tracking-tight sm:text-5xl"
@@ -261,7 +261,7 @@ function Landing() {
                       />
                     </>
                   )}
-                  <Number n={i + 1} />
+                  <Ordinal n={i + 1} />
                 </div>
                 <h3 className="text-2xl font-semibold">{step.title}</h3>
                 <p className="text-lg text-text-muted">{step.detail}</p>

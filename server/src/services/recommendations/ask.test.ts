@@ -303,6 +303,17 @@ describe('createAsker', () => {
     errorSpy.mockRestore();
   });
 
+  // Only a leading "yes" or "no" is a verdict; "no" inside a sentence is not.
+  it('a "no" inside the summary is not a verdict', async () => {
+    const { write } = writerSaying('There is no need to change your plans.');
+    const answer = await createAsker({ forecast, write })(
+      'outdoors',
+      { place },
+      NOW,
+    );
+    expect(answer.generatedBy).toBe('ai');
+  });
+
   // Review Focus 2.
   it('medical and out of scope make no AI call and show no cards', async () => {
     const { generate, write } = writerSaying(
