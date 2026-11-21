@@ -13,12 +13,12 @@ API: in the server suite (route tests against the Express app)
 E2E: 294 passed, 82 skipped (desktop-only size runs in the phone project), local build on port 8090 (at 5254a29: 294 passed, 82 skipped; build pass); live: 294 passed, 82 skipped against https://airaware-ai.netlify.app at 7a6aa05, 21 Nov 2026 06:03–06:15 UTC, the journey passing on desktop and Pixel 7
 Accessibility: see ACCESSIBILITY.md "Results (Phase 9)"
 CodeQL: 0 open alerts; the javascript-typescript and actions analyses of 7a6aa05 returned 0 results
-SonarQube: SonarCloud quality gate FAILED at 7a6aa05 on new reliability (rating C, 2 bugs: typescript:S5850 ask.ts:140, typescript:S2137 Landing.tsx:65; both predate Phase 10); security, maintainability, new coverage 97.6%, duplication 0.4% and hotspots reviewed passed. Both fixed in 5254a29; the gate is re-read after that push. gitleaks: no leaks found (234 commits)
+SonarQube: SonarCloud quality gate FAILED at 7a6aa05 on new reliability (rating C, 2 bugs: typescript:S5850 ask.ts:140, typescript:S2137 Landing.tsx:65; both predate Phase 10); security, maintainability, new coverage 97.6%, duplication 0.4% and hotspots reviewed passed. Both fixed in 5254a29; the gate PASSED at 6a1deb5 (reliability A, 0 open bugs; every condition OK). gitleaks: no leaks found (234 commits)
 Data provider and data kind: Open-Meteo, model_forecast (live Pune check, /api/v1/air-quality/forecast?latitude=18.52&longitude=73.86)
 Timestamp/freshness: retrievedAt 2026-11-21T06:02:49Z, under a minute old when checked
 Critical issues: none. Task 4 review: 0 Critical, 0 Important; two Minors re-graded Important and fixed in dcebdaf and 934678c ("bad air" in the AI check; the plan names its air where no verdict shows); 10 Minors deferred. The new air line was seen by eye at 320 on My Home; 1280 and Today's split-failure state are covered by the unit tests and the e2e layout checks, not by eye
 Known limitations: model forecasts only (CPCB observations not connected); the CAMS grid is about 45 km; the 10 deferred Minors in the Phase 10 report; the owner's phone check after the final fixes (geolocation over HTTPS, bottom bar, notched landscape) is open
-Release decision: released at 7a6aa05 (the owner approved the push); every release-gate item is met except the SonarCloud gate, fixed in 5254a29 and confirmed only after that push
+Release decision: released at 7a6aa05 (the owner approved the push); every release-gate item is met; the SonarCloud gate passed at 6a1deb5 after the fixes in 5254a29
 ```
 
 ## Browser review (Task 1)
