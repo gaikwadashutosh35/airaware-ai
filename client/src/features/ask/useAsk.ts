@@ -6,7 +6,12 @@ import type {
   HouseholdContext,
 } from '../../../../shared/contracts.ts';
 import { ApiError, askAirAware } from '../../services/api.ts';
-import { toAnswers, toContext } from '../daily-plan/householdFields.ts';
+import {
+  FIELDS,
+  fieldId,
+  toAnswers,
+  toContext,
+} from '../daily-plan/householdFields.ts';
 import type { Place } from '../location/place.ts';
 import { ASK_COPY } from './ask.ts';
 
@@ -17,6 +22,8 @@ export interface AskEntry {
   // Your message: the question typed, the chip's label, or the answer tapped.
   echo: string;
   said: 'asked' | 'answered';
+  // The question an answer replies to: its heading names it.
+  about?: string;
   // null: a local reply ("Noted…"); nothing was sent.
   request: AskRequest | null;
   status: 'thinking' | 'ready' | 'error';
@@ -112,6 +119,7 @@ export function useAsk(
     echo: string,
     said: AskEntry['said'],
     answers: HouseholdContext,
+    about?: string,
   ) {
     if (!place || !key) return;
     const request: AskRequest = {
@@ -127,6 +135,7 @@ export function useAsk(
       id: ++lastId.current,
       echo,
       said,
+      about,
       request,
       status: 'thinking',
     };
@@ -163,17 +172,20 @@ export function useAsk(
     if (!key || thinking || !entry || entry.followUp || !answer) return;
     if (answer.topic === 'medical' || answer.topic === 'out_of_scope') return;
     const next = toContext({ ...toAnswers(context), [field]: value });
+    const about = FIELDS.find((f) => fieldId(f) === field)?.label;
     onContextChange(next);
     update(key, entryId, { followUp: { field, outcome: 'answered', label } });
     const changes =
-      answer.followUps.find((f) => f.field === field)?.changes ?? [];
+      // An older server (a rollback) sends none.
+      (answer.followUps ?? []).find((f) => f.field === field)?.changes ?? [];
     if (changes.includes(value)) {
-      sendWith({ topic: answer.topic }, label, 'answered', next);
+      sendWith({ topic: answer.topic }, label, 'answered', next, about);
     } else {
       append({
         id: ++lastId.current,
         echo: label,
         said: 'answered',
+        about,
         request: null,
         status: 'ready',
         note: ASK_COPY.noted,

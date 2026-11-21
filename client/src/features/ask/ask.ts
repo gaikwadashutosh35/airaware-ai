@@ -57,11 +57,16 @@ export const ASK_COPY = {
     'This changes your answers for this visit. To keep them, save in My Profile.',
   skip: 'Skip',
   skipped: 'Skipped. You can answer it in My Profile any time.',
-  noted: "Noted. That doesn't change today's advice.",
+  noted: "Noted. That doesn't change this answer.",
   alsoAsk: 'You could also ask:',
   askedPrefix: 'You asked:',
   answeredPrefix: 'You answered:',
 } as const;
+
+// An answer's hidden heading prefix: it names the question (WCAG 2.4.6).
+export function answerPrefix(question: string): string {
+  return `Your answer to "${question}":`;
+}
 
 export function answeredLine(label: string): string {
   return `You answered: ${label}.`;
@@ -108,7 +113,8 @@ export function pendingFollowUp(
     return null;
   }
   const answers = toAnswers(context);
-  for (const { field: id, changes } of answer.followUps) {
+  // An older server (a rollback) sends none.
+  for (const { field: id, changes } of answer.followUps ?? []) {
     const field = FIELDS.find((f) => fieldId(f) === id);
     if (field && !answers[id] && !skipped.has(id)) {
       return { entryId: last.id, field, changes };

@@ -10,6 +10,7 @@ import {
   ASK_COPY,
   TOPICS,
   answeredLine,
+  answerPrefix,
   clockTime,
   shortAnswer,
   suggestionsFor,
@@ -210,9 +211,11 @@ export function AskEntry({
         className="max-w-[85%] self-end rounded-2xl rounded-br-sm border border-transparent bg-text-dark px-4 py-3 text-lg font-semibold text-surface-light"
       >
         <span className="sr-only">
-          {entry.said === 'answered'
-            ? ASK_COPY.answeredPrefix
-            : ASK_COPY.askedPrefix}
+          {entry.said === 'asked'
+            ? ASK_COPY.askedPrefix
+            : entry.about
+              ? answerPrefix(entry.about)
+              : ASK_COPY.answeredPrefix}
         </span>{' '}
         {entry.echo}
       </h2>

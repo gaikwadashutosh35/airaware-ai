@@ -48,8 +48,12 @@ export function Ask({
   const [question, setQuestion] = useState('');
   const inputId = useId();
   const latest = ask.entries.at(-1);
-  // Answers already here when the page opens keep focus where it is.
-  const [openedWith] = useState(latest?.id);
+  // Answers already here when the page opens keep focus where it is; a
+  // question sent from Today on the way here (still thinking) takes it, so it
+  // shows at the end of the thread and is announced.
+  const [openedWith] = useState(
+    latest?.status === 'thinking' ? undefined : latest?.id,
+  );
   const pending = pendingFollowUp(ask.entries, context, ask.skipped);
 
   const status = !latest

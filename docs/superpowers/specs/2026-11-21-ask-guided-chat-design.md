@@ -185,7 +185,7 @@ followUps: Array<{ field: string; changes: string[] }>;
 2. It adds your message with the tapped label.
 3. The next step depends on the value:
    - **In `changes`:** it asks the same topic again. The new reply is more personal.
-   - **Not in `changes`:** nothing is sent. AirAware replies "Noted. That doesn't change today's advice."
+   - **Not in `changes`:** nothing is sent. AirAware replies "Noted. That doesn't change this answer." *(Amended in the final review: the earlier "…today's advice" was false when the answer adds a card elsewhere, for example to Today's plan.)*
 4. The question's buttons are replaced by "You answered: {label}."
 
 **Tapping Skip:**

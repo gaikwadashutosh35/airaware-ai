@@ -720,6 +720,32 @@ describe('AppShell', () => {
     expect(exerciseQuestion()).toBeNull();
   });
 
+  // Final review: with a thread already there, a question from Today lands
+  // at the end; its heading takes focus, so it is in view and announced.
+  it('a question from Today, after earlier ones, takes focus on Ask', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    await goTo('Ask AirAware');
+    fireEvent.click(screen.getByRole('button', { name: 'Outdoor activities' }));
+    await flush();
+    await goTo('Today');
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: 'Ask about your air, home or day' }),
+      { target: { value: 'Should I run the purifier tonight?' } },
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await flush();
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'You asked: Should I run the purifier tonight?',
+      }),
+    );
+  });
+
   it("Today's ask box asks once, and the answer shows on Ask", async () => {
     const fetchSpy = routeFetch(ok());
     render(<AppShell />);

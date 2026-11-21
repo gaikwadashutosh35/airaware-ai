@@ -101,7 +101,10 @@ test('a question back, answered, asks again with the answer', async ({
 
   await expect(page.getByText('You answered: Yes.')).toBeVisible();
   await expect(
-    page.getByRole('heading', { level: 2, name: 'You answered: Yes' }),
+    page.getByRole('heading', {
+      level: 2,
+      name: 'Your answer to "Do you exercise outdoors?": Yes',
+    }),
   ).toBeVisible();
   await expect.poll(() => asked.length).toBe(2);
   expect(asked[1]!.postDataJSON()).toMatchObject({
@@ -126,7 +129,7 @@ test('an answer that changes nothing sends no request', async ({ page }) => {
     page
       .locator('article.ask-answer')
       .last()
-      .getByText("Noted. That doesn't change today's advice."),
+      .getByText("Noted. That doesn't change this answer."),
   ).toBeVisible();
   expect(asked).toHaveLength(1);
 });

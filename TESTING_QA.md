@@ -109,7 +109,7 @@ Repeat with data provider unavailable, stale response, and AI provider unavailab
   - other states on a 320 px phone: a stale above-limit Today, the forecast error card, the place dialog with suggestions, Welcome steps 2 and 3, and an Ask answer;
   - 200 % text (at 900, 1024 and 1280) and WCAG text spacing;
   - long place names, and the header with a desktop scrollbar's width taken (headless Chromium hides scrollbars, so a right margin on body stands in);
-  - forced colours: no backdrop, a focus outline, the header's contrast, outlines on the highlighted place suggestion, chosen chips and pressed topics, and axe without its colour-contrast rule, which misreads forced colours in Chromium.
+  - forced colours: no backdrop, a focus outline, the header's contrast, outlines on the highlighted place suggestion and chosen chips, the edge of your Ask message (the pressed topic is gone with the guided chat), and axe without its colour-contrast rule, which misreads forced colours in Chromium.
 - **`e2e/backdrop.spec.ts`:**
   - no text outside the title block rests on the scene;
   - the title block's contrast over every sky;

@@ -141,7 +141,7 @@ test('no banned words: the guided chat', async ({ page }) => {
     page
       .locator('article.ask-answer')
       .last()
-      .getByText("Noted. That doesn't change today's advice."),
+      .getByText("Noted. That doesn't change this answer."),
   ).toBeVisible();
   expectCopyRules(await pageText(page));
 });

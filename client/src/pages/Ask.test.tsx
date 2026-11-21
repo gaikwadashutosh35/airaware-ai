@@ -259,7 +259,10 @@ describe('Ask page', () => {
       screen.queryByRole('group', { name: 'Do you exercise outdoors?' }),
     ).toBeNull();
     expect(sentBody(1)).toMatchObject({ topic: 'outdoors' });
-    const reply = heading('Yes', 'You answered: ');
+    const reply = heading(
+      'Yes',
+      'Your answer to "Do you exercise outdoors?": ',
+    );
     expect(document.activeElement).toBe(reply);
     expect(before(heading('Outdoor activities'), reply)).toBe(true);
     expect(before(reply, input())).toBe(true);
@@ -276,7 +279,10 @@ describe('Ask page', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(status()).toBe(ASK_COPY.noted);
-    const reply = heading('No', 'You answered: ').closest('article')!;
+    const reply = heading(
+      'No',
+      'Your answer to "Do you exercise outdoors?": ',
+    ).closest('article')!;
     expect(within(reply).getByText(ASK_COPY.noted)).toBeTruthy();
   });
 

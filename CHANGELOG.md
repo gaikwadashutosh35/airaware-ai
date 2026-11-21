@@ -75,7 +75,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - Questions back, worked out on the server:
     - after a topic answer, AirAware may ask one My Profile question, but only when an answer would change today's cards (today's air and the three-card cap included);
     - the answer goes to the answers on screen, so Today's plan, My Home and My Profile use it too, and My Profile's Save keeps it;
-    - an answer that changes nothing is "Noted. That doesn't change today's advice." without a request;
+    - an answer that changes nothing is "Noted. That doesn't change this answer." without a request;
     - Skip is remembered for the visit.
   - The newest reply ends with "You could also ask:" and 2–3 starters.
   - What stays the same:

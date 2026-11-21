@@ -12,6 +12,7 @@ import {
   TOPICS,
   answeredCount,
   answeredLine,
+  answerPrefix,
   pendingFollowUp,
   shortAnswer,
   startersFor,
@@ -80,12 +81,16 @@ describe('Ask wording', () => {
         'This changes your answers for this visit. To keep them, save in My Profile.',
       skip: 'Skip',
       skipped: 'Skipped. You can answer it in My Profile any time.',
-      noted: "Noted. That doesn't change today's advice.",
+      noted: "Noted. That doesn't change this answer.",
       alsoAsk: 'You could also ask:',
       askedPrefix: 'You asked:',
       answeredPrefix: 'You answered:',
     });
     expect(answeredLine('Yes')).toBe('You answered: Yes.');
+    // Final review: an answer's heading names its question (WCAG 2.4.6).
+    expect(answerPrefix('Do you exercise outdoors?')).toBe(
+      'Your answer to "Do you exercise outdoors?":',
+    );
   });
 
   it('no fixed Ask string says safe, healthy, clean air or AQI', () => {
@@ -169,6 +174,15 @@ describe('pendingFollowUp', () => {
           followUp: { field: 'routine.outdoorExercise', outcome: 'skipped' },
         }),
       ]),
+    ).toBeNull();
+  });
+
+  // Final review: a rollback can pair a new tab with an older server.
+  it('an answer without followUps offers nothing and does not throw', () => {
+    const old: Partial<AskAnswer> = { ...offering };
+    delete old.followUps;
+    expect(
+      pendingFollowUp([entry(1, old as AskAnswer)], {}, new Set()),
     ).toBeNull();
   });
 

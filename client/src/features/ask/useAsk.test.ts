@@ -193,7 +193,12 @@ describe('useAsk', () => {
           label: 'Yes',
         },
       },
-      { echo: 'Yes', said: 'answered', status: 'thinking' },
+      {
+        echo: 'Yes',
+        said: 'answered',
+        about: 'Do you exercise outdoors?',
+        status: 'thinking',
+      },
     ]);
   });
 
@@ -217,10 +222,32 @@ describe('useAsk', () => {
     expect(result.current.entries[1]).toMatchObject({
       echo: 'No',
       said: 'answered',
+      about: 'Do you exercise outdoors?',
       request: null,
       status: 'ready',
       note: ASK_COPY.noted,
     });
+  });
+
+  // Final review: an answer from an older server has no followUps.
+  it('an answer without followUps is noted, not a crash', async () => {
+    const { result } = renderHook(() => useAsk(pune, {}, 0, onContextChange));
+    act(() => result.current.send({ topic: 'outdoors' }, 'Outdoor activities'));
+    const old: Partial<AskAnswer> = { ...offering };
+    delete old.followUps;
+    await answer(old);
+
+    act(() =>
+      result.current.answerFollowUp(
+        result.current.entries[0]!.id,
+        'routine.outdoorExercise',
+        'yes',
+        'Yes',
+      ),
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(result.current.entries[1]).toMatchObject({ note: ASK_COPY.noted });
   });
 
   it('Skip sends nothing and is remembered for the visit', async () => {
