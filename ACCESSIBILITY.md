@@ -90,7 +90,7 @@ A screen-reader pass with a real reader has not been done yet.
   - the backdrop steps aside;
   - focus outlines show;
   - the header's forced colours reach 4.5:1;
-  - the highlighted place suggestion gets an outline (fixed in Phase 9; it was marked by colour alone, which forced colours remove);
+  - the highlighted place suggestion, chosen Welcome chips and pressed Ask topics get an outline (fixed in Phase 9; they were marked by colour alone, which forced colours remove);
   - axe passes with every rule except colour-contrast. That rule misreads forced colours in Chromium (it takes the authored `-webkit-text-fill-color`, not the painted colour), so the header's contrast is checked directly instead.
 
 **Keyboard walk** (Tab and Shift+Tab only, scripted in Chromium at 1280 and 390, every page and the place dialog):

@@ -66,7 +66,7 @@ function Chip({
   onChange: () => void;
 }) {
   return (
-    <label className="group inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-text-dark-muted px-4 has-checked:border-text-dark has-checked:bg-text-dark has-checked:text-surface-light has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:opacity-60">
+    <label className="group inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-text-dark-muted px-4 has-checked:border-text-dark has-checked:bg-text-dark has-checked:text-surface-light forced-colors:has-checked:outline-2 forced-colors:has-checked:-outline-offset-2 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-disabled:cursor-not-allowed has-disabled:opacity-60">
       <input
         type={type}
         name={name}

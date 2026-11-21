@@ -64,7 +64,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - a new layout spec checks every page at 320, 640, 768, 1024 and 1280 px (nothing past the screen edge, one `h1`), plus 44 px targets, axe at phone width, 200 % text, WCAG text spacing and long place names;
   - the header wordmarks, the footer "Privacy" links and the source links now reach 44 px;
   - with text at 200 % the header row scrolls sideways instead of pushing the nav and the place chip off the screen; at normal text the header is unchanged;
-  - in Windows High Contrast the backdrop steps aside, focus shows, the header reads and the highlighted place suggestion gets an outline;
+  - in Windows High Contrast the backdrop steps aside, focus shows, the header reads, and the highlighted place suggestion, chosen Welcome chips and pressed Ask topics get an outline;
   - the keyboard walk and accessibility tree were checked on every page, and the owner ran a 12-item real-phone checklist (`docs/REAL_PHONE_CHECKLIST.md`).
 - Landing (Phase 4 of the assistant redesign):
   - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;

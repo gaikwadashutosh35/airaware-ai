@@ -32,7 +32,7 @@ export function TopicChips({
             aria-pressed={pressed === undefined ? undefined : pressed === id}
             disabled={busy}
             onClick={() => onTopic(id, label)}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-text-dark-muted px-4 aria-pressed:border-text-dark aria-pressed:bg-text-dark aria-pressed:text-surface-light disabled:opacity-60"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-text-dark-muted px-4 aria-pressed:border-text-dark aria-pressed:bg-text-dark aria-pressed:text-surface-light forced-colors:aria-pressed:outline-2 forced-colors:aria-pressed:-outline-offset-2 disabled:opacity-60"
           >
             {pressed === id && <Check aria-hidden="true" className="size-4" />}
             {label}

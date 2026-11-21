@@ -10,6 +10,7 @@ import {
   smallTargets,
   stub,
 } from './layout.ts';
+import { aiAskFixture } from '../client/src/test/askFixtures.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
 import { PUNE } from './routes.ts';
 
@@ -308,4 +309,46 @@ test('forced colours: the highlighted suggestion shows', async ({ page }) => {
   });
   expect(outline.style).not.toBe('none');
   expect(outline.width).toBeGreaterThan(0);
+});
+
+// Found while verifying the fix pass: chosen Welcome chips and pressed Ask
+// topics were also marked by colour alone, which forced colours remove.
+test.describe('forced colours: chosen chips show', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({
+      forcedColors: 'active',
+      reducedMotion: 'reduce',
+    });
+    await stub(page, 'not_elevated');
+    await page.route('**/api/v1/assistant/answer', (route) =>
+      route.fulfill({ json: { data: aiAskFixture } }),
+    );
+  });
+  const outlined = (el: Element) => {
+    const s = getComputedStyle(el);
+    return s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0;
+  };
+
+  test('a chosen Welcome chip has an outline', async ({ page }) => {
+    await page.goto(PUNE.replace('/app?', '/app/welcome?'));
+    const chosen = page.locator('label', { hasText: 'Office commute' });
+    await chosen.click();
+    expect(await chosen.evaluate(outlined)).toBe(true);
+    const plain = page.locator('label', { hasText: 'School commute' });
+    expect(await plain.evaluate(outlined)).toBe(false);
+  });
+
+  test('a pressed Ask topic has an outline', async ({ page }) => {
+    await page.goto(PUNE.replace('/app?', '/app/ask?'));
+    await page
+      .getByRole('button', { name: 'Outdoor activities', exact: true })
+      .click();
+    const pressed = page.locator('button[aria-pressed="true"]');
+    await expect(pressed).toHaveCount(1);
+    // Off the button, so the focus ring isn't what shows.
+    await page.locator('main h1:visible').first().click();
+    expect(await pressed.evaluate(outlined)).toBe(true);
+    const plain = page.locator('button[aria-pressed="false"]').first();
+    expect(await plain.evaluate(outlined)).toBe(false);
+  });
 });
