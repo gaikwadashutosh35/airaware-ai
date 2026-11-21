@@ -60,6 +60,12 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - the footer says the background follows the model forecast for the place, and when it is not current;
   - the hourly reload keeps the scene instead of flashing grey, and the band leaves Today's card, so the verdict sits higher on a phone;
   - on screens under 24rem (384 px) tall, such as a phone held sideways, the city hides, so a long place name in the title never lands on it.
+- Responsive and accessibility pass (Phase 9 of the assistant redesign):
+  - a new layout spec checks every page at 320, 640, 768, 1024 and 1280 px (nothing past the screen edge, one `h1`), plus 44 px targets, axe at phone width, 200 % text, WCAG text spacing and long place names;
+  - the header wordmarks, the footer "Privacy" links and the source links now reach 44 px;
+  - with text at 200 % the top nav no longer runs off the screen (it may wrap from `lg`), and the place chip caps at 200 px from `lg` so the nav stays on one row at normal text;
+  - in Windows High Contrast the backdrop steps aside, focus shows and the header reads;
+  - the keyboard walk and accessibility tree were checked on every page, and the owner ran a 12-item real-phone checklist (`docs/REAL_PHONE_CHECKLIST.md`).
 - Landing (Phase 4 of the assistant redesign):
   - the hero has "Check My Air" (`/app`) and "Meet Your Assistant" (`/app/ask`), the place search under "Or search a city", and a phone screenshot of the new Today page;
   - eight sections: "Understand your air" (with a screenshot of the open Air quality details), the four rule-card chapters renamed "Your personal daily plan", "Improve indoor air", "Sustainable everyday choices" and "Explainable AI", "How AirAware works" (the 4 real steps as a flow, then the limits) and a closing "Check My Air";

@@ -102,6 +102,21 @@ Repeat with data provider unavailable, stale response, and AI provider unavailab
 - **Limits per run:** 8 plan requests (the API allows 10 per minute) and 4 anonymous sign-ins (Supabase allows 30 per hour). Wait a minute between runs. Every account the journey creates is deleted again.
 - It is not part of `npm test` or CI.
 
+**Layout and accessibility (Phase 9):** these answer every API call themselves (`e2e/layout.ts` `stub`), so they spend none of the shared rate limits.
+- **`e2e/responsive.spec.ts`:**
+  - every page at 320, 640, 768, 1024 and 1280 px: nothing past the screen edge, one `h1`;
+  - 44 px targets and axe at 320, on desktop and Pixel 7;
+  - 200 % text and WCAG text spacing;
+  - long place names;
+  - forced colours: no backdrop, a focus outline, the header's contrast, and axe without its colour-contrast rule, which misreads forced colours in Chromium.
+- **`e2e/backdrop.spec.ts`:**
+  - no text outside the title block rests on the scene;
+  - the title block's contrast over every sky;
+  - the backdrop stays put between pages;
+  - the rain layer moves as one box;
+  - nothing reaches past a 320 px screen.
+- **Real phone:** `docs/REAL_PHONE_CHECKLIST.md`, 12 items the owner runs on their own phone over home Wi-Fi (`npm run dev -w client -- --host`). "Use my location" needs HTTPS, so it is checked on the live site.
+
 ## 8. Accessibility QA
 
 - Semantic HTML and landmark structure.

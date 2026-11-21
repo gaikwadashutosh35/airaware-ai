@@ -125,6 +125,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
     - **Loading and none:** a still silhouette while a place's first forecast loads; the neutral unknown look with no place or after an error.
     - **Readability:** every section sits on a solid `bg-surface-light` panel. Only each page's title block (`data-part="title-block"`) rests on the sky, all in `text-dark`, checked at 4.5:1 against every sky, cloud, deck, glow and rain colour (`e2e/backdrop.spec.ts`). Each page ends with space as tall as the city.
     - **Label:** the footer says "Background: model forecast for {place}." while a forecast is shown.
+    - **Forced colours** (Windows High Contrast): the whole backdrop hides, so the words sit on the system background.
   - `DailyPlanSection`: builds by itself while Today or My Home is shown (no plan, changed answers, or a plan over an hour old by the device clock), never twice at once. After an error it waits for "Try again". It shows the top card, with the full day in a `<details>`, and reports its state (nothing, building, an error with a retry, a stale plan, or the current one) for My Home, which shows the same states and never a stale plan as today's.
   - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family ask their topic through `useAsk` and open Ask.
   - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. Send asks through `useAsk` and opens Ask; the question never goes into the address.
@@ -168,6 +169,13 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 - Desktop: dashboard grid and editorial homepage chapters.
 - Avoid horizontal overflow at narrow viewport widths.
 - Test long location names, missing data, and translated content.
+- **Guarded by `e2e/responsive.spec.ts`** (Phase 9), on every page:
+  - at 320, 640, 768, 1024 and 1280 px: nothing reaches past the screen, measured by each element's edges (the page clips sideways overflow, so scroll width can't show it), and exactly one `h1`;
+  - at 320: 44 px targets, except links inside a sentence;
+  - at 1280: 200 % text, nothing clipped;
+  - at 320: WCAG text spacing, nothing clipped;
+  - a long place keeps the header on screen and, at normal text, the top nav on one row.
+- **Top bar:** from `lg` the nav may wrap, which happens only when text is enlarged past the breakpoints. The place chip caps at 200 px from `lg`, so the row never runs short at normal text.
 
 ## 11. Accessibility requirements
 
