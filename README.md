@@ -3,7 +3,7 @@
 **Hack2Skills PromptWars Virtual · Main Challenge 06**  
 **Breathe smarter. Make informed daily choices.**
 
-AirAware AI is a GenAI-powered assistant for households and communities. It combines clearly labelled air-quality observations/forecasts with optional routine and home context to offer explainable daily actions, practical indoor-air suggestions, and sustainable swaps.
+AirAware AI is a GenAI-powered assistant for households and communities. It combines clearly labelled air-quality model forecasts with optional routine and home context to offer explainable daily actions, practical indoor-air suggestions, and sustainable swaps.
 
 ## Why AirAware AI?
 
@@ -13,7 +13,7 @@ Environmental readings are not always easy to translate into useful daily choice
 
 - Manual location search and opt-in geolocation.
 - Air-quality overview with provider, data kind, time, pollutant, units, and freshness.
-- Distinct official-observation and model-forecast views.
+- Model forecasts always labelled as such; the official CPCB observation is shown as not connected (no permitted feed yet), never filled in.
 - Personalized daily action plan.
 - Indoor air-quality assistant.
 - Sustainable everyday alternatives.
@@ -75,7 +75,7 @@ npm run dev -w server
 npm run dev -w client
 ```
 
-Open `http://localhost:5173`, search an Indian city and see its hourly model forecast from Open-Meteo. No API keys are needed yet. The production Docker image and checks are in `SETUP.md` §8. No live URL is listed until a deployment is verified.
+Open `http://localhost:5173`, search an Indian city and see its hourly model forecast from Open-Meteo. No API keys are needed: without them the plan and Ask answers come from the rules. The production Docker image and checks are in `SETUP.md` §8; the live site and its checks are in `DEPLOYMENT.md`.
 
 ## Quick start
 

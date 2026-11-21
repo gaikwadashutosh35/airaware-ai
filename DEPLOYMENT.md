@@ -83,7 +83,7 @@ To turn it off, delete the variable and redeploy, or revoke the key in the Conso
 2. `/`, `/app` and `/privacy` return 200.
 3. The Pune forecast (`/api/v1/air-quality/forecast?latitude=18.52&longitude=73.86`) is `model_forecast`, with a fresh `retrievedAt`.
 4. The CSP on `/app` equals the CSP on `/api/v1/health`.
-5. `E2E_BASE_URL=https://airaware-ai.netlify.app npm run e2e` gives 16 passed, none skipped. The suite deletes every account it creates.
+5. `E2E_BASE_URL=https://airaware-ai.netlify.app npm run e2e` passes in full (the latest counts and date are in `docs/QA_REPORT.md`). Most specs answer their own API calls; the journey uses the real services and deletes every account it creates.
 
 ## Local production run
 

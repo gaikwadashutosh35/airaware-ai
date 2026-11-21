@@ -4,13 +4,13 @@ Follows `TESTING_QA.md` §11. Each field says what was actually run; a field sti
 
 ```text
 Date: 21 Nov 2026
-Commit: (filled in Task 3)
-Build: (Task 3)
-Typecheck: (Task 3)
-Lint: (Task 3)
-Unit: (Task 3)
-API: (Task 3)
-E2E: (Task 3; live run in Task 5)
+Commit: 5db4887 (the regression run; later commits are docs only)
+Build: pass (npm run build)
+Typecheck: pass
+Lint: pass (oxlint --deny-warnings); format: pass
+Unit: server 320 passed, 5 skipped; client 451 passed
+API: in the server suite (route tests against the Express app)
+E2E: 294 passed, 82 skipped (desktop-only size runs in the phone project), local build on port 8090; live run in Task 5
 Accessibility: see ACCESSIBILITY.md "Results (Phase 9)"
 CodeQL: (Task 5, after the push)
 SonarQube: (Task 5, after the push)
@@ -49,3 +49,17 @@ Release decision: (Task 5)
 | Keyboard navigation and reduced motion work | Yes | `e2e/keyboard.spec.ts`; the reduced-motion e2e checks; rings checked by eye in Phase 9 |
 | Empty, stale, error and loading states designed | Yes | Loading (skeleton over the still city), stale (banner and "Not current." in the footer), the error card, and Ask before a question: all seen here, and checked at 320 by the other-states tests |
 | All controls have real functionality | Yes | The journey e2e (search, plan, explain, save, reload, isolation, delete); no inert control seen in this review |
+
+## Release gate (Task 3, `TESTING_QA.md` §10)
+
+| Item | Result | Evidence |
+|---|---|---|
+| Build, typecheck and lint pass | Yes | The run above, each step with its own exit code 0 |
+| Critical provenance tests pass | Yes | `openMeteo.test.ts` "maps the recorded response into a labelled model forecast"; `airQuality.test.ts` "returns a labelled model forecast whose run age is unknown"; `TodayLead.test.tsx` "the verdict leads, with its tag, provenance and caveat"; `e2e/copy.spec.ts` |
+| Invalid AI output is rejected | Yes | `personalize.test.ts` "retries once after invalid JSON", "fenced JSON is invalid", "gives up after two schema failures"; `claude.test.ts` "rejects a refusal", "rejects a cut-off answer", "rejects an answer without text" |
+| No unresolved critical authorization issue | None known | The journey's isolation step (a second anonymous user sees only its own plan) passed; Task 4's review checks this again |
+| Main E2E path passes | Yes | `e2e/journey.spec.ts` on desktop and Pixel 7, in the run above |
+| Accessibility check completed | Yes | `ACCESSIBILITY.md` "Results (Phase 9)" |
+| Production data provider and timestamps verified | Open | Task 5, on the live site |
+| Public, one branch, under 10 MB with history | Yes | GitHub: public, default `main`, one remote branch; `git count-objects -vH`: 1.27 MiB packed |
+| README and deployment claims accurate | Yes, locally | Corrected in Task 3 (forecasts only, no "no live URL" line, the live e2e wording); the live claims are confirmed in Task 5 |
