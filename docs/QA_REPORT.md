@@ -63,3 +63,43 @@ Release decision: released at 7a6aa05 (the owner approved the push); every relea
 | Production data provider and timestamps verified | Yes | Live, 21 Nov 2026: Pune forecast `model_forecast` from Open-Meteo, `retrievedAt` under a minute old; health 200; `/`, `/app`, `/privacy` 200; the CSP on `/app` equals the API's |
 | Public, one branch, under 10 MB with history | Yes | GitHub: public, default `main`, one remote branch; `git count-objects -vH`: 1.27 MiB packed |
 | README and deployment claims accurate | Yes | Corrected in Task 3; the live site and the DEPLOYMENT "After every deploy" checks confirmed in Task 5 |
+
+## 22 Nov 2026 releases
+
+Six pushes to `main`, each on the owner's word. Same rule as above: each field says what was actually run.
+
+```text
+Date: 22 Nov 2026
+Commit: 868e945; 7758d3f to cd19595 (5 commits); 803697c; 4d2d4ed; 1c0cd94; 3c5f5e1 (live)
+Build: pass at every release; each time the live script bundle matched the local build
+Typecheck: pass. The full local gate ran on the committed tree at cd19595, 4d2d4ed and 1c0cd94. At 868e945 and 3c5f5e1 it ran before a last edit (see the table). At 803697c it did not run locally. CI verify ran it on every final tree
+Lint: pass (oxlint --type-aware --deny-warnings); format: pass. Same coverage as typecheck; after each last edit, lint and Prettier ran again on the touched files (Prettier only at 803697c)
+Unit: server 330 passed, 5 skipped at every full local gate; client 486 (868e945), 493 (cd19595), 494 (4d2d4ed), 499 (1c0cd94 and 3c5f5e1). On the final tree where the gate came earlier: the Landing unit tests (18) at 3c5f5e1; the 89 air-quality client tests at 803697c. CI verify ran the full suites on every final tree
+API: in the server suite (route tests against the Express app)
+E2E: local build on port 8090: 305 passed, 83 skipped at 868e945; 309 passed, 83 skipped at cd19595, 4d2d4ed, 1c0cd94 and 3c5f5e1. The 3c5f5e1 run started before its review fix to e2e/landing.spec.ts; the fixed spec then passed on its own (10 tests). None locally at 803697c. Live against https://airaware-ai.netlify.app after each deploy: 305 passed, 83 skipped (868e945); 309 passed, 83 skipped (each of the other five, the fixed Landing spec included)
+Accessibility: axe in the client component tests and in seven e2e specs (through e2e/axe.ts); keyboard paths in e2e/keyboard.spec.ts; all inside the runs above. No manual keyboard review recorded today
+CodeQL: the javascript-typescript and actions analyses returned 0 results at all six commits; 0 open alerts after 3c5f5e1
+SonarQube: SonarCloud quality gate passed at 868e945; FAILED at cd19595 on new reliability (rating C, typescript:S7727 in skylineGeometry.ts); fixed in 803697c, and the gate PASSED at 803697c, 4d2d4ed, 1c0cd94 and 3c5f5e1 (0 new-code issues at 3c5f5e1). gitleaks: the CI secrets job passed at all six commits
+Data provider and data kind: model_forecast (live Pune check after each deploy); Open-Meteo is the only forecast source
+Timestamp/freshness: retrievedAt under a minute old at each check; the last 2026-11-22T09:27:15Z
+Critical issues: none. Reviews (counts are the reviewers' grades): 868e945, 2 Minors (1 refuted, 1 fixed before commit); the cityscape release, 7 findings, no Critical (1 Important re-graded Minor, 1 refuted), 6 Minors deferred and fixed in 4d2d4ed; 4d2d4ed, none; 1c0cd94, 10 Minors (3 refuted), the rest fixed or ruled on before commit; 3c5f5e1, 1 Minor, fixed before commit. 803697c had no review. No deferred minors left from today's reviews
+Known limitations: model forecasts only (CPCB observations not connected); the CAMS grid is about 45 km; the 10 deferred Minors in the Phase 10 report are still open; the owner's phone check from Phase 10 is not recorded as done; the overcast, rain, unknown and stale skies were judged from code and colour maths, not screenshots; the 700 ms fade was probed in Chromium only
+Release decision: released; live at 3c5f5e1. cd19595 was live with a failed SonarCloud gate for about 70 minutes, until 803697c
+```
+
+| Release | Pushed (UTC) | What changed | Local check | Live bundle |
+|---|---|---|---|---|
+| `868e945` | 02:43 | My Home reloads its sky with its plan; the footer line names the level | Full gate, then a wording fix to a comment and two docs (Prettier and oxlint on the touched code files) | `index-D2n2xEHP.js` |
+| `7758d3f` to `cd19595` | 04:47 | The mixed-street city with no landmark, the 700 ms fade, the design docs | Full gate | `index-4DDnFT7p.js` |
+| `803697c` | 05:57 | The S7727 fix (one code line and its comment) | Port check equal, 89 air-quality tests, Prettier | `index-i1A40lK4.js` |
+| `4d2d4ed` | 06:48 | The cityscape review's 6 deferred Minors | Full gate | `index-CBT1jNAU.js` |
+| `1c0cd94` | 08:29 | No fog band; old weather drops off; the rain layer stays mounted; My Home's sky follows a newer plan | Full gate | `index-oZrEVMxZ.js` |
+| `3c5f5e1` | 09:26 | Both Landing screenshots recaptured from the live app (Pune, 09:02 UTC) | Full gate before the review fix; then the Landing e2e spec (10), the Landing unit tests (18), and lint and Prettier on the touched files | `index-DxIPXNlG.js`; both image files match the build |
+
+**After every deploy:** checks 1–4 passed (health 200; `/`, `/app` and `/privacy` 200; the Pune forecast is `model_forecast` and under a minute old; the CSP on `/app` equals the API's). The CI verify, secrets and sonar jobs succeeded. The sonar job uploads the analysis and does not enforce the gate, so the gate is read separately.
+
+**Seen by eye:**
+- **The city as shipped in cd19595:** one contact sheet (within, above and loading at 320, 390, 768 and 1280; within at 1920) and a crop of the bands. No city screenshot was taken after 4d2d4ed or 1c0cd94.
+- **The Landing:** the hero at 1280 and the details at 320. The reviewer opened the other two and checked both new captures' content, size and metadata (no EXIF).
+
+**Not in this report:** `7e3a992` and `9529bde`, pushed on 21 Nov after the Phase 10 results above.
