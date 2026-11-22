@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cityscape variants</title>
+    <!-- Comparison sheet (22 Nov 2026) for the cityscape skyline: three variants drawn by the design workflow and today's geometry. The owner picked B, Mixed street. Every variant is
+         drawn inside the same page mock with the app's current state
+         treatment (CitySkyline.tsx): sky gradient, glow, clouds, far/mid/near
+         rows, veils (masked), windows from 640 px. Only the buildings differ.
+         Variants register in window.VARIANTS from variant-*.js files.
+         ?only=<id> limits the sheet to one variant. -->
+    <style>
+      :root {
+        --surface-light: #f5f8fa;
+        --secondary: #64a9ff;
+        --text-dark: #182435;
+        --text-dark-muted: #4a5a6e;
+        --warning: #f5b84b;
+        --rule: #d3dce6;
+        --bg: #080f1c;
+        --within-top: color-mix(
+          in oklab,
+          var(--secondary) 46%,
+          var(--surface-light)
+        );
+        --above-top: color-mix(in oklab, var(--secondary) 14%, var(--rule));
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #fff;
+        color: var(--text-dark);
+        font:
+          15px/1.5 Inter,
+          ui-sans-serif,
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1320px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 0 0 2px;
+      }
+      h3 {
+        font-size: 14px;
+        margin: 6px 0 0;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+        max-width: 80ch;
+      }
+      .muted {
+        color: var(--text-dark-muted);
+        font-size: 13px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: flex-start;
+      }
+      .frame {
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .page {
+        position: relative;
+        overflow: hidden;
+        transform-origin: 0 0;
+      }
+      .abs {
+        position: absolute;
+      }
+      .fill {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .mask {
+        -webkit-mask-image: linear-gradient(transparent, black 60%);
+        mask-image: linear-gradient(transparent, black 60%);
+      }
+      .header {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 64px;
+        background: var(--bg);
+      }
+      .card {
+        position: absolute;
+        left: 6%;
+        right: 6%;
+        top: 120px;
+        height: 150px;
+        background: var(--surface-light);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+      }
+      .title {
+        position: absolute;
+        left: 6%;
+        top: 76px;
+        font-weight: 700;
+        font-size: 26px;
+        color: var(--text-dark);
+      }
+      .phonebar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 56px;
+        background: var(--bg);
+      }
+    </style>
+  </head>
+  <body>
+    <main id="out"></main>
+    <script>
+      window.VARIANTS = window.VARIANTS || [];
+    </script>
+    <script>
+      // Variant A: Housing society. Mid row = mid-rise society blocks (balcony
+      // bands, stair/lift cores above the roof, tanks on legs), one terraced block,
+      // one block with deep recessed balconies, three glass offices; far = slim
+      // towers over low blocks; near = low houses (a few shops), taller flats with
+      // deep chhajjas and stair rooms, one small office with strip glazing.
+      (() => {
+        const G = 160;
+        const n = (v) => Math.round(v * 10) / 10;
+        const R = (x, y, w, h) => `M${n(x)} ${n(y)}h${n(w)}v${n(h)}h${n(-w)}z`;
+        const B = (x, w, h) => R(x, G - h, w, h);
+        const P = (d) => `<path d="${d}"/>`;
+        // Water tank on two legs standing on `base`, drawn as one outline.
+        const tank = (cx, base, w, h, l, lid) => {
+          const x0 = cx - w / 2,
+            y = base - l - h;
+          const legs = `v${h}h-1v${l}h-1.6v${-l}h${n(5.2 - w)}v${l}h-1.6v${-l}h-1`;
+          return lid
+            ? `M${n(x0 + w / 4)} ${n(y - 1.2)}h${n(w / 2)}v1.2h${n(w / 4)}${legs}v${-h}h${n(w / 4)}z`
+            : `M${n(x0)} ${n(y)}h${w}${legs}z`;
+        };
+        // mid tanks: standard (lid), tall, wide, small, small pair; L = lift room
+        const T = (cx, b) => tank(cx, b, 9, 5, 3, 1);
+        const Tt = (cx, b) => tank(cx, b, 7, 7, 3, 1);
+        const Tw = (cx, b) => tank(cx, b, 13, 4.5, 2.5);
+        const Ts = (cx, b) => tank(cx, b, 6, 4, 2.5);
+        const Tp = (cx, b) => Ts(cx - 3.2, b) + Ts(cx + 3.2, b);
+        const L = (cx, b) => R(cx - 3.5, b - 4, 7, 4);
+        // near tanks: standard (lid), small, wide, small pair
+        const N = (cx, b) => tank(cx, b, 10, 6, 3.5, 1);
+        const Ns = (cx, b) => tank(cx, b, 7, 5, 3);
+        const Nw = (cx, b) => tank(cx, b, 14, 5, 3);
+        const Np = (cx, b) => Ns(cx - 4, b) + Ns(cx + 4, b);
+
+        // ---- far: slim towers (setback top tier), one flat slab, low distant blocks
+        const tower = (x, w, h) => B(x, w, h - 6) + B(x + 3, w - 6, h);
+        const far = P(
+          [
+            [-10, 34, 48],
+            [24, 30, 58],
+            [54, 40, 44],
+            [94, 30, 62],
+            [124, 26, 50],
+            [166, 36, 56],
+            [202, 30, 66],
+            [232, 40, 52],
+            [272, 34, 60],
+            [306, 30, 48],
+            [336, 44, 64],
+            [380, 36, 54],
+            [432, 40, 60],
+            [472, 30, 50],
+            [502, 38, 66],
+            [558, 32, 58],
+            [590, 40, 50],
+            [630, 30, 62],
+            [660, 30, 52],
+            [724, 34, 60],
+            [758, 52, 50],
+          ]
+            .map(([x, w, h]) => B(x, w, h))
+            .join('') +
+            B(-10, 820, 12) +
+            tower(8, 18, 76) +
+            tower(150, 16, 86) +
+            B(266, 22, 78) +
+            tower(416, 16, 84) +
+            tower(540, 18, 88) +
+            tower(690, 14, 82),
+        );
+
+        // ---- mid: housing-society blocks and offices
+        let midDetail = '';
+        // Society block: roof slab, stair/lift cores [dx, topper] above the roof,
+        // balcony bands either side of each core. o.tanks: [[dx, fn]] on the roof;
+        // o.side: chhajja slabs on one flank (1 right, -1 left); o.step: [dx, w, dh]
+        // raised part; o.win: older block, hooded windows in the first bay only.
+        const apt = (x, w, h, cores, o = {}) => {
+          const top = G - h;
+          let d = B(x, w, h) + R(x - 1.5, top, w + 3, 2);
+          if (o.step) {
+            const [sx, sw, dh] = o.step;
+            d +=
+              R(x + sx, top - dh, sw, dh) +
+              R(x + sx - 1.5, top - dh, sw + 3, 2);
+            for (let y = top - dh + 5; y < top; y += 7)
+              midDetail += R(x + sx + 2.5, y, sw - 5, 2);
+          }
+          for (const [c, k] of cores)
+            d += R(x + c, top - 8, 11, 8) + (k ? k(x + c + 5.5, top - 8) : '');
+          for (const [dx, k] of o.tanks || []) d += k(x + dx, top);
+          if (o.side)
+            for (let y = top + 6; y < G - 10; y += 7)
+              d += R(o.side > 0 ? x + w : x - 3, y, 3, 2.5);
+          const edges = [0, ...cores.flatMap(([c]) => [c, c + 11]), w];
+          for (
+            let y = top + (o.win ? 8 : 6);
+            y < G - (o.win ? 12 : 10);
+            y += o.win ? 8 : 7
+          )
+            for (let i = 0; i < edges.length; i += 2) {
+              const a = x + edges[i] + 2.5,
+                b = x + edges[i + 1] - 2.5;
+              if (o.win) {
+                if (i === 0) {
+                  midDetail += R(a - 1, y - 2, b - a + 2, 1.2);
+                  for (let xx = a; xx + 3 <= b; xx += 8)
+                    midDetail += R(xx, y, 3, 3.5);
+                }
+              } else if (b - a > 8) midDetail += R(a, y, b - a, 2);
+            }
+          return P(d);
+        };
+        // Terraced block: tiers stepping down to the right, each roof slab
+        // projecting over the next tier; core and tank on the top tier.
+        const terrace = (x, tw, hs) => {
+          let d = '';
+          hs.forEach(
+            (h, i) =>
+              (d +=
+                B(x + i * tw, tw, h) +
+                R(x + i * tw - (i ? 0 : 1.5), G - h, tw + (i ? 3 : 4.5), 2)),
+          );
+          const top = G - hs[0];
+          d +=
+            R(x + 4, top - 8, 11, 8) +
+            T(x + 9.5, top - 8) +
+            Ts(x + tw + 9, G - hs[1]);
+          for (let y = top + 6; y < G - 10; y += 7)
+            midDetail += R(
+              x + 2.5,
+              y,
+              hs.filter((h) => G - h + 6 <= y).length * tw - 5,
+              2,
+            );
+          return P(d);
+        };
+        // Block with deep recessed balconies: lit slab edges and piers frame the
+        // dark recesses; slab ends project past both flanks; two-tier lift core.
+        const recessed = (x, w, h, piers, core) => {
+          const top = G - h;
+          let d =
+            B(x, w, h) +
+            R(x - 1.5, top, w + 3, 2) +
+            R(x + core, top - 8, 11, 8) +
+            R(x + core + 2, top - 12, 7, 4);
+          for (let y = top + 7; y < G - 8; y += 7) {
+            d += R(x - 3, y, 3, 2) + R(x + w, y, 3, 2);
+            midDetail += R(x + 1, y, w - 2, 1.5);
+          }
+          for (const p of piers) midDetail += R(x + p, top + 3, 2, h - 11);
+          return P(d);
+        };
+        // Glass office: vertical glazing bands; setback crown, or a lift room off-centre.
+        const office = (x, w, h, crown) => {
+          const top = G - h;
+          const d =
+            B(x, w, h) +
+            (crown
+              ? R(x + 3, top - crown, w - 6, crown)
+              : R(x + w - 11, top - 5, 8, 5));
+          for (let xx = x + 3; xx + 2 <= x + w - 3; xx += 6)
+            midDetail += R(xx, top + 4, 2, h - 8);
+          return P(d);
+        };
+        const mid =
+          P(B(-10, 820, 12)) +
+          apt(-12, 50, 44, [[28]]) +
+          office(42, 28, 62, 4) +
+          apt(76, 62, 52, [[18, T]], { tanks: [[46, Tw]] }) +
+          P(B(142, 36, 30) + R(164, 122, 9, 8)) +
+          apt(182, 38, 46, [[16, Tt]]) +
+          terrace(222, 20, [58, 47, 36]) +
+          recessed(284, 56, 60, [1, 18, 35, 47, 53], 36) +
+          office(346, 34, 72, 5) +
+          apt(386, 78, 48, [
+            [12, L],
+            [55, Tp],
+          ]) +
+          apt(470, 50, 38, [], { step: [0, 26, 12], tanks: [[38, Ts]] }) +
+          apt(526, 48, 58, [[30, T]]) +
+          office(578, 30, 64, 0) +
+          apt(614, 64, 54, [[36]], { side: -1, win: 1, tanks: [[14, T]] }) +
+          P(B(684, 40, 36) + Tw(700, 124)) +
+          apt(728, 54, 60, [[14, L]], { tanks: [[40, T]] }) +
+          apt(786, 30, 44, [[10]]);
+
+        // ---- near: low houses, a few shops, taller flats and a small office
+        let nearDetail = '';
+        // One row of windows: 'sq' squares, 'pr' tall with a mullion, 'wd' wide.
+        const wins = (x, w, y, kind, pitch) => {
+          for (
+            let xx = x + 4;
+            xx + (kind === 'wd' ? 8 : 4.6) <= x + w - 3;
+            xx += pitch
+          )
+            nearDetail +=
+              kind === 'pr'
+                ? R(xx, y, 2, 5.5) + R(xx + 2.6, y, 2, 5.5)
+                : kind === 'wd'
+                  ? R(xx, y, 8, 3)
+                  : R(xx, y, 3.5, 4.5);
+        };
+        // Low G+1 house: parapet, deep sunshade over the ground floor. o.room: stair
+        // room dx; o.t: [dx, tank]; o.shop: shutter bays (half raised, lit below);
+        // o.win: [kind, pitch] upper-floor windows; o.wall: compound wall of a lane on the left.
+        const low = (x, w, h, o = {}) => {
+          const top = G - h;
+          let d =
+            B(x, w, h) +
+            R(x - 1, top, w + 2, 2) +
+            R(x - 2.5, G - 10, w + 5, 2.5);
+          if (o.wall) d += B(x - o.wall, o.wall, 5);
+          if (o.room != null) d += R(x + o.room, top - 6, 9, 6);
+          if (o.t) d += o.t[1](x + o.t[0], top);
+          if (o.shop) {
+            const bw = (w - 6 - (o.shop - 1) * 2) / o.shop;
+            for (let i = 0; i < o.shop; i++)
+              nearDetail += R(x + 3 + i * (bw + 2), G - 3, bw, 3);
+          }
+          if (o.win && h >= 19) wins(x, w, top + 3.5, ...o.win);
+          return P(d);
+        };
+        // Taller flat: parapet, a deep chhajja over every floor (projects 3),
+        // windows under each, stair room, tanks [[dx, tank, onRoom]].
+        const flat = (x, w, h, o) => {
+          const top = G - h;
+          let d = B(x, w, h) + R(x - 1.5, top, w + 3, 2.5);
+          for (let y = top + 9.5; y < G - 8; y += 9.5)
+            d += R(x - 3, y, w + 6, 2.5);
+          if (o.room != null) d += R(x + o.room, top - 7, 12, 7);
+          for (const [dx, k, onRoom] of o.t)
+            d += k(x + dx, onRoom ? top - 7 : top);
+          for (let y = top + 3.5; y + 5 <= G - 10; y += 9.5)
+            wins(x, w, y, ...o.win);
+          return P(d);
+        };
+        // Small office: plain block, thin strip glazing per floor (split in two),
+        // lift room off-centre, lower side wing.
+        const nOffice = (x, w, h, ww) => {
+          const top = G - h;
+          for (let y = top + 5; y <= G - 9; y += 7)
+            nearDetail +=
+              R(x + 3, y, w / 2 - 4, 1.5) + R(x + w / 2 + 1, y, w / 2 - 4, 1.5);
+          nearDetail +=
+            R(x + w + 4, G - 24, ww - 8, 2.5) +
+            R(x + w + 4, G - 15, ww - 8, 2.5);
+          return P(
+            B(x, w, h) +
+              R(x + w - 12, top - 6, 9, 6) +
+              B(x + w, ww, 30) +
+              R(x + w, G - 30, ww + 1, 2),
+          );
+        };
+        const near =
+          flat(-10, 50, 32, { room: 30, t: [[12, N]], win: ['pr', 13] }) +
+          low(40, 30, 20, { win: ['wd', 13] }) +
+          low(70, 31, 16) +
+          low(107, 30, 22, { wall: 6, shop: 2, t: [15, Ns] }) +
+          flat(137, 46, 40, { room: 6, t: [[34, N]], win: ['sq', 12] }) +
+          low(183, 28, 18, { room: 17 }) +
+          low(217, 33, 24, { wall: 6, t: [22, N], win: ['pr', 12] }) +
+          low(250, 27, 15) +
+          low(277, 36, 23, { shop: 3 }) +
+          low(313, 33, 19, { room: 4, win: ['wd', 12] }) +
+          flat(346, 44, 34, { room: 4, t: [[10, N, 1]], win: ['wd', 13] }) +
+          low(390, 30, 20, { win: ['sq', 10] }) +
+          low(420, 31, 16, { t: [16, Np] }) +
+          low(457, 32, 22, { wall: 6, shop: 1 }) +
+          low(489, 33, 19, { win: ['wd', 13] }) +
+          nOffice(522, 34, 44, 20) +
+          low(576, 30, 19, { room: 17, win: ['pr', 11] }) +
+          low(606, 28, 24, { t: [11, Nw], win: ['sq', 9] }) +
+          low(640, 40, 18, { wall: 6 }) +
+          flat(680, 50, 34, { room: 30, t: [[36, N, 1]], win: ['pr', 15] }) +
+          low(730, 32, 18) +
+          low(762, 50, 21, { room: 34, win: ['pr', 13] });
+
+        window.VARIANTS.push({
+          id: 'a',
+          name: 'Housing society',
+          idea: 'Middle row of housing-society mid-rises (balcony bands, stair/lift cores above flat roofs, tanks on legs in four sizes, some cores bare), one terraced block and one with deep recessed balconies, three glass offices; far row of slim towers over low blocks; near row of low houses (three shops), taller flats with deep chhajjas and stair rooms, and a small office with strip glazing.',
+          far,
+          mid,
+          midDetail: P(midDetail),
+          near,
+          nearDetail: P(nearDetail),
+        });
+      })();
+    </script>
+    <script>
+      // Variant B: Mixed street. The far row is one skyline outline; mid and near are one <path> of rect subpaths per building.
+      (() => {
+        const G = 160;
+        const f = (n) => +n.toFixed(1);
+        // rect subpath, clipped to the allowed overhang x -10..810
+        const R = (x, y, w, h) => {
+          const a = Math.max(x, -10),
+            b = Math.min(x + w, 810);
+          return `M${f(a)} ${f(y)}h${f(b - a)}v${f(h)}h${f(a - b)}z`;
+        };
+        const P = (d) => (d ? `<path d="${d}"/>` : '');
+        // Water tank on a steel stand, standing on roof line t: drum, platform, two legs (8.5 tall).
+        const tank = (cx, t) =>
+          R(cx - 5, t - 8.5, 10, 5.5) +
+          R(cx - 6, t - 4.2, 12, 1.4) +
+          R(cx - 5, t - 3, 2, 3) +
+          R(cx + 3, t - 3, 2, 3);
+
+        // FAR: a continuous low range plus soft towers (k 0 flat, 1 one-sided setback, 2 low roof box).
+        const LOW = [
+          [-10, 28, 40],
+          [18, 22, 48],
+          [40, 34, 36],
+          [74, 26, 44],
+          [100, 30, 34],
+          [130, 20, 50],
+          [150, 36, 38],
+          [186, 24, 46],
+          [210, 30, 34],
+          [240, 22, 42],
+          [262, 34, 48],
+          [296, 26, 36],
+          [322, 30, 44],
+          [352, 22, 38],
+          [374, 36, 46],
+          [410, 24, 34],
+          [434, 30, 42],
+          [464, 22, 50],
+          [486, 34, 36],
+          [520, 26, 44],
+          [546, 30, 38],
+          [576, 22, 48],
+          [598, 34, 36],
+          [632, 24, 42],
+          [656, 30, 34],
+          [686, 22, 46],
+          [708, 34, 38],
+          [742, 26, 44],
+          [768, 42, 36],
+        ];
+        const TOW = [
+          [6, 20, 66, 0],
+          [36, 22, 82, 1],
+          [118, 20, 76, 0],
+          [134, 26, 62, 2],
+          [176, 18, 86, 1],
+          [244, 24, 72, 0],
+          [262, 16, 84, 2],
+          [326, 22, 66, 0],
+          [374, 20, 88, 1],
+          [392, 14, 74, 0],
+          [446, 30, 70, 2],
+          [500, 18, 84, 0],
+          [520, 24, 66, 1],
+          [600, 20, 78, 2],
+          [628, 26, 60, 0],
+          [700, 16, 82, 1],
+          [742, 26, 68, 2],
+          [788, 18, 76, 0],
+        ];
+        const tower = ([x, w, h, k], i) => {
+          const t = G - h;
+          if (k === 1)
+            return [
+              [x, w, t + 10],
+              [i % 2 ? x + 5 : x, w - 5, t],
+            ];
+          if (k === 2)
+            return [
+              [x, w, t + 3],
+              [x + 4, w - 8, t],
+            ];
+          return [[x, w, t]];
+        };
+        // The far row is one flat fill with no overhangs, so it is drawn as one outline: the highest roof over each x.
+        const FR = [
+          ...LOW.map(([x, w, h]) => [x, w, G - h]),
+          ...TOW.flatMap(tower),
+        ];
+        const xs = [...new Set(FR.flatMap(([x, w]) => [x, x + w]))].sort(
+          (p, q) => p - q,
+        );
+        let far = 'M-10 160',
+          last;
+        for (let j = 0; j < xs.length - 1; j++) {
+          const top = Math.min(
+            ...FR.filter(([x, w]) => x <= xs[j] && x + w >= xs[j + 1]).map(
+              (r) => r[2],
+            ),
+          );
+          if (top !== last)
+            ((far += (j ? 'H' + f(xs[j]) : '') + 'V' + f(top)), (last = top));
+        }
+        far = P(far + 'H810V160z');
+
+        // MID: F older flats with chhajjas (s: raised half), S society blocks with balconies and a stair/lift core (c),
+        // O glass offices with vertical fins (k: box = plant room, set = setback top).
+        const MID = [
+          ['F', -10, 40, 44, { s: 'r' }],
+          ['S', 32, 52, 58, { c: [8] }],
+          ['O', 87, 30, 70, { k: 'box' }],
+          ['F', 119, 28, 40, { bare: 1 }],
+          ['S', 150, 46, 62, { c: [17] }],
+          ['O', 199, 32, 72, { k: 'set' }],
+          ['F', 234, 42, 46, { s: 'l' }],
+          ['S', 281, 58, 54, { c: [8, 40], cw: 10 }],
+          ['O', 345, 24, 64, { bare: 1 }],
+          ['F', 369, 30, 42, {}],
+          ['O', 405, 38, 74, { k: 'box' }],
+          ['S', 444, 50, 60, { c: [34] }],
+          ['F', 494, 38, 48, { s: 'r' }],
+          ['O', 540, 28, 66, {}],
+          ['S', 570, 50, 56, { c: [4] }],
+          ['F', 620, 32, 38, { bare: 1 }],
+          ['O', 658, 34, 70, { k: 'set' }],
+          ['S', 694, 54, 58, { c: [21] }],
+          ['F', 748, 30, 44, { s: 'l' }],
+          ['O', 783, 27, 62, { k: 'box' }],
+        ];
+        const mid = [],
+          midDetail = [];
+        for (const [type, x, w, h, o] of MID) {
+          const t = G - h;
+          let d = R(x, t, w, h),
+            m = '';
+          if (type === 'S') {
+            const cw = o.cw || 12;
+            for (const c of o.c) d += R(x + c, t - 8, cw, 8);
+            // balcony slab (projecting) and one railing run under it, per floor
+            for (let y = t + 6; y < G - 8; y += 8)
+              ((d += R(x - 2, y, w + 4, 2)),
+                (m += R(x + 2, y + 2, w - 4, 2.2)));
+          } else if (type === 'O') {
+            if (o.k === 'box') d += R(x + 5, t - 4, w - 10, 4);
+            if (o.k === 'set')
+              d = R(x, t + 10, w, h - 10) + R(x + 4, t, w - 8, 10);
+            for (let fx = x + 4; fx < x + w - 3; fx += 8) {
+              const top = o.k === 'set' && fx > x + w - 6 ? t + 13 : t + 3;
+              m += R(fx, top, 1.8, G - 4 - top);
+            }
+          } else {
+            const hx = o.s === 'r' ? x + w / 2 : x;
+            if (o.s)
+              d +=
+                R(hx, t - 8, w / 2, 8) +
+                R(o.s === 'r' ? hx : hx - 1.5, t - 5, w / 2 + 1.5, 1.6);
+            const n = Math.floor((w - 4) / 10),
+              gap = (w - n * 4) / (n + 1);
+            for (let y = t + 3; y < G - 8; y += 10) {
+              d += R(x - 1.5, y, w + 3, 1.6);
+              for (let i = 0; i < n; i++)
+                m += R(x + gap + i * (4 + gap), y + 2.6, 4, 4);
+            }
+          }
+          mid.push(P(d));
+          if (!o.bare) midDetail.push(P(m));
+        }
+
+        // NEAR: 15 shop-houses and walk-ups with gaps between them so the mid row shows through.
+        // [x, w, floors, ground-shop height, upper-floor height, opts]
+        // opts: t tank offsets, m stair room offset (mt: tank on it), p raised parapet, cp coping, aw awning,
+        // cj sunshade ticks; facade (nearDetail): w window offsets (ww x wh), b balcony line per floor,
+        // tl one tall stair opening, sh rolling shutters (1 or 2). No facade key = plain front.
+        const NEAR = [
+          [
+            -10,
+            40,
+            2,
+            13,
+            11,
+            { t: [28], cp: 1, aw: 1, w: [6, 12.5], ww: 4, wh: 5, sh: 1 },
+          ],
+          [46, 26, 3, 12, 10, { p: 1, aw: 1, b: 1 }],
+          [
+            96,
+            38,
+            4,
+            12,
+            9.5,
+            { t: [26], cj: 1, aw: 1, w: [4, 11, 26], ww: 3.5, wh: 4.5, sh: 2 },
+          ],
+          [134, 22, 1, 14, 0, { cp: 1 }],
+          [
+            190,
+            34,
+            3,
+            13,
+            11,
+            { m: 4, mt: 1, aw: 1, tl: 10, w: [24], ww: 5, wh: 5 },
+          ],
+          [
+            240,
+            46,
+            2,
+            13,
+            12,
+            { p: 1, aw: 1, w: [5, 10.5, 30.5, 36], ww: 4, wh: 6, sh: 2 },
+          ],
+          [302, 28, 4, 12, 10.5, { t: [10], b: 1 }],
+          [
+            364,
+            40,
+            3,
+            13,
+            10,
+            { m: 22, mt: 1, aw: 1, w: [4, 11], ww: 4, wh: 5, tl: 28, sh: 1 },
+          ],
+          [424, 30, 2, 12, 11, { p: 1, aw: 1 }],
+          [
+            454,
+            36,
+            4,
+            11,
+            9.5,
+            { m: 5, t: [28], cj: 1, w: [4, 27.5], ww: 4.5, wh: 4.5 },
+          ],
+          [522, 32, 3, 14, 11, { t: [8, 22], aw: 1, b: 1, sh: 1 }],
+          [
+            576,
+            44,
+            2,
+            12,
+            10,
+            { p: 1, t: [8], aw: 1, w: [6, 19.5, 33], ww: 5, wh: 5, sh: 2 },
+          ],
+          [648, 28, 4, 12, 10, { m: 6, cp: 1, tl: 12 }],
+          [676, 34, 3, 13, 9, { aw: 1, w: [4, 9.5], ww: 3.5, wh: 4 }],
+          [
+            762,
+            48,
+            3,
+            12,
+            11,
+            { t: [14], cp: 1, w: [5, 21, 37], ww: 4, wh: 5.5, sh: 2 },
+          ],
+        ];
+        const near = [],
+          nearDetail = [];
+        for (const [x, w, n, gh, fh, o] of NEAR) {
+          const t = G - gh - fh * (n - 1),
+            up = (k) => G - gh - fh * k; // up(k): top of upper floor k
+          let d = R(x, t, w, G - t),
+            m = '';
+          if (o.cp) d += R(x - 1, t, w + 2, 1.6);
+          if (o.aw) d += R(x - 2.5, G - gh, w + 5, 1.5);
+          if (o.p) d += R(x + w / 4, t - 3, w / 2, 3);
+          for (const cx of o.t || []) d += tank(x + cx, t);
+          if (o.m !== undefined) {
+            d += R(x + o.m, t - 7, 15, 7) + R(x + o.m - 1, t - 7, 17, 1.4);
+            if (o.mt) d += tank(x + o.m + 5, t - 7);
+          }
+          for (let k = 1; k < n; k++) {
+            if (o.cj) d += R(x - 1.5, up(k) + 1, w + 3, 1.3);
+            for (const ox of o.w || [])
+              m += R(x + ox, up(k) + (fh - o.wh) / 2 + 0.5, o.ww, o.wh);
+            if (o.b) m += R(x + 2, up(k) + fh - 3.2, w - 4, 1.4);
+          }
+          if (o.tl !== undefined) m += R(x + o.tl, t + 2, 3, G - gh - t - 4);
+          // rolling shutter: two slats, pulled half down
+          const sw = o.sh === 2 ? (w - 8) / 2 : w - 6;
+          for (let i = 0; i < (o.sh || 0); i++)
+            m +=
+              R(x + 3 + i * (sw + 2), G - 7.5, sw, 1.3) +
+              R(x + 3 + i * (sw + 2), G - 4.5, sw, 1.3);
+          near.push(P(d));
+          if (m) nearDetail.push(P(m));
+        }
+
+        window.VARIANTS.push({
+          id: 'b',
+          name: 'Mixed street',
+          idea: 'Fifteen shop-houses and walk-ups of 1-4 storeys, spaced apart, with parapets, sunshades, stair rooms and rooftop tanks on legs; behind them glass offices with vertical fins, balconied society blocks with a stair/lift core and older flats with chhajjas; soft towers of varied height far away.',
+          far,
+          mid: mid.join(''),
+          midDetail: midDetail.join(''),
+          near: near.join(''),
+          nearDetail: nearDetail.join(''),
+        });
+      })();
+    </script>
+    <script>
+      // Variant C: Quiet skyline. Few clean shapes; character from rooflines
+      // (set-backs, terraces, lift rooms, tanks on legs) and balcony bands.
+      (() => {
+        const G = 160;
+        const n = (v) => Math.round(v * 10) / 10;
+        // Absolute, clockwise rect subpath (all subpaths share one winding).
+        const r = (x, y, w, h) =>
+          `M${n(x)} ${n(y)}H${n(x + w)}V${n(y + h)}H${n(x)}Z`;
+        const box = (x, w, h) => r(x, G - h, w, h);
+        const cap = (x, w, top) => r(x - 1.2, top - 1.6, w + 2.4, 1.6); // parapet coping
+        const room = (x, base, w, h) =>
+          r(x, base - h, w, h) + r(x - 0.8, base - h - 1.2, w + 1.6, 1.2); // stair/lift room
+        // Water tank on two legs standing on y = base (8.5 high).
+        const tank = (cx, base) =>
+          r(cx - 3.4, base - 3, 1.7, 3) +
+          r(cx + 1.7, base - 3, 1.7, 3) +
+          `M${n(cx - 4)} ${n(base - 3)}V${n(base - 7.5)}L${n(cx - 3)} ${n(base - 8.5)}H${n(cx + 3)}L${n(cx + 4)} ${n(base - 7.5)}V${n(base - 3)}Z`;
+        const ledges = (x, w, ys) =>
+          ys.map((y) => r(x - 2, y, w + 4, 1.4)).join(''); // chhajjas
+        const comb = (edge, side, ys) =>
+          ys.map((y) => r(side < 0 ? edge - 3 : edge, y, 3, 3.6)).join(''); // balcony slabs
+        const P = (...d) => `<path d="${d.join('')}"/>`;
+        // Light bands: horizontal (balconies) and vertical (glazing).
+        const H = (x, w, y0, y1, step = 7, t = 2) => {
+          let d = '';
+          for (let y = y0; y + t <= y1; y += step) d += r(x + 2.5, y, w - 5, t);
+          return d;
+        };
+        const V = (x, w, y0, y1, step = 7, t = 2) => {
+          let d = '';
+          for (let xx = x + 3; xx + t <= x + w - 2.5; xx += step)
+            d += r(xx, y0, t, y1 - y0);
+          return d;
+        };
+
+        // FAR: one muted path; clusters of towers and low stretches, top >= 72.
+        const far = P(
+          box(-10, 34, 58),
+          box(24, 24, 78),
+          r(28, 76, 14, 6),
+          box(48, 42, 64),
+          box(90, 22, 86),
+          box(112, 50, 56),
+          box(162, 30, 74),
+          box(192, 40, 62),
+          box(232, 26, 88),
+          box(258, 22, 70),
+          box(280, 44, 80),
+          r(286, 74, 22, 6),
+          box(324, 40, 58),
+          box(364, 28, 84),
+          box(392, 46, 66),
+          box(438, 24, 76),
+          box(462, 48, 56),
+          box(510, 30, 82),
+          box(540, 26, 88),
+          box(566, 44, 64),
+          box(610, 36, 78),
+          r(616, 76, 18, 6),
+          box(646, 50, 60),
+          box(696, 26, 86),
+          box(722, 44, 68),
+          box(766, 44, 80),
+        );
+
+        // MID: residential slabs (lift-core bump, balcony bands) and office towers (vertical glazing).
+        const mid = [
+          P(box(-10, 54, 54), room(18, 106, 12, 5)),
+          P(box(46, 40, 70), r(52, 86, 28, 4)),
+          P(box(92, 62, 50), room(100, 110, 10, 5), room(138, 110, 10, 5)),
+          P(box(158, 40, 44), box(164, 28, 72)),
+          P(box(202, 44, 66), room(224, 94, 12, 5)),
+          P(box(250, 26, 76), box(276, 16, 64)),
+          P(box(294, 58, 56), room(300, 104, 12, 5), tank(334, 104)),
+          P(box(356, 44, 70), room(380, 90, 12, 5)),
+          P(box(404, 40, 58), box(418, 26, 64)),
+          P(box(448, 58, 58), room(486, 102, 12, 5)),
+          P(`M510 160V88L520 82H552V160Z`),
+          P(box(556, 58, 62), room(566, 98, 12, 5), tank(598, 98)),
+          P(box(616, 38, 52)),
+          P(box(656, 60, 66), room(664, 94, 12, 5), room(698, 94, 12, 5)),
+          P(`M720 160V94L762 84V160Z`),
+          P(box(766, 44, 50), room(780, 110, 10, 5)),
+          // Fill the gaps between mid buildings below the near roofs, so they do not show through near's 90 %.
+          P(
+            ...[
+              [44, 46, 124],
+              [86, 92, 149],
+              [154, 158, 148],
+              [198, 202, 148],
+              [246, 250, 122],
+              [292, 294, 139],
+              [352, 356, 122],
+              [400, 404, 140],
+              [444, 448, 140],
+              [506, 510, 126],
+              [552, 556, 130],
+              [614, 616, 151],
+              [654, 656, 142],
+              [716, 720, 120],
+              [762, 766, 136],
+            ].map(([a, b, y]) => r(a - 0.5, y, b - a + 1, G - y)),
+          ),
+        ].join('');
+        const midDetail = [
+          H(-10, 54, 110, 130),
+          V(46, 40, 92, 130, 8),
+          H(92, 62, 114, 130),
+          V(164, 28, 91, 156, 7),
+          H(202, 44, 98, 122),
+          V(250, 26, 87, 134, 7),
+          H(294, 58, 108, 130),
+          H(356, 44, 94, 128),
+          V(418, 26, 99, 134, 8),
+          H(448, 58, 106, 128),
+          V(518, 34, 89, 140, 7),
+          H(556, 58, 102, 140),
+          V(616, 38, 111, 140, 8),
+          H(656, 60, 98, 132),
+          V(722, 40, 94, 132, 8),
+          H(766, 44, 114, 130),
+        ]
+          .map((d) => P(d))
+          .join('');
+
+        // NEAR: a few strong shapes with low shop-house runs between them.
+        const near = [
+          P(box(-10, 24, 22), box(14, 24, 27), cap(14, 24, 133), tank(2, 138)),
+          P(
+            box(42, 42, 38),
+            ledges(42, 42, [127, 134, 141, 148]),
+            room(64, 122, 12, 6.5),
+            tank(70, 114.3),
+          ),
+          P(
+            box(36, 7, 12),
+            box(83, 9, 12),
+            box(92, 30, 26),
+            box(122, 28, 19),
+            cap(92, 30, 134),
+          ),
+          P(box(149, 58, 12), cap(150, 56, 148)),
+          P(
+            box(206, 58, 40),
+            comb(206, -1, [124, 131, 138, 145]),
+            room(238, 120, 14, 8),
+            tank(224, 120),
+          ),
+          P(
+            box(263, 23, 26),
+            box(286, 22, 21),
+            cap(264, 22, 134),
+            cap(286, 22, 139),
+            tank(298, 137.4),
+          ),
+          P(box(307, 28, 11)),
+          P(
+            box(334, 18, 46),
+            box(352, 20, 38),
+            box(372, 18, 30),
+            cap(334, 18, 114),
+            cap(352, 20, 122),
+            cap(372, 18, 130),
+            tank(381, 128.4),
+          ),
+          P(
+            box(389, 8, 10),
+            box(396, 66, 20),
+            box(461, 8, 10),
+            cap(396, 66, 140),
+            room(440, 138.4, 12, 6),
+            tank(446, 131.2),
+          ),
+          P(
+            box(468, 54, 36),
+            box(468, 36, 43),
+            comb(522, 1, [127, 134, 141, 148]),
+            tank(494, 117),
+          ),
+          P(
+            box(521, 8, 10),
+            box(528, 38, 30),
+            cap(528, 38, 130),
+            ledges(528, 38, [146]),
+            tank(556, 128.4),
+          ),
+          P(
+            box(565, 7, 10),
+            box(572, 40, 34),
+            room(598, 126, 10, 6),
+            box(612, 7, 10),
+          ),
+          P(box(618, 62, 18), cap(618, 62, 142), tank(642, 140.4)),
+          P(
+            box(679, 7, 10),
+            box(686, 26, 30),
+            box(712, 30, 42),
+            ledges(712, 30, [124, 131, 138, 145]),
+            room(728, 118, 9, 6),
+          ),
+          P(
+            box(741, 31, 24),
+            box(772, 40, 28),
+            cap(742, 30, 136),
+            cap(772, 40, 132),
+            tank(792, 130.4),
+          ),
+        ].join('');
+
+        // NEAR DETAIL (>= 640 px): floor lines on the apartments, one window strip on shop-houses.
+        const nearDetail = [
+          H(42, 42, 125, 150, 7, 1.2),
+          H(206, 58, 123, 150, 7, 1.2),
+          H(468, 54, 127, 150, 7, 1.2),
+          H(334, 18, 120, 150, 7, 1.2),
+          H(352, 20, 127, 150, 7, 1.2),
+          H(712, 30, 122, 150, 7, 1.2),
+          r(17, 137, 18, 2) +
+            r(95, 138, 24, 2) +
+            r(267, 138, 16, 2) +
+            r(531, 136, 32, 2) +
+            r(575, 132, 34, 2) +
+            r(745, 140, 24, 2) +
+            r(775, 136, 34, 2),
+        ]
+          .map((d) => P(d))
+          .join('');
+
+        window.VARIANTS.push({
+          id: 'c',
+          name: 'Quiet skyline',
+          idea: 'The fewest, cleanest shapes: character from rooflines (set-backs, terraces, lift rooms, tanks on legs) and horizontal balcony bands, not windows. Balconied housing blocks and vertical-band glass offices in the middle row; shop-house runs with tanks and chhajjas in front.',
+          far,
+          mid,
+          midDetail,
+          near,
+          nearDetail,
+        });
+      })();
+    </script>
+    <script>
+      // Today's geometry (CitySkyline.tsx), for comparison.
+      (() => {
+        const FAR = [
+          [0, 28, 60],
+          [30, 22, 85],
+          [55, 35, 50],
+          [95, 18, 95],
+          [115, 40, 65],
+          [215, 26, 75],
+          [245, 34, 55],
+          [285, 20, 90],
+          [310, 38, 62],
+          [352, 24, 80],
+          [378, 22, 58],
+        ];
+        const MID = [
+          [12, 30, 66],
+          [50, 24, 52],
+          [86, 32, 74],
+          [132, 20, 58],
+          [226, 28, 68],
+          [262, 22, 56],
+          [296, 34, 78],
+          [338, 26, 62],
+          [374, 22, 50],
+        ];
+        const NEAR = [
+          [-5, 40, 38],
+          [38, 30, 52],
+          [72, 46, 30],
+          [122, 24, 46],
+          [200, 36, 34],
+          [240, 28, 50],
+          [272, 44, 28],
+          [320, 26, 44],
+          [350, 52, 32],
+        ];
+        const shifted = (row, by) =>
+          row.map(([x, w], i) => [x + 400, w, row[(i + by) % row.length][2]]);
+        const FA = [...FAR, ...shifted(FAR, 4)],
+          MA = [...MID, ...shifted(MID, 5)],
+          NA = [...NEAR, ...shifted(NEAR, 3)];
+        const rects = (r) =>
+          r
+            .map(
+              ([x, w, h]) =>
+                `<rect x="${x}" y="${160 - h}" width="${w}" height="${h}"/>`,
+            )
+            .join('');
+        const tank = (cx, top) =>
+          `<path d="M${cx - 5} ${top - 7}h10v5h-10zM${cx - 4} ${top - 2}h1.5v2h-1.5zM${cx + 2.5} ${top - 2}h1.5v2h-1.5z"/>`;
+        const win = `<defs><pattern id="curwin" width="7" height="9" patternUnits="userSpaceOnUse"><rect x="2" y="2" width="3" height="4"/></pattern></defs>`;
+        window.VARIANTS.push({
+          id: 'current',
+          name: 'Today (for comparison)',
+          idea: 'Flat rectangles in three rows, a domed hall (far) and a memorial arch (near), rooftop tanks on every third near building, a window pattern from 640 px.',
+          far:
+            rects(FA) +
+            '<rect x="160" y="120" width="50" height="40"/><path d="M163 120 A22 22 0 0 1 207 120 Z"/>',
+          mid: rects(MA),
+          near:
+            rects(NA) +
+            '<path d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z"/>' +
+            NA.filter((_, i) => i % 3 === 1)
+              .map(([x, w, h]) => tank(x + w / 2, 160 - h))
+              .join(''),
+          nearDetail:
+            win +
+            NA.map(
+              ([x, w, h]) =>
+                `<rect x="${x + 3}" y="${160 - h + 5}" width="${w - 6}" height="${h - 9}" fill="url(#curwin)"/>`,
+            ).join(''),
+        });
+      })();
+    </script>
+    <script>
+      const SKY = {
+        within: { top: 'var(--within-top)', bottom: 'var(--surface-light)' },
+        above: {
+          top: 'var(--above-top)',
+          bottom: 'color-mix(in oklab, var(--rule) 45%, var(--surface-light))',
+        },
+        unknown: { top: 'var(--rule)', bottom: 'var(--surface-light)' },
+      };
+      // Overcast tops: today's (nearly the above sky) and the proposal
+      // (keeps the within hue, only muted).
+      const OVERCAST = {
+        today: {
+          within: 'color-mix(in oklab, var(--within-top) 45%, var(--rule))',
+          above: 'color-mix(in oklab, var(--above-top) 45%, var(--rule))',
+          unknown: 'var(--rule)',
+        },
+        proposal: {
+          within: 'color-mix(in oklab, var(--within-top) 75%, var(--rule))',
+          above: 'color-mix(in oklab, var(--above-top) 45%, var(--rule))',
+          unknown: 'var(--rule)',
+        },
+      };
+      const GLOW = { within: 0.6, above: 0.22, unknown: 0 };
+      const VEIL_FAR = { within: 0.05, above: 0.42, unknown: 0 };
+      const VEIL = {
+        within: 'var(--rule)',
+        above: 'color-mix(in oklab, var(--rule) 88%, var(--secondary))',
+        unknown: 'var(--rule)',
+      };
+      const CLOUDS = [
+        [300, 30],
+        [480, 22],
+        [180, 36],
+      ];
+      const MIDFILL =
+        'color-mix(in oklab, var(--text-dark-muted) 55%, var(--text-dark))';
+      const ROW =
+        'viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice" class="fill"';
+
+      function upper(state) {
+        const { air, clouds, glow, overcastTop } = state;
+        let s =
+          `<svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice" class="abs" style="left:0;right:0;top:64px;width:100%;height:${state.W >= 640 ? 224 : 160}px">` +
+          `<defs><radialGradient id="g${state.uid}"><stop offset="0" stop-color="#f5b84b"/><stop offset="0.3" stop-color="#f5b84b" stop-opacity="0.6"/><stop offset="1" stop-color="#f5b84b" stop-opacity="0"/></radialGradient></defs>`;
+        if (glow)
+          s += `<circle cx="560" cy="58" r="62" fill="url(#g${state.uid})" opacity="${GLOW[air]}"/>`;
+        if (clouds === 3)
+          s += `<ellipse cx="400" cy="-6" rx="520" ry="30" fill="#d3dce6" opacity="0.85"/>`;
+        for (const [cx, cy] of CLOUDS.slice(0, clouds)) {
+          s +=
+            `<ellipse cx="${cx}" cy="${cy + 2}" rx="38" ry="9" fill="#d3dce6" opacity="0.7"/>` +
+            `<g fill="#f5f8fa"><ellipse cx="${cx}" cy="${cy}" rx="36" ry="10"/><ellipse cx="${cx - 15}" cy="${cy - 6}" rx="17" ry="11"/><ellipse cx="${cx + 12}" cy="${cy - 9}" rx="20" ry="13"/></g>`;
+        }
+        return s + '</svg>';
+      }
+
+      // One page mock, W x H CSS px, drawn at `scale`.
+      function page(v, state) {
+        const { W, H, scale } = state;
+        const band = W >= 640 ? Math.min(176, H * 0.2) : Math.min(128, H * 0.2);
+        const bottom = W >= 768 ? 0 : 56;
+        const windows = W >= 640;
+        const air = state.air;
+        let city;
+        if (state.loading) {
+          city = `<svg ${ROW}><g fill="#d3dce6" opacity="0.7">${v.far}</g><g fill="#d3dce6">${v.near}</g></svg>`;
+        } else {
+          city =
+            `<svg ${ROW}><g fill="var(--text-dark-muted)" opacity="0.42">${v.far}</g></svg>` +
+            `<div class="fill mask" style="background:${VEIL[air]};opacity:${VEIL_FAR[air]}"></div>` +
+            `<svg ${ROW}><g fill="${MIDFILL}" opacity="0.62">${v.mid}</g>` +
+            (v.midDetail
+              ? `<g fill="var(--surface-light)" opacity="0.28">${v.midDetail}</g>`
+              : '') +
+            `</svg>` +
+            (air === 'above'
+              ? `<div class="fill mask" style="background:${VEIL.above};opacity:0.2"></div>`
+              : '') +
+            `<svg ${ROW}><g fill="var(--text-dark)" opacity="0.9">${v.near}</g>` +
+            (windows && v.nearDetail
+              ? `<g fill="var(--surface-light)" opacity="0.5">${v.nearDetail}</g>`
+              : '') +
+            `</svg>`;
+        }
+        const top = state.loading
+          ? 'var(--surface-light)'
+          : state.overcastTop || SKY[air].top;
+        const bottomC = state.loading
+          ? 'var(--surface-light)'
+          : SKY[air].bottom;
+        const inner =
+          `<div class="fill" style="background:linear-gradient(${top}, ${bottomC})"></div>` +
+          (state.loading ? '' : upper(state)) +
+          `<div class="header"></div>` +
+          `<div class="title">Today in Pune</div>` +
+          `<div class="card"></div>` +
+          `<div class="abs" style="left:0;right:0;bottom:${bottom}px;height:${band}px">${city}</div>` +
+          (bottom ? `<div class="phonebar"></div>` : '');
+        return (
+          `<div class="frame" style="width:${W * scale}px;height:${H * scale}px">` +
+          `<div class="page" style="width:${W}px;height:${H}px;transform:scale(${scale})">${inner}</div></div>`
+        );
+      }
+
+      let uid = 0;
+      function fig(v, label, s) {
+        return `<figure style="margin:0">${page(v, { uid: uid++, ...s })}<h3>${label}</h3></figure>`;
+      }
+      // A close-up of the city band alone: the page mock cropped to its
+      // bottom `band` px (no phone bar), so details can be judged.
+      function band(v, label, s) {
+        const b = s.W >= 640 ? 176 : 128;
+        const H = Math.max(b / 0.2, 640);
+        const inner = page(v, { uid: uid++, ...s, H, scale: 1 })
+          .replace(/<div class="phonebar"><\/div>/, '')
+          .replace(/bottom:56px/, 'bottom:0px');
+        return (
+          `<figure style="margin:0"><div class="frame" style="width:${s.W * s.scale}px;height:${b * s.scale}px;position:relative">` +
+          `<div style="position:absolute;left:0;bottom:0;transform-origin:0 100%;transform:scale(${s.scale})">${inner}</div></div><h3>${label}</h3></figure>`
+        );
+      }
+
+      const only = new URLSearchParams(location.search).get('only');
+      const out = document.getElementById('out');
+      if (only === 'compare') {
+        let c = '<h1>Cityscape variants: side by side</h1>';
+        for (const id of ['current', 'a', 'b', 'c']) {
+          const v = VARIANTS.find((x) => x.id === id);
+          if (!v) continue;
+          c +=
+            `<section><h2>${id === 'current' ? 'Today' : id.toUpperCase() + '. ' + v.name}</h2><div class="row">` +
+            band(v, '1280 px, within', {
+              W: 1280,
+              scale: 0.62,
+              air: 'within',
+              clouds: 0,
+              glow: false,
+            }) +
+            band(v, '390 px phone, within', {
+              W: 390,
+              scale: 1.1,
+              air: 'within',
+              clouds: 0,
+              glow: false,
+            }) +
+            `</div><div class="row" style="margin-top:8px">` +
+            band(v, '1280 px, above', {
+              W: 1280,
+              scale: 0.62,
+              air: 'above',
+              clouds: 0,
+              glow: false,
+            }) +
+            band(v, '390 px phone, loading', {
+              W: 390,
+              scale: 1.1,
+              air: 'unknown',
+              loading: true,
+            }) +
+            `</div></section>`;
+        }
+        out.innerHTML = c;
+        throw new Error('compare done');
+      }
+      let html = `<h1>Cityscape variants</h1><p class="muted">Same page mock, same state treatment as the app today; only the buildings differ. Sizes are the brief's test viewports, scaled down.</p>`;
+      for (const v of VARIANTS.filter((x) => !only || x.id === only)) {
+        const D = { W: 1280, H: 720, scale: 0.42 };
+        html +=
+          `<section><h2>${v.id.toUpperCase()}. ${v.name}</h2><p class="muted">${v.idea}</p>` +
+          `<div class="row">` +
+          fig(v, 'Within the limit, partly cloudy, daylight', {
+            ...D,
+            air: 'within',
+            clouds: 2,
+            glow: true,
+          }) +
+          fig(v, 'Above the limit, clear, daylight', {
+            ...D,
+            air: 'above',
+            clouds: 0,
+            glow: true,
+          }) +
+          fig(v, 'No data (unknown)', {
+            ...D,
+            air: 'unknown',
+            clouds: 0,
+            glow: false,
+          }) +
+          fig(v, 'Loading (still silhouette)', {
+            ...D,
+            air: 'unknown',
+            loading: true,
+          }) +
+          `</div><div class="row" style="margin-top:14px">` +
+          band(v, 'Close-up: city band at 1280 px, within', {
+            W: 1280,
+            scale: 0.98,
+            air: 'within',
+            clouds: 0,
+            glow: false,
+          }) +
+          band(v, 'Close-up: city band at 390 px (phone), within', {
+            W: 390,
+            scale: 1.6,
+            air: 'within',
+            clouds: 0,
+            glow: false,
+          }) +
+          band(v, 'Close-up: city band at 1280 px, above', {
+            W: 1280,
+            scale: 0.98,
+            air: 'above',
+            clouds: 0,
+            glow: false,
+          }) +
+          `</div><div class="row" style="margin-top:14px">` +
+          fig(v, '320 × 640, within', {
+            W: 320,
+            H: 640,
+            scale: 0.6,
+            air: 'within',
+            clouds: 1,
+            glow: true,
+          }) +
+          fig(v, '390 × 844, above', {
+            W: 390,
+            H: 844,
+            scale: 0.5,
+            air: 'above',
+            clouds: 0,
+            glow: true,
+          }) +
+          fig(v, '768 × 1024, within', {
+            W: 768,
+            H: 1024,
+            scale: 0.36,
+            air: 'within',
+            clouds: 2,
+            glow: true,
+          }) +
+          `</div></section>`;
+      }
+      if (!only || only === 'overcast') {
+        const v = VARIANTS[0];
+        if (v) {
+          const D = { W: 1280, H: 720, scale: 0.42 };
+          html +=
+            `<section><h2>Overcast: within vs above</h2><p class="muted">Today the overcast "within" sky is nearly the "above" sky. The proposal keeps the within hue, only muted.</p><div class="row">` +
+            fig(v, 'Today: within, overcast', {
+              ...D,
+              air: 'within',
+              clouds: 3,
+              glow: false,
+              overcastTop: OVERCAST.today.within,
+            }) +
+            fig(v, 'Proposal: within, overcast', {
+              ...D,
+              air: 'within',
+              clouds: 3,
+              glow: false,
+              overcastTop: OVERCAST.proposal.within,
+            }) +
+            fig(v, 'Above, clear (for comparison)', {
+              ...D,
+              air: 'above',
+              clouds: 0,
+              glow: false,
+            }) +
+            fig(v, 'Above, overcast', {
+              ...D,
+              air: 'above',
+              clouds: 3,
+              glow: false,
+              overcastTop: OVERCAST.proposal.above,
+            }) +
+            `</div></section>`;
+        }
+      }
+      out.innerHTML = html;
+    </script>
+  </body>
+</html>
