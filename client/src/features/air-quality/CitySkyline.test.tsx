@@ -18,7 +18,6 @@ function scene(fields: Partial<Scene> = {}): Scene {
     clouds: 0,
     rain: false,
     heat: false,
-    fog: false,
     glow: false,
     ...fields,
   };
@@ -117,10 +116,10 @@ describe('CitySkyline', () => {
   // No hard top edge over the sky: each fades in from the top of the city
   // box as shown. On screens wider than 5:1 `slice` crops the drawing's top,
   // so a fade drawn in the drawing would start part-way and show an edge.
-  it('veils and fog fade in from the visible band top', () => {
-    const container = draw({ air: 'above', fog: true });
+  it('veils fade in from the visible band top', () => {
+    const container = draw({ air: 'above' });
     const city = container.querySelector('[data-layer="city"]');
-    for (const name of ['veil-far', 'veil-mid', 'fog']) {
+    for (const name of ['veil-far', 'veil-mid']) {
       const layer = part(container, name);
       expect(layer?.parentElement).toBe(city);
       expect(layer?.getAttribute('class') ?? '').toContain(
@@ -353,11 +352,27 @@ describe('CitySkyline', () => {
     ).not.toMatch(/animate-/);
   });
 
-  it('rain draws streaks, and fog its band', () => {
+  // Owner, 22 Nov: no fog band (it looked like the air haze).
+  it('rain draws streaks, hidden when dry; no fog band', () => {
+    const layer = (container: HTMLElement) =>
+      container.querySelector('[data-layer="rain"]')?.getAttribute('class');
     expect(part(draw({ rain: true }), 'rain')).not.toBeNull();
-    expect(part(draw(), 'rain')).toBeNull();
-    expect(part(draw({ fog: true }), 'fog')).not.toBeNull();
+    expect(layer(draw({ rain: true }))).not.toMatch(/(^|\s)invisible(\s|$)/);
+    expect(layer(draw())).toMatch(/(^|\s)invisible(\s|$)/);
     expect(part(draw(), 'fog')).toBeNull();
+  });
+
+  // Final review: the rain layer stays mounted, hidden when dry, so rain
+  // that starts at the hourly reload shows without replaying its fall
+  // (motion only when a place is first drawn, DESIGN.md §9).
+  it('rain that starts later does not replay its fall', () => {
+    const { container, rerender } = render(<CitySkyline scene={scene()} />);
+    const before = container.querySelector('[data-layer="rain"]');
+    expect(before).not.toBeNull();
+    rerender(<CitySkyline scene={scene({ rain: true })} />);
+    const after = container.querySelector('[data-layer="rain"]');
+    expect(after).toBe(before);
+    expect(after?.getAttribute('class')).not.toMatch(/(^|\s)invisible(\s|$)/);
   });
 
   // Review A2 minor a, for a tile: one loop of the rain moves each streak

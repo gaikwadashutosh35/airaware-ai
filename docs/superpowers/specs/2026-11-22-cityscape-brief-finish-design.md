@@ -152,3 +152,5 @@ These deferred minors from the 22 Nov backdrop review stay as they are:
 - rain replays when an hourly reload turns it on;
 - missing cloud cover draws a clear sky;
 - after an answer change, My Home's plan can briefly differ from its sky.
+
+**Amended (22 Nov 2026):** all five were then settled. The owner's calls: the fog band is removed; missing cloud cover keeps no clouds and no glow; the "No data" tag stays, partial check included. The builder's calls: weather counts for an hour after its own hour, then the scene draws none; the rain layer stays mounted, hidden when dry, so it never replays at the hourly reload; on My Home, a plan rebuilt on a forecast over a minute newer than the backdrop's reloads the backdrop once.

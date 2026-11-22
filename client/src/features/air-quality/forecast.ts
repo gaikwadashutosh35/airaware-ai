@@ -64,8 +64,9 @@ export const POLLUTANTS: ReadonlyArray<{
 ];
 
 // The hour's weather in words, from known values only, named by its time so
-// it never reads as current once the hour has passed. The scene above
-// draws the same facts; this line is what a screen reader hears.
+// it never reads as current once the hour has passed. The backdrop draws
+// clouds, rain, heat and daylight from the same values; visibility is in
+// words only. This line is what a screen reader hears.
 export function weatherLine(weather: WeatherNow | null): string {
   if (!weather) return 'Weather unavailable';
   const parts: string[] = [];

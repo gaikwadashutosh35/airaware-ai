@@ -27,6 +27,8 @@ test('clouds drift then rest', async ({ page }) => {
   await stubToday(page);
   await page.goto(PUNE);
 
+  // A real cloud drifts (30 % cover), not an empty group.
+  await expect(page.locator('[data-part="cloud"]')).toHaveCount(1);
   expect((await cloudsStyle(page)).name).toBe('cloud-drift');
   await page.waitForTimeout(5_500);
   expect(['none', 'matrix(1, 0, 0, 1, 0, 0)']).toContain(

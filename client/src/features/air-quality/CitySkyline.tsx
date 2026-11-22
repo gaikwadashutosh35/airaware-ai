@@ -76,7 +76,7 @@ const CITY =
   'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:24rem)]:hidden';
 
 // The city's rows share one drawing box, stacked as layers so the veils
-// and fog can sit between them as HTML. Those fade in from the top of the
+// can sit between them as HTML. They fade in from the top of the
 // city box as shown, to full strength at 60 % of it: on screens wider than
 // 5:1, `slice` crops the drawing's top, so a fade drawn inside it would
 // start part-way and show an edge across the sky.
@@ -89,7 +89,7 @@ const MASK = '[mask-image:linear-gradient(transparent,black_60%)]';
 
 // The app's backdrop: a decorative city behind every page. Its look (sky,
 // glow strength, veils) follows the server's 24-hour air check; clouds, rain,
-// fog, heat and daylight follow this hour's weather forecast. The page's
+// heat and daylight follow this hour's weather forecast. The page's
 // words carry the meaning; this picture is hidden from assistive technology.
 // With no scene yet, a still, neutral silhouette of the same city.
 export function CitySkyline({ scene }: { scene: Scene | null }) {
@@ -255,14 +255,6 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
             {paths(SKYLINE.nearDetail)}
           </g>
         </svg>
-        {/* Fog at the city's base only (backdrop design §5.1). */}
-        {scene.fog && (
-          <div
-            data-part="fog"
-            className={`${FILL} bg-surface-light ${MASK}`}
-            style={{ opacity: 0.6 }}
-          />
-        )}
         {scene.heat && (
           <svg {...ROW}>
             <rect
@@ -280,38 +272,38 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
       {/* Rain over the whole screen: a tile one loop of rain-fall maps onto
           itself. The whole layer moves, as one box the browser can hand to
           the GPU, and overhangs the screen by 64 px each side, so the loop
-          (12 px left, 32 px down) never shows an edge. */}
-      {scene.rain && (
-        <svg
-          data-layer="rain"
-          className="absolute -inset-16 motion-safe:animate-rain"
-        >
-          <defs>
-            <pattern
-              id={`${id}-rain`}
-              width="24"
-              height="64"
-              patternUnits="userSpaceOnUse"
+          (12 px left, 32 px down) never shows an edge. It stays mounted,
+          hidden when dry, so its fall plays only when a place is first
+          drawn: rain that starts at the hourly reload shows still. */}
+      <svg
+        data-layer="rain"
+        className={`absolute -inset-16 motion-safe:animate-rain${scene.rain ? '' : ' invisible'}`}
+      >
+        <defs>
+          <pattern
+            id={`${id}-rain`}
+            width="24"
+            height="64"
+            patternUnits="userSpaceOnUse"
+          >
+            <g
+              className="stroke-text-dark-muted"
+              opacity="0.5"
+              strokeWidth="1.5"
             >
-              <g
-                className="stroke-text-dark-muted"
-                opacity="0.5"
-                strokeWidth="1.5"
-              >
-                {RAIN_TILE.map(([x, y]) => (
-                  <line key={x} x1={x} y1={y} x2={x - 4} y2={y + 10} />
-                ))}
-              </g>
-            </pattern>
-          </defs>
-          <rect
-            data-part="rain"
-            width="100%"
-            height="100%"
-            fill={`url(#${id}-rain)`}
-          />
-        </svg>
-      )}
+              {RAIN_TILE.map(([x, y]) => (
+                <line key={x} x1={x} y1={y} x2={x - 4} y2={y + 10} />
+              ))}
+            </g>
+          </pattern>
+        </defs>
+        <rect
+          data-part="rain"
+          width="100%"
+          height="100%"
+          fill={`url(#${id}-rain)`}
+        />
+      </svg>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Page, Route } from '@playwright/test';
-import type { DailyPlan, ForecastSeries } from '../shared/contracts.ts';
+import type { DailyPlan, ForecastData } from '../shared/contracts.ts';
 import { forecastFixture } from '../client/src/test/fixtures.ts';
 
 const HOUR = 60 * 60 * 1000;
@@ -9,8 +9,10 @@ export const PUNE = '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86';
 
 const hourOf = (date: Date) => Math.floor(date.getTime() / HOUR) * HOUR;
 
-// The recorded test forecast, moved so its hours start at `retrievedAt`.
-export function forecastAt(retrievedAt: Date): ForecastSeries {
+// The recorded test forecast, moved so its hours start at `retrievedAt`,
+// with its weather for that same hour (the backdrop stops drawing weather
+// over an hour past its hour).
+export function forecastAt(retrievedAt: Date): ForecastData {
   const start = hourOf(retrievedAt);
   return {
     ...forecastFixture,
@@ -19,6 +21,11 @@ export function forecastAt(retrievedAt: Date): ForecastSeries {
       ...hour,
       time: new Date(start + i * HOUR).toISOString(),
     })),
+    weather: forecastFixture.weather && {
+      ...forecastFixture.weather,
+      time: new Date(start).toISOString(),
+      retrievedAt: retrievedAt.toISOString(),
+    },
   };
 }
 

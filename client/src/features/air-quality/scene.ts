@@ -3,6 +3,7 @@ import type {
   ForecastData,
   WeatherNow,
 } from '../../../../shared/contracts.ts';
+import { isOlderThan } from '../../lib/clock.ts';
 import { LEVEL_TAG } from '../daily-plan/planDisplay.ts';
 import { NEAR_YOU } from '../location/place.ts';
 
@@ -17,13 +18,14 @@ const AIR: Record<AirAssessment['level'], SceneAir> = {
 };
 
 // What the readout's skyline draws. `air` comes from the air check; every
-// other flag from this hour's weather. An unknown value adds nothing.
+// other flag from this hour's weather. An unknown value adds nothing. No
+// fog (owner, 22 Nov): visibility can't tell fog from smog, and a fog band
+// looked like the air haze.
 export interface Scene {
   air: SceneAir;
   clouds: 0 | 1 | 2 | 3;
   rain: boolean;
   heat: boolean;
-  fog: boolean;
   // Daylight: a known day, sky and air, with no rain or overcast.
   glow: boolean;
 }
@@ -32,7 +34,6 @@ export interface Scene {
 // Rain needs a forecast amount, never a chance alone (cityscape D4).
 const RAIN_MM = 0.2;
 const HOT_C = 35;
-const FOG_M = 1000;
 
 function cloudCount(cover: number | null): Scene['clouds'] {
   if (cover === null || cover < 20) return 0;
@@ -53,7 +54,6 @@ export function sceneFromConditions(
     rain,
     // Rain wins: one animated layer at most.
     heat: !rain && (weather?.temperatureC ?? -Infinity) >= HOT_C,
-    fog: (weather?.visibilityM ?? Infinity) < FOG_M,
     // Daylight on a known sky: a known day (a missing isDay, from weather
     // cached before the field, counts as unknown), known cover and rain
     // amount, no overcast or rain, and known air.
@@ -74,9 +74,13 @@ export const NEUTRAL: Scene = {
   clouds: 0,
   rain: false,
   heat: false,
-  fog: false,
   glow: false,
 };
+
+// Weather is for its hour, and counts for an hour after that, like the
+// forecast itself (the hourly reload replaces it by then). Past that, the
+// scene draws no weather: no rain or sun from hours ago on a page left open.
+const WEATHER_KEPT_MIN = 120;
 
 // What the app backdrop draws (backdrop design §5.2). `shown` is the ready
 // forecast, or the one a same-place reload will replace; null with
@@ -84,8 +88,15 @@ export const NEUTRAL: Scene = {
 export function backdropScene(
   shown: ForecastData | null,
   loading: boolean,
+  now: Date,
 ): Scene | null {
-  if (shown) return sceneFromConditions(shown.airCheck, shown.weather);
+  if (shown) {
+    const weather =
+      shown.weather && !isOlderThan(shown.weather.time, now, WEATHER_KEPT_MIN)
+        ? shown.weather
+        : null;
+    return sceneFromConditions(shown.airCheck, weather);
+  }
   return loading ? null : NEUTRAL;
 }
 

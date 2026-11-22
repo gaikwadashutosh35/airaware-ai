@@ -44,6 +44,8 @@ const weather = (fields: Partial<WeatherNow> = {}): WeatherNow => ({
   ...fields,
 });
 
+// Within the weather fixture's hour.
+const NOW = new Date('2026-11-18T10:30:00.000Z');
 const WITHIN = air(36);
 const ABOVE = air(72);
 const UNKNOWN = air(null);
@@ -74,7 +76,6 @@ describe('sceneFromConditions', () => {
       clouds: 0,
       rain: false,
       heat: false,
-      fog: false,
       glow: false,
     });
   });
@@ -119,11 +120,12 @@ describe('sceneFromConditions', () => {
     expect(scene.heat).toBe(false);
   });
 
-  it('fog below 1 km visibility', () => {
-    const fog = (visibilityM: number) =>
-      sceneFromConditions(WITHIN, weather({ visibilityM })).fog;
-    expect(fog(999)).toBe(true);
-    expect(fog(1000)).toBe(false);
+  // Owner, 22 Nov: no fog band. Low visibility in Indian winters is often
+  // smog, and visibility can't tell fog from it (brief §5.1).
+  it('low visibility draws nothing', () => {
+    expect(sceneFromConditions(WITHIN, weather({ visibilityM: 500 }))).toEqual(
+      sceneFromConditions(WITHIN, weather()),
+    );
   });
 
   // Cityscape D3: the glow is daylight, so it needs a known day and a known
@@ -170,11 +172,10 @@ describe('sceneFromConditions', () => {
         sceneFromConditions(check, sky),
       );
       expect(scenes.map((s) => s.air)).toEqual(['within', 'above', 'unknown']);
-      const weatherOf = ({ clouds, rain, heat, fog }: (typeof scenes)[0]) => ({
+      const weatherOf = ({ clouds, rain, heat }: (typeof scenes)[0]) => ({
         clouds,
         rain,
         heat,
-        fog,
       });
       expect(weatherOf(scenes[1]!)).toEqual(weatherOf(scenes[0]!));
       expect(weatherOf(scenes[2]!)).toEqual(weatherOf(scenes[0]!));
@@ -183,17 +184,16 @@ describe('sceneFromConditions', () => {
 
   // Backdrop design §5.2.
   it('backdrop: the silhouette only while a first forecast loads', () => {
-    expect(backdropScene(null, true)).toBeNull();
+    expect(backdropScene(null, true, NOW)).toBeNull();
   });
 
   it('backdrop: neutral with no forecast or on error', () => {
-    expect(backdropScene(null, false)).toEqual(NEUTRAL);
+    expect(backdropScene(null, false, NOW)).toEqual(NEUTRAL);
     expect(NEUTRAL).toEqual({
       air: 'unknown',
       clouds: 0,
       rain: false,
       heat: false,
-      fog: false,
       glow: false,
     });
   });
@@ -205,8 +205,25 @@ describe('sceneFromConditions', () => {
       weather: weather({ cloudCoverPercent: 60 }),
     };
     const expected = sceneFromConditions(s.airCheck, s.weather);
-    expect(backdropScene(s, false)).toEqual(expected);
-    expect(backdropScene(s, true)).toEqual(expected);
+    expect(backdropScene(s, false, NOW)).toEqual(expected);
+    expect(backdropScene(s, true, NOW)).toEqual(expected);
+  });
+
+  // Final review: weather is for its hour. Like the forecast, it counts for
+  // an hour after that (when the hourly reload replaces it), then the scene
+  // stops drawing it: no rain or sun from hours ago on a page left open.
+  it('backdrop: weather over an hour past its hour draws nothing', () => {
+    const s = {
+      ...forecastFixture,
+      airCheck: ABOVE,
+      weather: weather({ cloudCoverPercent: 60, precipitationMm: 1 }),
+    };
+    expect(
+      backdropScene(s, false, new Date('2026-11-18T12:00:00.000Z')),
+    ).toEqual(sceneFromConditions(ABOVE, s.weather));
+    expect(
+      backdropScene(s, false, new Date('2026-11-18T12:01:00.000Z')),
+    ).toEqual(sceneFromConditions(ABOVE, null));
   });
 
   // The backdrop review: the level in words, so the sky's tint is never
@@ -239,7 +256,6 @@ describe('sceneFromConditions', () => {
       clouds: 0,
       rain: false,
       heat: false,
-      fog: false,
       glow: false,
     });
   });

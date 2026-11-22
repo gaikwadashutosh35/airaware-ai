@@ -174,7 +174,11 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Cityscape backdrop (22 Nov):
   - My Home reloads the forecast once an hour, as its plan rebuilds then too, so the sky and the plan's air words refresh together, as on Today;
   - the footer names the air level ("Within the limit", "Above the limit" or "No data"), so on pages with no other air words the sky's tint is never the only sign of it;
-  - a rooftop tank no longer shows a darker notch where it meets its parapet.
+  - a rooftop tank no longer shows a darker notch where it meets its parapet;
+  - no fog band: low visibility can't be told apart from smog, and the band looked like the air haze (owner's call);
+  - weather over an hour past its own hour is no longer drawn, so a page left open never shows rain or sun from hours ago;
+  - rain that starts at the hourly reload no longer replays its fall;
+  - on My Home, a plan rebuilt on a forecast over a minute newer reloads the sky once, so the sky and the plan's air words agree.
 
 ### Security
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.

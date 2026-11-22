@@ -499,6 +499,79 @@ describe('AppShell', () => {
     );
   });
 
+  // Final review: weather over an hour past its hour stops drawing on a
+  // page that never reloads; the air look stays, marked "Not current.".
+  it('old weather leaves the backdrop on a page that never reloads', async () => {
+    routeFetch(ok(ABOVE), planRoutes());
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    await goTo('Better Habits');
+    expect(backdrop()?.getAttribute('data-clouds')).toBe('1');
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+
+    // The fixture's weather is for 17:00; 17:30 + 91 min = 19:01.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(91 * 60_000);
+    });
+    expect(backdrop()?.getAttribute('data-clouds')).toBe('0');
+    expect(backdrop()?.getAttribute('data-air')).toBe('above');
+    expect(note()?.textContent).toMatch(/ Not current\.$/);
+  });
+
+  // Final review: on My Home, a plan rebuilt on a newer forecast than the
+  // backdrop's reloads the backdrop once, so the sky and the plan's air
+  // words rest on the same data. Never a loop, even when the reload
+  // brings back the older forecast.
+  it('My Home reloads the sky once when its plan rests on a newer forecast', async () => {
+    const newer = {
+      ...rulesPlanFixture,
+      forecast: {
+        ...rulesPlanFixture.forecast!,
+        retrievedAt: '2026-11-17T17:20:00.000Z',
+      },
+    };
+    const fetchSpy = routeFetch(
+      ok(),
+      planRoutes(() => Promise.resolve(Response.json({ data: newer }))),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    const before = forecastCalls(fetchSpy).length;
+
+    await goTo('My Home');
+    await flush();
+    expect(forecastCalls(fetchSpy)).toHaveLength(before + 1);
+    await flush();
+    await flush();
+    expect(forecastCalls(fetchSpy)).toHaveLength(before + 1);
+  });
+
+  // Review: two cache misses at once stamp times seconds apart; those are
+  // the same model run, so no reload.
+  it('My Home keeps the sky when its plan is only seconds newer', async () => {
+    const seconds = {
+      ...rulesPlanFixture,
+      forecast: {
+        ...rulesPlanFixture.forecast!,
+        retrievedAt: '2026-11-17T17:05:30.000Z',
+      },
+    };
+    const fetchSpy = routeFetch(
+      ok(),
+      planRoutes(() => Promise.resolve(Response.json({ data: seconds }))),
+    );
+    render(<AppShell />);
+    await choosePlace();
+    await flush();
+    const before = forecastCalls(fetchSpy).length;
+
+    await goTo('My Home');
+    await flush();
+    expect(forecastCalls(fetchSpy)).toHaveLength(before);
+  });
+
   it('a failed forecast leaves a neutral backdrop', async () => {
     routeFetch(
       () =>

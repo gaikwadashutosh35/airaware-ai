@@ -147,6 +147,25 @@ function AppShell() {
   useEffect(() => {
     if (forecastDue) reloadForecast();
   }, [forecastDue]);
+  // My Home: a plan rebuilt for changed answers fetches its own forecast.
+  // When that one is over a minute newer than the backdrop's, the backdrop
+  // reloads, so the sky and the plan's air words rest on the same data.
+  // Seconds apart is two cache misses at once: the same model run. Once per
+  // plan: a reload that comes back older (another server's cache) never
+  // loops.
+  const planForecastAt =
+    todayPlan.kind === 'ready'
+      ? todayPlan.plan.forecast?.retrievedAt
+      : undefined;
+  const syncedPlanRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (page !== 'home' || forecast.state.status !== 'ready') return;
+    if (!planForecastAt || planForecastAt === syncedPlanRef.current) return;
+    const backdropAt = forecast.state.data.series.retrievedAt;
+    if (Date.parse(planForecastAt) - Date.parse(backdropAt) < 60_000) return;
+    syncedPlanRef.current = planForecastAt;
+    reloadForecast();
+  }, [page, forecast.state, planForecastAt]);
 
   // After the user picks a place, move focus to the result so keyboard and
   // screen-reader users land on it; a place from the address keeps focus put.
@@ -240,7 +259,7 @@ function AppShell() {
       <title>{`${TITLES[page]} | AirAware AI`}</title>
       {/* One backdrop for every app page; it stays mounted between pages. */}
       <CitySkyline
-        scene={backdropScene(shown, forecast.state.status === 'loading')}
+        scene={backdropScene(shown, forecast.state.status === 'loading', now)}
       />
       <a
         href="#main"
