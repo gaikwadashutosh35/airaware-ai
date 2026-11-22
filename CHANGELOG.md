@@ -173,7 +173,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Phase 8: Gemini calls are capped at 200 per day per server and reused for identical requests; the Gemini key never follows a redirect; place labels reject control characters; the CPCB standards link uses https; a saved snapshot says "that day"; deleting one saved plan keeps keyboard focus and says so; a slow load no longer overwrites edited answers; the chart no longer assumes a unit.
 - Cityscape backdrop (22 Nov):
   - My Home reloads the forecast once an hour, as its plan rebuilds then too, so the sky and the plan's air words refresh together, as on Today;
-  - the footer names the air level ("Within the limit", "Above the limit" or "No data"), so on pages with no other air words the sky's tint is never the only sign of it.
+  - the footer names the air level ("Within the limit", "Above the limit" or "No data"), so on pages with no other air words the sky's tint is never the only sign of it;
+  - a rooftop tank no longer shows a darker notch where it meets its parapet.
 
 ### Security
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.

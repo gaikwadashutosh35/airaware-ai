@@ -31,13 +31,14 @@ function draw(fields: Partial<Scene> | null = {}) {
 
 const part = (container: HTMLElement, name: string) =>
   container.querySelector(`[data-part="${name}"]`);
-// An SVG part's opacity attribute, or an HTML layer's inline opacity.
+// An SVG part's opacity attribute, or an inline opacity. Unset (or a
+// missing part) reads as 1, the CSS default: a layer left without its
+// opacity draws fully, and a check for 0 must catch that.
 const opacityOf = (container: HTMLElement, name: string) => {
   const el = part(container, name);
   return Number(
     el?.getAttribute('opacity') ??
-      (el as HTMLElement | null)?.style.opacity ??
-      0,
+      ((el as HTMLElement | null)?.style.opacity || 1),
   );
 };
 // The class of the first stop of the gradient the sky is filled with.
@@ -140,7 +141,8 @@ describe('CitySkyline', () => {
     expect(unknown).toContain('var(--color-rule)');
     expect(unknown).not.toContain('secondary');
     // Overcast mutes the top of the sky (weather, not air), and the within
-    // sky keeps its hue, so it never passes for an above one (brief §4.3).
+    // sky keeps most of its colour strength, so it never passes for an
+    // above one (brief §4.3).
     expect(topStop(draw({ air: 'within', clouds: 3 }))).toMatch(
       /_75%,var\(--color-rule\)\)\]/,
     );
@@ -158,7 +160,6 @@ describe('CitySkyline', () => {
     expect(veils('within', 0)).toEqual([0.05, 0]);
     expect(veils('above', 0)).toEqual([0.42, 0.2]);
     expect(veils('unknown', 0)).toEqual([0, 0]);
-    // opacityOf reads a missing part as 0: check the part is there.
     expect(part(draw({ air: 'within' }), 'veil-mid')).not.toBeNull();
     for (const air of ['within', 'above', 'unknown'] as const) {
       expect(veils(air, 3)).toEqual(veils(air, 0));
@@ -224,6 +225,11 @@ describe('CitySkyline', () => {
     for (const el of faded) {
       const cls = el.getAttribute('class') ?? '';
       expect(cls).toContain('motion-safe:duration-700');
+      // What fades: the sky's colours, the glow's and veils' opacity, and
+      // the far veil's colour.
+      expect(cls).toContain(
+        'motion-safe:transition-[stop-color,opacity,background-color]',
+      );
       expect(cls).not.toMatch(/(^|\s)(transition|duration)-/);
     }
   });
@@ -243,6 +249,18 @@ describe('CitySkyline', () => {
   // Variant B: 10 tanks on 9 near buildings.
   it('rooftop tanks sit on the near row', () => {
     expect(part(draw(), 'tanks')?.children).toHaveLength(9);
+  });
+
+  // Final review: the buildings and their tanks share one translucent
+  // layer, so where a tank meets its parapet the overlap isn't darker.
+  it('the near row and its tanks share one layer', () => {
+    const container = draw();
+    const near = part(container, 'near')!;
+    const tanks = part(container, 'tanks')!;
+    expect(near.parentElement).toBe(tanks.parentElement);
+    expect(near.parentElement?.getAttribute('opacity')).toBe('0.9');
+    expect(near.getAttribute('opacity')).toBeNull();
+    expect(tanks.getAttribute('opacity')).toBeNull();
   });
 
   it('the middle row carries its details at every width', () => {

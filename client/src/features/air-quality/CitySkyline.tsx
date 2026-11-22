@@ -20,7 +20,8 @@ const RAIN_TILE: Array<[number, number]> = [
 
 // Token colours as whole class strings, so Tailwind emits them. The sky's
 // top mutes towards `rule` under an overcast deck (weather, not air); the
-// within sky keeps its hue there, so it never passes for an above one.
+// within sky keeps most of its colour strength (chroma) there, so it never
+// passes for an above one.
 const SKY: Record<SceneAir, { top: string; overcast: string; bottom: string }> =
   {
     within: {
@@ -238,11 +239,11 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
           style={{ opacity: scene.air === 'above' ? 0.2 : 0 }}
         />
         <svg {...ROW}>
-          <g data-part="near" className="fill-text-dark" opacity="0.9">
-            {paths(SKYLINE.near)}
-          </g>
-          <g data-part="tanks" className="fill-text-dark" opacity="0.9">
-            {paths(SKYLINE.tanks)}
+          {/* One translucent layer, so a tank meeting its parapet doesn't
+              draw darker where they overlap. */}
+          <g className="fill-text-dark" opacity="0.9">
+            <g data-part="near">{paths(SKYLINE.near)}</g>
+            <g data-part="tanks">{paths(SKYLINE.tanks)}</g>
           </g>
           {/* Windows, balcony lines and shutters: detail a phone's small
               band can't hold. */}

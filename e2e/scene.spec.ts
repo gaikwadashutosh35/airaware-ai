@@ -44,20 +44,28 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     await page.goto(PUNE);
     const sky = page.locator('[data-part="sky"]');
     await expect(sky).toBeAttached();
-    const durations = await sky.evaluate((holder) => {
+    const stops = await sky.evaluate((holder) => {
       const ref = /url\(#([^)]+)\)/.exec(
         holder.getAttribute('fill') ?? '',
       )![1]!;
       return [...document.getElementById(ref)!.querySelectorAll('stop')].map(
-        (stop) => getComputedStyle(stop).transitionDuration,
+        (stop) => {
+          const style = getComputedStyle(stop);
+          return {
+            duration: style.transitionDuration,
+            property: style.transitionProperty,
+          };
+        },
       );
     });
-    expect(durations).toHaveLength(2);
-    for (const duration of durations) {
+    expect(stops).toHaveLength(2);
+    for (const { duration, property } of stops) {
       if (reducedMotion === 'reduce') {
         expect(Number.parseFloat(duration)).toBeLessThan(0.001);
       } else {
         expect(duration).toBe('0.7s');
+        // The sky's colour itself fades, not just something on it.
+        expect(property).toContain('stop-color');
       }
     }
   });

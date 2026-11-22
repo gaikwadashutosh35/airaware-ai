@@ -55,6 +55,8 @@ describe('SKYLINE', () => {
     expect(SKYLINE.far.startsWith('M-10 160')).toBe(true);
     expect(SKYLINE.far.endsWith('H810V160z')).toBe(true);
     expect(SKYLINE.far.match(/V160/g)).toHaveLength(1);
+    // An x span no block covers has no roof: the builder writes VInfinity.
+    expect(SKYLINE.far).not.toContain('Infinity');
   });
 
   it('variant B: 20 middle and 15 near buildings, 10 tanks on 9', () => {
