@@ -19,13 +19,14 @@ const RAIN_TILE: Array<[number, number]> = [
 ];
 
 // Token colours as whole class strings, so Tailwind emits them. The sky's
-// top mutes towards `rule` under an overcast deck (weather, not air).
+// top mutes towards `rule` under an overcast deck (weather, not air); the
+// within sky keeps its hue there, so it never passes for an above one.
 const SKY: Record<SceneAir, { top: string; overcast: string; bottom: string }> =
   {
     within: {
       top: '[stop-color:color-mix(in_oklab,var(--color-secondary)_46%,var(--color-surface-light))]',
       overcast:
-        '[stop-color:color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_46%,var(--color-surface-light))_45%,var(--color-rule))]',
+        '[stop-color:color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_46%,var(--color-surface-light))_75%,var(--color-rule))]',
       bottom: '[stop-color:var(--color-surface-light)]',
     },
     above: {
@@ -42,6 +43,10 @@ const SKY: Record<SceneAir, { top: string; overcast: string; bottom: string }> =
     },
   };
 const GLOW: Record<SceneAir, number> = { within: 0.6, above: 0.22, unknown: 0 };
+// The air look changes over 700 ms (brief §5.2), and at once under reduced
+// motion. The glow and the middle veil stay mounted at 0 so they can fade.
+const FADE =
+  'motion-safe:transition-[stop-color,opacity,background-color] motion-safe:duration-700 motion-safe:ease-out';
 const VEIL_FAR: Record<SceneAir, number> = {
   within: 0.05,
   above: 0.42,
@@ -128,8 +133,11 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
       >
         <defs>
           <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" className={overcast ? sky.overcast : sky.top} />
-            <stop offset="1" className={sky.bottom} />
+            <stop
+              offset="0"
+              className={`${overcast ? sky.overcast : sky.top} ${FADE}`}
+            />
+            <stop offset="1" className={`${sky.bottom} ${FADE}`} />
           </linearGradient>
         </defs>
         <rect data-part="sky" width="1" height="1" fill={`url(#${id}-sky)`} />
@@ -156,16 +164,15 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
             />
           </radialGradient>
         </defs>
-        {scene.glow && (
-          <circle
-            data-part="glow"
-            cx="560"
-            cy="58"
-            r={scene.heat ? 76 : 62}
-            fill={`url(#${id}-glow)`}
-            opacity={GLOW[scene.air]}
-          />
-        )}
+        <circle
+          data-part="glow"
+          cx="560"
+          cy="58"
+          r={scene.heat ? 76 : 62}
+          fill={`url(#${id}-glow)`}
+          className={FADE}
+          style={{ opacity: scene.glow ? GLOW[scene.air] : 0 }}
+        />
         {overcast && (
           <ellipse
             data-part="cloud-deck"
@@ -205,7 +212,7 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
         </svg>
         <div
           data-part="veil-far"
-          className={`${FILL} ${VEIL[scene.air]} ${MASK}`}
+          className={`${FILL} ${VEIL[scene.air]} ${MASK} ${FADE}`}
           style={{ opacity: VEIL_FAR[scene.air] }}
         />
         <svg {...ROW}>
@@ -225,13 +232,11 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
             {paths(SKYLINE.midDetail)}
           </g>
         </svg>
-        {scene.air === 'above' && (
-          <div
-            data-part="veil-mid"
-            className={`${FILL} ${VEIL.above} ${MASK}`}
-            style={{ opacity: 0.2 }}
-          />
-        )}
+        <div
+          data-part="veil-mid"
+          className={`${FILL} ${VEIL.above} ${MASK} ${FADE}`}
+          style={{ opacity: scene.air === 'above' ? 0.2 : 0 }}
+        />
         <svg {...ROW}>
           <g data-part="near" className="fill-text-dark" opacity="0.9">
             {paths(SKYLINE.near)}

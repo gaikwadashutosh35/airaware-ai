@@ -139,30 +139,36 @@ describe('CitySkyline', () => {
     const unknown = topStop(draw({ air: 'unknown' }));
     expect(unknown).toContain('var(--color-rule)');
     expect(unknown).not.toContain('secondary');
-    // Overcast mutes the top of the sky (weather, not air).
+    // Overcast mutes the top of the sky (weather, not air), and the within
+    // sky keeps its hue, so it never passes for an above one (brief §4.3).
     expect(topStop(draw({ air: 'within', clouds: 3 }))).toMatch(
-      /_45%,var\(--color-rule\)\)\]/,
+      /_75%,var\(--color-rule\)\)\]/,
     );
   });
 
   it('veils follow the air state only', () => {
     const veils = (air: SceneAir, clouds: Scene['clouds']) => {
       const container = draw({ air, clouds });
+      // Both always there, so they can fade: 0 when off.
       return [
         opacityOf(container, 'veil-far'),
-        part(container, 'veil-mid') && opacityOf(container, 'veil-mid'),
+        opacityOf(container, 'veil-mid'),
       ];
     };
-    expect(veils('within', 0)).toEqual([0.05, null]);
+    expect(veils('within', 0)).toEqual([0.05, 0]);
     expect(veils('above', 0)).toEqual([0.42, 0.2]);
-    expect(veils('unknown', 0)).toEqual([0, null]);
+    expect(veils('unknown', 0)).toEqual([0, 0]);
+    // opacityOf reads a missing part as 0: check the part is there.
+    expect(part(draw({ air: 'within' }), 'veil-mid')).not.toBeNull();
     for (const air of ['within', 'above', 'unknown'] as const) {
       expect(veils(air, 3)).toEqual(veils(air, 0));
     }
   });
 
   it('the glow follows the scene', () => {
-    expect(part(draw({ glow: false }), 'glow')).toBeNull();
+    // Always there, so it can fade: 0 when off.
+    expect(part(draw({ glow: false }), 'glow')).not.toBeNull();
+    expect(opacityOf(draw({ glow: false }), 'glow')).toBe(0);
     const within = draw({ air: 'within', glow: true });
     const above = draw({ air: 'above', glow: true });
     expect(opacityOf(above, 'glow')).toBeLessThan(opacityOf(within, 'glow'));
@@ -202,6 +208,24 @@ describe('CitySkyline', () => {
     expect(within.every(Boolean)).toBe(true);
     expect(buildings('above')).toEqual(within);
     expect(buildings('unknown')).toEqual(within);
+  });
+
+  // Brief §5.2: the air look changes gently, and at once under reduced
+  // motion (the classes apply only under motion-safe).
+  it('the air look fades, only when motion is welcome', () => {
+    const container = draw({ air: 'above', glow: true });
+    const faded = [
+      ...container.querySelectorAll('linearGradient stop'),
+      part(container, 'glow')!,
+      part(container, 'veil-far')!,
+      part(container, 'veil-mid')!,
+    ];
+    expect(faded).toHaveLength(5);
+    for (const el of faded) {
+      const cls = el.getAttribute('class') ?? '';
+      expect(cls).toContain('motion-safe:duration-700');
+      expect(cls).not.toMatch(/(^|\s)(transition|duration)-/);
+    }
   });
 
   it('no smog in any state', () => {
