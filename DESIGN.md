@@ -118,8 +118,8 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `TodayLead`: the weather strip (the backdrop's words), verdict (`h2`), word tag, provenance line, stale banner and caveat.
   - `CitySkyline` (the app backdrop, adaptive cityscape):
     - **Where:** one fixed, full-screen, `aria-hidden` backdrop behind every `/app/*` page. `AppShell` draws it once and keeps it mounted between pages; it takes no clicks or focus.
-    - **Layers:** a sky gradient over the screen; the daylight glow and clouds under the header; the city band (far, middle and near rows, rooftop tanks, lit windows from 640 px) at the bottom, above the phone bar, never over a fifth of the screen high, and hidden on screens under 24rem tall, where a wrapped title could reach it (the sky alone carries the look there); veils and fog fading in from the band's top; rain over the whole screen; heat at the city's base.
-    - **Air look:** only from `airCheck.level`. Within: a brighter blue sky. Above: a muted blue-grey sky and veils over the far and middle rows. Unknown: a neutral grey sky.
+    - **Layers:** a sky gradient over the screen; the daylight glow and clouds under the header; the city band at the bottom (variant B, "Mixed street", 22 Nov: far towers; middle-row older flats with sunshades, society blocks with balconies and stair cores, and glass offices with fins, with their light details at every width; near shop-houses and walk-ups with parapets, awnings and rooftop water tanks, and from 640 px their windows, balcony lines and shutters; no landmark; path data in `skylineGeometry.ts`), above the phone bar, never over a fifth of the screen high, and hidden on screens under 24rem tall, where a wrapped title could reach it (the sky alone carries the look there); veils and fog fading in from the band's top; rain over the whole screen; heat at the city's base.
+    - **Air look:** only from `airCheck.level`. Within: a brighter blue sky. Above: a muted blue-grey sky and veils over the far and middle rows. Unknown: a neutral grey sky. Under an overcast deck the sky's top mutes, and the within sky keeps its hue, so it never passes for an above one.
     - **Weather:** clouds, rain (forecast amount only), fog, heat and the glow (`weather.isDay`) follow only the weather.
     - **Stale:** keeps the last-known look. The footer adds "Not current." and Today keeps its banner. A same-place hourly reload keeps the look until the new forecast arrives.
     - **Loading and none:** a still silhouette while a place's first forecast loads; the neutral unknown look with no place or after an error.
@@ -167,6 +167,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - the clouds settle 16 px into place over 4.8 s once, then rest;
   - both play when a place's forecast is first drawn, never on a page change or the hourly reload.
   - The heat band and the buildings are still.
+- The air look (the sky's colours, the glow, the veils) changes over 700 ms, ease-out, under `motion-safe:` only, so it changes at once under reduced motion. The glow and the middle veil stay mounted at opacity 0 when off, so they fade. A place's first scene, after the silhouette, appears at once.
 
 ## 10. Responsive behavior
 
