@@ -1,56 +1,6 @@
 import { useId } from 'react';
 import type { Scene, SceneAir } from './scene.ts';
-
-// [x, width, height] on a 160-high ground line.
-const FAR: Array<[number, number, number]> = [
-  [0, 28, 60],
-  [30, 22, 85],
-  [55, 35, 50],
-  [95, 18, 95],
-  [115, 40, 65],
-  [215, 26, 75],
-  [245, 34, 55],
-  [285, 20, 90],
-  [310, 38, 62],
-  [352, 24, 80],
-  [378, 22, 58],
-];
-// Offices and flats between the far and near rows.
-const MID: Array<[number, number, number]> = [
-  [12, 30, 66],
-  [50, 24, 52],
-  [86, 32, 74],
-  [132, 20, 58],
-  [226, 28, 68],
-  [262, 22, 56],
-  [296, 34, 78],
-  [338, 26, 62],
-  [374, 22, 50],
-];
-const NEAR: Array<[number, number, number]> = [
-  [-5, 40, 38],
-  [38, 30, 52],
-  [72, 46, 30],
-  [122, 24, 46],
-  [200, 36, 34],
-  [240, 28, 50],
-  [272, 44, 28],
-  [320, 26, 44],
-  [350, 52, 32],
-];
-
-// The same rows again on the right half, with heights rotated so the two
-// halves don't repeat exactly. Wide enough that `slice` keeps the glow in
-// view from a 320 px phone to a wide card.
-const shifted = (row: Array<[number, number, number]>, by: number) =>
-  row.map(([x, w], i): [number, number, number] => [
-    x + 400,
-    w,
-    row[(i + by) % row.length]![2],
-  ]);
-const FAR_ALL = [...FAR, ...shifted(FAR, 4)];
-const MID_ALL = [...MID, ...shifted(MID, 5)];
-const NEAR_ALL = [...NEAR, ...shifted(NEAR, 3)];
+import { SKYLINE } from './skylineGeometry.ts';
 
 // Upper-sky clouds, filled in this order as cover rises. The first two sit
 // in the middle third, which a phone's crop (about x 225-575) still shows.
@@ -104,16 +54,8 @@ const VEIL: Record<SceneAir, string> = {
   unknown: 'bg-rule',
 };
 
-const rects = (row: Array<[number, number, number]>) =>
-  row.map(([x, w, h]) => (
-    <rect key={x} x={x} y={160 - h} width={w} height={h} />
-  ));
-
-// A rooftop water tank on legs, centred on `cx`, standing on `top`.
-const tank = (cx: number, top: number) =>
-  `M${cx - 5} ${top - 7}h10v5h-10z` +
-  `M${cx - 4} ${top - 2}h1.5v2h-1.5z` +
-  `M${cx + 2.5} ${top - 2}h1.5v2h-1.5z`;
+// One <path> per string of the city's path data (skylineGeometry.ts).
+const paths = (ds: string[]) => ds.map((d, i) => <path key={i} d={d} />);
 
 // The fixed full-screen backdrop and its layers (backdrop design §5.1). The
 // city band never takes over a fifth of the screen, and sits above the phone
@@ -157,9 +99,12 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
         <div data-layer="city" className={CITY}>
           <svg {...ROW}>
             <g className="fill-rule" opacity="0.7">
-              {rects(FAR_ALL)}
+              <path d={SKYLINE.far} />
             </g>
-            <g className="fill-rule">{rects(NEAR_ALL)}</g>
+            <g className="fill-rule">
+              {paths(SKYLINE.near)}
+              {paths(SKYLINE.tanks)}
+            </g>
           </svg>
         </div>
       </div>
@@ -255,10 +200,7 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
       <div data-layer="city" className={CITY}>
         <svg {...ROW}>
           <g data-part="far" className="fill-text-dark-muted" opacity="0.42">
-            {rects(FAR_ALL)}
-            {/* A domed hall. */}
-            <rect x="160" y="120" width="50" height="40" />
-            <path d="M163 120 A22 22 0 0 1 207 120 Z" />
+            <path d={SKYLINE.far} />
           </g>
         </svg>
         <div
@@ -272,7 +214,15 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
             className="[fill:color-mix(in_oklab,var(--color-text-dark-muted)_55%,var(--color-text-dark))]"
             opacity="0.62"
           >
-            {rects(MID_ALL)}
+            {paths(SKYLINE.mid)}
+          </g>
+          {/* Railings, window squares and glass fins, at every width. */}
+          <g
+            data-part="mid-detail"
+            className="fill-surface-light"
+            opacity="0.28"
+          >
+            {paths(SKYLINE.midDetail)}
           </g>
         </svg>
         {scene.air === 'above' && (
@@ -283,45 +233,20 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
           />
         )}
         <svg {...ROW}>
-          <defs>
-            <pattern
-              id={`${id}-windows`}
-              width="7"
-              height="9"
-              patternUnits="userSpaceOnUse"
-            >
-              <rect
-                x="2"
-                y="2"
-                width="3"
-                height="4"
-                className="fill-surface-light"
-                opacity="0.5"
-              />
-            </pattern>
-          </defs>
           <g data-part="near" className="fill-text-dark" opacity="0.9">
-            {rects(NEAR_ALL)}
-            {/* A memorial arch. */}
-            <path d="M150 160 V102 H194 V160 H182 V128 A10 10 0 0 0 162 128 V160 Z" />
+            {paths(SKYLINE.near)}
           </g>
           <g data-part="tanks" className="fill-text-dark" opacity="0.9">
-            {NEAR_ALL.filter((_, i) => i % 3 === 1).map(([x, w, h]) => (
-              <path key={x} d={tank(x + w / 2, 160 - h)} />
-            ))}
+            {paths(SKYLINE.tanks)}
           </g>
-          {/* Lit windows: detail a phone's small band can't hold. */}
-          <g data-part="windows" className="max-sm:hidden">
-            {NEAR_ALL.map(([x, w, h]) => (
-              <rect
-                key={x}
-                x={x + 3}
-                y={160 - h + 5}
-                width={w - 6}
-                height={h - 9}
-                fill={`url(#${id}-windows)`}
-              />
-            ))}
+          {/* Windows, balcony lines and shutters: detail a phone's small
+              band can't hold. */}
+          <g
+            data-part="windows"
+            className="fill-surface-light max-sm:hidden"
+            opacity="0.5"
+          >
+            {paths(SKYLINE.nearDetail)}
           </g>
         </svg>
         {/* Fog at the city's base only (backdrop design §5.1). */}

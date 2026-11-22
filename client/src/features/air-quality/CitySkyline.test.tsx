@@ -4,6 +4,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Scene, SceneAir } from './scene.ts';
 import { CitySkyline } from './CitySkyline.tsx';
+import { SKYLINE } from './skylineGeometry.ts';
 
 afterEach(cleanup);
 
@@ -215,9 +216,31 @@ describe('CitySkyline', () => {
     );
   });
 
-  // 18 near buildings, a tank on every third.
+  // Variant B: 10 tanks on 9 near buildings.
   it('rooftop tanks sit on the near row', () => {
-    expect(part(draw(), 'tanks')?.children).toHaveLength(6);
+    expect(part(draw(), 'tanks')?.children).toHaveLength(9);
+  });
+
+  it('the middle row carries its details at every width', () => {
+    const detail = part(draw(), 'mid-detail');
+    expect(detail?.children.length).toBeGreaterThan(0);
+    expect(detail?.getAttribute('class') ?? '').not.toContain('hidden');
+  });
+
+  // Brief §3.2: no landmark. The old arch and dome were the only arcs.
+  it('no curved landmark shapes in the city', () => {
+    const city = draw().querySelector('[data-layer="city"]')!;
+    for (const path of city.querySelectorAll('path')) {
+      expect(path.getAttribute('d')).not.toMatch(/[Aa]/);
+    }
+  });
+
+  it('the silhouette is the same city, with tanks and no details', () => {
+    const city = draw(null).querySelector('[data-layer="city"]')!;
+    expect(city.querySelectorAll('path')).toHaveLength(
+      1 + SKYLINE.near.length + SKYLINE.tanks.length,
+    );
+    expect(part(draw(null), 'mid-detail')).toBeNull();
   });
 
   it('loading draws a still, neutral silhouette', () => {
