@@ -115,7 +115,8 @@ function tower(
 function farOutline(): string {
   const blocks = [
     ...LOW.map(([x, w, h]): [number, number, number] => [x, w, G - h]),
-    ...TOW.flatMap(tower),
+    // The index picks which side a setback sits on.
+    ...TOW.flatMap((t, i) => tower(t, i)),
   ];
   const xs = [...new Set(blocks.flatMap(([x, w]) => [x, x + w]))].sort(
     (p, q) => p - q,
