@@ -75,15 +75,18 @@ test('the details shot reads on a 320 px phone', async ({ page }) => {
       shown: img.getBoundingClientRect().width,
       // A 2× capture: its own CSS size is half its pixels.
       own: img.naturalWidth / 2,
-      file: img.naturalWidth / img.naturalHeight,
-      set:
-        Number(img.getAttribute('width')) / Number(img.getAttribute('height')),
+      file: [img.naturalWidth, img.naturalHeight],
+      set: [
+        2 * Number(img.getAttribute('width')),
+        2 * Number(img.getAttribute('height')),
+      ],
     };
   });
 
   expect(size.shown / size.own).toBeGreaterThan(0.75);
-  // Its width and height match the file, so nothing shifts as it loads.
-  expect(size.set).toBeCloseTo(size.file, 2);
+  // Its width and height are exactly the file's at 2×, so nothing shifts
+  // or stretches as it loads (a ratio check let a 2 px drift through).
+  expect(size.set).toEqual(size.file);
 });
 
 test('no movement under reduced motion', async ({ page }) => {

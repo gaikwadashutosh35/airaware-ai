@@ -163,7 +163,7 @@ function Landing() {
             {/* The label first, so it never sits below the fold while the
                 screenshot is read as today's air. */}
             <figcaption className="text-sm text-text-muted">
-              A past screenshot of Today for Pune, 20 Nov 2026. Open the app for
+              A past screenshot of Today for Pune, 22 Nov 2026. Open the app for
               current values.
             </figcaption>
             <img
@@ -182,13 +182,13 @@ function Landing() {
           flip={false}
           heading="Understand your air"
           text="One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was updated. Every number, unit and source is one tap away, under Air quality details."
-          caption="A past screenshot of Air quality details for Pune, 20 Nov 2026. Open the app for current values."
+          caption="A past screenshot of Air quality details for Pune, 22 Nov 2026. Open the app for current values."
         >
           {/* A phone capture, like the hero's, at most its own CSS size. */}
           <img
             src={detailsShot}
             width={358}
-            height={616}
+            height={618}
             loading="lazy"
             alt="Screenshot of the open Air quality details for Pune: the PM2.5 model forecast for one hour with its unit, and the 24-hour check in words"
             className="h-auto w-full max-w-[358px] rounded-xl outline-1 -outline-offset-1 outline-rule-dark"

@@ -34,7 +34,7 @@ const REAL_FIGURES = [
   '24-hour',
   '18 November 2009',
   // The screenshots' capture date.
-  '20 Nov 2026',
+  '22 Nov 2026',
 ];
 
 describe('Landing', () => {
@@ -84,9 +84,14 @@ describe('Landing', () => {
     expect(within(chapter).getByText(UNDERSTAND_TEXT)).toBeDefined();
     const image = within(chapter).getByAltText(DETAILS_ALT);
     expect(image.getAttribute('loading')).toBe('lazy');
+    // The 22 Nov capture's size in CSS px; e2e/landing.spec.ts checks it
+    // against the file itself (2x).
+    expect([image.getAttribute('width'), image.getAttribute('height')]).toEqual(
+      ['358', '618'],
+    );
     const caption = chapter.querySelector('figcaption');
     expect(caption?.textContent).toBe(
-      'A past screenshot of Air quality details for Pune, 20 Nov 2026. Open the app for current values.',
+      'A past screenshot of Air quality details for Pune, 22 Nov 2026. Open the app for current values.',
     );
     expect(
       caption!.compareDocumentPosition(image) &
@@ -233,7 +238,7 @@ describe('Landing', () => {
     const image = screen.getByAltText(HERO_ALT);
     const caption = image.closest('figure')?.querySelector('figcaption');
     expect(caption?.textContent).toBe(
-      'A past screenshot of Today for Pune, 20 Nov 2026. Open the app for current values.',
+      'A past screenshot of Today for Pune, 22 Nov 2026. Open the app for current values.',
     );
     // Final review B2: the label comes first, so it is never below the fold
     // while the figure shows.

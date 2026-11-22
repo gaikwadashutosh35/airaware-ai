@@ -167,7 +167,8 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - a new city, "Mixed street", picked by the owner from three drawn variants: shop-houses with rooftop water tanks in front, older flats, balconied society blocks and glass offices behind, soft towers far away;
   - no landmark: the arch and the domed hall are gone, so no place gets another city's skyline;
   - the air look (sky, glow, haze) fades over 700 ms when it changes, and changes at once under reduced motion;
-  - on an overcast day the "within the limit" sky keeps its blue, so it never looks like "above the limit".
+  - on an overcast day the "within the limit" sky keeps its blue, so it never looks like "above the limit";
+  - the Landing page's two screenshots are recaptured from the live app (Pune, 22 Nov 2026, real Open-Meteo data), so the hero shows the new city; both captions carry the new date.
 
 ### Fixed
 - Phase 8: Gemini calls are capped at 200 per day per server and reused for identical requests; the Gemini key never follows a redirect; place labels reject control characters; the CPCB standards link uses https; a saved snapshot says "that day"; deleting one saved plan keeps keyboard focus and says so; a slow load no longer overwrites edited answers; the chart no longer assumes a unit.
