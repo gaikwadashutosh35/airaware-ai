@@ -8,6 +8,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HouseholdContext } from '../../../shared/contracts.ts';
 import type { Place } from '../features/location/place.ts';
+import { ApiError } from '../services/api.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import { searchFixture } from '../test/fixtures.ts';
 import { Welcome } from './Welcome.tsx';
@@ -205,6 +206,35 @@ describe('Welcome', () => {
     expect(heading(STEP3)).toBeDefined();
     expect(screen.getByRole('alert').textContent).toBe(
       "Saving isn't available right now. Untick Remember to continue without saving.",
+    );
+  });
+
+  it('a save the server refuses for another reason keeps the old message', async () => {
+    setup({
+      onFinish: vi.fn(() =>
+        Promise.reject(new ApiError(503, 'SAVE_UNAVAILABLE', 'Not now.')),
+      ),
+    });
+    click('Next');
+    tick('Remember on this device');
+    await finish();
+    expect(screen.getByRole('alert').textContent).toBe(
+      "Saving isn't available right now. Untick Remember to continue without saving.",
+    );
+  });
+
+  it('a rate-limited save says so and keeps you on step 3', async () => {
+    setup({
+      onFinish: vi.fn(() =>
+        Promise.reject(new ApiError(429, 'RATE_LIMITED', 'Too many requests.')),
+      ),
+    });
+    click('Next');
+    tick('Remember on this device');
+    await finish();
+    expect(heading(STEP3)).toBeDefined();
+    expect(screen.getByRole('alert').textContent).toBe(
+      'Too many requests. Try again in a minute, or untick Remember to continue without saving.',
     );
   });
 

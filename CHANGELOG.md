@@ -190,6 +190,11 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - "an hour", "a minute", "an extra hour", "a mile" and "a couple of hours" count as numbers. "A day" and "a second look" do not;
   - "100 m", "100 ft", "60 years" and similar now carry their unit, so a limit (60 or 100) cannot pass as a distance or a span of time;
   - "24h", "24‑hour" with a Unicode hyphen, "PM-2.5" and "two-wheeled" still pass.
+- Rate-limit messages (23 Nov): after "Too many requests", these say so and keep their own advice; any other failure keeps its message:
+  - **Save my answers**: "Too many requests. Try again in a minute. Your answers are still on screen.";
+  - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
+  - opening a saved plan: "Too many requests. Try again in a minute.";
+  - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
 
 ### Security
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.

@@ -28,6 +28,8 @@ vi.mock('../../lib/supabase.ts', () => ({
 const SAVED = 'Saved on this browser.';
 const UNAVAILABLE =
   "Saving isn't available right now. Your answers are still on screen.";
+const RATE_LIMITED =
+  'Too many requests. Try again in a minute. Your answers are still on screen.';
 const NOTE =
   'Saved on this browser only. Clearing your browser data or switching devices loses it.';
 
@@ -288,6 +290,25 @@ describe('HouseholdPreferencesForm', () => {
     fireEvent.click(saveButton());
     expect(await screen.findByText(UNAVAILABLE)).toBeDefined();
     expect(exercise.value).toBe('yes');
+    expect(screen.queryByText(SAVED)).toBeNull();
+  });
+
+  it('a rate-limited save says so and keeps the answers', async () => {
+    routeFetch(() =>
+      Response.json(
+        { error: { code: 'RATE_LIMITED', message: 'Too many requests.' } },
+        { status: 429 },
+      ),
+    );
+    render(<HouseholdPreferencesForm />);
+    const exercise = screen.getByLabelText<HTMLSelectElement>(
+      'Do you exercise outdoors?',
+    );
+    fireEvent.change(exercise, { target: { value: 'yes' } });
+    fireEvent.click(saveButton());
+    expect(await screen.findByText(RATE_LIMITED)).toBeDefined();
+    expect(exercise.value).toBe('yes');
+    expect(screen.queryByText(UNAVAILABLE)).toBeNull();
     expect(screen.queryByText(SAVED)).toBeNull();
   });
 

@@ -14,9 +14,12 @@ import {
   type TravelMode,
 } from '../features/onboarding/onboarding.ts';
 import { savingAvailable } from '../lib/supabase.ts';
+import { ApiError } from '../services/api.ts';
 
 const SAVE_FAILED =
   "Saving isn't available right now. Untick Remember to continue without saving.";
+const RATE_LIMITED =
+  'Too many requests. Try again in a minute, or untick Remember to continue without saving.';
 
 const DAYS: [DayChoice, string][] = [
   ['office', 'Office commute'],
@@ -148,8 +151,12 @@ export function Welcome({
     setError('');
     try {
       await onFinish({ context: result, remember });
-    } catch {
-      setError(SAVE_FAILED);
+    } catch (error) {
+      setError(
+        error instanceof ApiError && error.code === 'RATE_LIMITED'
+          ? RATE_LIMITED
+          : SAVE_FAILED,
+      );
     } finally {
       setBusy(false);
     }

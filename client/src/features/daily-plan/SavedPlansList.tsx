@@ -4,13 +4,21 @@ import type {
   SavedPlanSummary,
 } from '../../../../shared/contracts.ts';
 import { currentToken, savingAvailable } from '../../lib/supabase.ts';
-import { deletePlan, getPlan, listPlans } from '../../services/api.ts';
+import {
+  ApiError,
+  deletePlan,
+  getPlan,
+  listPlans,
+} from '../../services/api.ts';
 import { formatDateTime } from '../air-quality/forecast.ts';
 
 const EMPTY = 'No saved plans yet.';
 const LOAD_FAILED = "Your saved plans couldn't be loaded right now.";
 const OPEN_FAILED = "This saved plan couldn't be opened right now.";
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
+const OPEN_LIMITED = 'Too many requests. Try again in a minute.';
+const DELETE_LIMITED =
+  'Too many requests, so nothing was deleted. Try again in a minute.';
 const DELETED = 'Saved plan deleted.';
 
 type State =
@@ -84,8 +92,12 @@ export function SavedPlansList({
     setMessage('');
     try {
       onOpen(await getPlan(await token(), id));
-    } catch {
-      setMessage(OPEN_FAILED);
+    } catch (error) {
+      setMessage(
+        error instanceof ApiError && error.code === 'RATE_LIMITED'
+          ? OPEN_LIMITED
+          : OPEN_FAILED,
+      );
     }
   }
 
@@ -106,8 +118,12 @@ export function SavedPlansList({
       headingRef.current?.focus();
       onDeleted(id);
       setReloads((n) => n + 1);
-    } catch {
-      setMessage(DELETE_FAILED);
+    } catch (error) {
+      setMessage(
+        error instanceof ApiError && error.code === 'RATE_LIMITED'
+          ? DELETE_LIMITED
+          : DELETE_FAILED,
+      );
     } finally {
       setBusy(false);
     }

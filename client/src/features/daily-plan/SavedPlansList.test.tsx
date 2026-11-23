@@ -161,6 +161,24 @@ describe('SavedPlansList', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it('says when opening a saved plan was rate-limited', async () => {
+    routeFetch((_method, path) =>
+      path === '/api/v1/plans' ? ok([newer]) : failure(429, 'RATE_LIMITED'),
+    );
+    const { onOpen } = renderList();
+    await screen.findByRole('heading', { name: 'Saved plans' });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Open/ }));
+
+    expect(
+      await screen.findByText('Too many requests. Try again in a minute.'),
+    ).toBeDefined();
+    expect(
+      screen.queryByText("This saved plan couldn't be opened right now."),
+    ).toBeNull();
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
   it('deletes one plan after a confirmation', async () => {
     let listed = [older, newer];
     const spy = routeFetch((method, path) => {
@@ -229,6 +247,28 @@ describe('SavedPlansList', () => {
     expect(
       await screen.findByText('Nothing was deleted. Try again in a moment.'),
     ).toBeDefined();
+    expect(rows()).toHaveLength(1);
+    expect(onDeleted).not.toHaveBeenCalled();
+  });
+
+  it('keeps the row and says so when a delete is rate-limited', async () => {
+    routeFetch((method) =>
+      method === 'DELETE' ? failure(429, 'RATE_LIMITED') : ok([newer]),
+    );
+    const { onDeleted } = renderList();
+    await screen.findByRole('heading', { name: 'Saved plans' });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Delete/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete plan' }));
+
+    expect(
+      await screen.findByText(
+        'Too many requests, so nothing was deleted. Try again in a minute.',
+      ),
+    ).toBeDefined();
+    expect(
+      screen.queryByText('Nothing was deleted. Try again in a moment.'),
+    ).toBeNull();
     expect(rows()).toHaveLength(1);
     expect(onDeleted).not.toHaveBeenCalled();
   });

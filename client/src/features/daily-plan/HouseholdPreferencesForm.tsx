@@ -10,6 +10,7 @@ import {
   tokenForSave,
 } from '../../lib/supabase.ts';
 import {
+  ApiError,
   deleteAccount,
   getPreferences,
   savePreferences,
@@ -30,6 +31,8 @@ export const NOT_SET_UP = "Saving isn't set up on this site.";
 const SAVED = 'Saved on this browser.';
 const UNAVAILABLE =
   "Saving isn't available right now. Your answers are still on screen.";
+const RATE_LIMITED =
+  'Too many requests. Try again in a minute. Your answers are still on screen.';
 const LOAD_FAILED = "Your saved answers couldn't be loaded right now.";
 const DELETED = 'Deleted. Nothing is saved now.';
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
@@ -143,8 +146,12 @@ export function HouseholdPreferencesForm({
       const token = await tokenForSave();
       await savePreferences(token, { context: toContext(answers) });
       setStatus(SAVED);
-    } catch {
-      setStatus(UNAVAILABLE);
+    } catch (error) {
+      setStatus(
+        error instanceof ApiError && error.code === 'RATE_LIMITED'
+          ? RATE_LIMITED
+          : UNAVAILABLE,
+      );
     } finally {
       setBusy(false);
     }
