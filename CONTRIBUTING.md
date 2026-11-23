@@ -9,7 +9,7 @@
 - Do not commit secrets, generated data, or large assets.
 
 ## Branch policy
-For the Hack2Skills submission, keep exactly one branch, `main`. Work directly on `main` in small verified commits unless the challenge rules are later confirmed to allow additional branches. Do not create feature branches or worktrees that leave additional branch refs in the repository.
+For the Hack2skill submission, keep exactly one branch, `main`. Work directly on `main` in small verified commits unless the challenge rules are later confirmed to allow additional branches. Do not create feature branches or worktrees that leave additional branch refs in the repository.
 
 ## Before committing
 ```bash

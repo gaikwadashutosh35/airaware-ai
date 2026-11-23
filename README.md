@@ -1,6 +1,6 @@
 # AirAware AI — Urban Air Quality Assistant
 
-**Hack2Skills PromptWars Virtual · Main Challenge 06**  
+**Hack2skill PromptWars Virtual · Main Challenge 06**  
 **Breathe smarter. Make informed daily choices.**
 
 AirAware AI is a GenAI-powered assistant for households and communities. It combines clearly labelled air-quality model forecasts with optional routine and home context to offer explainable daily actions, practical indoor-air suggestions, and sustainable swaps.
@@ -22,7 +22,7 @@ Environmental readings are not always easy to translate into useful daily choice
 
 ## Try it in 5 minutes
 
-Open https://airaware-ai.netlify.app. There is no sign-in. Nothing is saved unless you tick **Remember on this device**, or press **Save my answers** or **Save plan**. A plan usually takes up to 30 seconds to build. Plans (Save plan included) and Ask answers share a limit of 10 requests a minute. If you see "Too many requests. Try again in a minute.", or "Saving isn't available right now." after **Save plan**, wait a minute and try again.
+Open https://airaware-ai.netlify.app. There is no sign-in. Nothing is saved unless you tick **Remember on this device**, or press **Save my answers** or **Save plan**. A plan usually takes up to 30 seconds to build. Plans (Save plan included) and Ask answers share a limit of 10 requests a minute. If you see "Too many requests. Try again in a minute.", wait a minute and try again.
 
 1. Press **Check My Air**.
 2. Search a city in India, for example `Pune`, `Delhi` or `Tezpur`, and pick it from the list. Or press **Use my location**: your browser asks first, and the location is rounded to about 1 km.
@@ -94,9 +94,14 @@ React, Vite, TypeScript, Tailwind CSS, Node.js, Express, Zod, Gemini provider ad
 airaware-ai/
 ├── client/
 ├── server/
+├── shared/
+├── netlify/functions/
+├── e2e/
 ├── supabase/migrations/
 ├── docs/
 ├── .github/workflows/
+├── netlify.toml
+├── Dockerfile
 ├── AGENTS.md
 ├── README.md
 └── .gitignore
@@ -147,11 +152,11 @@ Open `http://localhost:5173`, search an Indian city and see its hourly model for
 
 ## Data integrity
 
-CPCB is the reference for India's National AQI and official station observations when a verified, permitted data-access method is available. Open-Meteo can provide model forecasts; it is not a CPCB station feed. Never relabel European/US AQI as CPCB National AQI. If a verified official feed is unavailable, be honest and use clearly labelled forecast/demo data instead of fabricating a live reading.
+CPCB is the reference for the CPCB National AQI and for official station observations; no verified, permitted feed for them is connected yet. Open-Meteo provides model forecasts, not CPCB station data. Its European and US index values are never requested or relabelled as the CPCB National AQI. The app shows the labelled model forecast and never fabricates a live reading or shows demo values in its place.
 
 ## Responsible-use limitations
 
-This product provides general information, not medical diagnosis or treatment. It cannot guarantee any activity or location is safe. Indoor and outdoor conditions differ. Follow current local authority guidance and consult qualified medical professionals for health questions.
+This product provides general information, not medical diagnosis or treatment. It cannot promise that any activity or place is free of risk. Indoor and outdoor conditions differ. Follow current local authority guidance and consult qualified medical professionals for health questions.
 
 ## Challenge repository requirements
 
@@ -176,7 +181,7 @@ This product provides general information, not medical diagnosis or treatment. I
 - `THREAT_MODEL.md` — assets, trust boundaries, threats and controls.
 - `PERFORMANCE.md` — frontend, backend, and provider efficiency.
 - `OBSERVABILITY_RUNBOOK.md` — provider, database, and AI failure handling.
-- `CONTRIBUTING.md` — safe contribution and commit practices.
+- `CONTRIBUTING.md` — contribution and commit practices.
 - `CHANGELOG.md` — change history.
 - `GLOSSARY.md` — domain terminology.
 - `ARCHITECTURE_DECISIONS.md` — decision records.

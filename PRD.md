@@ -1,6 +1,6 @@
 # AirAware AI — Product Requirements Document
 
-**Challenge:** Hack2Skills PromptWars Virtual — Main Challenge 06  
+**Challenge:** Hack2skill PromptWars Virtual — Main Challenge 06  
 **Vertical:** Urban Air Quality Assistant  
 **Product:** AirAware AI  
 **Tagline:** Breathe smarter. Make informed daily choices.

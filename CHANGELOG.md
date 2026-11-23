@@ -180,6 +180,11 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - weather over an hour past its own hour is no longer drawn, so a page left open never shows rain or sun from hours ago;
   - rain that starts at the hourly reload no longer replays its fall;
   - on My Home, a plan rebuilt on a forecast over a minute newer reloads the sky once, so the sky and the plan's air words agree.
+- Small fixes (23 Nov):
+  - the AI answer check also catches the number words it missed: thirteen to nineteen, sixty to ninety, zero, millions, lakhs and crores, fractions ("a third", "a fifth") and "doubled", "tripled" or "halved". An answer that uses one not in its input is dropped, as before;
+  - a rate-limited **Save plan** says "Too many requests. Try again in a minute." instead of "Saving isn't available right now.";
+  - README and ARCHITECTURE: stale lines rewritten (the repository trees, the page paths, the air data layer, the rules engine, the AI layer, the domain types, the provider interfaces, the request flow, the secret keys, the data-integrity note and the disclaimer);
+  - "Hack2skill" spelled the same way in README, ARCHITECTURE, PRD, CONTRIBUTING and CLAUDE_CODE_START_PROMPT.
 
 ### Security
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.

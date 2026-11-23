@@ -7,7 +7,7 @@
 - Keep deterministic rules authoritative for thresholds and validation.
 - Keep provider credentials server-side.
 - Support provider replacement without rewriting application logic.
-- Remain small and maintainable for the Hack2Skills repository limit.
+- Remain small and maintainable for the Hack2skill repository limit.
 
 ## 2. Stack in use
 
@@ -32,41 +32,48 @@
 airaware-ai/
 ├── client/
 │   ├── src/
-│   │   ├── app/
+│   │   ├── assets/
 │   │   ├── components/
 │   │   ├── features/
-│   │   │   ├── location/
 │   │   │   ├── air-quality/
+│   │   │   ├── ask/
 │   │   │   ├── daily-plan/
-│   │   │   ├── indoor-air/
-│   │   │   ├── sustainable-swaps/
-│   │   │   └── assistant/
+│   │   │   ├── guides/
+│   │   │   ├── location/
+│   │   │   ├── onboarding/
+│   │   │   └── today/
+│   │   ├── lib/
+│   │   ├── pages/
 │   │   ├── services/
-│   │   ├── hooks/
-│   │   ├── types/
-│   │   └── lib/
+│   │   └── test/
 │   └── package.json
 ├── server/
 │   ├── src/
 │   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── middleware/
 │   │   ├── routes/
-│   │   ├── schemas/
 │   │   ├── services/
+│   │   │   ├── ai/
 │   │   │   ├── air-data/
+│   │   │   ├── location/
 │   │   │   ├── recommendations/
-│   │   │   └── ai/
-│   │   ├── repositories/
-│   │   ├── utils/
+│   │   │   └── saved/
+│   │   ├── test-fixtures/
 │   │   ├── app.ts
+│   │   ├── netlify.ts
 │   │   └── server.ts
 │   └── package.json
+├── shared/
+│   └── contracts.ts
+├── netlify/
+│   └── functions/
+├── e2e/
 ├── supabase/
 │   └── migrations/
 ├── docs/
 ├── .github/
 │   └── workflows/
+├── netlify.toml
+├── Dockerfile
 ├── .gitignore
 └── README.md
 ```
@@ -75,13 +82,13 @@ airaware-ai/
 
 ### Client
 
-Responsible for navigation, forms, display, local UI state, accessibility, and calling typed API services. It must not calculate official AQI or call private AI keys directly.
+Responsible for navigation, forms, display, local UI state, accessibility, and calling typed API services. It must not calculate a CPCB National AQI or call private AI keys directly.
 
 **Paths:** there is no router library. `App.tsx` switches on the path that `lib/navigation.ts` provides (`usePath`, `navigate`, `appPage`).
 - `/` is the landing page; `/privacy` is the privacy page.
 - Every `/app/*` path renders `AppShell`:
   - `/app` is Today;
-  - `/app/ask`, `/app/home`, `/app/habits` and `/app/welcome` are the redesign pages, built in later phases;
+  - `/app/ask` is Ask AirAware, `/app/home` is My Home, `/app/habits` is Better Habits, and `/app/welcome` is the first-visit questions;
   - `/app/profile` is My Profile.
 - `AppShell` holds the place, forecast, answers and saved-plan state, so moving between pages refetches nothing.
 - Today and My Profile stay mounted and are hidden when not shown, so a built plan, a build in progress and unsaved answers survive moving between pages.
@@ -96,15 +103,15 @@ Authenticates users, validates payloads, applies rate limits, enforces ownership
 
 ### Air data layer
 
-Provider adapters return normalized snapshots with provenance. The adapter does not silently convert forecast data into observations. Normalization includes units, valid time, provider source, station/model details, freshness, and limitations.
+The Open-Meteo adapter returns a normalized forecast series (`ModelForecast`: a `ForecastSeries` without `freshness`) with provenance. It does not silently convert forecast data into observations. Normalization includes units, hour times, provider source, model resolution, and limitations. The forecast route adds `freshness: 'unknown'` when it serves the series, because Open-Meteo does not report the model run time.
 
 ### Rules engine
 
-Evaluates allowed recommendation rules. Inputs are validated data snapshots and optional household preferences. Outputs are structured recommendation candidates with reason codes and evidence types.
+Evaluates allowed recommendation rules (`buildCandidates` in `server/src/services/recommendations/rules.ts`). Inputs are the 24-hour air check and optional household answers. Outputs are recommendation cards, each with a written reason, an evidence type, its sources and the inputs it used.
 
 ### AI layer
 
-Receives a bounded, validated context and recommendation candidates. AI improves wording and personalization, but cannot invent values, change AQI categories, create source URLs, or make medical claims. Output is validated with Zod and checked against allowed action types.
+Receives only the 24-hour check result and the cards (id, section, priority, title, text, reason): the rule cards and, for Ask, guide-library cards. It gets no place, coordinates or typed questions. The AI may pick, order and time the action cards and write a short summary and "for you" lines. Notices are always shown as they are and cannot be featured. It cannot change a card's text, its sources or any forecast value. Its answer is parsed with Zod and must pass content checks (lengths; 1 to 8 known action-card ids with no repeats; every high-priority action card featured; numbers, in digits or common number words, only from its input; banned wording), or it is dropped and the rules' plan is shown.
 
 ### Persistence
 
@@ -112,69 +119,81 @@ Supabase tables store user preferences and saved plans with RLS. Avoid persistin
 
 ## 5. Domain types
 
-Use shared types generated or exported from a small shared package/folder. Keep the server authoritative for validation.
+Shared types live in `shared/contracts.ts` (types only), used by the server and the client. The server stays authoritative for validation. The air-data types, abridged:
 
 ```ts
 export type DataKind = 'official_observation' | 'model_forecast' | 'demo';
-export type Freshness = 'fresh' | 'stale' | 'unknown';
+export type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
 
-export interface PollutantReading {
-  pollutant: 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
-  value: number;
-  unit: string;
-  timestamp: string;
+export interface ForecastSeries {
+  provider: 'Open-Meteo';
+  sourceUrl: string;
+  dataKind: 'model_forecast';
+  modelResolution: string;
+  retrievedAt: string;
+  // Open-Meteo does not report the model run time.
+  freshness: 'unknown';
+  units: Partial<Record<Pollutant, string>>;
+  hours: Array<{
+    time: string;
+    values: Partial<Record<Pollutant, number | null>>;
+  }>;
+  limitations: string[];
 }
 
-export interface AirQualitySnapshot {
-  locationLabel: string;
-  dataKind: DataKind;
-  provider: string;
-  sourceUrl: string;
-  retrievedAt: string;
-  observedAt?: string;
-  forecastFor?: string;
-  stationName?: string;
-  modelResolution?: string;
-  pollutants: PollutantReading[];
-  freshness: Freshness;
-  limitations: string[];
-  nationalAqi?: {
-    value: number;
-    category: 'Good' | 'Satisfactory' | 'Moderate' | 'Poor' | 'Very Poor' | 'Severe';
-    methodology: 'CPCB';
-  };
+export type LimitStatus = 'above_limit' | 'within_limit' | 'unknown';
+
+// A model-forecast 24-hour average compared with India's NAAQS 24-hour
+// limit. Not an AQI and not a CPCB category.
+export interface PollutantCheck {
+  pollutant: 'PM2_5' | 'PM10';
+  status: LimitStatus;
+  // Rounded to 1 decimal; null when unknown.
+  average24h: number | null;
+  // μg/m³
+  limit: number;
+}
+
+export interface AirAssessment {
+  level: 'elevated' | 'not_elevated' | 'unknown';
+  // UTC ISO time of the first of the 24 forecast hours averaged; null when
+  // no complete window exists.
+  windowStart: string | null;
+  // Always [PM2_5, PM10].
+  checks: PollutantCheck[];
 }
 ```
 
-`nationalAqi` is allowed only when a valid CPCB AQI or a correctly implemented documented CPCB method is available. Do not fill it from PM2.5 alone or from Open-Meteo's other AQI indices.
+There is no index field. A CPCB National AQI field may be added only when a valid CPCB value or a correctly implemented, documented CPCB method is available: never from PM2.5 alone or from Open-Meteo's European or US index values.
 
 ## 6. Provider interfaces
 
 ```ts
-export interface AirQualityProvider {
-  getCurrent(input: LocationInput): Promise<AirQualitySnapshot | null>;
-  getForecast(input: LocationInput): Promise<AirQualityForecast | null>;
-}
+// server/src/services/air-data/cachedForecast.ts
+export type CachedForecast = (
+  latitude: number,
+  longitude: number,
+  now: Date,
+) => Promise<ModelForecast>;
 
-export interface AIProvider {
-  generateDailyPlan(input: PlannerContext): Promise<unknown>;
-  answerQuestion(input: AssistantContext): Promise<unknown>;
-}
+// server/src/services/ai/personalize.ts
+export type GeneratePlan = (input: PlanWriterInput) => Promise<string>;
 ```
 
-Provider selection comes from validated server configuration. A fallback to demo mode must be explicit and visible to the user.
+The forecast comes from one provider, Open-Meteo, through a 10-minute cache. Each AI writer (Gemini, then the optional Claude backup) is a `GeneratePlan` function. `createPlanWriter` (`server/src/services/recommendations/dailyPlan.ts`) builds one plan writer that asks them in order, each within a daily call budget, and resolves to null when none gives an accepted answer; `createPlanWriter` itself returns null when no writer is set up. Which writers exist comes from validated server configuration (`server/src/config/appOptions.ts`): a writer is set up only when its key is set. There is no demo mode: when Open-Meteo fails, the app says the forecast is unavailable.
 
 ## 7. Request flow
 
-1. Client selects a location.
-2. API validates the location and retrieves data from configured providers.
-3. Data service normalizes and evaluates freshness.
-4. Recommendation rules create allowed candidate actions.
-5. AI receives only validated and bounded context.
-6. AI response is parsed and validated.
-7. Safety validator removes/rejects unsupported claims.
-8. API returns the plan, source context, assumptions, and limitations.
-9. User explicitly saves a plan; database RLS and ownership apply.
+The daily plan:
+
+1. The client sends the place (label and coordinates) and any household answers to `POST /api/v1/recommendations/daily-plan`.
+2. The API applies the plan rate limit and a 4 kB body limit, and validates the body with Zod.
+3. The forecast comes from Open-Meteo through the 10-minute cache. A provider failure is not an error: the air check becomes unknown.
+4. `assessAir` makes the 24-hour check, and `buildCandidates` turns it and the answers into rule cards.
+5. If an AI writer is set up, it receives only the check result and the cards (`toWriterInput`).
+6. Its answer is parsed with Zod and must pass `checkPlanOutput`. A writer is asked a second time only when its answer is not valid JSON or fails the schema; a failed content check or a failed call moves on to the next writer. When no writer's answer passes, the plan is the rules' plan.
+7. The API returns the plan: who made it, the check, the forecast's provider, source, retrieval time and limitations, the cards with their reasons and sources, and the `safetyNote`.
+8. Saving is a separate request when the user presses Save plan. The server builds the plan again, and database RLS and ownership apply.
 
 ## 8. Quality architecture
 
@@ -190,7 +209,7 @@ Provider selection comes from validated server configuration. A fallback to demo
 ## 9. Deployment topology
 
 - Netlify (ADR-006, `DEPLOYMENT.md`): the CDN serves the built client, and `/api/*` is rewritten to one Function that runs the Express app, all on one origin.
-- Netlify environment variables hold the server settings. A Gemini key, when added, is marked secret.
+- Netlify environment variables hold the server settings. `GEMINI_API_KEY` and the optional `ANTHROPIC_API_KEY` (the Claude backup) are marked secret and scoped to Functions.
 - Supabase: Auth/Postgres.
 - External data APIs called from server.
 - AI model called from server.
