@@ -20,6 +20,66 @@ Environmental readings are not always easy to translate into useful daily choice
 - Explainable AI recommendations and limitations.
 - Optional saved plans and household preferences.
 
+## Try it in 5 minutes
+
+Open https://airaware-ai.netlify.app. There is no sign-in. Nothing is saved unless you tick **Remember on this device**, or press **Save my answers** or **Save plan**. A plan usually takes up to 30 seconds to build. Plans (Save plan included) and Ask answers share a limit of 10 requests a minute. If you see "Too many requests. Try again in a minute.", or "Saving isn't available right now." after **Save plan**, wait a minute and try again.
+
+1. Press **Check My Air**.
+2. Search a city in India, for example `Pune`, `Delhi` or `Tezpur`, and pick it from the list. Or press **Use my location**: your browser asks first, and the location is rounded to about 1 km.
+3. Answer the two optional steps as **Household A** (table below), then press **See my air**.
+4. On **Today**, read the one-sentence verdict and its **Model forecast** label with the update time. Open **Air quality details** for the PM2.5 and PM10 figures, the 48-hour chart, units and sources.
+5. Press **See your full day**. It says who made the plan:
+   - **Made with AI**: Gemini (or the Claude backup) picked and timed our rules' suggestions;
+   - **Made by our rules**: AI is unavailable right now, and everything else still works.
+
+   Open **Why?** under a card for its reason, sources and any caveat.
+6. In **My Profile**, switch to **Household B**: travel **I work from home**, outdoor exercise **No**, cooking **LPG gas**, kitchen exhaust **Yes**, busy road **No**. Then open **See your full day** on Today again. The household cards change.
+7. Open **Ask AirAware** and try the questions below.
+
+**Two households, same city, same day:**
+
+| Question | Household A | Household B |
+|---|---|---|
+| Your day | Office commute, Outdoor exercise | Work from home |
+| How do you usually travel? | Car | (not asked) |
+| What do you mostly cook with? | Wood, coal or crop waste | LPG |
+| Kitchen exhaust or chimney? | No | Yes |
+| Near a busy road? | Yes | No |
+
+On any day, Household A gets "Ventilate the kitchen while cooking", "Consider a cleaner cooking fuel where possible", "Your home is near a busy road" and "Combine trips and avoid idling", plus "Check conditions before outdoor exercise" (or "Consider an indoor alternative for exercise" when the forecast is above India's limit). Household B gets none of these; it gets "Use the kitchen exhaust while cooking" instead. In the plan, "Extra caution for your household" (children, older adults or someone more sensitive), "Less waiting beside busy roads on the school run" and "Consider a lower-traffic route or time" (walking, cycling or two-wheeler commutes) appear only when the forecast's 24-hour check is above India's limit.
+
+The table uses the first-visit wording. My Profile (step 6) words the same questions slightly differently.
+
+**Questions for Ask AirAware** (in brackets, the topic each one is answered under):
+
+- "Can I go for a run this evening?" (Outdoor activities)
+- "Should I open the windows today?" (Windows and ventilation)
+- "How can I reduce smoke when cooking?" (Indoor air)
+- "Can my kids play outside after school?" (My family)
+- "How can I make my commute greener?" (Commuting)
+- "What can I do instead of burning leaves?" (Greener habits)
+- "I have asthma, which medicine should I take?" (no medical advice: it points you to a doctor)
+
+## How it works
+
+1. **Place.** You search a place in India (Open-Meteo geocoding), or press **Use my location**. Coordinates are rounded to 2 decimal places, about 1 km.
+2. **Forecast.** The server asks the Open-Meteo Air Quality API for 48 hourly values from the CAMS global model: PM2.5, PM10, NO₂, SO₂, O₃ and CO. It caches each forecast for 10 minutes. Every value carries its unit, source and time.
+3. **24-hour check.** The server averages the next 24 hourly PM2.5 and PM10 values and compares them with India's 24-hour limits: 60 and 100 μg/m³ (CPCB National Ambient Air Quality Standards, 18 November 2009). If an hour is missing, that pollutant's 24-hour average is shown as not available, never guessed.
+4. **Rules.** Fixed rules (`server/src/services/recommendations/rules.ts`) turn the check and your optional answers into suggestions. Each suggestion has its reason. Suggestions based on the forecast cite Open-Meteo and the CPCB 2009 standards; general ones say they have no external source.
+5. **AI, optional.** Gemini, with Claude as an optional backup, may pick, order and time those suggestions and add a short summary and "for you" lines. It sees only the check result and the rule cards: no coordinates and no typed questions. Its answer must pass a Zod schema and content checks, or it is dropped and the rules' plan is shown. The AI cannot change the advice text, the sources or any forecast value.
+6. **Ask.** Your question picks a topic by keyword rules on the server. It is not saved, logged or sent to an AI. The answer's cards come from the same rules and forecast check, plus the guide library. Gemini (or the Claude backup) may add a short summary written from those cards and the forecast check, never from your question.
+7. **Screen.** Air readings are labelled "Model forecast" with their time; Today, the plan and Air quality details also name the source. More than an hour after retrieval, Today, Ask answers and the background note say "Not current", and a plan says its forecast is more than an hour old.
+
+## Air data: what you see
+
+**We don't calculate an AQI.**
+
+- **What you see:** Open-Meteo's model forecast (CAMS global) for a grid cell about 45 km wide, hourly for the next 48 hours. Each forecast carries these limitations, word for word: "Model forecast, not a station observation.", "Not the CPCB National AQI." and "Grid cell is about 45 km wide; conditions near roads or local sources can differ."
+- **Why there is no index number:** the CPCB National AQI follows CPCB's own method (sub-indices for several pollutants, each over a set averaging period) and is published by CPCB. A number we computed from a model forecast would look official without being so. Open-Meteo's European and US index values are not requested, because they are not the CPCB National AQI.
+- **What you get instead:** the 24-hour check above, written as one sentence, with the averages and limits one tap away.
+- **Official observations:** CPCB is the reference for station observations. No supported, permitted machine-readable feed has been verified yet, so the app says "Official CPCB observations are not connected yet." and never fills that gap.
+- **Freshness and failures:** a forecast retrieved more than an hour ago is marked "Not current" (the app gets no model run time from Open-Meteo). If the provider fails, the app says the information is unavailable; it never shows demo values in its place.
+
 ## Challenge vertical
 
 Urban Air Quality Assistant — personalized low-emission routines, indoor-air improvements, sustainable swaps, and explainable recommendations for families and communities.
@@ -128,9 +188,9 @@ This product provides general information, not medical diagnosis or treatment. I
 
 ## Links
 
-- Live app: _Add verified URL_
-- API: _Add verified URL_
-- Repository: _Add URL_
+- Live app: https://airaware-ai.netlify.app
+- API: https://airaware-ai.netlify.app/api/v1/health (the same site: `/api/*` runs the Express API as one Netlify Function)
+- Repository: https://github.com/gaikwadashutosh35/airaware-ai
 
 ## Author
 

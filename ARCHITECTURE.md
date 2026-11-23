@@ -9,19 +9,19 @@
 - Support provider replacement without rewriting application logic.
 - Remain small and maintainable for the Hack2Skills repository limit.
 
-## 2. Recommended stack
+## 2. Stack in use
 
 | Layer | Technology |
 |---|---|
 | Web client | React, Vite, TypeScript |
-| Styling/components | Tailwind CSS, Shadcn UI, Lucide React |
-| Charts | Recharts |
-| Motion | CSS/Framer Motion selectively |
+| Styling/components | Tailwind CSS v4, Lucide React icons, native HTML elements (no component kit) |
+| Charts | Hand-drawn SVG (`ForecastChart.tsx`), no chart library |
+| Motion | CSS only, respecting reduced motion (no motion library) |
 | API | Node.js, Express, TypeScript |
 | Schemas | Zod |
 | Database/auth | Supabase PostgreSQL, Supabase Auth |
-| AI | Gemini behind `AIProvider` interface |
-| Air data | CPCB adapter only with verified supported access; Open-Meteo forecast adapter; demo adapter |
+| AI | Gemini (REST via `fetch`), with an optional Claude backup (`@anthropic-ai/sdk`); the fixed rules' plan when neither gives an accepted answer |
+| Air data | Open-Meteo Air Quality API (CAMS global model forecast), Open-Meteo geocoding, and the Open-Meteo weather forecast for Today's weather line and backdrop; CPCB observations not connected (no verified permitted feed); no demo adapter |
 | Tests | Vitest, Testing Library, Supertest, Playwright, axe-core |
 | Quality | oxlint (type-aware), Prettier, TypeScript, CodeQL, SonarQube Cloud |
 | Hosting | Netlify — CDN for the built client, one Function running the Express API (ADR-006) |
