@@ -38,7 +38,14 @@ const BUILD_FAILED = 'Something went wrong building your plan.';
 const SAVED = 'Saved on this browser. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
+const RATE_LIMITED = 'Too many requests. Try again in a minute.';
 const NO_CARD = 'No suggestions for your answers today.';
+
+function saveFailure(error: unknown): string {
+  if (!(error instanceof ApiError)) return SAVE_FAILED;
+  if (error.status === 409) return LIMIT;
+  return error.code === 'RATE_LIMITED' ? RATE_LIMITED : SAVE_FAILED;
+}
 
 interface Built {
   plan: DailyPlan;
@@ -159,9 +166,7 @@ export function DailyPlanSection({
       setMessage(SAVED);
       onSaved();
     } catch (error) {
-      setMessage(
-        error instanceof ApiError && error.status === 409 ? LIMIT : SAVE_FAILED,
-      );
+      setMessage(saveFailure(error));
     } finally {
       setSaving(false);
     }

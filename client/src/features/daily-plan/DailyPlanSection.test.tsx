@@ -575,6 +575,23 @@ describe('DailyPlanSection', () => {
     expect(screen.queryByText(SAVED)).toBeNull();
   });
 
+  // Save plan shares the 10-a-minute limit with plans and Ask answers.
+  it('explains a rate-limited save', async () => {
+    routeFetch((path) =>
+      path === PLAN_PATH ? planReply() : errorReply(429, 'RATE_LIMITED'),
+    );
+    renderSection();
+    await build();
+
+    fireEvent.click(saveButton());
+
+    expect(
+      await screen.findByText('Too many requests. Try again in a minute.'),
+    ).toBeDefined();
+    expect(screen.queryByText(SAVE_FAILED)).toBeNull();
+    expect(screen.queryByText(SAVED)).toBeNull();
+  });
+
   it('never claims a save that failed', async () => {
     routeFetch((path) =>
       path === PLAN_PATH ? planReply() : errorReply(503, 'SAVE_UNAVAILABLE'),
