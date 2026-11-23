@@ -82,7 +82,7 @@ export function toWriterInput(
 // unit that follows it, so "60 minutes" is not accepted just because the
 // limit 60 appears in the input. "24-hour" and "24 hours" compare equal.
 const NUMBER =
-  /(?:\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|twice|double|triple|thrice|half|quarter|dozen)\b|\d+(?:\.\d+)?)(?:[\s-]*(?:minutes?|mins?|hours?|hrs?|seconds?|secs?|days?|km|kilomet(?:re|er)s?|met(?:re|er)s?|am|pm)\b)?/gi;
+  /(?:\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|(?:hundred|thousand|million|billion|lakh|crore|dozen|third|fifth|tenth)s?|twice|doubled?|doubling|tripled?|thrice|half|halved|quarter)\b|\d+(?:\.\d+)?)(?:[\s-]*(?:minutes?|mins?|hours?|hrs?|seconds?|secs?|days?|km|kilomet(?:re|er)s?|met(?:re|er)s?|am|pm)\b)?/gi;
 const UNITS: Array<[RegExp, string]> = [
   [/(minute|min)s?$/, 'min'],
   [/(hour|hr)s?$/, 'h'],

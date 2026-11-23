@@ -204,6 +204,37 @@ describe('checkPlanOutput', () => {
     twoHours.featured[0]!.forYou = 'Keep outdoor time to about two hours.';
     expect(checkPlanOutput(twoHours, input)).toBe('numbers');
   });
+
+  // The word list stopped at fifty: teens, sixty to ninety, large numbers,
+  // fractions, zero and "doubled" or "halved" slipped through.
+  it('number words beyond fifty, large numbers and fractions must come from the input', () => {
+    const summaries = [
+      `${valid().summary} PM2.5 is about sixty today.`,
+      `${valid().summary} Keep outdoor time under fifteen minutes.`,
+      `${valid().summary} PM10 is near eighty.`,
+      `${valid().summary} Seventy is close to the limit.`,
+      `${valid().summary} Ninety minutes indoors is enough.`,
+      `${valid().summary} Thirteen hours above the limit.`,
+      `${valid().summary} Nineteen hours above the limit.`,
+      `${valid().summary} Thousands of particles per breath.`,
+      `${valid().summary} Expect zero haze tonight.`,
+      `${valid().summary} Millions of fine particles drift indoors.`,
+      `${valid().summary} Billions of particles are in the air.`,
+      `${valid().summary} Over a lakh vehicles pass busy roads.`,
+      `${valid().summary} Crores of people live near roads.`,
+      `${valid().summary} PM2.5 is about a fifth above the limit.`,
+      `${valid().summary} A third of the limit is left.`,
+      `${valid().summary} Levels doubled overnight.`,
+      `${valid().summary} Doubling the time indoors helps.`,
+      `${valid().summary} Levels tripled since morning.`,
+      `${valid().summary} Exposure halved indoors.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBe(
+        'numbers',
+      );
+    }
+  });
 });
 
 describe('PLAN_OUTPUT_JSON_SCHEMA', () => {
