@@ -185,6 +185,11 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - a rate-limited **Save plan** says "Too many requests. Try again in a minute." instead of "Saving isn't available right now.";
   - README and ARCHITECTURE: stale lines rewritten (the repository trees, the page paths, the air data layer, the rules engine, the AI layer, the domain types, the provider interfaces, the request flow, the secret keys, the data-integrity note and the disclaimer);
   - "Hack2skill" spelled the same way in README, ARCHITECTURE, PRD, CONTRIBUTING and CLAUDE_CODE_START_PROMPT.
+- AI answer check, number gaps (23 Nov):
+  - numbers come from the input's values only. Field names ("average24h") and names such as PM2.5, PM10 and two-wheeler no longer let 24, 2.5, 10 or "two" into an answer;
+  - "an hour", "a minute", "an extra hour", "a mile" and "a couple of hours" count as numbers. "A day" and "a second look" do not;
+  - "100 m", "100 ft", "60 years" and similar now carry their unit, so a limit (60 or 100) cannot pass as a distance or a span of time;
+  - "24h", "24‑hour" with a Unicode hyphen, "PM-2.5" and "two-wheeled" still pass.
 
 ### Security
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.

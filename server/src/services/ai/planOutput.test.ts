@@ -235,6 +235,112 @@ describe('checkPlanOutput', () => {
       );
     }
   });
+
+  // Field names and labels are not numbers: average24h, PM2.5, PM10 and
+  // two-wheeler let 24, 2.5, 10 and "two" through in any sentence.
+  it('numbers from field names and labels must still come from the data', () => {
+    const summaries = [
+      `${valid().summary} PM2.5 is about 24 today.`,
+      `${valid().summary} Levels are 2.5 times the limit.`,
+      `${valid().summary} Indoors is 10 times better.`,
+      `${valid().summary} Make two short trips instead.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBe(
+        'numbers',
+      );
+    }
+  });
+
+  it('pollutant names and the two-wheeler label still pass', () => {
+    expect(
+      checkPlanOutput(
+        withSummary(
+          `${valid().summary} PM2.5, PM 2.5 and PM10 matter for your two-wheeler commute.`,
+        ),
+        input,
+      ),
+    ).toBeNull();
+  });
+
+  // "About an hour" and "a couple of hours" are numbers in words.
+  it('article and "couple" durations must come from the input', () => {
+    const summaries = [
+      `${valid().summary} Keep outdoor time to about an hour.`,
+      `${valid().summary} A couple of hours indoors helps.`,
+      `${valid().summary} Wait a minute before opening windows.`,
+      `${valid().summary} Stay a kilometre from busy roads.`,
+      `${valid().summary} Spend an extra hour indoors today.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBe(
+        'numbers',
+      );
+    }
+  });
+
+  // Review of the change above: spellings it wrongly rejected.
+  it('spelling variants of names and durations still pass', () => {
+    const summaries = [
+      `${valid().summary} The 24h average for PM2.5 is above the limit.`,
+      `${valid().summary} The 24-h forecast for PM2.5 is above the limit.`,
+      `${valid().summary} The 24‑hour PM2.5 forecast is above the limit.`,
+      `${valid().summary} Take a second look at the forecast first.`,
+      `${valid().summary} A second-hand purifier can still help.`,
+      `${valid().summary} PM-2.5 and PM-10 are the particles to watch.`,
+      `${valid().summary} Fine particles (PM2.5/10) are the ones to watch.`,
+      `${valid().summary} The main concern today is PM2.5.`,
+      `${valid().summary} On a two-wheeled commute, a quieter route helps.`,
+      `${valid().summary} If you ride on two wheels, a quieter route helps.`,
+      `${valid().summary} Your two‑wheeler commute is the most exposed.`,
+      `${valid().summary} Above the limit of 60 — days like this call for less time out.`,
+      `${valid().summary} The main concern is PM2.5 — hours near roads add up.`,
+      `${valid().summary} The main concern is PM2.5 – hours near roads add up.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBeNull();
+    }
+  });
+
+  it('a pollutant name does not hide a number or unit after it', () => {
+    const summaries = [
+      `${valid().summary} Levels of PM 10.60 are expected.`,
+      `${valid().summary} Keep outdoor time under PM10 minutes.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBe(
+        'numbers',
+      );
+    }
+  });
+
+  // The limits 60 and 100 are always in the input: without these units
+  // "100 m" read as the PM10 limit.
+  it('distances and longer spans must come from the input', () => {
+    const summaries = [
+      `${valid().summary} Wait 100 m back from the kerb.`,
+      `${valid().summary} Stand 100 ft back from the road.`,
+      `${valid().summary} Stand 100 feet back from the road.`,
+      `${valid().summary} Stay a mile away from busy roads.`,
+      `${valid().summary} This has gone on for 60 years.`,
+    ];
+    for (const summary of summaries) {
+      expect(checkPlanOutput(withSummary(summary), input), summary).toBe(
+        'numbers',
+      );
+    }
+  });
+
+  it('"hourly" and "a day" are not durations', () => {
+    expect(
+      checkPlanOutput(
+        withSummary(
+          `${valid().summary} Check the hourly forecast on a day like this.`,
+        ),
+        input,
+      ),
+    ).toBeNull();
+  });
 });
 
 describe('PLAN_OUTPUT_JSON_SCHEMA', () => {

@@ -81,8 +81,22 @@ export function toWriterInput(
 // A number (digits or a number word), with any time, distance or clock
 // unit that follows it, so "60 minutes" is not accepted just because the
 // limit 60 appears in the input. "24-hour" and "24 hours" compare equal.
-const NUMBER =
-  /(?:\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|(?:hundred|thousand|million|billion|lakh|crore|dozen|third|fifth|tenth)s?|twice|doubled?|doubling|tripled?|thrice|half|halved|quarter)\b|\d+(?:\.\d+)?)(?:[\s-]*(?:minutes?|mins?|hours?|hrs?|seconds?|secs?|days?|km|kilomet(?:re|er)s?|met(?:re|er)s?|am|pm)\b)?/gi;
+// "An hour", "a minute" or "an extra hour" count. "A day" and "a second"
+// do not: "on a day like this" and "a second look" are no durations.
+const UNIT =
+  'minutes?|mins?|hours?|hrs?|h|seconds?|secs?|days?|weeks?|months?|years?|yrs?|km|kilomet(?:re|er)s?|met(?:re|er)s?|miles?|mi|yards?|feet|foot|ft|am|pm|m';
+const ARTICLE_UNIT =
+  'minutes?|mins?|hours?|hrs?|km|kilomet(?:re|er)s?|met(?:re|er)s?|miles?';
+const NUMBER = new RegExp(
+  String.raw`(?:\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|(?:hundred|thousand|million|billion|lakh|crore|dozen|third|fifth|tenth)s?|twice|doubled?|doubling|tripled?|thrice|half|halved|quarter|couple(?:\s+of)?|an?(?=[\s-]+(?:(?:extra|full|whole|additional|single)[\s-]+)?(?:${ARTICLE_UNIT})\b))\b|\d+(?:\.\d+)?)(?:(?:-|\s+)?(?:${UNIT})\b)?`,
+  'gi',
+);
+// Names, not numbers: the pollutants and the two-wheeler commute. A name
+// followed by more digits or a unit is left in place to be checked.
+const NAMES = new RegExp(
+  String.raw`\bPM[\s-]?(?:2\.5|10)(?:\/(?:2\.5|10))?\b(?!\.?\d|(?:-|\s+)?(?:${UNIT})\b)|\btwo[\s-]?wheel(?:er|ed)?s?\b`,
+  'gi',
+);
 const UNITS: Array<[RegExp, string]> = [
   [/(minute|min)s?$/, 'min'],
   [/(hour|hr)s?$/, 'h'],
@@ -93,12 +107,21 @@ const UNITS: Array<[RegExp, string]> = [
 ];
 
 function numberTokens(text: string): string[] {
-  return (text.match(NUMBER) ?? []).map((raw) =>
+  // Unicode hyphens and dashes ("24‑hour") read as "-".
+  const plain = text.replace(/[‐-―]/g, '-').replace(NAMES, ' ');
+  return (plain.match(NUMBER) ?? []).map((raw) =>
     UNITS.reduce(
       (token, [unit, short]) => token.replace(unit, short),
       raw.toLowerCase().replace(/[\s-]/g, ''),
     ),
   );
+}
+
+// The input's values, not its field names: "average24h" holds no number.
+function values(value: unknown): string[] {
+  return value !== null && typeof value === 'object'
+    ? Object.values(value).flatMap(values)
+    : [String(value)];
 }
 
 const BANNED = [
@@ -161,7 +184,7 @@ export function checkPlanOutput(
     return 'ids';
   }
 
-  const known = new Set(numberTokens(JSON.stringify(input)));
+  const known = new Set(values(input).flatMap(numberTokens));
   if (texts.some((t) => numberTokens(t).some((n) => !known.has(n)))) {
     return 'numbers';
   }
