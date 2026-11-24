@@ -220,6 +220,8 @@ describe('AppShell', () => {
   beforeAll(stubDialog);
 
   beforeEach(() => {
+    // jsdom has no scrollIntoView.
+    Element.prototype.scrollIntoView = vi.fn();
     // jsdom has no scrolling; navigation scrolls to the top.
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     vi.useFakeTimers();

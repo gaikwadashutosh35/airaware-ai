@@ -51,7 +51,7 @@ export function TopicChips({
   );
 }
 
-// Starter questions as buttons: the greeting's, and "You could also ask:".
+// Starter questions as buttons: the Ask page's, and "You could also ask:".
 export function StarterButtons({
   questions,
   busy,
@@ -79,13 +79,13 @@ export function StarterButtons({
   );
 }
 
-// "{verdict} · Model forecast · retrieved {time}": never without its kind, and
-// no time when the server had no forecast.
+// "{verdict} · Model forecast · Open-Meteo · retrieved {time}"; with no
+// forecast, the verdict alone: no kind, provider or time to show.
 function airLine(answer: AskAnswer): string {
-  const updated = answer.forecast
-    ? ` · retrieved ${clockTime(answer.forecast.retrievedAt)}`
-    : '';
-  return `${verdictFrom(answer.air).title} · Model forecast${updated}`;
+  const { title } = verdictFrom(answer.air);
+  return answer.forecast
+    ? `${title} · Model forecast · Open-Meteo · retrieved ${clockTime(answer.forecast.retrievedAt)}`
+    : title;
 }
 
 function Answer({
@@ -177,6 +177,7 @@ export function AskEntry({
   onAnswerFollowUp: (field: string, value: string, label: string) => void;
   onSkipFollowUp: (field: string) => void;
 }) {
+  const articleRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const outcomeRef = useRef<HTMLParagraphElement>(null);
   // Set by Skip: the skipped line takes focus once it shows.
@@ -190,7 +191,10 @@ export function AskEntry({
       : (entry.topic ?? null);
 
   useEffect(() => {
-    if (focus) headingRef.current?.focus();
+    if (!focus) return;
+    // Instant: no smooth scroll to wait for, so focus never races it.
+    articleRef.current?.scrollIntoView({ block: 'start' });
+    headingRef.current?.focus({ preventScroll: true });
   }, [focus]);
   useEffect(() => {
     if (entry.followUp && focusOutcome.current) {
@@ -201,6 +205,7 @@ export function AskEntry({
 
   return (
     <article
+      ref={articleRef}
       aria-labelledby={headingId}
       aria-busy={entry.status === 'thinking'}
       className="ask-answer flex flex-col gap-3"

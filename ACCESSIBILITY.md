@@ -144,5 +144,13 @@ No real screen reader has been confirmed yet.
 - **Live region:** "Your plan is ready." stays in the same `<output>` but is for screen readers only; the building, error and save lines stay visible (TD-10).
 - **"Reload forecast":** a 44 px button; after it, focus moves to the H1, as after "Try again" (`AppShell.test.tsx`, `e2e/firstscreen.spec.ts` ST-01a).
 - **Loading:** "Loading forecast…" is visible text inside the `aria-busy` placeholder.
-- **Order:** the invite now follows the help choices in the DOM as on screen; the Tab walks in `e2e/keyboard.spec.ts` pass on both projects. Its place-dialog test failed once in each of two full 7-spec runs (once on desktop, once on phone) and passed 50 of 50 on its own; the likely cause is a race between the dialog's native close and its `close` event (`PlaceChip.tsx`), not yet fixed.
+- **Order:** the invite now follows the help choices in the DOM as on screen; the Tab walks in `e2e/keyboard.spec.ts` pass on both projects. Its place-dialog test is flaky (see the P4 section below).
 - Not done: a real screen reader, and a check on a real phone of the new banner and placeholder.
+
+## Redesign P4, Ask AirAware (2026-11-24)
+
+- **Order:** title, intro, context line, the question box, topics, three starters, "More questions" (a native `<details>`, 44 px summary), then the conversation. The DOM follows the screen; `e2e/keyboard.spec.ts`'s Tab walk on Ask passes on both projects.
+- **New answer:** the exchange scrolls instantly to the top of the view, then its heading takes focus with `preventScroll`, so there is no second jump and nothing animates the scroll (AK-04, AK-05 in `e2e/firstscreen.spec.ts`).
+- **Large text:** Send drops below the input; at 200 % text the input fills its row on phones (AK-10).
+- **Known issue at 200 % text:** at 390×844 the Ask title block reaches about 165 px into the fixed city drawing on first load (29 px without the new intro line; Today's reaches none), so the end of the context line and "Edit" sit over the buildings until the page is scrolled. Measured with a 32 px browser default font as well as CSS. Not yet fixed.
+- **Place-dialog keyboard test:** across the P3 and P4 runs on 24 Nov it failed 3 times (twice in a full 8- or 7-spec run, once in a run of `keyboard.spec.ts` alone) and passed in the other full runs and 50 of 50 repeats on its own. The likely cause is a race between the dialog's native close and its `close` event (`PlaceChip.tsx`); not yet fixed.

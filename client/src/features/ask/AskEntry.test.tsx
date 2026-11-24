@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AskAnswer } from '../../../../shared/contracts.ts';
 import { ApiError } from '../../services/api.ts';
 import {
@@ -67,6 +67,10 @@ function show(
   return { ...view, onRetry, onTopic };
 }
 
+beforeEach(() => {
+  // jsdom has no scrollIntoView.
+  Element.prototype.scrollIntoView = vi.fn();
+});
 afterEach(cleanup);
 
 describe('AskEntry', () => {
@@ -78,7 +82,7 @@ describe('AskEntry', () => {
     expect(screen.getByText('Made with AI')).toBeTruthy();
     expect(
       screen.getByText(
-        `Based on: Forecast above India's 24-hour limit · Model forecast · retrieved ${UPDATED}`,
+        `Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
       ),
     ).toBeTruthy();
     const cards = screen.getAllByRole('heading', { level: 3 });
@@ -111,15 +115,33 @@ describe('AskEntry', () => {
     expect(screen.getByText(/not current/i)).toBeTruthy();
   });
 
-  it('no forecast: no time, and the unavailable verdict', () => {
+  it('no forecast: only the unavailable verdict, no kind, provider or time', () => {
     const { container } = show(ready(unknownAirAskFixture));
 
     expect(
-      screen.getByText(
-        'Based on: Air information unavailable · Model forecast',
-      ),
+      screen.getByText('Based on: Air information unavailable', {
+        exact: true,
+      }),
     ).toBeTruthy();
-    expect(container.textContent).not.toMatch(/retrieved/);
+    expect(container.textContent).not.toMatch(
+      /Model forecast|Open-Meteo|retrieved/,
+    );
+  });
+
+  it('a medical question with no forecast: Today has only the verdict', () => {
+    const { container } = show(
+      ready(
+        { ...medicalAskFixture, forecast: null, air: unknownAirAskFixture.air },
+        'Should I change my inhaler dose?',
+      ),
+    );
+
+    expect(
+      screen.getByText('Today: Air information unavailable', { exact: true }),
+    ).toBeTruthy();
+    expect(container.textContent).not.toMatch(
+      /Model forecast|Open-Meteo|retrieved/,
+    );
   });
 
   it('a medical question: the refusal and today, no cards', async () => {
@@ -130,7 +152,7 @@ describe('AskEntry', () => {
     expect(screen.getByText(ASK_COPY.medical)).toBeTruthy();
     expect(
       screen.getByText(
-        `Today: Forecast above India's 24-hour limit · Model forecast · retrieved ${UPDATED}`,
+        `Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
       ),
     ).toBeTruthy();
     expect(screen.queryByText('Why?')).toBeNull();
@@ -197,6 +219,25 @@ describe('AskEntry', () => {
     show(entry({ status: 'thinking' }), { focus: true });
 
     expect(document.activeElement).toBe(heading());
+  });
+
+  // F-04 / AK-05: the exchange scrolls to the top at once, then focus follows
+  // without a second scroll.
+  it('a new exchange scrolls to the top, then focuses without scrolling', () => {
+    const calls: string[] = [];
+    const scroll = vi.fn(() => calls.push('scroll'));
+    Element.prototype.scrollIntoView = scroll;
+    const focus = vi
+      .spyOn(HTMLElement.prototype, 'focus')
+      .mockImplementation(() => void calls.push('focus'));
+
+    show(entry({ status: 'thinking' }), { focus: true });
+
+    expect(scroll).toHaveBeenCalledWith({ block: 'start' });
+    expect(scroll.mock.contexts[0]).toBe(heading().closest('article'));
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(calls).toEqual(['scroll', 'focus']);
+    focus.mockRestore();
   });
 
   it('its topic buttons rest while another answer is coming', () => {

@@ -17,16 +17,17 @@ import type { useAsk } from '../features/ask/useAsk.ts';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import { NEAR_YOU, type Place } from '../features/location/place.ts';
 import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
-import { greeting } from '../features/today/today.ts';
+import { isOlderThan } from '../lib/clock.ts';
 import { follow } from '../lib/navigation.ts';
 
-// Ask AirAware as a guided chat (spec 2026-11-21): a greeting with the
-// topics and starters, the conversation oldest first, then the question box.
+// Ask AirAware as a guided chat (spec 2026-11-21; order from redesign P4): the
+// question box, the topics and starters, then the conversation oldest first.
 // Answers come from the server's rules and guide cards. A typed question goes
 // only into the POST body: no form name, address or storage.
 export function Ask({
   place,
   updatedAt,
+  forecastLoading,
   context,
   now,
   ask,
@@ -37,6 +38,8 @@ export function Ask({
   place: Place | null;
   // The shell's forecast retrieval time; null while loading or failed.
   updatedAt: string | null;
+  // True only while the forecast loads; a failed one reserves nothing.
+  forecastLoading: boolean;
   // The answers on screen, saved or not.
   context: HouseholdContext;
   now: Date;
@@ -81,9 +84,21 @@ export function Ask({
         <h1 className="text-3xl font-semibold tracking-tight">
           {ASK_COPY.heading}
         </h1>
+        <p className="text-sm text-text-dark">{ASK_COPY.intro}</p>
         {place && (
           <p className="text-sm text-text-dark">
-            {`Using: ${place.label === NEAR_YOU ? 'the model forecast near you (approximate)' : `the ${place.label} model forecast`}${updatedAt ? `, retrieved ${clockTime(updatedAt)}` : ''} · ${answeredCount(context)} of 10 household questions answered · `}
+            {`Using: ${place.label === NEAR_YOU ? 'the model forecast near you (approximate)' : `the ${place.label} model forecast`}`}
+            {updatedAt
+              ? `, retrieved ${clockTime(updatedAt)}${isOlderThan(updatedAt, now, 60) ? ' · Not current' : ''}`
+              : forecastLoading && (
+                  // Holds the line's length until the forecast lands, so the
+                  // words after it do not move (PF-01). Never read or shown.
+                  // Same locale-aware format as the real time.
+                  <span aria-hidden="true" className="invisible">
+                    {`, retrieved ${clockTime(new Date(2000, 0, 1, 22, 22).toISOString())}`}
+                  </span>
+                )}
+            {` · ${answeredCount(context)} of 10 household questions answered · `}
             <a
               href="/app/profile"
               onClick={(event) => {
@@ -109,15 +124,57 @@ export function Ask({
         </div>
       ) : (
         <>
-          {/* AirAware speaks first: the greeting holds the topics and starters. */}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const typed = question.trim();
+              if (!typed) return;
+              ask.send({ question: typed }, typed);
+              setQuestion('');
+            }}
+            className="flex flex-col gap-1 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+          >
+            <label htmlFor={inputId} className="font-medium">
+              {ASK_COPY.inputLabel}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <input
+                id={inputId}
+                type="text"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                required
+                maxLength={200}
+                enterKeyHint="send"
+                autoComplete="off"
+                className="min-h-12 min-w-0 flex-[1_1_10rem] rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
+              />
+              <button
+                type="submit"
+                disabled={ask.thinking}
+                className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
+              >
+                {ASK_COPY.send}
+              </button>
+            </div>
+          </form>
           <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
-            <p>{`${greeting(now)}. ${ASK_COPY.greetingTail}`}</p>
             <TopicChips busy={ask.thinking} onTopic={askTopic} />
             <StarterButtons
-              questions={STARTERS}
+              questions={STARTERS.slice(0, 3)}
               busy={ask.thinking}
               onStarter={askStarter}
             />
+            <details>
+              <summary className="min-h-11 cursor-pointer py-2 font-medium">
+                {ASK_COPY.moreQuestions}
+              </summary>
+              <StarterButtons
+                questions={STARTERS.slice(3)}
+                busy={ask.thinking}
+                onStarter={askStarter}
+              />
+            </details>
           </div>
           {ask.entries.map((entry) => (
             <AskEntry
@@ -137,40 +194,6 @@ export function Ask({
               onSkipFollowUp={(field) => ask.skipFollowUp(entry.id, field)}
             />
           ))}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              const typed = question.trim();
-              if (!typed) return;
-              ask.send({ question: typed }, typed);
-              setQuestion('');
-            }}
-            className="flex flex-col gap-1 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
-          >
-            <label htmlFor={inputId} className="font-medium">
-              {ASK_COPY.inputLabel}
-            </label>
-            <div className="flex gap-2">
-              <input
-                id={inputId}
-                type="text"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                required
-                maxLength={200}
-                enterKeyHint="send"
-                autoComplete="off"
-                className="min-h-12 min-w-0 flex-1 rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
-              />
-              <button
-                type="submit"
-                disabled={ask.thinking}
-                className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
-              >
-                {ASK_COPY.send}
-              </button>
-            </div>
-          </form>
         </>
       )}
     </div>

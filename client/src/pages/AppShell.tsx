@@ -351,6 +351,7 @@ function AppShell() {
                 ? forecast.state.data.series.retrievedAt
                 : null
             }
+            forecastLoading={forecast.state.status === 'loading'}
             context={context}
             now={now}
             ask={ask}

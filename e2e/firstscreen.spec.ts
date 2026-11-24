@@ -2,6 +2,7 @@
 // logo, the Tab order, enlarged text and the unknown-page redirect. Every page
 // uses the stub, so no request reaches the AI and nothing is saved.
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { rulesAskFixture } from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { at, stub, type Level } from './layout.ts';
 import { planAt, PUNE } from './routes.ts';
@@ -592,3 +593,183 @@ test('PF-07: Today, My Home, Today builds one plan', async ({ page }) => {
   console.log(`PF-07: ${posts.length} plan POST(s)`);
   expect(posts).toHaveLength(1);
 });
+
+// Redesign P4: Ask AirAware. Every request is stubbed, so no answer reaches
+// the AI and nothing is saved.
+async function ask(page: Page, width: number, height: number) {
+  await page.setViewportSize({ width, height });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  await page.route('**/api/v1/assistant/answer', (route) =>
+    route.fulfill({ json: { data: rulesAskFixture } }),
+  );
+  await page.goto(at('/app/ask'));
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Ask AirAware' }),
+  ).toBeVisible();
+  await page.waitForLoadState('networkidle');
+}
+
+const questionInput = (page: Page) =>
+  page.getByRole('textbox', { name: 'Ask about your air, home or day' });
+
+// AK-01: the question box is on the first screen.
+for (const [width, height] of [
+  [390, 844],
+  [320, 640],
+  [1280, 720],
+] as const) {
+  test(`AK-01: the question box is above the fold at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const bottom = await bottomOf(questionInput(page));
+    const limit = width < 768 ? await barTop(page) : 720;
+    console.log(
+      `AK-01 ${width}x${height}: input bottom ${bottom}, limit ${limit}, margin ${limit - bottom}`,
+    );
+    expect(bottom).toBeLessThanOrEqual(limit);
+  });
+}
+
+// AK-04 and AK-05: a new exchange is at the top of the view, its answer starts
+// on screen, and focus is on its heading with no later scroll.
+for (const [width, height] of [
+  [320, 640],
+  [390, 844],
+  [1280, 720],
+] as const) {
+  test(`AK-04/05: a tapped starter shows its answer on screen at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    await page
+      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .click();
+    const article = page.locator('article.ask-answer').last();
+    await expect(article.getByText('Made by our rules')).toBeVisible();
+    const scrolls = await page.evaluate(
+      () =>
+        new Promise<number[]>((resolve) =>
+          requestAnimationFrame(() => {
+            const first = window.scrollY;
+            requestAnimationFrame(() => resolve([first, window.scrollY]));
+          }),
+        ),
+    );
+    const top = (await article.boundingBox())!.y;
+    const paragraph = (await article.locator('p').first().boundingBox())!.y;
+    const limit = width < 768 ? await barTop(page) : height;
+    console.log(
+      `AK-04 ${width}x${height}: article top ${top}, first paragraph top ${paragraph}, limit ${limit}, scrollY ${scrolls.join(',')}`,
+    );
+    // scrollIntoView rounds to a whole pixel: allow a subpixel.
+    expect(top).toBeGreaterThanOrEqual(-0.5);
+    expect(paragraph).toBeLessThan(limit);
+    expect(scrolls[0]).toBe(scrolls[1]);
+    expect(
+      await page.evaluate(
+        () =>
+          document.activeElement ===
+          document.querySelector('article.ask-answer:last-of-type h2'),
+      ),
+    ).toBe(true);
+  });
+}
+
+// AK-10: at 200 % text the input keeps most of the row; at normal text on the
+// narrowest phone it shares a row with Send.
+for (const [width, height] of [
+  [390, 844],
+  [1280, 720],
+] as const) {
+  for (const where of ['Ask', 'Today'] as const) {
+    test(`AK-10: the ${where} input is at least 60 % wide at 200 % text: ${width}x${height}`, async ({
+      page,
+    }) => {
+      await ask(page, width, height);
+      if (where === 'Today') {
+        await page.goto(at('/app'));
+        await expect(page.getByText('Your plan is ready.')).toBeAttached();
+      }
+      await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+      const [input, content] = await questionInput(page).evaluate((el) => {
+        const form = el.closest('form')!;
+        const style = getComputedStyle(form);
+        return [
+          el.getBoundingClientRect().width,
+          form.clientWidth -
+            parseFloat(style.paddingLeft) -
+            parseFloat(style.paddingRight),
+        ];
+      });
+      console.log(
+        `AK-10 ${where} ${width}x${height}: input ${input}, form content ${content}, ${Math.round((100 * input) / content)} %`,
+      );
+      expect(input).toBeGreaterThanOrEqual(content * 0.6);
+    });
+  }
+}
+
+for (const [width, height] of [
+  [320, 640],
+  [390, 844],
+  [768, 1024],
+  [1280, 720],
+] as const) {
+  test(`AK-10: the input and Send share a row at normal text: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const tops = [
+      (await questionInput(page).boundingBox())!.y,
+      (await page.getByRole('button', { name: 'Send' }).boundingBox())!.y,
+    ];
+    console.log(
+      `AK-10 ${width}x${height}: input and Send tops ${tops.join(',')}`,
+    );
+    expect(tops[0]).toBe(tops[1]);
+  });
+}
+
+// PF-01 Ask: the forecast lands at about 0.8 s.
+for (const [width, height] of [
+  [320, 640],
+  [390, 844],
+  [768, 1024],
+  [1280, 720],
+] as const) {
+  test(`Ask's layout shift stays under 0.1: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await stub(page, 'not_elevated');
+    await page.route('**/api/v1/air-quality/forecast**', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      await route.fallback();
+    });
+    await page.addInitScript(() => {
+      const w = window as unknown as { cls: number };
+      w.cls = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const shift = entry as PerformanceEntry & {
+            value: number;
+            hadRecentInput: boolean;
+          };
+          if (!shift.hadRecentInput) w.cls += shift.value;
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(at('/app/ask'));
+    await expect(page.getByText(/retrieved/).first()).toBeAttached();
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    const cls = await page.evaluate(
+      () => (window as unknown as { cls: number }).cls,
+    );
+    console.log(`PF-01 Ask CLS ${width}x${height} = ${cls}`);
+    expect(cls).toBeLessThan(0.1);
+  });
+}

@@ -64,8 +64,8 @@ describe('Ask wording', () => {
       errorTitle: "We couldn't answer that",
       errorFallback: 'Something went wrong answering your question.',
       tryAgain: 'Try again',
-      greetingTail:
-        "I'm AirAware. Ask me about your day, your home or your commute.",
+      intro: "Answers come from AirAware's rules and today's forecast.",
+      moreQuestions: 'More questions',
       followUpIntro: 'One question so I can be more specific:',
       followUpNote:
         'This changes your answers for this visit. To keep them, save in My Profile.',

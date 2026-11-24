@@ -38,7 +38,7 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
         <label htmlFor={inputId} className="font-medium">
           Ask about your air, home or day
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             id={inputId}
             ref={inputRef}
@@ -49,7 +49,7 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
             maxLength={200}
             enterKeyHint="send"
             autoComplete="off"
-            className="min-h-12 min-w-0 flex-1 rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
+            className="min-h-12 min-w-0 flex-[1_1_10rem] rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
           />
           <button
             type="submit"

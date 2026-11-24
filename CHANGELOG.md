@@ -195,6 +195,15 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P4, Ask AirAware (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows D1–D6, A12 and C9):
+  - the question box comes first, under the title, a new intro line ("Answers come from AirAware's rules and today's forecast.") and the context line; the greeting is gone; then the topics, three starters and "More questions" with the other two; then the conversation;
+  - a new exchange scrolls instantly to the top of the view and its heading takes focus without a second jump, so the answer is on screen at 320×640, 390×844 and 1280×720;
+  - "Based on" names "Model forecast · Open-Meteo" and the time only when a forecast was used; without one it says only "Air information unavailable";
+  - the context line adds "· Not current" once the forecast is over an hour old;
+  - an invisible stand-in holds the context line's length while the forecast loads, so the page no longer moves down when the time arrives (stubbed layout shift on Ask at 320, 390, 768 and 1280: at most 0.0019);
+  - at large text, Send drops below the input on Ask and on Today's box;
+  - the plan and Ask prompt is `daily-plan-v3`: the unknown-air rule says "air information is unavailable" (was "live air information"); nothing else in it changed;
+  - `e2e/firstscreen.spec.ts` adds AK-01, AK-04/05, AK-10 and Ask's layout-shift check (fully stubbed).
 - Redesign P3, Today (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows A10, A11 and B1–B12):
   - phones gain room: the H1 is 24 px below 640 px, and the verdict card and the plan panel use less padding there; the recommendation's heading is 20 px on phones;
   - within the limit, the verdict card drops its meaning sentence, which now opens the check list in "Air quality details"; above the limit and unknown keep it on the card;

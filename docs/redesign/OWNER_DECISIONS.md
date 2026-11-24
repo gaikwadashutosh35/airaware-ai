@@ -89,6 +89,12 @@ Each recommendation follows the same principles:
 | D4 | F-34: answer provenance | **Approve**: "… · Model forecast · Open-Meteo · retrieved HH:MM", and "Model forecast" only when a forecast exists | Provenance matches the data |
 | D5 | F-33: Ask header time | **Approve** "· Not current" when over 60 minutes old | Stale is marked where the time is shown |
 
+**Ruling during P4, approved by the owner on 24 Nov 2026:**
+
+| ID | Decision | Answer |
+|---|---|---|
+| D7 | At 200 % text (390x844), Ask's title block reaches about 165 px into the fixed city drawing on first load (29 px without the A12 intro; Today's none), so the end of the context line and "Edit" sit over the buildings | **Commit P4 as built; fix in P8** with the backdrop work (for example, hide the city when text is very large), which also removes the 29 px that predates P4 |
+
 ## E. My Home and Better Habits (P5)
 
 | ID | Decision | Recommended answer | Why |

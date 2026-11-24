@@ -80,6 +80,12 @@ describe('AskBox', () => {
     expect(onAsk).not.toHaveBeenCalled();
   });
 
+  it('the input row wraps, so Send can drop below at large text', () => {
+    render(<AskBox onAsk={vi.fn()} />);
+
+    expect(input().parentElement!.classList.contains('flex-wrap')).toBe(true);
+  });
+
   it('keeps questions short and says send on the keyboard', async () => {
     const { container } = render(<AskBox onAsk={vi.fn()} />);
 

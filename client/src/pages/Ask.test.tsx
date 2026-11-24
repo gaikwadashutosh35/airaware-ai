@@ -40,19 +40,24 @@ const QUESTION = 'Will the smog lift by evening?';
 function Harness({
   place,
   updatedAt,
+  forecastLoading,
   context,
+  now,
 }: {
   place: Place | null;
   updatedAt: string | null;
+  forecastLoading: boolean;
   context: HouseholdContext;
+  now: Date;
 }) {
   const ask = useAsk(place, context, 0, () => {});
   return (
     <Ask
       place={place}
       updatedAt={updatedAt}
+      forecastLoading={forecastLoading}
       context={context}
-      now={NOW}
+      now={now}
       ask={ask}
       onChoosePlace={() => {}}
       onLocateStart={() => {}}
@@ -64,10 +69,18 @@ function Harness({
 function show({
   place = pune as Place | null,
   updatedAt = UPDATED_AT as string | null,
+  forecastLoading = false,
   context = three,
+  now = NOW,
 } = {}) {
   return render(
-    <Harness place={place} updatedAt={updatedAt} context={context} />,
+    <Harness
+      place={place}
+      updatedAt={updatedAt}
+      forecastLoading={forecastLoading}
+      context={context}
+      now={now}
+    />,
   );
 }
 
@@ -119,6 +132,8 @@ function typeAndSend(question: string) {
 }
 
 beforeEach(() => {
+  // jsdom has no scrollIntoView.
+  Element.prototype.scrollIntoView = vi.fn();
   replies = [];
   fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(
     () =>
@@ -155,12 +170,26 @@ describe('Ask page', () => {
     const { container } = show({
       place: { ...pune, label: NEAR_YOU },
       updatedAt: null,
+      forecastLoading: true,
       context: {},
     });
 
-    expect(container.textContent).toContain(
-      'Using: the model forecast near you (approximate) · 0 of 10 household questions answered · Edit',
+    const using = [...container.querySelectorAll('p')].find((p) =>
+      p.textContent?.startsWith('Using:'),
+    )!;
+    expect(using.textContent).toMatch(
+      /^Using: the model forecast near you \(approximate\).* · 0 of 10 household questions answered · Edit$/,
     );
+    // Only an invisible, hidden-from-readers reserve stands where the time goes.
+    expect(
+      using.querySelector('span.invisible')!.getAttribute('aria-hidden'),
+    ).toBe('true');
+  });
+
+  it('a failed forecast leaves no blank reserve in the line', () => {
+    const { container } = show({ updatedAt: null, forecastLoading: false });
+
+    expect(container.querySelector('span.invisible')).toBeNull();
   });
 
   it('without a place, the place search comes first', () => {
@@ -196,27 +225,61 @@ describe('Ask page', () => {
     expect(heading('Indoor air')).toBeTruthy();
   });
 
-  // Guided chat (Task 4).
-  it('opens with a greeting that holds the topics and starters', async () => {
+  // Guided chat (Task 4), reordered by redesign P4 (AK-02, AK-03).
+  it('with a place: title, intro, Using line, question box, topics, 3 starters, More questions, thread', async () => {
     const { container } = show();
+    typeAndSend('First question');
+    await answer(aiAskFixture);
 
-    const hello = screen.getByText(
-      `${greeting(NOW)}. ${ASK_COPY.greetingTail}`,
-    );
-    expect(before(hello, button('Indoor air'))).toBe(true);
-    expect(
-      before(
-        button('Indoor air'),
-        button('Can I go for a morning walk today?'),
-      ),
-    ).toBe(true);
-    expect(before(button('Can I go for a morning walk today?'), input())).toBe(
-      true,
-    );
+    const h1 = screen.getByRole('heading', { level: 1 });
+    const intro = screen.getByText(ASK_COPY.intro);
+    const using = screen.getByText(/^Using:/);
+    const order = [
+      h1,
+      intro,
+      using,
+      input(),
+      button('Outdoor activities'),
+      button('Can I go for a morning walk today?'),
+      button('How can I improve my indoor air?'),
+      screen.getByText(ASK_COPY.moreQuestions),
+      heading('First question'),
+    ];
+    order.slice(1).forEach((el, i) => {
+      expect(before(order[i]!, el)).toBe(true);
+    });
+    expect(container.textContent).not.toContain(greeting(NOW));
+    expect(container.textContent).not.toContain("I'm AirAware");
     await expectNoAxeViolations(container);
   });
 
-  it('the thread reads oldest first, then the question box', async () => {
+  it('three starters show, two wait under "More questions" and rest while thinking', () => {
+    show();
+    const summary = screen.getByText(ASK_COPY.moreQuestions);
+    const details = summary.closest('details')!;
+    expect(summary.tagName).toBe('SUMMARY');
+    const outside = within(document.body)
+      .getAllByRole('button')
+      .filter((b) => b.textContent?.endsWith('?') && !details.contains(b));
+    expect(outside).toHaveLength(3);
+    const hidden = within(details).getAllByRole('button');
+    expect(hidden.map((b) => b.textContent)).toEqual([
+      "What should I consider for my children's outdoor activities?",
+      'How can I reduce pollution while commuting?',
+    ]);
+
+    typeAndSend(QUESTION);
+    for (const b of hidden)
+      expect((b as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('the intro shows without a place too', () => {
+    show({ place: null });
+
+    expect(screen.getByText(ASK_COPY.intro)).toBeTruthy();
+  });
+
+  it('the thread reads oldest first, after the question box', async () => {
     show();
 
     typeAndSend('First question');
@@ -224,10 +287,24 @@ describe('Ask page', () => {
     typeAndSend('Second question');
     await answer(aiAskFixture);
 
+    expect(before(input(), heading('First question'))).toBe(true);
     expect(before(heading('First question'), heading('Second question'))).toBe(
       true,
     );
-    expect(before(heading('Second question'), input())).toBe(true);
+  });
+
+  it('"Not current" joins the Using line once the forecast is over an hour old', () => {
+    const at = (minutes: number) =>
+      new Date(new Date(UPDATED_AT).getTime() + minutes * 60_000);
+
+    const { container } = show({ now: at(59) });
+    expect(container.textContent).not.toContain('Not current');
+    cleanup();
+
+    const late = show({ now: at(61) });
+    expect(late.container.textContent).toContain(
+      `retrieved ${UPDATED} · Not current · 3 of 10 household questions answered · Edit`,
+    );
   });
 
   it("a question back offers the field's own options and Skip", async () => {
@@ -265,7 +342,6 @@ describe('Ask page', () => {
     );
     expect(document.activeElement).toBe(reply);
     expect(before(heading('Outdoor activities'), reply)).toBe(true);
-    expect(before(reply, input())).toBe(true);
     await answer(rulesAskFixture);
     await expectNoAxeViolations(container);
   });

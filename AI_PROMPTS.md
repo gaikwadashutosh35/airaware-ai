@@ -41,11 +41,13 @@ Explain why each suggestion is relevant.
 Return only the requested structured output.
 ```
 
-## 3. Daily plan task prompt (`daily-plan-v2`)
+## 3. Daily plan task prompt (`daily-plan-v3`)
 
 Used by `POST /api/v1/recommendations/daily-plan` (Phase 5). The candidates go in a separate user message introduced as data, never inside these instructions. Gemini only picks, orders and times candidates and writes `summary` and `forYou`; the advice text, reasons, caveats and sources stay the rules' own. Source: `server/src/services/ai/prompts.ts`.
 
 `daily-plan-v2` (2026-11-19): measured on Claude Haiku 5.5, v1 let the model feature the high-priority air notice (rejected as `ids`) and write negated banned words such as "no guarantee of safety" (rejected as `wording`). v2 makes both rules explicit, and asks for at least one featured action (without it, on a day with no high-priority action, the model sometimes featured none).
+
+`daily-plan-v3` (2026-11-24, owner ruling D6): the unknown-air rule says "air information is unavailable" instead of "live air information": the app never has live readings. Nothing else changed. Not re-measured on a model; `server/src/services/ai/prompts.test.ts` pins the wording and the version.
 
 ```text
 You receive validated air-quality context and the recommendation
@@ -72,7 +74,7 @@ Rules:
 - Use no numbers except ones that appear in the context.
 - Do not state clock times, place names, AQI values or medical
   conditions.
-- If the air level is "unknown", say that live air information is
+- If the air level is "unknown", say that air information is
   unavailable and do not describe today's air.
 - Never use the words safe, safety, unsafe, guarantee, healthy,
   risk-free, clean air or low risk, not even to deny them.
@@ -80,7 +82,7 @@ Rules:
 Return only JSON matching the schema.
 ```
 
-**Ask AirAware (redesign Phase 7)** reuses this prompt, `daily-plan-v2`, unchanged:
+**Ask AirAware (redesign Phase 7)** reuses this prompt, now `daily-plan-v3`, unchanged:
 - **Input:** the same shape as a plan: the air check plus the notices and the topic's up to three cards.
 - **No user text:** the typed question picks a topic on the server and never enters a prompt, so the `user` part of §1 is not used. Medical and out-of-scope questions make no AI call.
 - **What is used:** only the summary, as the answer's 1–2 sentences. The cards keep the server's order; the AI's featured order and "for you" lines are not shown.

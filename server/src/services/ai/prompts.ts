@@ -1,6 +1,6 @@
 // Daily-plan prompts. SYSTEM_PROMPT is AI_PROMPTS.md §2 verbatim;
-// TASK_PROMPT is AI_PROMPTS.md §3 (daily-plan-v2).
-export const PROMPT_VERSION = 'daily-plan-v2';
+// TASK_PROMPT is AI_PROMPTS.md §3 (daily-plan-v3).
+export const PROMPT_VERSION = 'daily-plan-v3';
 
 export const SYSTEM_PROMPT = `You are AirAware AI, a general air-quality information and household
 action assistant.
@@ -54,7 +54,7 @@ Rules:
 - Use no numbers except ones that appear in the context.
 - Do not state clock times, place names, AQI values or medical
   conditions.
-- If the air level is "unknown", say that live air information is
+- If the air level is "unknown", say that air information is
   unavailable and do not describe today's air.
 - Never use the words safe, safety, unsafe, guarantee, healthy,
   risk-free, clean air or low risk, not even to deny them.
