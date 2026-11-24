@@ -21,9 +21,9 @@ Once a place is chosen, the place button at the top shows it. Tap it to search a
 
 ## 2. Today
 Today answers "How is my air?" first, from top to bottom:
-- **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · updated {time}". When the forecast is old, a "Not current" line sits under it. While Today stays open, it reloads the forecast and rebuilds the plan once an hour.
+- **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · retrieved {time}". When the forecast is old, a "Not current" line sits under it. While Today stays open, it reloads the forecast and rebuilds the plan once an hour.
 - **Your recommendation for today:** one suggestion, with who made it (our rules or AI) and the safety note. **Why this recommendation?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
-- **What would you like help with?** Outdoor activities, My home, My family and Greener habits. Outdoor activities and My family open Ask AirAware with that topic answered.
+- **What would you like help with?** Outdoor activities, My home, My family and Better habits. Outdoor activities and My family open Ask AirAware with that topic answered.
 - **Ask AirAware anything:** type a question or pick a starter question, then **Send** to get the answer on Ask AirAware.
 - **Air quality details**, closed until you open it: the PM2.5 figure, the chart and tables, the forecast location, how the 24-hour check works, and the sources and limitations.
 
@@ -48,7 +48,7 @@ Today shows the plan's top suggestion. **See your full day** shows, in order:
 - Who made it: our fixed rules, or AI that picked and timed our rules' advice (the advice text and sources are always ours).
 - "Your day" (AI plans only), then Outdoors and travel, Indoor air and Sustainable swaps.
 
-The air notice and the 24-hour air check are not repeated there: the verdict says the first, and Air quality details explains the second. The check compares the model forecast's 24-hour PM2.5 and PM10 averages with India's 24-hour limits. It is a model forecast for an area about 45 km wide, not a station measurement and not the CPCB AQI.
+The air notice and the 24-hour air check are not repeated there: the verdict says the first, and Air quality details explains the second. The check compares the model forecast's 24-hour PM2.5 and PM10 averages with India's 24-hour limits. It is a model forecast for an area about 45 km wide, not a station measurement and not the CPCB National AQI.
 
 Open **Why?** on any card to see the reason, whether it rests on today's forecast check or general guidance, which of your answers it used, its sources and any caveat. If the forecast behind a plan is more than an hour old, the plan says so until Today builds a new one.
 
@@ -60,7 +60,7 @@ Open **Why it matters** on any card for its reason and sources. The guides cite 
 
 ## 5a. Ask AirAware
 - **A conversation:** AirAware greets you, then your questions and its answers follow in order, oldest first, with the question box at the end.
-- **Topics:** Outdoor activities, Windows and ventilation, Indoor air, My family, Commuting and Greener habits. Tapping one answers at once.
+- **Topics:** Outdoor activities, Windows and ventilation, Indoor air, My family, Commuting and Better habits. Tapping one answers at once.
 - **Starter questions** also answer at once, or type your own question (up to 200 characters) and press **Send**.
 - **A question back:** when one of your household answers would change today's suggestions, AirAware may ask it, for example "Do you exercise outdoors?".
   - Tap an answer, or **Skip** (it isn't asked again this visit).
@@ -76,7 +76,7 @@ Open **Why it matters** on any card for its reason and sources. The guides cite 
 General guides in four groups: Daily commuting and vehicle idling, Waste, Cooking, and Energy use. Each has **Why it matters** and its sources. Choose the changes that suit your life. The app never states how much pollution a change saves, because it has no documented way to calculate it.
 
 ## 7. Manage saved data
-- **Save plan**, under See your full day, keeps the plan on this browser. The first save creates an anonymous account (no email, name or password).
+- **Save plan**, under See your full day, stores the plan in your anonymous account on AirAware's database host; this browser keeps the sign-in. The first save creates that account (no email, name or password).
 - **Saved plans**, in My Profile, lists them, newest first. **Open** shows one below the list, under "Saved plan from …. This is a snapshot, not current air information."; **Close** puts it away. **Delete** removes one plan after a confirmation. You can keep up to 20.
 - **Delete my saved data** (in Your household) removes your account, saved answers and saved plans.
 

@@ -227,7 +227,7 @@ Request (illustrative):
 
 **Behaviour:**
 - Returns 200 for every valid request, whatever happens to Gemini or Open-Meteo.
-- An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Live air information unavailable" notice. It never falls back to demo or stale data.
+- An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Air information unavailable" notice. It never falls back to demo or stale data.
 - AI plans and full rules-only plans (Gemini not configured) are cached for 10 minutes by coordinates, label, household details and the forecast window. Fallback plans (Gemini or the forecast failed) are not cached, so the next request tries again.
 
 Response (illustrative, shortened):
@@ -276,7 +276,7 @@ Request (illustrative), with exactly one of `question` or `topic`:
 - Rate limit: it shares the daily plan's 10 requests per minute per IP (one counter for every route that can call the AI), on top of the 60 per minute on all of `/api/v1`. Over the limit → `429 RATE_LIMITED`.
 
 **Behaviour:**
-- Returns 200 for every valid request, whatever happens to the AI or Open-Meteo. An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Live air information unavailable" notice.
+- Returns 200 for every valid request, whatever happens to the AI or Open-Meteo. An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Air information unavailable" notice.
 - `medical` and `out_of_scope`: no AI call and no cards; the air check, notices, sources and safety note are still returned. The client shows the fixed medical or out-of-scope reply.
 - Any other topic: up to three cards, the household's own rules for that topic first (most important first), then general guide cards. A guide is never shown beside its personal twin, and the busy-road and kitchen-exhaust guides follow the same hide rules as My Home.
 - The 1–2 sentence `summary` comes from the daily plan's writer (prompt `daily-plan-v2`), so Ask and the daily plan share one daily AI budget and one 10-minute answers cache. A summary that reads as a yes or no on safety, or fails the plan's own checks, is dropped: `generatedBy` is then `"rules"` and `summary` `null`.

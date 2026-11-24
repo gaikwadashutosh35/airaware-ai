@@ -150,7 +150,7 @@ function Landing() {
             </div>
             <div className="flex max-w-md flex-col gap-2">
               <p className="text-sm text-text-muted">Or search a city</p>
-              <LocationSearch onSelect={openDashboard} />
+              <LocationSearch onSelect={openDashboard} offersLocation={false} />
             </div>
           </div>
           {/* A phone screenshot at its own CSS size, so its text reads at
@@ -181,7 +181,7 @@ function Landing() {
           number={1}
           flip={false}
           heading="Understand your air"
-          text="One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was updated. Every number, unit and source is one tap away, under Air quality details."
+          text="One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was retrieved. Every number, unit and source is one tap away, under Air quality details."
           caption="A past screenshot of Air quality details for Pune, 22 Nov 2026. Open the app for current values."
         >
           {/* A phone capture, like the hero's, at most its own CSS size. */}

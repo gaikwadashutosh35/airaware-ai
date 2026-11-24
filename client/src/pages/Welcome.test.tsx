@@ -209,6 +209,18 @@ describe('Welcome', () => {
     );
   });
 
+  // F-01: Remember says an account is created, not that data stays on the device.
+  it('Remember says it creates an anonymous account', () => {
+    setup();
+    click('Next');
+    expect(
+      screen.getByText(
+        'Creates an anonymous account that keeps your answers, and a place you searched for, so this browser can reopen them. Delete it any time in My Profile.',
+      ),
+    ).toBeDefined();
+    expect(screen.queryByText(/anonymous save on this device/)).toBeNull();
+  });
+
   it('a save the server refuses for another reason keeps the old message', async () => {
     setup({
       onFinish: vi.fn(() =>

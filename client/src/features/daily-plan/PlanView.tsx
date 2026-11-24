@@ -11,7 +11,7 @@ import {
 } from './planDisplay.ts';
 
 const MODEL_LINE =
-  'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB AQI.';
+  'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB National AQI.';
 const emptyTopic = (day: string) =>
   `No suggestions in this area for your answers ${day}.`;
 

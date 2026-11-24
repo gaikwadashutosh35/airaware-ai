@@ -13,7 +13,7 @@ const HERO_ALT =
 const DETAILS_ALT =
   'Screenshot of the open Air quality details for Pune: the PM2.5 model forecast for one hour with its unit, and the 24-hour check in words';
 const UNDERSTAND_TEXT =
-  "One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was updated. Every number, unit and source is one tap away, under Air quality details.";
+  "One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was retrieved. Every number, unit and source is one tap away, under Air quality details.";
 const EXPLAINABLE_TEXT =
   "AI can arrange our rules' suggestions and word them for your day, but it never decides them. Every suggestion opens to its reason, the answers and forecast check it used, its sources and its limits.";
 const CHAPTERS = [

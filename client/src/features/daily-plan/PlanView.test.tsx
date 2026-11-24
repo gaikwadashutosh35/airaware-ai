@@ -11,7 +11,7 @@ import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
 
 const MODEL_LINE =
-  'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB AQI.';
+  'Model forecast for an area about 45 km wide. Not a station measurement and not the CPCB National AQI.';
 
 const follows = (a: Node, b: Node) =>
   Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);

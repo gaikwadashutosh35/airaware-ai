@@ -26,9 +26,9 @@ import {
 
 // Shared with "Save plan".
 export const SAVE_NOTE =
-  'Saved on this browser only. Clearing your browser data or switching devices loses it.';
+  "Saving creates an anonymous account (no email or name). Your answers are stored on AirAware's database host, and this browser keeps the sign-in. Delete them any time in My Profile. Clearing this browser's data loses access but does not delete them.";
 export const NOT_SET_UP = "Saving isn't set up on this site.";
-const SAVED = 'Saved on this browser.';
+const SAVED = 'Saved to your anonymous account.';
 const UNAVAILABLE =
   "Saving isn't available right now. Your answers are still on screen.";
 const RATE_LIMITED =

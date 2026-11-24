@@ -235,7 +235,7 @@ export const unavailablePlanFixture: DailyPlan = {
       id: 'data.unavailable',
       section: 'notice',
       priority: 'high',
-      title: 'Live air information unavailable',
+      title: 'Air information unavailable',
       text: "We could not get a complete 24-hour forecast for this place, so this plan gives no advice about today's air. The other suggestions apply on any day.",
       reason: 'The forecast was missing, incomplete or in an unexpected unit.',
       inputsUsed: ['air.level'],

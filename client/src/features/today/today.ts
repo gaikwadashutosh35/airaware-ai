@@ -44,7 +44,7 @@ export function verdictFrom(check: AirAssessment): {
     };
   }
   return {
-    title: 'Live air information unavailable',
+    title: 'Air information unavailable',
     explanation:
       "We could not get a complete 24-hour forecast for this place, so there's no advice about today's air. The suggestions below apply on any day.",
     caveat: null,

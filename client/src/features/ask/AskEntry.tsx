@@ -79,11 +79,11 @@ export function StarterButtons({
   );
 }
 
-// "{verdict} · Model forecast · updated {time}": never without its kind, and
+// "{verdict} · Model forecast · retrieved {time}": never without its kind, and
 // no time when the server had no forecast.
 function airLine(answer: AskAnswer): string {
   const updated = answer.forecast
-    ? ` · updated ${clockTime(answer.forecast.retrievedAt)}`
+    ? ` · retrieved ${clockTime(answer.forecast.retrievedAt)}`
     : '';
   return `${verdictFrom(answer.air).title} · Model forecast${updated}`;
 }

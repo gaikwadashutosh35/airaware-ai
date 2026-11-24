@@ -20,7 +20,7 @@ export const TOPICS: Array<{ id: AskTopic; label: string }> = [
   { id: 'indoor', label: 'Indoor air' },
   { id: 'family', label: 'My family' },
   { id: 'commuting', label: 'Commuting' },
-  { id: 'habits', label: 'Greener habits' },
+  { id: 'habits', label: 'Better habits' },
 ];
 
 export const STARTERS: Array<{ question: string; topic: AskTopic }> = [
@@ -45,7 +45,7 @@ export const ASK_COPY = {
   medical:
     "I can't give medical advice. For health concerns, please talk to a doctor.",
   outOfScope:
-    'I can help with outdoor plans, windows and ventilation, indoor air, family and greener habits',
+    'I can help with outdoor plans, windows and ventilation, indoor air, family and better habits',
   errorTitle: "We couldn't answer that",
   errorFallback: 'Something went wrong answering your question.',
   tryAgain: 'Try again',

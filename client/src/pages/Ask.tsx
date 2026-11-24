@@ -83,7 +83,7 @@ export function Ask({
         </h1>
         {place && (
           <p className="text-sm text-text-dark">
-            {`Using: ${place.label === NEAR_YOU ? 'the model forecast near you (approximate)' : `the ${place.label} model forecast`}${updatedAt ? `, updated ${clockTime(updatedAt)}` : ''} · ${answeredCount(context)} of 10 answers · `}
+            {`Using: ${place.label === NEAR_YOU ? 'the model forecast near you (approximate)' : `the ${place.label} model forecast`}${updatedAt ? `, retrieved ${clockTime(updatedAt)}` : ''} · ${answeredCount(context)} of 10 household questions answered · `}
             <a
               href="/app/profile"
               onClick={(event) => {

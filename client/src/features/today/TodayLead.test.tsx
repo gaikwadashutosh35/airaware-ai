@@ -48,7 +48,7 @@ describe('TodayLead', () => {
       minute: '2-digit',
     });
     expect(container.textContent).toContain(
-      `Model forecast · Open-Meteo · updated ${time}`,
+      `Model forecast · Open-Meteo · retrieved ${time}`,
     );
     // No number without its unit, and no coordinates, in the lead.
     expect(container.textContent).not.toMatch(/µg|μg/);
@@ -60,7 +60,7 @@ describe('TodayLead', () => {
     expect(
       screen.getByRole('heading', {
         level: 2,
-        name: 'Live air information unavailable',
+        name: 'Air information unavailable',
       }),
     ).toBeDefined();
   });

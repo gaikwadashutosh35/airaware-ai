@@ -78,7 +78,7 @@ describe('AskEntry', () => {
     expect(screen.getByText('Made with AI')).toBeTruthy();
     expect(
       screen.getByText(
-        `Based on: Forecast above India's 24-hour limit · Model forecast · updated ${UPDATED}`,
+        `Based on: Forecast above India's 24-hour limit · Model forecast · retrieved ${UPDATED}`,
       ),
     ).toBeTruthy();
     const cards = screen.getAllByRole('heading', { level: 3 });
@@ -116,10 +116,10 @@ describe('AskEntry', () => {
 
     expect(
       screen.getByText(
-        'Based on: Live air information unavailable · Model forecast',
+        'Based on: Air information unavailable · Model forecast',
       ),
     ).toBeTruthy();
-    expect(container.textContent).not.toMatch(/updated/);
+    expect(container.textContent).not.toMatch(/retrieved/);
   });
 
   it('a medical question: the refusal and today, no cards', async () => {
@@ -130,7 +130,7 @@ describe('AskEntry', () => {
     expect(screen.getByText(ASK_COPY.medical)).toBeTruthy();
     expect(
       screen.getByText(
-        `Today: Forecast above India's 24-hour limit · Model forecast · updated ${UPDATED}`,
+        `Today: Forecast above India's 24-hour limit · Model forecast · retrieved ${UPDATED}`,
       ),
     ).toBeTruthy();
     expect(screen.queryByText('Why?')).toBeNull();

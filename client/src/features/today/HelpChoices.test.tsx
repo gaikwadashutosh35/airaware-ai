@@ -19,7 +19,7 @@ describe('HelpChoices', () => {
       ['Outdoor activities', '/app/ask', 'outdoors'],
       ['My home', '/app/home', null],
       ['My family', '/app/ask', 'family'],
-      ['Greener habits', '/app/habits', null],
+      ['Better habits', '/app/habits', null],
     ] as const;
 
     for (const [name, path, topic] of cases) {

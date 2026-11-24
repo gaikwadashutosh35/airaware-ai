@@ -24,6 +24,15 @@ async function type(value: string) {
   fireEvent.change(screen.getByRole('combobox'), { target: { value } });
 }
 
+// A browser that can give a location, so "Use my location" shows beside the
+// search (jsdom has no navigator.geolocation).
+function withLocation() {
+  Object.defineProperty(navigator, 'geolocation', {
+    value: { getCurrentPosition: vi.fn() },
+    configurable: true,
+  });
+}
+
 async function pause(ms = 300) {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
@@ -38,6 +47,7 @@ describe('LocationSearch', () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    Reflect.deleteProperty(navigator, 'geolocation');
     vi.restoreAllMocks();
   });
 
@@ -153,13 +163,94 @@ describe('LocationSearch', () => {
   });
 
   it('says when nothing matches', async () => {
+    withLocation();
     respondWith({ data: [] });
     render(<LocationSearch onSelect={() => {}} />);
 
     await type('zzqxw');
     await pause();
 
-    expect(screen.getByRole('status').textContent).toBe('No places found');
+    expect(screen.getByRole('status').textContent).toBe(
+      'No places found. Try a nearby city, or use your location.',
+    );
+  });
+
+  // F-35: a failed search says what to do next, not the provider's message.
+  it('says what to do when the search fails', async () => {
+    withLocation();
+    respondWith(
+      {
+        error: {
+          code: 'PROVIDER_ERROR',
+          message: 'Data provider unavailable.',
+        },
+      },
+      502,
+    );
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('Pune');
+    await pause();
+
+    expect(screen.getByRole('status').textContent).toBe(
+      "Search isn't working right now. Try again, or use your location.",
+    );
+  });
+
+  // The landing page has no "Use my location", so its messages leave it out.
+  it('leaves out the location hint where none is offered', async () => {
+    respondWith({ data: [] });
+    render(<LocationSearch onSelect={() => {}} offersLocation={false} />);
+
+    await type('zzqxw');
+    await pause();
+    expect(screen.getByRole('status').textContent).toBe(
+      'No places found. Try a nearby city.',
+    );
+
+    vi.restoreAllMocks();
+    respondWith(
+      {
+        error: {
+          code: 'PROVIDER_ERROR',
+          message: 'Data provider unavailable.',
+        },
+      },
+      502,
+    );
+    await type('Pune');
+    await pause();
+    expect(screen.getByRole('status').textContent).toBe(
+      "Search isn't working right now. Try again in a moment.",
+    );
+  });
+
+  // "Use my location" hides itself in a browser with no geolocation, so the
+  // search must not point to it there either.
+  it('leaves out the location hint when the browser has no location', async () => {
+    respondWith({ data: [] });
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('zzqxw');
+    await pause();
+
+    expect(screen.getByRole('status').textContent).toBe(
+      'No places found. Try a nearby city.',
+    );
+  });
+
+  it('keeps the connection message when AirAware cannot be reached', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
+      new TypeError('Failed to fetch'),
+    );
+    render(<LocationSearch onSelect={() => {}} />);
+
+    await type('Pune');
+    await pause();
+
+    expect(screen.getByRole('status').textContent).toBe(
+      'Could not reach AirAware. Check your connection.',
+    );
   });
 
   it('shows the server message when rate limited', async () => {

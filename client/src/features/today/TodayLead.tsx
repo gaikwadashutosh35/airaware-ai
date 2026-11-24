@@ -42,7 +42,7 @@ export function TodayLead({
           <span className="rounded-full border border-text-dark px-2 py-0.5 font-semibold text-text-dark">
             {LEVEL_TAG[data.airCheck.level]}
           </span>
-          Model forecast · Open-Meteo · updated {updated}
+          Model forecast · Open-Meteo · retrieved {updated}
         </p>
         {stale && <StaleBanner />}
         <p>{verdict.explanation}</p>

@@ -93,6 +93,13 @@ describe('buildCandidates', () => {
     ]);
   });
 
+  // F-16: the app only has model forecasts, so the notice never says "live".
+  it('unavailable notice title', () => {
+    expect(byId(buildCandidates({}, unknown), 'data.unavailable')?.title).toBe(
+      'Air information unavailable',
+    );
+  });
+
   it('elevated air with no details', () => {
     expect(ids(buildCandidates({}, elevated))).toEqual(ELEVATED_NO_DETAILS);
   });
@@ -367,6 +374,9 @@ describe('buildCandidates', () => {
       /\bsafe(ly|ty)?\b/i,
       /guarantee/i,
       /healthy/i,
+      /clean air/i,
+      /\bgood air\b/i,
+      /\bbad air\b/i,
       /diagnos/i,
       /medicat/i,
       /\btreat/i,

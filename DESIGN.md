@@ -82,7 +82,7 @@ Eight sections (assistant redesign, Phase 4). Every screenshot is a real capture
 Today answers "How is my air?" first, then "What should I do?" (assistant redesign, Phase 6):
 
 1. A greeting by device time, then the H1 "Today in {place}".
-2. The scene and weather strip, then the verdict (the largest text), its word tag, "Model forecast · Open-Meteo · updated {time}", the "Not current" banner when stale (never hidden), and the caveat.
+2. The scene and weather strip, then the verdict (the largest text), its word tag, "Model forecast · Open-Meteo · retrieved {time}", the "Not current" banner when stale (never hidden), and the caveat.
 3. "Your recommendation for today": one plan card with "Why this recommendation?". "See your full day" folds the rest of the plan and "Save plan".
 4. "What would you like help with?": four choices.
 5. "Ask AirAware anything".
@@ -125,7 +125,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
     - **Loading and none:** a still silhouette while a place's first forecast loads; the neutral unknown look with no place or after an error.
     - **Readability:** every section sits on a solid `bg-surface-light` panel. Only each page's title block (`data-part="title-block"`) rests on the sky, all in `text-dark`, checked at 4.5:1 against every sky, cloud, deck, glow and rain colour (`e2e/backdrop.spec.ts`). Each page ends with space as tall as the city.
     - **Label:** the footer says "Background: model forecast for {place}. {level tag}." while a forecast is shown (the tag is "Within the limit", "Above the limit" or "No data"; "No data" also covers a partial check, as on Today, which the owner kept on 22 Nov), so the sky's tint is never the only sign of the level.
-    - **Hourly reload:** Today and My Home reload the forecast once it is an hour old, as the plan rebuilds hourly there too, so the sky and the plan refresh together. Ask reloads too, so its "updated" time is never over an hour old. Other pages keep the last look, and the footer then adds "Not current.". On My Home, a plan rebuilt for changed answers on a forecast over a minute newer than the backdrop's reloads the backdrop once (seconds apart is the same model run), so the sky and the plan's air words rest on the same data.
+    - **Hourly reload:** Today and My Home reload the forecast once it is an hour old, as the plan rebuilds hourly there too, so the sky and the plan refresh together. Ask reloads too, so its "retrieved" time is never over an hour old. Other pages keep the last look, and the footer then adds "Not current.". On My Home, a plan rebuilt for changed answers on a forecast over a minute newer than the backdrop's reloads the backdrop once (seconds apart is the same model run), so the sky and the plan's air words rest on the same data.
     - **Forced colours** (Windows High Contrast): the whole backdrop hides, so the words sit on the system background.
   - `DailyPlanSection`: builds by itself while Today or My Home is shown (no plan, changed answers, or a plan over an hour old by the device clock), never twice at once. After an error it waits for "Try again". It shows the top card, with the full day in a `<details>`, and reports its state (nothing, building, an error with a retry, a stale plan, or the current one) for My Home, which shows the same states and never a stale plan as today's.
   - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family ask their topic through `useAsk` and open Ask.

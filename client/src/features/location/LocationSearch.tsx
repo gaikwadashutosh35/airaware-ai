@@ -11,10 +11,13 @@ const MIN_QUERY_LENGTH = 2;
 export function LocationSearch({
   onSelect,
   inputRef,
+  offersLocation = true,
 }: {
   onSelect: (place: Place) => void;
   // Lets the page move focus to the search (the place bar's "Change place").
   inputRef?: Ref<HTMLInputElement>;
+  // Whether "Use my location" sits beside the search (not on the landing page).
+  offersLocation?: boolean;
 }) {
   const id = useId();
   const inputId = `${id}-input`;
@@ -27,6 +30,9 @@ export function LocationSearch({
   const [status, setStatus] = useState('');
   // The label written into the input on selection must not search again.
   const selectedLabel = useRef<string | null>(null);
+  // "Use my location" is beside the search and the browser can give a
+  // location (UseMyLocation hides itself otherwise).
+  const pointsToLocation = offersLocation && 'geolocation' in navigator;
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -49,7 +55,9 @@ export function LocationSearch({
           setActive(-1);
           setStatus(
             found.length === 0
-              ? 'No places found'
+              ? pointsToLocation
+                ? 'No places found. Try a nearby city, or use your location.'
+                : 'No places found. Try a nearby city.'
               : `${found.length} place${found.length === 1 ? '' : 's'} found`,
           );
         })
@@ -57,10 +65,15 @@ export function LocationSearch({
           if (controller.signal.aborted) return;
           setResults([]);
           setOpen(false);
+          // A rate limit or a lost connection keeps its own message; any
+          // other failure says what to do next (F-35).
           setStatus(
-            error instanceof ApiError
+            error instanceof ApiError &&
+              (error.code === 'RATE_LIMITED' || error.code === 'NETWORK_ERROR')
               ? error.message
-              : 'Search failed. Try again.',
+              : pointsToLocation
+                ? "Search isn't working right now. Try again, or use your location."
+                : "Search isn't working right now. Try again in a moment.",
           );
         });
     }, DEBOUNCE_MS);
@@ -68,7 +81,7 @@ export function LocationSearch({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query]);
+  }, [query, pointsToLocation]);
 
   function select(result: LocationResult) {
     const place = placeFromResult(result);

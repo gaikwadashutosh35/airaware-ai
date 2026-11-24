@@ -64,7 +64,7 @@ describe('MyHome', () => {
     const today = screen.getByRole('region', { name: 'Today, for your home' });
     expect(
       within(today).getByText(
-        /^Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated /,
+        /^Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved /,
       ),
     ).toBeDefined();
   });

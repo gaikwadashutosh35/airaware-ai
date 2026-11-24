@@ -120,7 +120,7 @@ describe('planAirLine', () => {
   it('names the verdict, data kind, provider and update time', () => {
     const forecast = rulesPlanFixture.forecast!;
     expect(planAirLine(rulesPlanFixture.air, forecast)).toBe(
-      `Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated ${clockTime(forecast.retrievedAt)}`,
+      `Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${clockTime(forecast.retrievedAt)}`,
     );
   });
 

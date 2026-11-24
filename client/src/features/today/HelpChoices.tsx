@@ -33,7 +33,7 @@ const CHOICES: Array<{
     Icon: Users,
   },
   {
-    title: 'Greener habits',
+    title: 'Better habits',
     line: 'Small swaps that cut smoke and exhaust',
     to: '/app/habits',
     Icon: Leaf,

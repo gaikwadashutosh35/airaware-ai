@@ -22,7 +22,7 @@ import {
 } from '../../services/api.ts';
 import type { Place } from '../location/place.ts';
 import { topRecommendation } from '../today/today.ts';
-import { NOT_SET_UP, SAVE_NOTE } from './HouseholdPreferencesForm.tsx';
+import { NOT_SET_UP } from './HouseholdPreferencesForm.tsx';
 import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
 import {
@@ -35,7 +35,10 @@ import {
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const READY = 'Your plan is ready.';
 const BUILD_FAILED = 'Something went wrong building your plan.';
-const SAVED = 'Saved on this browser. This is the plan as saved.';
+const SAVED = 'Saved to your anonymous account. This is the plan as saved.';
+// F-01: the save note, for a plan rather than answers.
+const SAVE_PLAN_NOTE =
+  "Saving creates an anonymous account (no email or name). Your plan is stored on AirAware's database host, and this browser keeps the sign-in. Delete it any time in My Profile. Clearing this browser's data loses access but does not delete it.";
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
 const RATE_LIMITED = 'Too many requests. Try again in a minute.';
@@ -293,7 +296,7 @@ export function DailyPlanSection({
                     Save plan
                   </button>
                   <p id={noteId} className="text-sm">
-                    {savingAvailable ? SAVE_NOTE : NOT_SET_UP}
+                    {savingAvailable ? SAVE_PLAN_NOTE : NOT_SET_UP}
                   </p>
                 </div>
               )}

@@ -38,7 +38,7 @@ const RULES_MADE_BY =
   'Made by our rules. AI personalisation is unavailable right now.';
 const LOADING = 'Building your plan. This can take up to 30 seconds.';
 const PLAN_STALE = 'The forecast behind this plan is more than an hour old.';
-const SAVED = 'Saved on this browser. This is the plan as saved.';
+const SAVED = 'Saved to your anonymous account. This is the plan as saved.';
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
 const TOP = 'Consider an indoor alternative for exercise';
@@ -138,7 +138,7 @@ describe('DailyPlanSection', () => {
 
     expect(
       screen.getByText(
-        /^Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · updated /,
+        /^Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved /,
       ),
     ).toBeDefined();
   });
@@ -149,7 +149,7 @@ describe('DailyPlanSection', () => {
     await build();
 
     expect(
-      screen.queryByText(/ · Model forecast · Open-Meteo · updated /),
+      screen.queryByText(/ · Model forecast · Open-Meteo · retrieved /),
     ).toBeNull();
   });
 
@@ -573,6 +573,21 @@ describe('DailyPlanSection', () => {
 
     expect(await screen.findByText(LIMIT)).toBeDefined();
     expect(screen.queryByText(SAVED)).toBeNull();
+  });
+
+  // F-01: the note by Save plan says an account is created and where the
+  // plan goes, never that it stays in the browser.
+  it('says saving a plan creates an anonymous account', async () => {
+    routeFetch(() => planReply());
+    renderSection();
+    await build();
+
+    expect(
+      screen.getByText(
+        "Saving creates an anonymous account (no email or name). Your plan is stored on AirAware's database host, and this browser keeps the sign-in. Delete it any time in My Profile. Clearing this browser's data loses access but does not delete it.",
+      ),
+    ).toBeDefined();
+    expect(screen.queryByText(/on this browser only/)).toBeNull();
   });
 
   // Save plan shares the 10-a-minute limit with plans and Ask answers.

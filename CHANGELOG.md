@@ -195,6 +195,16 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P1, approved copy (24 Nov; owner's decision sheet `docs/redesign/OWNER_DECISIONS.md`, rows A1–A8):
+  - saving says what it does: "Saving creates an anonymous account (no email or name). Your answers are stored on AirAware's database host, and this browser keeps the sign-in. Delete them any time in My Profile. Clearing this browser's data loses access but does not delete them." (the Save plan note says "Your plan … Delete it …"); success reads "Saved to your anonymous account."; the Remember hint names the account too;
+  - "Live air information unavailable" is now "Air information unavailable" (the app has no live readings);
+  - "Greener habits" is now "Better habits" (Today's help choice, the Ask topic and Ask's off-topic reply), matching the page name;
+  - the forecast time reads "retrieved HH:MM", not "updated": it is when AirAware fetched the forecast;
+  - Ask's context line says "0 of 10 household questions answered";
+  - a rule caveat no longer uses the phrase "clean air", and the rules copy test now bans "clean air", "good air" and "bad air";
+  - an opened saved plan says "not the CPCB National AQI";
+  - place search: no result says "Try a nearby city, or use your location."; a failed search says "Search isn't working right now. Try again, or use your location." (the landing page, which has no location button, leaves that part out); a rate limit or a lost connection keeps its own message.
+- Redesign P0 (24 Nov): the 8.8 MB of audit screenshots are kept out of git, and `docs/redesign/evidence/capture-after.mjs` measures the "after" state without touching the Stage 0 evidence.
 
 ### Security
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.

@@ -300,7 +300,7 @@ export function Welcome({
               </label>
               <p className="text-sm text-text-dark-muted">
                 {savingAvailable
-                  ? 'Creates an anonymous save on this device. Delete it any time in My Profile.'
+                  ? 'Creates an anonymous account that keeps your answers, and a place you searched for, so this browser can reopen them. Delete it any time in My Profile.'
                   : NOT_SET_UP}
               </p>
               {remember && !placeIsSearched && (

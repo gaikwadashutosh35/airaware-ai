@@ -150,5 +150,5 @@ export function planAirLine(
   forecast: NonNullable<DailyPlan['forecast']>,
 ): string {
   if (air.level === 'unknown') return NO_AIR;
-  return `Today: ${verdictFrom(air).title} · Model forecast · ${forecast.provider} · updated ${clockTime(forecast.retrievedAt)}`;
+  return `Today: ${verdictFrom(air).title} · Model forecast · ${forecast.provider} · retrieved ${clockTime(forecast.retrievedAt)}`;
 }

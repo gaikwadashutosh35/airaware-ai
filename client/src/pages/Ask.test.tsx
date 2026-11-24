@@ -141,7 +141,7 @@ describe('Ask page', () => {
       screen.getByRole('heading', { level: 1, name: 'Ask AirAware' }),
     ).toBeTruthy();
     expect(container.textContent).toContain(
-      `Using: the Pune, Maharashtra model forecast, updated ${UPDATED} · 3 of 10 answers · Edit`,
+      `Using: the Pune, Maharashtra model forecast, retrieved ${UPDATED} · 3 of 10 household questions answered · Edit`,
     );
     expect(
       screen
@@ -159,7 +159,7 @@ describe('Ask page', () => {
     });
 
     expect(container.textContent).toContain(
-      'Using: the model forecast near you (approximate) · 0 of 10 answers · Edit',
+      'Using: the model forecast near you (approximate) · 0 of 10 household questions answered · Edit',
     );
   });
 

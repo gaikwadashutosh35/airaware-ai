@@ -1245,7 +1245,7 @@ describe('AppShell', () => {
     // air it used.
     expect(
       screen.getByText(
-        /^Today: Forecast .* · Model forecast · Open-Meteo · updated /,
+        /^Today: Forecast .* · Model forecast · Open-Meteo · retrieved /,
       ),
     ).toBeDefined();
   });
@@ -1271,7 +1271,7 @@ describe('AppShell', () => {
     ).toBeDefined();
     expect(
       screen.queryByText(
-        /^Today: Forecast .* · Model forecast · Open-Meteo · updated /,
+        /^Today: Forecast .* · Model forecast · Open-Meteo · retrieved /,
       ),
     ).toBeNull();
   });

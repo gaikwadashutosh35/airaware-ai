@@ -17,7 +17,7 @@ import {
 import { expectNoAxeViolations } from './axe.ts';
 import { PUNE } from './routes.ts';
 
-const SAVED = 'Saved on this browser. This is the plan as saved.';
+const SAVED = 'Saved to your anonymous account. This is the plan as saved.';
 const DELETED = 'Deleted. Nothing is saved now.';
 const EMPTY_TOPIC = 'No suggestions in this area for your answers today.';
 

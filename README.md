@@ -57,7 +57,7 @@ The table uses the first-visit wording. My Profile (step 6) words the same quest
 - "How can I reduce smoke when cooking?" (Indoor air)
 - "Can my kids play outside after school?" (My family)
 - "How can I make my commute greener?" (Commuting)
-- "What can I do instead of burning leaves?" (Greener habits)
+- "What can I do instead of burning leaves?" (Better habits)
 - "I have asthma, which medicine should I take?" (no medical advice: it points you to a doctor)
 
 ## How it works
