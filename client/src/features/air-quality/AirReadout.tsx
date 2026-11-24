@@ -3,6 +3,7 @@ import type {
   ForecastData,
   PollutantCheck,
 } from '../../../../shared/contracts.ts';
+import { verdictFrom } from '../today/today.ts';
 import { formatDateTime, formatTime, hourForNow } from './forecast.ts';
 
 const SHORT = { PM2_5: 'PM2.5', PM10: 'PM10' } as const;
@@ -38,22 +39,34 @@ function Marker({ above }: { above: boolean }) {
 }
 
 // Old data is never shown as current (Today shows this under the verdict).
-export function StaleBanner() {
+// With `onReload` (Today) it also offers the reload; Ask has the sentence only.
+export function StaleBanner({ onReload }: { onReload?: () => void }) {
   return (
-    <p
+    <div
       data-part="stale-banner"
-      className="flex items-start gap-2 rounded-md border border-warning bg-warning/15 px-3 py-2 font-semibold"
+      className="rounded-md border border-warning bg-warning px-3 py-2"
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 20 20"
-        className="mt-0.5 size-5 flex-none fill-text-dark"
-      >
-        <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM9 5h2v4.6l3 1.8-1 1.7-4-2.4z" />
-      </svg>
-      Not current: retrieved more than an hour ago. Reload for the latest
-      forecast.
-    </p>
+      <p className="flex items-start gap-2 font-semibold">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          className="mt-0.5 size-5 flex-none fill-text-dark"
+        >
+          <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM9 5h2v4.6l3 1.8-1 1.7-4-2.4z" />
+        </svg>
+        Not current: retrieved more than an hour ago. Reload for the latest
+        forecast.
+      </p>
+      {onReload && (
+        <button
+          type="button"
+          onClick={onReload}
+          className="mt-2 min-h-11 rounded-md border border-text-dark px-4 font-semibold"
+        >
+          Reload forecast
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -83,7 +96,7 @@ export function AirReadout({
             Model forecast
           </h3>
           {hour && (
-            <p className="text-sm text-text-dark-muted">
+            <p className="text-sm text-text-dark-muted tabular-nums">
               Values for {formatTime(hour.time)}
             </p>
           )}
@@ -118,7 +131,11 @@ export function AirReadout({
             {formatDateTime(data.airCheck.windowStart)}
           </p>
         )}
-        <ul className="flex flex-col gap-2">
+        {/* B1: within the limit the card is short, so its sentence is here. */}
+        {data.airCheck.level === 'not_elevated' && (
+          <p>{verdictFrom(data.airCheck).explanation}</p>
+        )}
+        <ul className="flex flex-col gap-2 tabular-nums">
           {data.airCheck.checks.map((check) => (
             <li key={check.pollutant} className="flex gap-2">
               <Marker above={check.status === 'above_limit'} />

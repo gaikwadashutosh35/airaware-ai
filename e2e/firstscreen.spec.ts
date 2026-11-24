@@ -1,9 +1,10 @@
 // Redesign P2: the first screen's shell. The phone bar, the place chip, the
 // logo, the Tab order, enlarged text and the unknown-page redirect. Every page
 // uses the stub, so no request reaches the AI and nothing is saved.
-import { expect, test, type Page } from '@playwright/test';
-import { at, stub } from './layout.ts';
-import { PUNE } from './routes.ts';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
+import { at, stub, type Level } from './layout.ts';
+import { planAt, PUNE } from './routes.ts';
 
 const PLACE = 'Pune, Maharashtra';
 
@@ -228,4 +229,366 @@ test('forced colours: the current nav item is underlined, the others not', async
   for (const [current, line] of lines)
     expect(line).toBe(current === 'page' ? 'underline' : 'none');
   expect(lines.some(([current]) => current === 'page')).toBe(true);
+});
+
+// PF-01: the forecast lands at about 0.8 s and the plan at about 1.5 s; the
+// layout shifts nothing below the placeholders by more than 0.1 in total.
+for (const [width, height] of [
+  [320, 640],
+  [390, 844],
+  [768, 1024],
+  [1280, 720],
+] as const) {
+  test(`Today's layout shift stays under 0.1: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await stub(page, 'not_elevated');
+    const later = (pattern: string, ms: number) =>
+      page.route(pattern, async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, ms));
+        await route.fallback();
+      });
+    await later('**/api/v1/air-quality/forecast**', 800);
+    await later('**/api/v1/recommendations/daily-plan', 1500);
+    await page.addInitScript(() => {
+      const w = window as unknown as { cls: number };
+      w.cls = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const shift = entry as PerformanceEntry & {
+            value: number;
+            hadRecentInput: boolean;
+          };
+          if (!shift.hadRecentInput) w.cls += shift.value;
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(at('/app'));
+    await expect(page.getByText('Your plan is ready.')).toBeAttached();
+    await expect(
+      page.getByRole('heading', {
+        name: 'Consider an indoor alternative for exercise',
+      }),
+    ).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    // A frame later, so the last shift is recorded.
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    const cls = await page.evaluate(
+      () => (window as unknown as { cls: number }).cls,
+    );
+    console.log(`PF-01 CLS ${width}x${height} = ${cls}`);
+    expect(cls).toBeLessThan(0.1);
+  });
+}
+
+// Redesign P3: Today's first screen and its four states. Every page uses the
+// stub, so no request reaches the AI and nothing is saved.
+const LONG = 'Thiruvananthapuram, Kerala';
+const LONG_URL = `/app?place=${encodeURIComponent(LONG)}&lat=8.52&lon=76.94`;
+const WITHIN = "Forecast within India's 24-hour limits";
+const MEANING =
+  'Fine and coarse particles are forecast below the national daily limits for the next 24 hours.';
+const ABOVE_MEANING =
+  'Fine particles (PM2.5) are forecast above the national daily limit for the next 24 hours.';
+
+async function today(
+  page: Page,
+  width: number,
+  height: number,
+  options: { url?: string; level?: Level } = {},
+) {
+  await page.setViewportSize({ width, height });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, options.level ?? 'not_elevated');
+  await page.goto(options.url ?? PUNE);
+  await expect(page.locator('main h1:visible').first()).toBeVisible();
+  await expect(page.getByText('Your plan is ready.')).toBeAttached();
+  await expect(page.locator('main article').first()).toBeVisible();
+  await page.waitForLoadState('networkidle');
+}
+
+const barTop = async (page: Page) =>
+  (await page.locator('nav[aria-label="Main"]').boundingBox())!.y;
+const bottomOf = async (locator: Locator) => {
+  const box = (await locator.boundingBox())!;
+  return box.y + box.height;
+};
+const verdict = (page: Page) =>
+  page.getByRole('heading', { level: 2, name: WITHIN });
+const provenance = (page: Page) =>
+  page.locator('p', { hasText: 'Model forecast · Open-Meteo · retrieved' });
+
+// TD-01 and TD-02: the verdict and where it comes from are above the bar.
+for (const [label, url] of [
+  ['Pune', PUNE],
+  [LONG, LONG_URL],
+] as const) {
+  test(`TD-01/02: the verdict and its provenance sit above the bar at 320x640: ${label}`, async ({
+    page,
+  }) => {
+    await today(page, 320, 640, { url });
+    const bar = await barTop(page);
+    const h2 = await bottomOf(verdict(page));
+    const line = await bottomOf(provenance(page));
+    console.log(
+      `TD-01/02 ${label}: h2 bottom ${h2}, provenance bottom ${line}, bar top ${bar}`,
+    );
+    expect(h2).toBeLessThanOrEqual(bar);
+    expect(line).toBeLessThanOrEqual(bar);
+  });
+}
+
+// TD-03: the lowest-priority top card still shows "Why this recommendation?".
+test('TD-03: the card with no For you line keeps its summary above the bar at 390x844', async ({
+  page,
+}) => {
+  const smoke = rulesPlanFixture.featured.find(
+    (f) => f.candidate.id === 'indoor.smoke-sources',
+  )!;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  const plan = planAt(
+    {
+      ...rulesPlanFixture,
+      air: { ...rulesPlanFixture.air, level: 'not_elevated' as const },
+      featured: [smoke],
+      more: [],
+    },
+    new Date(),
+  );
+  await page.route('**/api/v1/recommendations/daily-plan', (route) =>
+    route.fulfill({ json: { data: plan } }),
+  );
+  await page.goto(PUNE);
+  await expect(
+    page
+      .getByRole('heading', { name: 'Cut indoor smoke at the source' })
+      .first(),
+  ).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  const bottom = await bottomOf(page.locator('main article summary').first());
+  const bar = await barTop(page);
+  console.log(
+    `TD-03: summary bottom ${bottom}, bar top ${bar}, margin ${bar - bottom}`,
+  );
+  expect(bottom).toBeLessThanOrEqual(bar);
+});
+
+// TD-04 and TD-06: reported, not gated.
+for (const [width, height, id] of [
+  [390, 844, 'TD-04'],
+  [320, 640, 'TD-06'],
+] as const) {
+  test(`${id}: where the shipped plan's summary falls at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await today(page, width, height);
+    const bottom = await bottomOf(page.locator('main article summary').first());
+    const bar = await barTop(page);
+    console.log(
+      `${id}: summary bottom ${bottom}, bar top ${bar}, margin ${bar - bottom}`,
+    );
+  });
+}
+
+// TD-07: on desktop both cards open the page and their tops line up.
+test('TD-07: at 1280x720 the summary is on screen and the cards line up', async ({
+  page,
+}) => {
+  await today(page, 1280, 720);
+  const bottom = await bottomOf(page.locator('main article summary').first());
+  const lead = (await page
+    .locator('section', { has: verdict(page) })
+    .first()
+    .boundingBox())!;
+  const plan = (await page
+    .locator('section', {
+      has: page.getByRole('heading', { name: 'Your recommendation for today' }),
+    })
+    .boundingBox())!;
+  console.log(`TD-07: summary bottom ${bottom}, tops ${lead.y} and ${plan.y}`);
+  expect(bottom).toBeLessThanOrEqual(720);
+  expect(Math.abs(lead.y - plan.y)).toBeLessThanOrEqual(8);
+});
+
+// TD-08: 24 px on a phone, 30 px from 640.
+for (const [width, height, size] of [
+  [320, 640, '24px'],
+  [390, 844, '24px'],
+  [640, 900, '30px'],
+  [1280, 720, '30px'],
+] as const) {
+  test(`TD-08: the H1 is ${size} at ${width}`, async ({ page }) => {
+    await today(page, width, height);
+    const [font, lines] = await page
+      .locator('main h1:visible')
+      .first()
+      .evaluate((el) => {
+        const style = getComputedStyle(el);
+        return [
+          style.fontSize,
+          Math.round(
+            el.getBoundingClientRect().height / parseFloat(style.lineHeight),
+          ),
+        ] as const;
+      });
+    if (width === 390) console.log(`TD-08: Pune H1 at 390 is ${lines} line(s)`);
+    expect(font).toBe(size);
+  });
+}
+
+// TD-09: no word of the H1 breaks across lines at 320.
+test('TD-09: no word of the long place name breaks at 320x640', async ({
+  page,
+}) => {
+  await today(page, 320, 640, { url: LONG_URL });
+  const words = await page
+    .locator('main h1:visible')
+    .first()
+    .evaluate((h1) => {
+      const text = h1.firstChild!;
+      const range = document.createRange();
+      return [...(text.textContent ?? '').matchAll(/\S+/g)].map((match) => {
+        range.setStart(text, match.index);
+        range.setEnd(text, match.index + match[0].length);
+        return [match[0], range.getClientRects().length] as const;
+      });
+    });
+  console.log(`TD-09: rects per word ${JSON.stringify(words)}`);
+  for (const [, rects] of words) expect(rects).toBe(1);
+});
+
+// TD-11 and G-05: the invite is quiet, after the help choices, and at most
+// one control is filled with the primary colour while the details are shut.
+test('TD-11 and G-05: the invite follows the help choices, outlined', async ({
+  page,
+}) => {
+  await today(page, 390, 844);
+  const invite = page.getByRole('link', {
+    name: 'Make it personal: 2 quick questions',
+  });
+  const help = page.getByRole('heading', {
+    name: 'What would you like help with?',
+  });
+  expect(
+    await help.evaluate(
+      (el, other) =>
+        !!(
+          el.compareDocumentPosition(other!) & Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+      await invite.elementHandle(),
+    ),
+  ).toBe(true);
+  expect(
+    await invite.evaluate((el) => getComputedStyle(el).backgroundColor),
+  ).not.toBe('rgb(57, 213, 194)');
+  expect(await page.locator('details[open]').count()).toBe(0);
+  const filled = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('a, button')].filter(
+        (el) =>
+          el.checkVisibility() &&
+          getComputedStyle(el).backgroundColor === 'rgb(57, 213, 194)',
+      ).length,
+  );
+  console.log(`G-05: ${filled} visible primary-filled control(s)`);
+  expect(filled).toBeLessThanOrEqual(1);
+});
+
+// TD-14: the meaning sentence is in "Air quality details" when within, on the
+// card when above.
+test('TD-14: within the limit the meaning sentence is in the details, not on the card', async ({
+  page,
+}) => {
+  await today(page, 390, 844);
+  const details = page.locator('details', {
+    has: page.locator('summary', { hasText: 'Air quality details' }),
+  });
+  expect(await details.evaluate((el) => (el as HTMLDetailsElement).open)).toBe(
+    false,
+  );
+  const card = page.locator('section', { has: verdict(page) }).first();
+  await expect(card.getByText(MEANING)).toHaveCount(0);
+  await expect(details.getByText(MEANING)).toHaveCount(1);
+});
+
+test('TD-14: above the limit the meaning sentence stays on the card', async ({
+  page,
+}) => {
+  await today(page, 390, 844, { level: 'elevated' });
+  const card = page
+    .locator('section', {
+      has: page.getByRole('heading', {
+        level: 2,
+        name: "Forecast above India's 24-hour limit",
+      }),
+    })
+    .first();
+  await expect(card.getByText(ABOVE_MEANING)).toHaveCount(1);
+});
+
+// ST-01a: one tap, one forecast request, focus on the place, the banner goes.
+test('ST-01a: "Reload forecast" sends one request, keeps focus on the place and clears the banner', async ({
+  page,
+}) => {
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated', {}, twoHoursAgo);
+  await page.goto(PUNE);
+  const banner = page.locator('[data-part="stale-banner"]');
+  await expect(banner).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  // The next forecast is a fresh one.
+  await stub(page, 'not_elevated');
+  const gets: string[] = [];
+  page.on('request', (request) => {
+    if (
+      request.method() === 'GET' &&
+      request.url().includes('/api/v1/air-quality/forecast')
+    ) {
+      gets.push(request.url());
+    }
+  });
+  const url = page.url();
+  await banner.getByRole('button', { name: 'Reload forecast' }).click();
+  await page.waitForLoadState('networkidle');
+  // Wait for the fresh card (the loading state has no banner either).
+  await expect(verdict(page)).toBeVisible();
+  await expect(banner).toHaveCount(0);
+  console.log(`ST-01a: ${gets.length} forecast GET(s) after one tap`);
+  expect(gets).toHaveLength(1);
+  expect(page.url()).toBe(url);
+  expect(
+    await page.evaluate(() => document.activeElement?.tagName === 'H1'),
+  ).toBe(true);
+});
+
+// PF-07: leaving Today and coming back never builds a second plan.
+test('PF-07: Today, My Home, Today builds one plan', async ({ page }) => {
+  const posts: string[] = [];
+  page.on('request', (request) => {
+    if (
+      request.method() === 'POST' &&
+      request.url().includes('/api/v1/recommendations/daily-plan')
+    ) {
+      posts.push(request.url());
+    }
+  });
+  await today(page, 390, 844);
+  const nav = page.locator('nav[aria-label="Main"]');
+  await nav.getByRole('link', { name: 'My Home' }).click();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'My Home' }),
+  ).toBeVisible();
+  await nav.getByRole('link', { name: 'Today' }).click();
+  await expect(page.locator('main h1:visible').first()).toContainText(
+    'Today in',
+  );
+  await page.waitForLoadState('networkidle');
+  console.log(`PF-07: ${posts.length} plan POST(s)`);
+  expect(posts).toHaveLength(1);
 });

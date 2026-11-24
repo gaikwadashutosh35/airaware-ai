@@ -195,6 +195,17 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P3, Today (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows A10, A11 and B1–B12):
+  - phones gain room: the H1 is 24 px below 640 px, and the verdict card and the plan panel use less padding there; the recommendation's heading is 20 px on phones;
+  - within the limit, the verdict card drops its meaning sentence, which now opens the check list in "Air quality details"; above the limit and unknown keep it on the card;
+  - the "Not current" banner has a solid warning fill, and on Today a "Reload forecast" button (one reload, focus to the H1); Ask's banner gets the fill without the button;
+  - a card-sized "Loading forecast…" placeholder and a plan placeholder as tall as the ready plan, so the page doesn't jump when they land (stubbed layout shift at 320, 390, 768 and 1280: at most 0.0132);
+  - the plan names its own air when no verdict is on screen or the levels differ; "For you" lines show only once the household has answers (Today's top card and My Home);
+  - after a failed plan build, with a current forecast: "Your forecast on this page is still up to date.";
+  - "Your plan is ready." is for screen readers only;
+  - the invite moves after the help choices and is outlined, so the page keeps one teal action;
+  - the focus ring is dark inside the title block and the stale banner; the readout's numbers use tabular figures;
+  - `e2e/firstscreen.spec.ts` adds the P3 checks (first screen at 320 and 390, layout shift, H1 size, long place names, invite order, reload, one plan per visit); the stubbed plan now uses the stubbed forecast's air.
 - Redesign P2, shell and navigation (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows C1–C11):
   - the header reads logo, place chip, navigation, and Tab follows that order on phones and desktop;
   - the place chip shows the text before the first comma below 1024 px ("Pune") and the whole place from 1024 px; its accessible name stays "Change place: {place}" and its border is `text-muted`;

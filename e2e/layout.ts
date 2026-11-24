@@ -38,22 +38,21 @@ export async function stub(
 ): Promise<void> {
   // The recorded fixture is a full forecast, with its check and weather.
   const base = forecastAt(now) as ForecastData;
+  const airCheck: AirAssessment =
+    level === 'unknown'
+      ? base.airCheck
+      : { level, windowStart: base.hours[0]!.time, checks: CHECKS[level] };
   await routeApi(page, {
     forecast: {
       data: {
         ...base,
-        airCheck:
-          level === 'unknown'
-            ? base.airCheck
-            : {
-                level,
-                windowStart: base.hours[0]!.time,
-                checks: CHECKS[level],
-              },
+        airCheck,
         weather: { ...base.weather!, time: base.hours[0]!.time, ...weather },
       },
     },
-    plan: { data: planAt(rulesPlanFixture, now) },
+    // The real server builds the plan from the same forecast, so the plan's
+    // air is the forecast's, never a second level on the page.
+    plan: { data: planAt({ ...rulesPlanFixture, air: airCheck }, now) },
   });
   await page.route('**/api/v1/recommendations/guides**', (route) =>
     route.fulfill({

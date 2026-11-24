@@ -106,6 +106,32 @@ describe('MyHome', () => {
     ).toBeTruthy();
   });
 
+  // B2: no answers, no "For you" lines on the cards.
+  it('shows For you on the cards only when there are answers', async () => {
+    routeGuides(guidesOk);
+    const withAi = (context: HouseholdContext) => {
+      const plan: DailyPlan = {
+        ...aiPlanFixture,
+        featured: [
+          {
+            candidate: aiPlanFixture.more[0]!,
+            period: 'home',
+            forYou:
+              'You have an air purifier; run it in the room you use most.',
+          },
+        ],
+      };
+      return show(plan, context);
+    };
+    const { unmount } = withAi({});
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+    expect(screen.queryByText(/For you:/)).toBeNull();
+    unmount();
+    withAi({ home: { airPurifier: true } });
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+    expect(screen.getAllByText(/For you:/).length).toBeGreaterThan(0);
+  });
+
   // Review Focus 2.
   it('without a plan, only the guides show', async () => {
     routeGuides(guidesOk);

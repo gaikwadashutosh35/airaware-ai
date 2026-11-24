@@ -32,7 +32,7 @@ import { Welcome } from './Welcome.tsx';
 import { AirDetails } from '../features/today/AirDetails.tsx';
 import { AskBox } from '../features/today/AskBox.tsx';
 import { HelpChoices } from '../features/today/HelpChoices.tsx';
-import { TodayLead } from '../features/today/TodayLead.tsx';
+import { TodayLead, TodayLeadLoading } from '../features/today/TodayLead.tsx';
 import { CitySkyline } from '../features/air-quality/CitySkyline.tsx';
 import { backdropNote, backdropScene } from '../features/air-quality/scene.ts';
 import { greeting } from '../features/today/today.ts';
@@ -144,6 +144,10 @@ function AppShell() {
     (page === 'today' || page === 'home' || page === 'ask') &&
     forecast.state.status === 'ready' &&
     isOlderThan(forecast.state.data.loadedAt.toISOString(), now, 60);
+  // Over an hour old by the running clock: Today calls it "Not current".
+  const forecastOld =
+    forecast.state.status === 'ready' &&
+    isOlderThan(forecast.state.data.series.retrievedAt, now, 60);
   const reloadForecast = useEffectEvent(() => forecast.retry());
   // The backdrop's forecast: the ready one, or the one a same-place reload
   // will replace, so the screen never flashes grey once an hour.
@@ -361,7 +365,7 @@ function AppShell() {
             <h1
               ref={headingRef}
               tabIndex={-1}
-              className="text-3xl font-semibold tracking-tight"
+              className="text-2xl font-semibold tracking-tight sm:text-3xl"
             >
               {place
                 ? place.label === NEAR_YOU
@@ -383,11 +387,13 @@ function AppShell() {
                     <>
                       <TodayLead
                         data={forecast.state.data.series}
-                        stale={isOlderThan(
-                          forecast.state.data.series.retrievedAt,
-                          now,
-                          60,
-                        )}
+                        stale={forecastOld}
+                        onReload={() => {
+                          // The banner's button goes with the reload: keep
+                          // focus on the place, as the error card does.
+                          forecast.retry();
+                          headingRef.current?.focus();
+                        }}
                       />
                     </>
                   ) : forecast.state.status === 'error' ? (
@@ -402,7 +408,7 @@ function AppShell() {
                       level={2}
                     />
                   ) : (
-                    <Loading label="Loading forecast" />
+                    <TodayLeadLoading />
                   )}
                 </>
               ) : null}
@@ -418,36 +424,20 @@ function AppShell() {
                 // Not before saved answers load, or a returning user's
                 // plan is built twice, first without them.
                 active={(page === 'today' || page === 'home') && loaded}
-                airShown={forecast.state.status === 'ready'}
+                verdictLevel={
+                  forecast.state.status === 'ready'
+                    ? forecast.state.data.series.airCheck.level
+                    : null
+                }
+                forecastCurrent={
+                  forecast.state.status === 'ready' && !forecastOld
+                }
                 onSaved={() => setListVersion((n) => n + 1)}
                 onPlan={setTodayPlan}
                 deletedPlanId={deletedPlanId}
               />
             </div>
           </div>
-          {/* After the verdict and recommendation: Today answers "How is my
-            air?" first, even on a 320×640 phone. */}
-          {place && Object.keys(context).length === 0 && !inviteDismissed && (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule bg-surface-light p-4">
-              <a
-                href="/app/welcome"
-                onClick={(event) => {
-                  event.preventDefault();
-                  navigate('/app/welcome');
-                }}
-                className="press inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-bg"
-              >
-                Make it personal: 2 quick questions
-              </a>
-              <button
-                type="button"
-                onClick={() => setInviteDismissed(true)}
-                className="min-h-11 rounded-md border border-text-dark px-4"
-              >
-                Not now
-              </button>
-            </div>
-          )}
           {place && (
             <>
               <HelpChoices
@@ -455,6 +445,31 @@ function AppShell() {
                   ask.send({ topic }, TOPICS.find((t) => t.id === topic)!.label)
                 }
               />
+              {/* After the verdict and recommendation: Today answers "How is my
+                air?" first, even on a 320×640 phone. */}
+              {place &&
+                Object.keys(context).length === 0 &&
+                !inviteDismissed && (
+                  <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule bg-surface-light p-4">
+                    <a
+                      href="/app/welcome"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate('/app/welcome');
+                      }}
+                      className="press inline-flex min-h-11 items-center rounded-md border border-text-dark px-4 font-semibold"
+                    >
+                      Make it personal: 2 quick questions
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setInviteDismissed(true)}
+                      className="min-h-11 rounded-md border border-text-dark px-4"
+                    >
+                      Not now
+                    </button>
+                  </div>
+                )}
               <AskBox onAsk={(question) => ask.send({ question }, question)} />
               <AirDetails
                 data={

@@ -212,6 +212,13 @@
     outline-color: var(--color-focus);
   }
 
+  /* The title block sits on the pale sky and the stale banner on a solid
+     warning fill: both take the dark text colour for the ring. */
+  [data-part='title-block'] :focus-visible,
+  [data-part='stale-banner'] :focus-visible {
+    outline-color: var(--color-text-dark);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

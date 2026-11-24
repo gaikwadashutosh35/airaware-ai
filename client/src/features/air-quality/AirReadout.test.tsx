@@ -8,6 +8,7 @@ import { expectNoAxeViolations } from '../../test/axe.ts';
 import { forecastFixture } from '../../test/fixtures.ts';
 import { AirReadout } from './AirReadout.tsx';
 import { formatDateTime } from './forecast.ts';
+import { verdictFrom } from '../today/today.ts';
 
 afterEach(cleanup);
 
@@ -39,6 +40,52 @@ describe('AirReadout', () => {
     expect(figure.textContent).toContain('μg/m³');
     expect(container.textContent).toMatch(/Values for /);
     await expectNoAxeViolations(container);
+  });
+
+  // B1: within the limit, the card's sentence lives here, before the check list.
+  it('says what within the limit means only when within, before the list', () => {
+    const within: AirAssessment = {
+      level: 'not_elevated',
+      windowStart: '2026-11-17T17:00:00.000Z',
+      checks: [
+        {
+          pollutant: 'PM2_5',
+          status: 'within_limit',
+          average24h: 43,
+          limit: 60,
+        },
+        {
+          pollutant: 'PM10',
+          status: 'within_limit',
+          average24h: 45,
+          limit: 100,
+        },
+      ],
+    };
+    const sentence = verdictFrom(within).explanation;
+    const { container, unmount } = show({
+      ...forecastFixture,
+      airCheck: within,
+    });
+    const line = screen.getByText(sentence);
+    expect(
+      line.compareDocumentPosition(container.querySelector('ul')!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    unmount();
+    for (const airCheck of [elevated, forecastFixture.airCheck]) {
+      const view = show({ ...forecastFixture, airCheck });
+      expect(view.container.textContent).not.toContain(sentence);
+      view.unmount();
+    }
+  });
+
+  it('sets figures in tabular numerals', () => {
+    const { container } = show();
+    expect(screen.getByText(/^Values for /).className).toContain(
+      'tabular-nums',
+    );
+    expect(container.querySelector('ul')!.className).toContain('tabular-nums');
   });
 
   it('shows No value when this hour has no PM2.5', () => {

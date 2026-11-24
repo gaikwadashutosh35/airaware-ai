@@ -35,10 +35,16 @@ export function MyHome({
 
   const plan = today.kind === 'ready' ? today.plan : null;
   // Full cards: an AI plan's "Your day" repeats have no place here.
+  const noAnswers = Object.keys(context).length === 0;
   const cards = plan
     ? (groupPlan(plan)
         .topics.find((topic) => topic.section === 'indoor')
-        ?.items.map((item) => ({ ...item, compact: false })) ?? [])
+        ?.items.map((item) => ({
+          ...item,
+          compact: false,
+          // No answers, no "For you" line (B2).
+          forYou: noAnswers ? null : item.forYou,
+        })) ?? [])
     : [];
   const shown = new Set(cards.map((item) => item.candidate.id));
   const hide = (card: GuideCard) =>

@@ -4,11 +4,19 @@ const PULSE =
   'animate-pulse rounded bg-text-dark/10 motion-reduce:animate-none';
 
 // A placeholder of grey lines. Screen readers hear only the label.
-export function Loading({ label }: { label: string }) {
+// `className` is opt-in: a caller that must hold the height of what lands
+// here adds its own min-height.
+export function Loading({
+  label,
+  className = '',
+}: {
+  label: string;
+  className?: string;
+}) {
   return (
     <div
       aria-busy="true"
-      className="overflow-hidden rounded-lg border border-rule bg-surface-light"
+      className={`overflow-hidden rounded-lg border border-rule bg-surface-light ${className}`}
     >
       <span className="sr-only">{label}</span>
       <div aria-hidden="true" className="flex flex-col">

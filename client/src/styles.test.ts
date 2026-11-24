@@ -33,6 +33,19 @@ describe('design system base', () => {
     expect(existsSync('public/favicon.svg')).toBe(true);
   });
 
+  // B11: the title block and the stale banner sit on the page's pale
+  // sky or a solid warning fill, so their focus ring is the dark text colour.
+  it('the title block and the stale banner take the dark focus ring', () => {
+    // Whitespace collapsed, so Prettier's line breaks don't matter.
+    const flat = css.replace(/\s+/g, ' ');
+    const rule =
+      "[data-part='title-block'] :focus-visible, [data-part='stale-banner'] :focus-visible { outline-color: var(--color-text-dark); }";
+    expect(flat).toContain(rule);
+    expect(flat.indexOf(rule)).toBeGreaterThan(
+      flat.indexOf('.on-dark .on-light :focus-visible'),
+    );
+  });
+
   it('the elevated surface token exists', () => {
     expect(css).toContain('--color-elevated: #172638;');
   });

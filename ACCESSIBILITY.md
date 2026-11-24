@@ -137,3 +137,12 @@ A screen-reader pass with a real reader has not been done yet.
 - "Use my location" needs HTTPS and is still to be checked on the live site.
 
 No real screen reader has been confirmed yet.
+
+## Redesign P3, Today (2026-11-24)
+
+- **Focus ring:** inside the title block and the stale banner the ring is `text-dark` (owner ruling B11; `client/src/styles.test.ts` checks the rule exists and comes after the `.on-dark` rules). Dark text, the "Reload forecast" border and the ring on the banner's solid `warning` fill: 8.82:1.
+- **Live region:** "Your plan is ready." stays in the same `<output>` but is for screen readers only; the building, error and save lines stay visible (TD-10).
+- **"Reload forecast":** a 44 px button; after it, focus moves to the H1, as after "Try again" (`AppShell.test.tsx`, `e2e/firstscreen.spec.ts` ST-01a).
+- **Loading:** "Loading forecast…" is visible text inside the `aria-busy` placeholder.
+- **Order:** the invite now follows the help choices in the DOM as on screen; the Tab walks in `e2e/keyboard.spec.ts` pass on both projects. Its place-dialog test failed once in each of two full 7-spec runs (once on desktop, once on phone) and passed 50 of 50 on its own; the likely cause is a race between the dialog's native close and its `close` event (`PlaceChip.tsx`), not yet fixed.
+- Not done: a real screen reader, and a check on a real phone of the new banner and placeholder.

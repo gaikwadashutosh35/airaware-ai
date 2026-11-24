@@ -1256,7 +1256,16 @@ describe('AppShell', () => {
       '',
       '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
     );
-    routeFetch(ok(), planRoutes());
+    // The verdict and the plan rest on the same level (B5).
+    routeFetch(
+      () =>
+        Promise.resolve(
+          Response.json({
+            data: { ...forecastFixture, airCheck: rulesPlanFixture.air },
+          }),
+        ),
+      planRoutes(),
+    );
     render(<AppShell />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
@@ -1835,6 +1844,64 @@ describe('AppShell', () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     }
+  });
+
+  // B8: the invite is a quiet outlined link after the help choices.
+  it('the invite sits after the help choices and is not a filled button', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+
+    const invite = screen.getByRole('link', {
+      name: 'Make it personal: 2 quick questions',
+    });
+    expect(invite.className).not.toContain('bg-primary');
+    expect(invite.className).toContain('border-text-dark');
+    const help = screen.getByRole('heading', {
+      name: 'What would you like help with?',
+    });
+    const ask = screen.getByRole('heading', { name: 'Ask AirAware anything' });
+    expect(
+      help.compareDocumentPosition(invite) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      invite.compareDocumentPosition(ask) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  // ST-01a: one tap, one forecast request, focus on the place heading.
+  it('"Reload forecast" reloads once and moves focus to the heading', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    const spy = routeFetch(ok());
+    render(<AppShell />);
+    await flush();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(36 * 60_000);
+    });
+    const forecasts = () =>
+      spy.mock.calls.filter(
+        ([input]) => urlOf(input).pathname === '/api/v1/air-quality/forecast',
+      ).length;
+    const before = forecasts();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reload forecast' }));
+
+    expect(forecasts()).toBe(before + 1);
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
+      }),
+    );
   });
 
   // Final review, Important 1: a remount reloaded saved answers over Welcome's.

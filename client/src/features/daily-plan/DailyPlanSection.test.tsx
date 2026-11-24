@@ -93,7 +93,8 @@ function renderSection(props: Partial<Props> = {}) {
       context={{}}
       now={at}
       active
-      airShown
+      verdictLevel="elevated"
+      forecastCurrent
       onSaved={onSaved}
       onPlan={onPlan}
       {...props}
@@ -129,11 +130,10 @@ afterEach(() => {
 });
 
 describe('DailyPlanSection', () => {
-  // Phase 10 final review: while the forecast card failed or is loading, the
-  // top card may rest on air with no verdict on the page.
+  // B5: the plan names its air only when the verdict on screen does not.
   it('names the air the plan used when no verdict is shown', async () => {
     routeFetch(() => planReply());
-    renderSection({ airShown: false });
+    renderSection({ verdictLevel: null });
     await build();
 
     expect(
@@ -143,14 +143,90 @@ describe('DailyPlanSection', () => {
     ).toBeDefined();
   });
 
-  it('leaves the air to the verdict when it is shown', async () => {
+  it('names the air the plan used when the verdict shows another level', async () => {
     routeFetch(() => planReply());
-    renderSection();
+    renderSection({ verdictLevel: 'not_elevated' });
+    await build();
+
+    expect(
+      screen.getByText(
+        /^Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved /,
+      ),
+    ).toBeDefined();
+  });
+
+  it('leaves the air to the verdict when the levels match', async () => {
+    routeFetch(() => planReply());
+    renderSection({ verdictLevel: 'elevated' });
     await build();
 
     expect(
       screen.queryByText(/ · Model forecast · Open-Meteo · retrieved /),
     ).toBeNull();
+  });
+
+  // B2: no answers, no "For you" line on the top card.
+  it('shows no For you line without answers, and one with answers', async () => {
+    routeFetch(() => planReply(aiPlanFixture));
+    const first = renderSection({ context: {} });
+    await screen.findAllByText(/^Made with AI/);
+    // Only the top card: "See your full day" keeps its own lines.
+    const card = () => within(document.querySelector('article')!);
+    expect(card().queryByText(/For you:/)).toBeNull();
+    first.unmount();
+    renderSection({ context: { routine: { outdoorExercise: true } } });
+    await screen.findAllByText(/^Made with AI/);
+    expect(card().getByText(/For you:/)).toBeDefined();
+  });
+
+  // A11: a failed build says the forecast on the page still holds.
+  it('says the forecast is still up to date when the plan fails and it is', async () => {
+    routeFetch(() => errorReply(500, 'INTERNAL_ERROR'));
+    renderSection({ forecastCurrent: true });
+    const alert = await screen.findByRole('alert');
+    const line = screen.getByText(
+      'Your forecast on this page is still up to date.',
+    );
+    expect(alert.contains(line)).toBe(false);
+    expect(
+      alert.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('never says the forecast is up to date when it is not, or the plan works', async () => {
+    routeFetch(() => errorReply(500, 'INTERNAL_ERROR'));
+    const { unmount } = renderSection({ forecastCurrent: false });
+    await screen.findByRole('alert');
+    expect(screen.queryByText(/still up to date/)).toBeNull();
+    unmount();
+    cleanup();
+    routeFetch(() => planReply());
+    renderSection({ forecastCurrent: true });
+    await build();
+    expect(screen.queryByText(/still up to date/)).toBeNull();
+  });
+
+  // TD-10: only READY is screen-reader-only; everything else stays visible.
+  it('hides only the ready line, in the one live region', async () => {
+    let reply!: (response: Response) => void;
+    routeFetch((path) =>
+      path === PLAN_PATH
+        ? new Promise<Response>((resolve) => (reply = resolve))
+        : savedReply(rulesPlanFixture),
+    );
+    renderSection();
+    const status = screen.getByRole('status');
+    await waitFor(() => expect(status.textContent).toBe(LOADING));
+    expect(status.className).not.toContain('sr-only');
+    reply(planReply());
+    await build();
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status.textContent).toBe('Your plan is ready.');
+    expect(status.className).toContain('sr-only');
+    fireEvent.click(saveButton());
+    await screen.findByText(SAVED);
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status.className).not.toContain('sr-only');
   });
 
   it('waits for a place', async () => {

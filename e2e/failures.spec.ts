@@ -122,5 +122,9 @@ test('plan error: the rate-limit message', async ({ page }) => {
   await expect(
     page.getByText('Too many requests. Try again in a minute.'),
   ).toBeVisible();
+  // The forecast on the page is fresh, so it says so (A11).
+  await expect(
+    page.getByText('Your forecast on this page is still up to date.'),
+  ).toBeVisible();
   await expectNoAxeViolations(page);
 });

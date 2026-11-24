@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import type {
+  AirAssessment,
   DailyPlan,
   HouseholdContext,
 } from '../../../../shared/contracts.ts';
@@ -81,7 +82,8 @@ export function DailyPlanSection({
   context,
   now,
   active,
-  airShown,
+  verdictLevel,
+  forecastCurrent,
   onSaved,
   onPlan,
   deletedPlanId = null,
@@ -92,9 +94,12 @@ export function DailyPlanSection({
   now: Date;
   // True while Today or My Home is shown: the plan builds only then.
   active: boolean;
-  // True while the forecast verdict is on the page; otherwise the plan names
-  // the air it used.
-  airShown: boolean;
+  // The level of the verdict on screen, null when none is shown. The plan
+  // names the air it used when there is none or it is another level.
+  verdictLevel: AirAssessment['level'] | null;
+  // The forecast is ready and not over an hour old: after a failed build, the
+  // page says it still holds.
+  forecastCurrent: boolean;
   onSaved: () => void;
   // What this area shows (nothing, building, an error with a retry, a stale
   // plan or the current one): My Home mirrors it.
@@ -218,7 +223,12 @@ export function DailyPlanSection({
     const timer = setTimeout(() => startBuild(), 0);
     return () => clearTimeout(timer);
   }, [due]);
-  const top = built ? topRecommendation(built.plan) : null;
+  const topItem = built ? topRecommendation(built.plan) : null;
+  // No answers, nothing to say "for you" about (B2).
+  const top =
+    topItem && Object.keys(context).length === 0
+      ? { ...topItem, forYou: null }
+      : topItem;
   // Saved, and not deleted since: only then may the page say so.
   const isSaved = built?.savedId != null && built.savedId !== deletedPlanId;
   const shown = message === SAVED && !isSaved ? '' : message;
@@ -226,43 +236,63 @@ export function DailyPlanSection({
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+      className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-4 sm:gap-4 sm:p-6"
     >
       <h2
         id={headingId}
         ref={headingRef}
         tabIndex={-1}
-        className="text-2xl font-semibold tracking-tight"
+        className="text-xl font-semibold tracking-tight sm:text-2xl"
       >
         Your recommendation for today
       </h2>
       {!place && <p className="text-sm">Choose a place first.</p>}
-      <output className="block min-h-6 text-sm">{shown}</output>
-      {status.kind === 'building' && (
-        <Loading label="Finding your recommendation…" />
+      {/* Only "ready" is for screen readers alone: the rest is read too. */}
+      <output className={shown === READY ? 'sr-only' : 'block min-h-6 text-sm'}>
+        {shown}
+      </output>
+      {/* Also in the tick before the first build starts, so the page below
+          does not jump when the build begins. */}
+      {(status.kind === 'building' ||
+        (place !== null && status.kind === 'idle' && built === null)) && (
+        <Loading
+          label="Finding your recommendation…"
+          // As tall as the ready plan (the rules plan, measured at 320, 360,
+          // 390, 640, 1024 and 1280 wide), so nothing below moves.
+          className="min-h-[24.6rem] min-[360px]:min-h-[23.3rem] min-[390px]:min-h-[21.7rem] sm:min-h-[17rem] lg:min-h-[21.9rem] xl:min-h-[18.6rem]"
+        />
       )}
       {status.kind === 'error' && (
-        <ErrorState
-          error={status.error}
-          onRetry={() => {
-            void build();
-            // "Try again" goes as the build starts: keep focus here.
-            headingRef.current?.focus();
-          }}
-          fallback={BUILD_FAILED}
-          title="We couldn't build your recommendation."
-        />
+        <>
+          <ErrorState
+            error={status.error}
+            onRetry={() => {
+              void build();
+              // "Try again" goes as the build starts: keep focus here.
+              headingRef.current?.focus();
+            }}
+            fallback={BUILD_FAILED}
+            title="We couldn't build your recommendation."
+          />
+          {forecastCurrent && (
+            <p className="text-sm">
+              Your forecast on this page is still up to date.
+            </p>
+          )}
+        </>
       )}
       {status.kind === 'idle' && built && (
         <>
           {stale && <p className="font-semibold">{PLAN_STALE}</p>}
           {/* The full day hides the air check, so say it here. */}
           {!built.plan.forecast && <p className="font-semibold">{NO_AIR}</p>}
-          {built.plan.forecast && !airShown && (
-            <p className="text-sm text-text-dark-muted">
-              {planAirLine(built.plan.air, built.plan.forecast)}
-            </p>
-          )}
+          {built.plan.forecast &&
+            (verdictLevel === null ||
+              built.plan.air.level !== verdictLevel) && (
+              <p className="text-sm text-text-dark-muted">
+                {planAirLine(built.plan.air, built.plan.forecast)}
+              </p>
+            )}
           {top ? (
             <PlanCard
               item={top}

@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type {
   AirAssessment,
   ForecastData,
@@ -7,9 +7,19 @@ import type {
 import { formatTime } from '../air-quality/forecast.ts';
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { forecastFixture } from '../../test/fixtures.ts';
-import { TodayLead } from './TodayLead.tsx';
+import { TodayLead, TodayLeadLoading } from './TodayLead.tsx';
+import { verdictFrom } from './today.ts';
 
 afterEach(cleanup);
+
+const elevated: AirAssessment = {
+  level: 'elevated',
+  windowStart: '2026-11-17T17:00:00.000Z',
+  checks: [
+    { pollutant: 'PM2_5', status: 'above_limit', average24h: 78, limit: 60 },
+    { pollutant: 'PM10', status: 'within_limit', average24h: 45, limit: 100 },
+  ],
+};
 
 const within: AirAssessment = {
   level: 'not_elevated',
@@ -20,10 +30,14 @@ const within: AirAssessment = {
   ],
 };
 
-function show(data: ForecastData = forecastFixture, stale = false) {
+function show(
+  data: ForecastData = forecastFixture,
+  stale = false,
+  onReload?: () => void,
+) {
   return render(
     <main>
-      <TodayLead data={data} stale={stale} />
+      <TodayLead data={data} stale={stale} onReload={onReload} />
     </main>,
   );
 }
@@ -37,7 +51,8 @@ describe('TodayLead', () => {
     });
     expect(verdict).toBeDefined();
     expect(container.textContent).toContain('Within the limit');
-    expect(container.textContent).toContain(
+    // The meaning sentence moved into "Air quality details" (B1).
+    expect(container.textContent).not.toContain(
       'Fine and coarse particles are forecast below the national daily limits for the next 24 hours.',
     );
     expect(container.textContent).toContain(
@@ -76,6 +91,47 @@ describe('TodayLead', () => {
         .getByRole('heading', { level: 2 })
         .compareDocumentPosition(stale!) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  // B1: within the limit the card is short; the sentence moves into the details.
+  it('the meaning sentence is off the card when within, on it otherwise', () => {
+    const { container, unmount } = show({
+      ...forecastFixture,
+      airCheck: within,
+    });
+    expect(container.textContent).not.toContain(
+      verdictFrom(within).explanation,
+    );
+    unmount();
+    for (const airCheck of [forecastFixture.airCheck, elevated]) {
+      const view = show({ ...forecastFixture, airCheck });
+      expect(view.container.textContent).toContain(
+        verdictFrom(airCheck).explanation,
+      );
+      view.unmount();
+    }
+  });
+
+  it('the banner sentence is exactly the sentence, with one reload button', () => {
+    const onReload = vi.fn();
+    const { container } = show(
+      { ...forecastFixture, airCheck: within },
+      true,
+      onReload,
+    );
+    const banner = container.querySelector('[data-part="stale-banner"]')!;
+    expect(banner.querySelector('p')?.textContent).toBe(
+      'Not current: retrieved more than an hour ago. Reload for the latest forecast.',
+    );
+    const button = screen.getByRole('button', { name: 'Reload forecast' });
+    expect(banner.contains(button)).toBe(true);
+    fireEvent.click(button);
+    expect(onReload).toHaveBeenCalledTimes(1);
+  });
+
+  it('there is no reload button without onReload', () => {
+    show({ ...forecastFixture, airCheck: within }, true);
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('the weather line names only known values', () => {
@@ -155,5 +211,22 @@ describe('TodayLead', () => {
       expect(container.textContent).not.toMatch(/healthy/i);
       unmount();
     }
+  });
+});
+
+describe('TodayLeadLoading', () => {
+  it('says what it waits for, in view, with grey bars hidden from readers', () => {
+    const { container } = render(
+      <main>
+        <TodayLeadLoading />
+      </main>,
+    );
+    const section = container.querySelector('section')!;
+    expect(section.getAttribute('aria-busy')).toBe('true');
+    expect(screen.getByText('Loading forecast…').className).not.toContain(
+      'sr-only',
+    );
+    const bars = container.querySelectorAll('[aria-hidden="true"]');
+    expect(bars.length).toBeGreaterThanOrEqual(3);
   });
 });
