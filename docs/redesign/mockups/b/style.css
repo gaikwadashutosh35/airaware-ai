@@ -1,0 +1,1484 @@
+/* Direction B, "Editorial city". Stage 1 design mockup, not application code.
+   Load ../tokens.css first: every colour here is a token from
+   client/src/index.css, or a color-mix of tokens as CitySkyline.tsx uses. */
+
+/* ---------- shared ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+[tabindex='-1']:focus {
+  outline: none;
+}
+
+a,
+button,
+summary,
+input,
+label {
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.skip {
+  position: absolute;
+  inset-inline-start: 0.5rem;
+  inset-block-start: 0.5rem;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-light);
+  color: var(--color-text-dark);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+  outline-color: var(--color-focus);
+}
+
+/* Dark surfaces take the lighter ring (index.css .on-dark): secondary on
+   surface 7.08:1, on bg 7.91:1. Light panels keep the focus token. */
+.on-dark :focus-visible {
+  outline-color: var(--color-secondary);
+}
+
+.on-dark .on-light :focus-visible {
+  outline-color: var(--color-focus);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Small uppercase section label (Direction B's editorial voice). */
+.kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dark-muted);
+}
+
+.mock-note {
+  font-style: italic;
+}
+
+/* The sample label scrolls with the page, so it never covers content
+   further down. Same place as before on the first screen; no layout space. */
+.sample-label {
+  position: absolute;
+}
+
+/* "Placeholder" marker on mockup-only wording. */
+.ph {
+  display: inline-block;
+  margin-inline-start: 0.25rem;
+  padding-inline: 0.375rem;
+  border: 1px dashed currentColor;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+/* ---------- app shell ---------- */
+.app {
+  background: var(--color-surface-light);
+}
+
+/* Phones: a focused control is never hidden under the bottom bar. */
+@media (width < 48rem) {
+  html:has(body.app) {
+    scroll-padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.topbar {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.topbar .bar {
+  max-width: 72rem;
+  margin-inline: auto;
+  min-height: var(--header-height);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+    max(1rem, env(safe-area-inset-right, 0px));
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  flex: none;
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.chip {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  max-width: 11rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--color-text-muted);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.chip .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Main navigation: a fixed bar on phones, inline in the header from 768. */
+.nav {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 40;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-rule-dark);
+  padding-block-end: max(0px, env(safe-area-inset-bottom, 0px));
+  padding-inline: max(0px, env(safe-area-inset-left, 0px))
+    max(0px, env(safe-area-inset-right, 0px));
+}
+
+.nav ul {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-height: var(--nav-height);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav .pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 1.75rem;
+  border-radius: 999px;
+}
+
+/* Current page: filled light pill + bold label + aria-current (never colour
+   alone). The pill is text on bg, 17.8:1. */
+.nav a[aria-current='page'] {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.nav a[aria-current='page'] .pill {
+  background: var(--color-text);
+  color: var(--color-text-dark);
+}
+
+.nav .full {
+  display: none;
+}
+
+@media (width >= 48rem) {
+  .topbar .bar {
+    padding-inline: max(1.5rem, env(safe-area-inset-left, 0px))
+      max(1.5rem, env(safe-area-inset-right, 0px));
+  }
+
+  .logo {
+    order: 0;
+  }
+
+  .nav {
+    position: static;
+    order: 1;
+    margin-inline-start: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .nav ul {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav a {
+    flex-direction: row;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+  }
+
+  .nav .pill {
+    width: auto;
+    height: auto;
+  }
+
+  .nav a[aria-current='page'] {
+    background: var(--color-text);
+    color: var(--color-text-dark);
+  }
+
+  .nav a[aria-current='page'] .pill {
+    background: transparent;
+  }
+
+  .chip {
+    order: 2;
+    margin-inline-start: 0.5rem;
+    min-width: 6rem;
+  }
+}
+
+@media (width >= 64rem) {
+  .nav .short {
+    display: none;
+  }
+
+  .nav .full {
+    display: inline;
+  }
+}
+
+@media (forced-colors: active) {
+  .nav a[aria-current='page'] {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+}
+
+/* ---------- backdrop (kept as shipped: sky + city band, decorative) ---------- */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(var(--sky-top), var(--color-surface-light));
+}
+
+.backdrop[data-air='within'] {
+  --sky-top: color-mix(
+    in oklab,
+    var(--color-secondary) 46%,
+    var(--color-surface-light)
+  );
+}
+
+.backdrop[data-air='unknown'] {
+  --sky-top: var(--color-rule);
+}
+
+.city {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  height: min(8rem, 20vh);
+}
+
+.city svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.city .far {
+  fill: var(--color-text-dark-muted);
+  opacity: 0.42;
+}
+
+.city .mid {
+  fill: color-mix(
+    in oklab,
+    var(--color-text-dark-muted) 55%,
+    var(--color-text-dark)
+  );
+  opacity: 0.62;
+}
+
+.city .near {
+  fill: var(--color-text-dark);
+  opacity: 0.9;
+}
+
+.city .win {
+  fill: var(--color-surface-light);
+  opacity: 0.5;
+  display: none;
+}
+
+@media (width >= 40rem) {
+  .city {
+    height: min(11rem, 20vh);
+  }
+
+  .city .win {
+    display: inline;
+  }
+}
+
+@media (width >= 48rem) {
+  .city {
+    inset-block-end: 0;
+  }
+}
+
+@media (max-height: 24rem) {
+  .city {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .backdrop {
+    display: none;
+  }
+
+  /* The masthead loses its fill here; keep its edge. */
+  .masthead {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Open space as tall as the city band (plus the phone bar), so each page
+   ends on the whole city with no text on it. */
+.end-space {
+  height: calc(min(8rem, 20vh) + 3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (width >= 40rem) {
+  .end-space {
+    height: calc(min(11rem, 20vh) + 3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (width >= 48rem) {
+  .end-space {
+    height: min(11rem, 20vh);
+  }
+}
+
+/* ---------- page body ---------- */
+.app main {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-block: 2rem;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+    max(1rem, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (width >= 40rem) {
+  .app main {
+    padding-inline: max(1.5rem, env(safe-area-inset-left, 0px))
+      max(1.5rem, env(safe-area-inset-right, 0px));
+    gap: 1.5rem;
+  }
+}
+
+.today {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (width >= 64rem) {
+  .today {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 1.5rem;
+  }
+}
+
+/* The dark masthead: title block + the verdict, solid surface. */
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.masthead p {
+  margin: 0;
+}
+
+.masthead .title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.masthead .greet,
+.masthead .purpose {
+  color: var(--color-text-muted);
+}
+
+.masthead h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.masthead.compact h1 {
+  font-size: 1.75rem;
+}
+
+.masthead .weather {
+  padding-block: 0.5rem;
+  border-block: 1px solid var(--color-rule-dark);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.verdict-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.verdict {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.prov {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Level tag: text border and text on surface (15.97:1). */
+.tag {
+  padding: 0.0625rem 0.5rem;
+  border: 1px solid var(--color-text);
+  border-radius: 999px;
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.stale-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Not current: opaque amber with dark text (8.82:1), so it holds on the
+   dark masthead. The shipped 15 % tint is for light surfaces only. */
+.stale {
+  flex: 1 1 16rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-control);
+  background: var(--color-warning);
+  color: var(--color-text-dark);
+  font-weight: 650;
+}
+
+.stale .icon {
+  margin-top: 0.125rem;
+}
+
+.masthead .caveat {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Outlined light button for the dark masthead. */
+.btn-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.err {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-rule-dark);
+}
+
+@media (width >= 40rem) {
+  .masthead {
+    gap: 1rem;
+    padding: 1.5rem 2rem 1.75rem;
+  }
+
+  .masthead h1 {
+    font-size: 2rem;
+  }
+
+  .masthead.compact {
+    padding-block: 1.25rem;
+  }
+
+  .masthead.compact h1 {
+    font-size: 2.25rem;
+  }
+
+  .verdict {
+    font-size: 2.25rem;
+  }
+}
+
+@media (width >= 64rem) {
+  .verdict {
+    font-size: 2.5rem;
+  }
+}
+
+/* Light solid panels, as shipped. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-light);
+  color: var(--color-text-dark);
+}
+
+.panel p {
+  margin: 0;
+}
+
+.panel .head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+@media (width >= 40rem) {
+  .panel {
+    padding: 1.5rem;
+  }
+
+  .panel h2 {
+    font-size: 1.5rem;
+  }
+}
+
+.note {
+  font-size: 0.875rem;
+  color: var(--color-text-dark-muted);
+}
+
+.strong {
+  font-weight: 650;
+}
+
+/* The top recommendation: one rule above it instead of a nested box. */
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-rule);
+}
+
+.top h3,
+.card h3,
+.card h4 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.top p,
+.card p {
+  margin: 0;
+}
+
+details > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary::before {
+  content: '▸' / '';
+  font-size: 0.875rem;
+}
+
+details[open] > summary::before {
+  content: '▾' / '';
+}
+
+.why dl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.why dt {
+  font-weight: 600;
+}
+
+.why dd {
+  margin: 0;
+}
+
+.why ul {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.why a,
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: inherit;
+}
+
+/* Help choices: 2 x 2 on phones, 4 across from 1024. */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width >= 64rem) {
+  .choices {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.choices a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  height: 100%;
+  min-height: 2.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  color: inherit;
+  text-decoration: none;
+}
+
+.choices a:hover {
+  border-color: var(--color-text-dark);
+}
+
+.choices .t {
+  font-weight: 650;
+}
+
+.choices .l {
+  font-size: 0.875rem;
+  color: var(--color-text-dark-muted);
+}
+
+.invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Secondary action: outlined, so teal stays for one main action. */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-text-dark);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text-dark);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-text {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding-inline: 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-dark);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-primary {
+  min-height: 3rem;
+  padding-inline: 1rem;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: var(--color-text-dark);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ask label {
+  font-weight: 500;
+}
+
+.ask-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ask input,
+.field {
+  flex: 1;
+  min-width: 0;
+  min-height: 3rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--color-text-dark);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-light);
+  color: var(--color-text-dark);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.starters button {
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--color-text-dark-muted);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-dark);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.details-panel {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-light);
+}
+
+.details-panel > summary {
+  padding: 0.75rem 1rem;
+  font-size: 1.125rem;
+}
+
+.details-panel .body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--color-rule);
+}
+
+.details-panel .body p {
+  margin: 0;
+}
+
+/* My Home: ONE flowing grid of cards; the group name is each card's label
+   (a real h3 on the group's first card). auto-fit, so a lone card (Today,
+   for your home) takes the row instead of a third of it. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.card p,
+.card dl {
+  max-width: 65ch;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1rem;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+}
+
+/* Guide groups (DESIGN_SYSTEM_PROPOSAL.md section 3.3): each group is one
+   grid item; a group with 2+ cards spans the row and puts its cards on the
+   same columns. No dense packing, so headings keep DOM order. */
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+  gap: 1.25rem 0.75rem;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.group.wide {
+  grid-column: 1 / -1;
+}
+
+.group.wide .cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+}
+
+.group h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+
+/* Footer, as shipped: light, with the Background line and attribution. */
+.site-footer {
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-surface-light);
+}
+
+.site-footer .in {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-block: 2rem;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+    max(1rem, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-dark-muted);
+}
+
+.site-footer p {
+  margin: 0;
+  max-width: 70ch;
+}
+
+.site-footer a {
+  color: inherit;
+}
+
+.site-footer .text-link {
+  align-self: flex-start;
+}
+
+/* ---------- landing (dark, editorial) ---------- */
+.landing {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.landing .wrap {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px))
+    max(1rem, env(safe-area-inset-right, 0px));
+}
+
+@media (width >= 40rem) {
+  .landing .wrap {
+    padding-inline: max(2rem, env(safe-area-inset-left, 0px))
+      max(2rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* Grid items may shrink below their content's width (the search row holds
+   an input whose intrinsic width would widen the column at 320). */
+.landing .wrap > *,
+.hero-grid > * {
+  min-width: 0;
+}
+
+.l-head .wrap {
+  display: flex;
+  align-items: center;
+  min-height: var(--header-height);
+}
+
+.landing main p {
+  margin: 0;
+}
+
+/* Section marker "01"…"07": decorative, hidden from screen readers. */
+.marker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.marker::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-rule-dark);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    180deg,
+    var(--color-bg) 35%,
+    var(--color-rule-dark) 100%
+  );
+}
+
+.hero .wrap {
+  display: grid;
+  gap: 1.25rem;
+  padding-block: 1.25rem 1.5rem;
+  width: 100%;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 5.6vw + 0.5rem, 4.75rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.hero-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.lede {
+  max-width: 40ch;
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn-l {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding-inline: 1.5rem;
+  border-radius: 999px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-l.primary {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
+
+.btn-l.outline {
+  border: 1px solid var(--color-text);
+  color: var(--color-text);
+}
+
+.l-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 30rem;
+}
+
+.l-search .muted,
+.l-search .hint {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.l-search label {
+  font-weight: 500;
+}
+
+.l-search .row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.l-search .go {
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+/* The city horizon: full width, the hero's lower third. */
+.horizon {
+  position: relative;
+  overflow: hidden;
+  margin-top: auto;
+  height: 28svh;
+  min-height: 9rem;
+  max-height: 18rem;
+}
+
+.horizon svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.horizon .l1 {
+  fill: color-mix(in oklab, var(--color-rule-dark) 70%, var(--color-secondary));
+  opacity: 0.35;
+}
+
+.horizon .l2 {
+  fill: var(--color-elevated);
+}
+
+.horizon .l3 {
+  fill: var(--color-surface);
+}
+
+.horizon .l4 {
+  fill: var(--color-bg);
+}
+
+.horizon .lit {
+  fill: var(--color-warning);
+  opacity: 0.35;
+}
+
+@media (width >= 64rem) {
+  .hero {
+    min-height: calc(100svh - var(--header-height));
+  }
+
+  .hero .wrap {
+    gap: 1.75rem;
+    padding-block-start: 2rem;
+  }
+
+  .hero-grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .lede {
+    font-size: 1.25rem;
+  }
+
+  .horizon {
+    height: 33svh;
+    max-height: 20rem;
+  }
+}
+
+.sec {
+  padding-block: 3rem;
+}
+
+.sec.surface {
+  background: var(--color-surface);
+}
+
+.sec .wrap {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sec h2 {
+  margin: 0;
+  font-size: clamp(2rem, 2.6vw + 1.1rem, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.sec .text {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (width >= 64rem) {
+  .sec {
+    padding-block: 4.5rem;
+  }
+
+  .split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 4rem;
+    align-items: center;
+  }
+
+  .split > .marker {
+    grid-column: 1 / -1;
+  }
+}
+
+figure {
+  margin: 0;
+}
+
+.landing figcaption {
+  margin-block-end: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* A drawn Today preview (not a screenshot), in Direction B's look. */
+.preview {
+  max-width: 22rem;
+  overflow: hidden;
+  border: 1px solid var(--color-rule-dark);
+  border-radius: 1.25rem;
+  background: var(--color-surface-light);
+  color: var(--color-text-dark);
+  font-size: 0.875rem;
+}
+
+.preview .p-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.preview .p-sky {
+  padding: 0.75rem;
+  background: linear-gradient(
+    color-mix(in oklab, var(--color-secondary) 46%, var(--color-surface-light)),
+    var(--color-surface-light)
+  );
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview .p-mast {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.preview .p-mast .m {
+  color: var(--color-text-muted);
+}
+
+.preview .p-v {
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.preview .p-rec {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.5rem;
+  background: var(--color-surface-light);
+}
+
+.preview .p-rec .k {
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dark-muted);
+}
+
+.helps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.helps li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-rule-dark);
+}
+
+.helps .t {
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+
+.helps .l {
+  color: var(--color-text-muted);
+}
+
+@media (width >= 64rem) {
+  .helps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* A light example card on the dark page. */
+.ex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-panel);
+  background: var(--color-surface-light);
+  color: var(--color-text-dark);
+}
+
+.ex h3,
+.ex h4 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.pair {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.pair > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pair h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+@media (width >= 48rem) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+.steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  counter-increment: step;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-rule-dark);
+  border-radius: var(--radius-panel);
+  background: var(--color-bg);
+}
+
+.steps li::before {
+  content: counter(step) / '';
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--color-primary);
+}
+
+.steps h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.steps p {
+  color: var(--color-text-muted);
+}
+
+@media (width >= 48rem) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= 64rem) {
+  .steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.statement {
+  max-width: 26ch;
+  font-size: clamp(1.75rem, 2.4vw + 1rem, 3rem);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.l-foot {
+  border-top: 1px solid var(--color-rule-dark);
+}
+
+.l-foot .wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-block: 2rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.l-foot a {
+  color: inherit;
+}
+
+.l-foot ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

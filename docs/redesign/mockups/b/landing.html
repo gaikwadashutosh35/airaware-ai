@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>
+      AirAware AI: hourly air-quality forecasts for Indian cities (mockup B)
+    </title>
+    <link rel="stylesheet" href="../tokens.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="landing on-dark">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="l-head">
+      <div class="wrap">
+        <a class="logo" href="landing.html">AirAware AI</a>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <p class="sample-label">Illustrative sample — not live data</p>
+      <section class="hero" aria-labelledby="hero-h">
+        <div class="wrap">
+          <p class="marker" aria-hidden="true">01</p>
+          <h1 id="hero-h">The air around you matters.</h1>
+          <div class="hero-grid">
+            <p class="lede">
+              Understand your city's air quality. Discover smarter daily
+              routines. Make better choices for your home and community.
+            </p>
+            <div
+              class="actions-col"
+              style="display: flex; flex-direction: column; gap: 1.25rem"
+            >
+              <div class="actions">
+                <a class="btn-l primary" href="today-success.html"
+                  >Check My Air</a
+                >
+                <a class="btn-l outline" href="#">Meet Your Assistant</a>
+              </div>
+              <search>
+                <form class="l-search" action="#">
+                  <p class="muted">Or search a city</p>
+                  <label for="place-q"
+                    >Search for a city or area in India</label
+                  >
+                  <p class="hint" id="place-hint">
+                    Type at least 2 letters, then choose a place from the list.
+                  </p>
+                  <div class="row">
+                    <input
+                      class="field"
+                      id="place-q"
+                      type="text"
+                      role="combobox"
+                      aria-expanded="false"
+                      aria-autocomplete="list"
+                      aria-describedby="place-hint"
+                      autocomplete="off"
+                      spellcheck="false"
+                    />
+                    <button type="submit" class="go" data-m="search-submit">
+                      Search
+                    </button>
+                  </div>
+                </form>
+              </search>
+            </div>
+          </div>
+        </div>
+        <div class="horizon" data-part="landing-horizon" aria-hidden="true">
+          <svg
+            viewBox="0 0 1600 220"
+            preserveAspectRatio="xMidYMax slice"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              class="l1"
+              d="M-12 220V48h28V220ZM-5 48v-14h15v14ZM16 220V38h24V220ZM22 38v-16h13v16ZM46 220V38h21V220ZM51 38v-16h12v16ZM75 220V88h20V220ZM80 88v-12h11v12ZM81 88v-16h2v16ZM104 220V77h22V220ZM135 220V40h29V220ZM171 220V85h26V220ZM179 85v-16h2v16ZM197 220V82h22V220ZM204 82v-16h2v16ZM219 220V30h21V220ZM224 30v-10h12v10ZM240 220V104h17V220ZM257 220V51h17V220ZM274 220V64h31V220ZM309 220V98h26V220ZM315 98v-16h14v16ZM317 98v-16h2v16ZM343 220V77h28V220ZM350 77v-9h15v9ZM371 220V102h29V220ZM405 220V106h23V220ZM428 220V45h17V220ZM432 45v-12h9v12ZM433 45v-16h2v16ZM445 220V81h18V220ZM467 220V59h34V220ZM477 59v-16h2v16ZM501 220V108h28V220ZM508 108v-10h15v10ZM529 220V41h27V220ZM537 41v-16h2v16ZM558 220V39h20V220ZM578 220V38h21V220ZM584 38v-16h2v16ZM607 220V87h21V220ZM628 220V91h21V220ZM649 220V76h28V220ZM657 76v-16h2v16ZM683 220V61h17V220ZM700 220V90h22V220ZM726 220V105h30V220ZM733 105v-15h17v15ZM735 105v-16h2v16ZM756 220V69h17V220ZM760 69v-7h9v7ZM775 220V55h27V220ZM783 55v-16h2v16ZM811 220V69h33V220ZM819 69v-15h18v15ZM850 220V69h34V220ZM858 69v-8h19v8ZM860 69v-16h2v16ZM884 220V62h29V220ZM891 62v-11h16v11ZM893 62v-16h2v16ZM913 220V65h25V220ZM938 220V81h21V220ZM943 81v-9h12v9ZM959 220V70h34V220ZM969 70v-16h2v16ZM993 220V67h25V220ZM1001 67v-16h2v16ZM1018 220V101h34V220ZM1026 101v-10h19v10ZM1052 220V108h24V220ZM1076 220V63h17V220ZM1101 220V47h26V220ZM1107 47v-13h14v13ZM1127 220V98h23V220ZM1132 98v-10h13v10ZM1158 220V92h24V220ZM1164 92v-15h13v15ZM1185 220V39h26V220ZM1191 39v-15h14v15ZM1211 220V42h23V220ZM1218 42v-16h2v16ZM1238 220V76h31V220ZM1276 220V78h26V220ZM1282 78v-9h14v9ZM1302 220V84h22V220ZM1307 84v-11h12v11ZM1331 220V89h32V220ZM1338 89v-13h18v13ZM1365 220V35h31V220ZM1372 35v-12h17v12ZM1374 35v-16h2v16ZM1403 220V53h21V220ZM1408 53v-6h12v6ZM1424 220V68h30V220ZM1454 220V33h32V220ZM1461 33v-16h18v16ZM1464 33v-16h2v16ZM1486 220V56h33V220ZM1519 220V105h33V220ZM1527 105v-13h18v13ZM1529 105v-16h2v16ZM1552 220V106h32V220ZM1588 220V72h19V220ZM1593 72v-12h10v12ZM1594 72v-16h2v16ZM1607 220V42h19V220ZM1613 42v-16h2v16Z"
+            />
+            <path
+              class="l2"
+              d="M-12 220V127h42V220ZM1 127v-16h2v16ZM30 220V102h31V220ZM37 102v-15h17v15ZM61 220V96h29V220ZM90 220V101h41V220ZM134 220V118h47V220ZM185 220V133h45V220ZM230 220V113h29V220ZM259 220V75h45V220ZM304 220V91h39V220ZM313 91v-12h21v12ZM343 220V86h26V220ZM351 86v-16h2v16ZM369 220V116h28V220ZM397 220V88h45V220ZM442 220V137h40V220ZM487 220V101h36V220ZM495 101v-12h20v12ZM498 101v-16h2v16ZM523 220V111h48V220ZM571 220V132h32V220ZM603 220V96h39V220ZM612 96v-18h21v18ZM642 220V94h38V220ZM651 94v-16h21v16ZM680 220V131h27V220ZM686 131v-14h15v14ZM711 220V103h28V220ZM746 220V139h48V220ZM803 220V115h27V220ZM840 220V97h48V220ZM888 220V106h25V220ZM894 106v-7h14v7ZM913 220V83h37V220ZM957 220V76h32V220ZM964 76v-14h18v14ZM989 220V132h36V220ZM997 132v-8h20v8ZM1025 220V128h31V220ZM1032 128v-19h17v19ZM1056 220V85h26V220ZM1064 85v-16h2v16ZM1082 220V107h37V220ZM1128 220V72h31V220ZM1135 72v-16h17v16ZM1159 220V121h44V220ZM1169 121v-11h24v11ZM1172 121v-16h2v16ZM1203 220V102h32V220ZM1240 220V126h45V220ZM1285 220V120h36V220ZM1321 220V88h36V220ZM1332 88v-16h2v16ZM1357 220V98h43V220ZM1400 220V136h40V220ZM1440 220V132h27V220ZM1446 132v-14h15v14ZM1473 220V88h29V220ZM1507 220V97h42V220ZM1558 220V80h28V220ZM1565 80v-15h15v15ZM1586 220V126h43V220Z"
+            />
+            <path
+              class="l3"
+              d="M-12 220V161h37V220ZM0 161v-6h8v6ZM25 220V154h56V220ZM39 154v-8h12v8ZM81 220V143h46V220ZM92 143v-17h25v17ZM111 143v-7h10v7ZM127 220V118h57V220ZM184 220V158h45V220ZM229 220V164h32V220ZM261 220V110h38V220ZM280 110v-6h8v6ZM299 220V150h38V220ZM316 150v-6h8v6ZM337 220V135h34V220ZM345 135v-13h19v13ZM371 220V134h30V220ZM378 134v-9h17v9ZM401 220V113h38V220ZM439 220V152h57V220ZM496 220V112h52V220ZM508 112v-9h29v9ZM548 220V123h42V220ZM590 220V131h49V220ZM604 131v-8h11v8ZM639 220V151h30V220ZM646 151v-5h17v5ZM669 220V124h43V220ZM712 220V135h62V220ZM774 220V167h47V220ZM785 167v-15h26v15ZM779 167v-7h10v7ZM821 220V124h35V220ZM845 124v-6h8v6ZM856 220V169h63V220ZM870 169v-14h35v14ZM919 220V152h56V220ZM975 220V122h62V220ZM1037 220V167h42V220ZM1079 220V121h38V220ZM1117 220V132h37V220ZM1126 132v-6h20v6ZM1133 132v-6h8v6ZM1154 220V157h37V220ZM1191 220V164h37V220ZM1200 164v-19h20v19ZM1228 220V135h31V220ZM1259 220V125h55V220ZM1272 125v-10h30v10ZM1314 220V144h32V220ZM1321 144v-15h18v15ZM1346 220V131h55V220ZM1401 220V168h38V220ZM1410 168v-15h21v15ZM1439 220V139h56V220ZM1495 220V126h47V220ZM1542 220V164h38V220ZM1551 164v-11h21v11ZM1568 164v-6h8v6ZM1580 220V120h51V220Z"
+            />
+            <path
+              class="lit"
+              d="M-7 178h3v4h-3ZM-7 189h3v4h-3ZM1 167h3v4h-3ZM9 189h3v4h-3ZM30 193h3v4h-3ZM46 204h3v4h-3ZM54 160h3v4h-3ZM54 193h3v4h-3ZM62 171h3v4h-3ZM62 182h3v4h-3ZM62 204h3v4h-3ZM70 193h3v4h-3ZM274 149h3v4h-3ZM290 127h3v4h-3ZM290 160h3v4h-3ZM376 184h3v4h-3ZM384 184h3v4h-3ZM392 151h3v4h-3ZM392 162h3v4h-3ZM517 118h3v4h-3ZM525 151h3v4h-3ZM533 118h3v4h-3ZM533 162h3v4h-3ZM553 162h3v4h-3ZM553 173h3v4h-3ZM561 129h3v4h-3ZM561 151h3v4h-3ZM569 140h3v4h-3ZM595 148h3v4h-3ZM603 137h3v4h-3ZM603 159h3v4h-3ZM603 181h3v4h-3ZM611 148h3v4h-3ZM611 159h3v4h-3ZM611 181h3v4h-3ZM717 141h3v4h-3ZM725 163h3v4h-3ZM733 141h3v4h-3ZM733 174h3v4h-3ZM733 185h3v4h-3ZM749 174h3v4h-3ZM765 141h3v4h-3ZM779 173h3v4h-3ZM779 195h3v4h-3ZM787 173h3v4h-3ZM795 173h3v4h-3ZM795 195h3v4h-3ZM803 173h3v4h-3ZM803 184h3v4h-3ZM811 195h3v4h-3ZM1092 138h3v4h-3ZM1092 149h3v4h-3ZM1108 138h3v4h-3ZM1108 149h3v4h-3ZM1122 171h3v4h-3ZM1130 149h3v4h-3ZM1138 138h3v4h-3ZM1138 149h3v4h-3ZM1138 160h3v4h-3ZM1175 196h3v4h-3ZM1241 174h3v4h-3ZM1249 174h3v4h-3ZM1249 185h3v4h-3ZM1351 148h3v4h-3ZM1359 137h3v4h-3ZM1367 137h3v4h-3ZM1367 148h3v4h-3ZM1375 170h3v4h-3ZM1383 159h3v4h-3ZM1383 181h3v4h-3ZM1500 143h3v4h-3ZM1508 165h3v4h-3ZM1516 176h3v4h-3ZM1532 143h3v4h-3ZM1532 154h3v4h-3ZM1585 126h3v4h-3ZM1585 159h3v4h-3ZM1593 159h3v4h-3ZM1601 159h3v4h-3ZM1609 126h3v4h-3ZM1609 159h3v4h-3ZM1617 148h3v4h-3ZM1617 159h3v4h-3ZM1617 170h3v4h-3Z"
+            />
+            <path
+              class="l4"
+              d="M-12 220V177h83V220ZM71 220V196h62V220ZM133 220V189h67V220ZM158 189v-11h15v11ZM200 220V179h76V220ZM213 179v-12h17v12ZM276 220V168h84V220ZM293 168v-13h18v13ZM360 220V193h68V220ZM428 220V190h45V220ZM473 220V173h54V220ZM527 220V159h43V220ZM546 159v-6h9v6ZM570 220V187h49V220ZM574 187v-8h11v8ZM619 220V178h80V220ZM634 178v-13h18v13ZM699 220V194h49V220ZM729 194v-8h11v8ZM748 220V189h59V220ZM779 189v-9h13v9ZM807 220V164h82V220ZM889 220V187h72V220ZM961 220V172h40V220ZM979 172v-6h9v6ZM1001 220V168h78V220ZM1036 168v-12h17v12ZM1079 220V177h49V220ZM1098 177v-8h11v8ZM1128 220V174h74V220ZM1153 174v-11h16v11ZM1202 220V181h85V220ZM1255 181v-13h19v13ZM1287 220V166h85V220ZM1372 220V177h81V220ZM1453 220V160h90V220ZM1508 160v-14h20v14ZM1543 220V177h70V220ZM1564 177v-11h15v11ZM-20 212H1620V220H-20Z"
+            />
+            <path
+              class="lit"
+              d="M92 202h3v4h-3ZM100 202h3v4h-3ZM146 195h3v4h-3ZM154 195h3v4h-3ZM478 201h3v4h-3ZM486 179h3v4h-3ZM494 190h3v4h-3ZM502 190h3v4h-3ZM518 179h3v4h-3ZM518 201h3v4h-3ZM793 195h3v4h-3ZM1084 205h3v4h-3ZM1092 194h3v4h-3ZM1100 205h3v4h-3ZM1116 194h3v4h-3ZM1292 172h3v4h-3ZM1292 183h3v4h-3ZM1292 194h3v4h-3ZM1300 172h3v4h-3ZM1308 172h3v4h-3ZM1324 172h3v4h-3ZM1332 183h3v4h-3ZM1348 172h3v4h-3ZM1556 194h3v4h-3ZM1556 205h3v4h-3ZM1564 183h3v4h-3ZM1564 205h3v4h-3ZM1580 205h3v4h-3ZM1588 183h3v4h-3ZM1588 194h3v4h-3ZM1588 205h3v4h-3ZM1596 183h3v4h-3ZM1604 194h3v4h-3Z"
+            />
+          </svg>
+        </div>
+      </section>
+
+      <section class="sec surface" aria-labelledby="s2">
+        <div class="wrap split">
+          <p class="marker" aria-hidden="true">02</p>
+          <div class="text">
+            <h2 id="s2">Understand your air</h2>
+            <p class="lede">
+              One sentence tells you how today's forecast compares with India's
+              24-hour limits, labelled Model forecast with the time it was
+              updated. Every number, unit and source is one tap away, under Air
+              quality details.
+            </p>
+          </div>
+          <figure>
+            <figcaption>
+              Placeholder for a dated past screenshot of Today, drawn here in
+              Direction B's look. Open the app for current values.
+            </figcaption>
+            <div class="preview" aria-hidden="true">
+              <div class="p-bar"><span>AirAware AI</span><span>Pune</span></div>
+              <div class="p-sky">
+                <div class="p-mast">
+                  <span class="m">Good morning</span>
+                  <span>Today in Pune, Maharashtra</span>
+                  <span class="p-v"
+                    >Forecast within India's 24-hour limits</span
+                  >
+                  <span class="m"
+                    ><span class="tag">Within the limit</span> Model forecast ·
+                    Open-Meteo · updated HH:MM</span
+                  >
+                </div>
+                <div class="p-rec">
+                  <span class="k">Your plan</span>
+                  <strong>Cut indoor smoke at the source</strong>
+                  <span>▸ Why?</span>
+                </div>
+              </div>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="s3">
+        <div class="wrap">
+          <p class="marker" aria-hidden="true">03</p>
+          <h2 id="s3">What AirAware helps with</h2>
+          <ul class="helps">
+            <li>
+              <span class="t">Outdoor activities</span
+              ><span class="l">Walks, exercise, commutes</span>
+            </li>
+            <li>
+              <span class="t">My home</span
+              ><span class="l">Cooking, windows, purifiers</span>
+            </li>
+            <li>
+              <span class="t">My family</span
+              ><span class="l">Children, older adults, school runs</span>
+            </li>
+            <li>
+              <span class="t">Greener habits</span
+              ><span class="l">Small swaps that cut smoke and exhaust</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="sec surface" aria-labelledby="s4">
+        <div class="wrap split">
+          <p class="marker" aria-hidden="true">04</p>
+          <div class="text">
+            <h2 id="s4">Explainable AI</h2>
+            <p class="lede">
+              AI can arrange our rules' suggestions and word them for your day,
+              but it never decides them. Every suggestion opens to its reason,
+              the answers and forecast check it used, its sources and its
+              limits.
+            </p>
+            <div class="actions">
+              <a class="btn-l primary" href="today-success.html"
+                >Check My Air</a
+              >
+            </div>
+          </div>
+          <figure>
+            <figcaption>
+              Example from our rules, for a day when the forecast is above
+              India's 24-hour limit.
+            </figcaption>
+            <article class="ex on-light">
+              <h3>Run your air purifier where people spend most time</h3>
+              <p>
+                Consider running the purifier in the room your household uses
+                most, following the maker's instructions.
+              </p>
+              <details class="why" open>
+                <summary>
+                  Why?<span class="sr-only">
+                    (Run your air purifier where people spend most time)</span
+                  >
+                </summary>
+                <dl>
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      You said you have an air purifier, and the forecast is
+                      above the national 24-hour limit.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>today's forecast check</dd>
+                  </div>
+                  <div>
+                    <dt>What it used</dt>
+                    <dd>
+                      <ul>
+                        <li>Your answer to "Do you have an air purifier?"</li>
+                        <li>the 24-hour forecast check</li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li><a href="#">Open-Meteo Air Quality API</a></li>
+                        <li>
+                          <a href="#"
+                            >National Ambient Air Quality Standards (CPCB, 18
+                            November 2009)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Caveat</dt>
+                    <dd>
+                      A purifier helps with particles in that room; it does not
+                      remove every pollutant.
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+          </figure>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="s5">
+        <div class="wrap">
+          <p class="marker" aria-hidden="true">05</p>
+          <h2 id="s5">My Home and Better Habits</h2>
+          <div class="pair">
+            <div>
+              <h3>Improve indoor air</h3>
+              <p class="lede">
+                Indoor suggestions look at what you cook with and what burns
+                inside, as well as the air outside.
+              </p>
+              <figure>
+                <figcaption>Example from our rules.</figcaption>
+                <article class="ex on-light">
+                  <h4>Use the kitchen exhaust while cooking</h4>
+                  <p>
+                    Switch the exhaust on before you start cooking and leave it
+                    running for a few minutes after.
+                  </p>
+                </article>
+              </figure>
+            </div>
+            <div>
+              <h3>Sustainable everyday choices</h3>
+              <p class="lede">
+                Practical habits that cut pollution for you and your neighbours.
+                We never show an emissions saving we can't calculate.
+              </p>
+              <figure>
+                <figcaption>Example from our rules.</figcaption>
+                <article class="ex on-light">
+                  <h4>Combine trips and avoid idling</h4>
+                  <p>
+                    Combining errands into one trip and switching off the engine
+                    while waiting cut your vehicle's exhaust. For some trips,
+                    public transport, carpooling, walking or cycling may also be
+                    practical.
+                  </p>
+                </article>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec surface" aria-labelledby="s6">
+        <div class="wrap">
+          <p class="marker" aria-hidden="true">06</p>
+          <div class="text">
+            <h2 id="s6">How AirAware works</h2>
+            <p class="lede">Forecasts for the next 48 hours, hour by hour.</p>
+          </div>
+          <ol class="steps" aria-label="How a forecast reaches you">
+            <li>
+              <h3>CAMS global model</h3>
+              <p>
+                Copernicus runs it every 12 hours on a grid about 45 km wide.
+              </p>
+            </li>
+            <li>
+              <h3>Open-Meteo</h3>
+              <p>
+                Serves its hourly PM2.5, PM10 and four gases, each with a unit.
+              </p>
+            </li>
+            <li>
+              <h3>AirAware server</h3>
+              <p>
+                Asks only for a location rounded to about 1 km and reuses each
+                answer for 10 minutes.
+              </p>
+            </li>
+            <li>
+              <h3>Your screen</h3>
+              <p>
+                Every value with its unit, its hour and the label Model
+                forecast.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="s7">
+        <div class="wrap">
+          <p class="marker" aria-hidden="true">07</p>
+          <p class="statement">
+            Forecasts are model estimates, not station measurements, and not the
+            CPCB National AQI.
+          </p>
+          <p class="lede">Official CPCB observations are not connected yet.</p>
+          <h2 id="s7">Your city, the next two days</h2>
+          <div class="actions">
+            <a class="btn-l primary" href="today-success.html">Check My Air</a>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="l-foot">
+      <div class="wrap">
+        <p style="font-size: 1rem; font-weight: 650; color: var(--color-text)">
+          AirAware AI
+        </p>
+        <p>
+          Air-quality forecasts from
+          <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0),
+          based on CAMS global forecasts from the Copernicus Atmosphere
+          Monitoring Service.
+        </p>
+        <nav aria-label="Footer">
+          <ul>
+            <li><a class="text-link" href="#">Privacy</a></li>
+          </ul>
+        </nav>
+        <p class="mock-note">
+          Mockup note, not app copy: the "Search" submit button, the heading
+          "What AirAware helps with", the merged heading "My Home and Better
+          Habits" and the drawn Today preview (in place of the dated screenshot,
+          which shows clock times and values) are proposals.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

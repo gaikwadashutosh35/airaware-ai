@@ -1,0 +1,193 @@
+{
+  "startedAt": "2026-11-24T04:26:24.105Z",
+  "blocked": [],
+  "entries": [
+    {
+      "name": "today-details-open",
+      "viewport": "320x640",
+      "shots": ["local-today-details-open-320x640-full.jpg"],
+      "opened": [
+        "Why this recommendation? (Consider an indoor alter",
+        "See your full day",
+        "Why? (Consider an indoor alternative for exercise)",
+        "Why? (Ventilate for indoor sources, not by habit)",
+        "Why? (Run your air purifier where people spend mos",
+        "Why? (Ventilate the kitchen while cooking)",
+        "Why? (Cut indoor smoke at the source)",
+        "Why? (Combine trips and avoid idling)",
+        "Why? (Don't burn waste or leaves)",
+        "Air quality details",
+        "Hourly forecast (3 hours)"
+      ],
+      "axe": [],
+      "edge": [],
+      "small": [],
+      "screens": 19.1,
+      "console": []
+    },
+    {
+      "name": "today-details-open",
+      "viewport": "390x844",
+      "shots": ["local-today-details-open-390x844-full.jpg"],
+      "opened": [
+        "Why this recommendation? (Consider an indoor alter",
+        "See your full day",
+        "Why? (Consider an indoor alternative for exercise)",
+        "Why? (Ventilate for indoor sources, not by habit)",
+        "Why? (Run your air purifier where people spend mos",
+        "Why? (Ventilate the kitchen while cooking)",
+        "Why? (Cut indoor smoke at the source)",
+        "Why? (Combine trips and avoid idling)",
+        "Why? (Don't burn waste or leaves)",
+        "Air quality details",
+        "Hourly forecast (3 hours)"
+      ],
+      "axe": [],
+      "edge": [],
+      "small": [],
+      "screens": 12.7,
+      "console": []
+    },
+    {
+      "name": "today-details-open",
+      "viewport": "1280x720",
+      "shots": ["local-today-details-open-1280x720-full.jpg"],
+      "opened": [
+        "Why this recommendation? (Consider an indoor alter",
+        "See your full day",
+        "Why? (Consider an indoor alternative for exercise)",
+        "Why? (Ventilate for indoor sources, not by habit)",
+        "Why? (Run your air purifier where people spend mos",
+        "Why? (Ventilate the kitchen while cooking)",
+        "Why? (Cut indoor smoke at the source)",
+        "Why? (Combine trips and avoid idling)",
+        "Why? (Don't burn waste or leaves)",
+        "Air quality details",
+        "Hourly forecast (3 hours)"
+      ],
+      "axe": [],
+      "edge": [],
+      "small": [],
+      "screens": 11.7,
+      "console": []
+    },
+    {
+      "name": "place-dialog",
+      "viewport": "390x844",
+      "shots": [
+        "local-place-dialog-open-390x844-first.jpg",
+        "local-place-dialog-results-390x844-first.jpg"
+      ],
+      "axe": [],
+      "edge": [],
+      "small": [],
+      "screens": 3.3,
+      "options": [
+        "Pune, Maharashtra",
+        "Puneta, Rajasthan",
+        "Puneir, Uttar Pradesh",
+        "Puneja, Jammu and Kashmir",
+        "Puneta, Himachal Pradesh"
+      ],
+      "resultsAxe": [],
+      "dialogClosed": true,
+      "focusAfterEscape": "Change place: Pune, Maharashtra",
+      "console": []
+    },
+    {
+      "name": "place-dialog",
+      "viewport": "1280x720",
+      "shots": [
+        "local-place-dialog-open-1280x720-first.jpg",
+        "local-place-dialog-results-1280x720-first.jpg"
+      ],
+      "axe": [],
+      "edge": [],
+      "small": [],
+      "screens": 2.4,
+      "options": [
+        "Pune, Maharashtra",
+        "Puneta, Rajasthan",
+        "Puneir, Uttar Pradesh",
+        "Puneja, Jammu and Kashmir",
+        "Puneta, Himachal Pradesh"
+      ],
+      "resultsAxe": [],
+      "dialogClosed": true,
+      "focusAfterEscape": "Change place: Pune, Maharashtra",
+      "console": []
+    },
+    {
+      "name": "place-search-no-result",
+      "viewport": "390x844",
+      "shots": ["local-place-search-no-result-390x844-first.jpg"],
+      "dialogText": "Change place Search for a city or area in India Type at least 2 letters, then choose a place from the list. No places found Use my location Your browser asks first. Your location is rounded to about 1 km before it leaves your browser. Close",
+      "console": []
+    },
+    {
+      "name": "place-search-error",
+      "viewport": "390x844",
+      "shots": ["local-place-search-error-390x844-first.jpg"],
+      "dialogText": "Change place Search for a city or area in India Type at least 2 letters, then choose a place from the list. x Use my location Your browser asks first. Your location is rounded to about 1 km before it leaves your browser. Close",
+      "console": [
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+      ]
+    },
+    {
+      "name": "welcome-steps",
+      "viewport": "390x844",
+      "shots": [
+        "local-welcome-step2-390x844-full.jpg",
+        "local-welcome-step3-390x844-full.jpg"
+      ],
+      "step2": {
+        "axe": [],
+        "edge": [],
+        "small": [],
+        "screens": 1.3
+      },
+      "step3": {
+        "axe": [],
+        "edge": [],
+        "small": [],
+        "screens": 1.6
+      },
+      "rememberChecked": false,
+      "step3Text": "Step 3 of 3 Tell us a little about your home. What do you mostly cook with? LPG Electric Wood, coal or crop waste Other Prefer not to say Kitchen exhaust or chimney? Yes No Air purifier? Yes No Near a busy road? Yes No Not sure Remember on this device Creates an anonymous save on this device. Delete it any time in My Profile. Back See my air Skip",
+      "console": []
+    },
+    {
+      "name": "welcome-steps",
+      "viewport": "1280x720",
+      "shots": [
+        "local-welcome-step2-1280x720-full.jpg",
+        "local-welcome-step3-1280x720-full.jpg"
+      ],
+      "step2": {
+        "axe": [],
+        "edge": [],
+        "small": [],
+        "screens": 1.2
+      },
+      "step3": {
+        "axe": [],
+        "edge": [],
+        "small": [],
+        "screens": 1.7
+      },
+      "rememberChecked": false,
+      "step3Text": "Step 3 of 3 Tell us a little about your home. What do you mostly cook with? LPG Electric Wood, coal or crop waste Other Prefer not to say Kitchen exhaust or chimney? Yes No Air purifier? Yes No Near a busy road? Yes No Not sure Remember on this device Creates an anonymous save on this device. Delete it any time in My Profile. Back See my air Skip",
+      "console": []
+    },
+    {
+      "name": "landing-search",
+      "viewport": "390x844",
+      "shots": ["local-landing-search-390x844-first.jpg"],
+      "axe": [],
+      "edge": [],
+      "small": [],
+      "screens": 9.4,
+      "console": []
+    }
+  ]
+}

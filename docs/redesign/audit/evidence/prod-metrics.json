@@ -1,0 +1,6047 @@
+{
+  "mode": "prod",
+  "base": "https://airaware-ai.netlify.app",
+  "startedAt": "2026-11-24T03:41:46.465Z",
+  "blocked": [],
+  "plan": {
+    "realCalls": 1,
+    "replayed": 13,
+    "status": 200
+  },
+  "http429": [],
+  "pages": [
+    {
+      "source": "prod",
+      "route": "landing",
+      "state": "default",
+      "path": "/",
+      "viewport": "320x640",
+      "shots": ["prod-landing-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 4282,
+        "dcl": 5218,
+        "load": 5218,
+        "lcp": 5340,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "img": {
+            "n": 2,
+            "kb": 218
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "AirAware AI: hourly air-quality forecasts for Indian cities",
+        "url": "/",
+        "innerHeight": 640,
+        "docHeight": 8541,
+        "screens": 13.3,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 3253,
+          "modelForecast": 1751,
+          "notCurrent": null,
+          "checkMyAir": 435
+        },
+        "terms": {
+          "forecast": 12,
+          "24-hour": 4,
+          "model": 4,
+          "CPCB": 3,
+          "PM2.5": 1,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 1
+        },
+        "bannedWords": [],
+        "h1": ["The air around you matters."],
+        "headings": [
+          "H1 The air around you matters.",
+          "H2 Understand your air",
+          "H2 Your personal daily plan",
+          "H3 Check conditions before outdoor exercise",
+          "H2 Improve indoor air",
+          "H3 Use the kitchen exhaust while cooking",
+          "H2 Sustainable everyday choices",
+          "H3 Combine trips and avoid idling",
+          "H2 Explainable AI",
+          "H3 Run your air purifier where people spend most time",
+          "H2 How AirAware works",
+          "H3 CAMS global model",
+          "H3 Open-Meteo",
+          "H3 AirAware server",
+          "H3 Your screen",
+          "H2 Your city, the next two days"
+        ],
+        "navs": [],
+        "buttons": 8
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "landing",
+      "state": "default",
+      "path": "/",
+      "viewport": "390x844",
+      "shots": [
+        "prod-landing-default-390x844-first.jpg",
+        "prod-landing-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 372,
+        "dcl": 1089,
+        "load": 1089,
+        "lcp": 1196,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "img": {
+            "n": 2,
+            "kb": 218
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "AirAware AI: hourly air-quality forecasts for Indian cities",
+        "url": "/",
+        "innerHeight": 844,
+        "docHeight": 7923,
+        "screens": 9.4,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 3278,
+          "modelForecast": 1784,
+          "notCurrent": null,
+          "checkMyAir": 357
+        },
+        "terms": {
+          "forecast": 12,
+          "24-hour": 4,
+          "model": 4,
+          "CPCB": 3,
+          "PM2.5": 1,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 1
+        },
+        "bannedWords": [],
+        "h1": ["The air around you matters."],
+        "headings": [
+          "H1 The air around you matters.",
+          "H2 Understand your air",
+          "H2 Your personal daily plan",
+          "H3 Check conditions before outdoor exercise",
+          "H2 Improve indoor air",
+          "H3 Use the kitchen exhaust while cooking",
+          "H2 Sustainable everyday choices",
+          "H3 Combine trips and avoid idling",
+          "H2 Explainable AI",
+          "H3 Run your air purifier where people spend most time",
+          "H2 How AirAware works",
+          "H3 CAMS global model",
+          "H3 Open-Meteo",
+          "H3 AirAware server",
+          "H3 Your screen",
+          "H2 Your city, the next two days"
+        ],
+        "navs": [],
+        "buttons": 8
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "landing",
+      "state": "default",
+      "path": "/",
+      "viewport": "768x1024",
+      "shots": ["prod-landing-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 660,
+        "dcl": 1357,
+        "load": 1357,
+        "lcp": 2440,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "img": {
+            "n": 2,
+            "kb": 218
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "AirAware AI: hourly air-quality forecasts for Indian cities",
+        "url": "/",
+        "innerHeight": 1024,
+        "docHeight": 6891,
+        "screens": 6.7,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 3119,
+          "modelForecast": 1779,
+          "notCurrent": null,
+          "checkMyAir": 354
+        },
+        "terms": {
+          "forecast": 12,
+          "24-hour": 4,
+          "model": 4,
+          "CPCB": 3,
+          "PM2.5": 1,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 1
+        },
+        "bannedWords": [],
+        "h1": ["The air around you matters."],
+        "headings": [
+          "H1 The air around you matters.",
+          "H2 Understand your air",
+          "H2 Your personal daily plan",
+          "H3 Check conditions before outdoor exercise",
+          "H2 Improve indoor air",
+          "H3 Use the kitchen exhaust while cooking",
+          "H2 Sustainable everyday choices",
+          "H3 Combine trips and avoid idling",
+          "H2 Explainable AI",
+          "H3 Run your air purifier where people spend most time",
+          "H2 How AirAware works",
+          "H3 CAMS global model",
+          "H3 Open-Meteo",
+          "H3 AirAware server",
+          "H3 Your screen",
+          "H2 Your city, the next two days"
+        ],
+        "navs": [],
+        "buttons": 8
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "landing",
+      "state": "default",
+      "path": "/",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-landing-default-1280x720-first.jpg",
+        "prod-landing-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 358,
+        "dcl": 1149,
+        "load": 1149,
+        "lcp": 1320,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "img": {
+            "n": 2,
+            "kb": 218
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "AirAware AI: hourly air-quality forecasts for Indian cities",
+        "url": "/",
+        "innerHeight": 720,
+        "docHeight": 5633,
+        "screens": 7.8,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 2183,
+          "modelForecast": 1475,
+          "notCurrent": null,
+          "checkMyAir": 587
+        },
+        "terms": {
+          "forecast": 12,
+          "24-hour": 4,
+          "model": 4,
+          "CPCB": 3,
+          "PM2.5": 1,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 1
+        },
+        "bannedWords": [],
+        "h1": ["The air around you matters."],
+        "headings": [
+          "H1 The air around you matters.",
+          "H2 Understand your air",
+          "H2 Your personal daily plan",
+          "H3 Check conditions before outdoor exercise",
+          "H2 Improve indoor air",
+          "H3 Use the kitchen exhaust while cooking",
+          "H2 Sustainable everyday choices",
+          "H3 Combine trips and avoid idling",
+          "H2 Explainable AI",
+          "H3 Run your air purifier where people spend most time",
+          "H2 How AirAware works",
+          "H3 CAMS global model",
+          "H3 Open-Meteo",
+          "H3 AirAware server",
+          "H3 Your screen",
+          "H2 Your city, the next two days"
+        ],
+        "navs": [],
+        "buttons": 8
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "landing",
+      "state": "default",
+      "path": "/",
+      "viewport": "1440x900",
+      "shots": ["prod-landing-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 526,
+        "dcl": 1450,
+        "load": 1450,
+        "lcp": 1892,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "img": {
+            "n": 2,
+            "kb": 218
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "AirAware AI: hourly air-quality forecasts for Indian cities",
+        "url": "/",
+        "innerHeight": 900,
+        "docHeight": 5633,
+        "screens": 6.3,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 2183,
+          "modelForecast": 1475,
+          "notCurrent": null,
+          "checkMyAir": 587
+        },
+        "terms": {
+          "forecast": 12,
+          "24-hour": 4,
+          "model": 4,
+          "CPCB": 3,
+          "PM2.5": 1,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 1
+        },
+        "bannedWords": [],
+        "h1": ["The air around you matters."],
+        "headings": [
+          "H1 The air around you matters.",
+          "H2 Understand your air",
+          "H2 Your personal daily plan",
+          "H3 Check conditions before outdoor exercise",
+          "H2 Improve indoor air",
+          "H3 Use the kitchen exhaust while cooking",
+          "H2 Sustainable everyday choices",
+          "H3 Combine trips and avoid idling",
+          "H2 Explainable AI",
+          "H3 Run your air purifier where people spend most time",
+          "H2 How AirAware works",
+          "H3 CAMS global model",
+          "H3 Open-Meteo",
+          "H3 AirAware server",
+          "H3 Your screen",
+          "H2 Your city, the next two days"
+        ],
+        "navs": [],
+        "buttons": 8
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "app-noplace",
+      "state": "default",
+      "path": "/app",
+      "viewport": "320x640",
+      "shots": ["prod-app-noplace-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 372,
+        "dcl": 1113,
+        "load": 1113,
+        "lcp": 1268,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 640,
+        "docHeight": 984,
+        "screens": 1.5,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "app-noplace",
+      "state": "default",
+      "path": "/app",
+      "viewport": "390x844",
+      "shots": [
+        "prod-app-noplace-default-390x844-first.jpg",
+        "prod-app-noplace-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 355,
+        "dcl": 1069,
+        "load": 1069,
+        "lcp": 1144,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 844,
+        "docHeight": 964,
+        "screens": 1.1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "app-noplace",
+      "state": "default",
+      "path": "/app",
+      "viewport": "768x1024",
+      "shots": ["prod-app-noplace-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 324,
+        "dcl": 1010,
+        "load": 1010,
+        "lcp": 1076,
+        "cls": 0.014,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 1024,
+        "docHeight": 1024,
+        "screens": 1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "app-noplace",
+      "state": "default",
+      "path": "/app",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-app-noplace-default-1280x720-first.jpg",
+        "prod-app-noplace-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 281,
+        "dcl": 1052,
+        "load": 1053,
+        "lcp": 1184,
+        "cls": 0.007,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 720,
+        "docHeight": 868,
+        "screens": 1.2,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "app-noplace",
+      "state": "default",
+      "path": "/app",
+      "viewport": "1440x900",
+      "shots": ["prod-app-noplace-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 330,
+        "dcl": 1006,
+        "load": 1006,
+        "lcp": 1092,
+        "cls": 0.006,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 900,
+        "docHeight": 900,
+        "screens": 1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "welcome",
+      "state": "default",
+      "path": "/app/welcome",
+      "viewport": "320x640",
+      "shots": ["prod-welcome-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 339,
+        "dcl": 1084,
+        "load": 1084,
+        "lcp": 1140,
+        "cls": 0.182,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 640,
+        "docHeight": 984,
+        "screens": 1.5,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "welcome",
+      "state": "default",
+      "path": "/app/welcome",
+      "viewport": "390x844",
+      "shots": [
+        "prod-welcome-default-390x844-first.jpg",
+        "prod-welcome-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 363,
+        "dcl": 1159,
+        "load": 1159,
+        "lcp": 1212,
+        "cls": 0.157,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 844,
+        "docHeight": 964,
+        "screens": 1.1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "welcome",
+      "state": "default",
+      "path": "/app/welcome",
+      "viewport": "768x1024",
+      "shots": ["prod-welcome-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 331,
+        "dcl": 1014,
+        "load": 1014,
+        "lcp": 1060,
+        "cls": 0.067,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 1024,
+        "docHeight": 1024,
+        "screens": 1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "welcome",
+      "state": "default",
+      "path": "/app/welcome",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-welcome-default-1280x720-first.jpg",
+        "prod-welcome-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 347,
+        "dcl": 1023,
+        "load": 1023,
+        "lcp": 1072,
+        "cls": 0.075,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 720,
+        "docHeight": 868,
+        "screens": 1.2,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "welcome",
+      "state": "default",
+      "path": "/app/welcome",
+      "viewport": "1440x900",
+      "shots": ["prod-welcome-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 343,
+        "dcl": 1024,
+        "load": 1024,
+        "lcp": 1084,
+        "cls": 0.054,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 900,
+        "docHeight": 900,
+        "screens": 1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "today",
+      "state": "default",
+      "path": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "320x640",
+      "shots": ["prod-today-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 378,
+        "dcl": 1187,
+        "load": 1187,
+        "lcp": 2164,
+        "cls": 0.171,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 6
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "Today | AirAware AI",
+        "url": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 640,
+        "docHeight": 3130,
+        "screens": 4.9,
+        "y": {
+          "verdict": 327,
+          "recommendationHeading": 741,
+          "firstWhy": 1200,
+          "modelForecast": 447,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 7,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 1,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Today in Pune, Maharashtra"],
+        "headings": [
+          "H1 Today in Pune, Maharashtra",
+          "H2 Forecast within India's 24-hour limits",
+          "H2 Your recommendation for today",
+          "H3 Cut indoor smoke at the source",
+          "H2 What would you like help with?",
+          "H2 Ask AirAware anything",
+          "H2 Air quality details"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 20
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "POST /api/v1/recommendations/daily-plan 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "today",
+      "state": "default",
+      "path": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "390x844",
+      "shots": [
+        "prod-today-default-390x844-first.jpg",
+        "prod-today-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 347,
+        "dcl": 1130,
+        "load": 1131,
+        "lcp": 1236,
+        "cls": 0.283,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 6
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Today | AirAware AI",
+        "url": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 844,
+        "docHeight": 2860,
+        "screens": 3.4,
+        "y": {
+          "verdict": 307,
+          "recommendationHeading": 665,
+          "firstWhy": 1049,
+          "modelForecast": 391,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 7,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 1,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Today in Pune, Maharashtra"],
+        "headings": [
+          "H1 Today in Pune, Maharashtra",
+          "H2 Forecast within India's 24-hour limits",
+          "H2 Your recommendation for today",
+          "H3 Cut indoor smoke at the source",
+          "H2 What would you like help with?",
+          "H2 Ask AirAware anything",
+          "H2 Air quality details"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 20
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "today",
+      "state": "default",
+      "path": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "768x1024",
+      "shots": ["prod-today-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 421,
+        "dcl": 1116,
+        "load": 1116,
+        "lcp": 1208,
+        "cls": 0.155,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 6
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Today | AirAware AI",
+        "url": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 1024,
+        "docHeight": 2211,
+        "screens": 2.2,
+        "y": {
+          "verdict": 279,
+          "recommendationHeading": 528,
+          "firstWhy": 781,
+          "modelForecast": 327,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 7,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 1,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Today in Pune, Maharashtra"],
+        "headings": [
+          "H1 Today in Pune, Maharashtra",
+          "H2 Forecast within India's 24-hour limits",
+          "H2 Your recommendation for today",
+          "H3 Cut indoor smoke at the source",
+          "H2 What would you like help with?",
+          "H2 Ask AirAware anything",
+          "H2 Air quality details"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 20
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "today",
+      "state": "default",
+      "path": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-today-default-1280x720-first.jpg",
+        "prod-today-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 334,
+        "dcl": 1028,
+        "load": 1028,
+        "lcp": 1708,
+        "cls": 0.104,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 6
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Today | AirAware AI",
+        "url": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 720,
+        "docHeight": 1807,
+        "screens": 2.5,
+        "y": {
+          "verdict": 299,
+          "recommendationHeading": 234,
+          "firstWhy": 536,
+          "modelForecast": 347,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 7,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 1,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Today in Pune, Maharashtra"],
+        "headings": [
+          "H1 Today in Pune, Maharashtra",
+          "H2 Forecast within India's 24-hour limits",
+          "H2 Your recommendation for today",
+          "H3 Cut indoor smoke at the source",
+          "H2 What would you like help with?",
+          "H2 Ask AirAware anything",
+          "H2 Air quality details"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 20
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "today",
+      "state": "default",
+      "path": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1440x900",
+      "shots": ["prod-today-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 396,
+        "dcl": 1078,
+        "load": 1078,
+        "lcp": 1504,
+        "cls": 0.106,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 6
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "Today | AirAware AI",
+        "url": "/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 900,
+        "docHeight": 1839,
+        "screens": 2,
+        "y": {
+          "verdict": 299,
+          "recommendationHeading": 234,
+          "firstWhy": 536,
+          "modelForecast": 347,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 7,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 1,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Today in Pune, Maharashtra"],
+        "headings": [
+          "H1 Today in Pune, Maharashtra",
+          "H2 Forecast within India's 24-hour limits",
+          "H2 Your recommendation for today",
+          "H3 Cut indoor smoke at the source",
+          "H2 What would you like help with?",
+          "H2 Ask AirAware anything",
+          "H2 Air quality details"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 20
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "ask",
+      "state": "default",
+      "path": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "320x640",
+      "shots": ["prod-ask-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 318,
+        "dcl": 997,
+        "load": 998,
+        "lcp": 1048,
+        "cls": 0.119,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Ask AirAware | AirAware AI",
+        "url": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 640,
+        "docHeight": 1488,
+        "screens": 2.3,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 4,
+          "24-hour": 0,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Ask AirAware"],
+        "headings": ["H1 Ask AirAware"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 23
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "ask",
+      "state": "default",
+      "path": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "390x844",
+      "shots": [
+        "prod-ask-default-390x844-first.jpg",
+        "prod-ask-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 381,
+        "dcl": 1183,
+        "load": 1183,
+        "lcp": 1260,
+        "cls": 0.004,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Ask AirAware | AirAware AI",
+        "url": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 844,
+        "docHeight": 1396,
+        "screens": 1.7,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 4,
+          "24-hour": 0,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Ask AirAware"],
+        "headings": ["H1 Ask AirAware"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 23
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "ask",
+      "state": "default",
+      "path": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "768x1024",
+      "shots": ["prod-ask-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 362,
+        "dcl": 1040,
+        "load": 1040,
+        "lcp": 1092,
+        "cls": 0.009,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Ask AirAware | AirAware AI",
+        "url": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 1024,
+        "docHeight": 1223,
+        "screens": 1.2,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 4,
+          "24-hour": 0,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Ask AirAware"],
+        "headings": ["H1 Ask AirAware"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 23
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "ask",
+      "state": "default",
+      "path": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-ask-default-1280x720-first.jpg",
+        "prod-ask-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 350,
+        "dcl": 1026,
+        "load": 1026,
+        "lcp": 1080,
+        "cls": 0.001,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "Ask AirAware | AirAware AI",
+        "url": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 720,
+        "docHeight": 1191,
+        "screens": 1.7,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 4,
+          "24-hour": 0,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Ask AirAware"],
+        "headings": ["H1 Ask AirAware"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 23
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "ask",
+      "state": "default",
+      "path": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1440x900",
+      "shots": ["prod-ask-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 353,
+        "dcl": 1083,
+        "load": 1083,
+        "lcp": 1144,
+        "cls": 0.001,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Ask AirAware | AirAware AI",
+        "url": "/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 900,
+        "docHeight": 1223,
+        "screens": 1.4,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 4,
+          "24-hour": 0,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Ask AirAware"],
+        "headings": ["H1 Ask AirAware"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 23
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "home",
+      "state": "default",
+      "path": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "320x640",
+      "shots": ["prod-home-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 278,
+        "dcl": 958,
+        "load": 958,
+        "lcp": 1064,
+        "cls": 0.468,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 4,
+            "kb": 8
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Home | AirAware AI",
+        "url": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 640,
+        "docHeight": 3201,
+        "screens": 5,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 640,
+          "modelForecast": 229,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Home"],
+        "headings": [
+          "H1 My Home",
+          "H2 Today, for your home",
+          "H3 Cut indoor smoke at the source",
+          "H2 Ways to improve indoor air",
+          "H3 Cooking and smoke",
+          "H3 Ventilation",
+          "H3 Dust and cleaning",
+          "H3 Filtration"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/recommendations/guides?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "home",
+      "state": "default",
+      "path": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "390x844",
+      "shots": [
+        "prod-home-default-390x844-first.jpg",
+        "prod-home-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 586,
+        "dcl": 1264,
+        "load": 1264,
+        "lcp": 1336,
+        "cls": 0.416,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 4,
+            "kb": 8
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Home | AirAware AI",
+        "url": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 844,
+        "docHeight": 2831,
+        "screens": 3.4,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 565,
+          "modelForecast": 229,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Home"],
+        "headings": [
+          "H1 My Home",
+          "H2 Today, for your home",
+          "H3 Cut indoor smoke at the source",
+          "H2 Ways to improve indoor air",
+          "H3 Cooking and smoke",
+          "H3 Ventilation",
+          "H3 Dust and cleaning",
+          "H3 Filtration"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/recommendations/guides?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "home",
+      "state": "default",
+      "path": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "768x1024",
+      "shots": ["prod-home-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 325,
+        "dcl": 1004,
+        "load": 1004,
+        "lcp": 1480,
+        "cls": 0.348,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 4,
+            "kb": 8
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Home | AirAware AI",
+        "url": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 1024,
+        "docHeight": 2497,
+        "screens": 2.4,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 545,
+          "modelForecast": 249,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Home"],
+        "headings": [
+          "H1 My Home",
+          "H2 Today, for your home",
+          "H3 Cut indoor smoke at the source",
+          "H2 Ways to improve indoor air",
+          "H3 Cooking and smoke",
+          "H3 Ventilation",
+          "H3 Dust and cleaning",
+          "H3 Filtration"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/recommendations/guides?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "home",
+      "state": "default",
+      "path": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-home-default-1280x720-first.jpg",
+        "prod-home-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 510,
+        "dcl": 1190,
+        "load": 1190,
+        "lcp": 1272,
+        "cls": 0.226,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 4,
+            "kb": 8
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "My Home | AirAware AI",
+        "url": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 720,
+        "docHeight": 2193,
+        "screens": 3,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 496,
+          "modelForecast": 249,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Home"],
+        "headings": [
+          "H1 My Home",
+          "H2 Today, for your home",
+          "H3 Cut indoor smoke at the source",
+          "H2 Ways to improve indoor air",
+          "H3 Cooking and smoke",
+          "H3 Ventilation",
+          "H3 Dust and cleaning",
+          "H3 Filtration"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/recommendations/guides?… 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "home",
+      "state": "default",
+      "path": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1440x900",
+      "shots": ["prod-home-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 338,
+        "dcl": 1029,
+        "load": 1031,
+        "lcp": 1124,
+        "cls": 0.199,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 4,
+            "kb": 8
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Home | AirAware AI",
+        "url": "/app/home?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 900,
+        "docHeight": 2225,
+        "screens": 2.5,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 496,
+          "modelForecast": 249,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 2,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Home"],
+        "headings": [
+          "H1 My Home",
+          "H2 Today, for your home",
+          "H3 Cut indoor smoke at the source",
+          "H2 Ways to improve indoor air",
+          "H3 Cooking and smoke",
+          "H3 Ventilation",
+          "H3 Dust and cleaning",
+          "H3 Filtration"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "POST /api/v1/recommendations/daily-plan 200",
+        "GET /api/v1/recommendations/guides?… 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "habits",
+      "state": "default",
+      "path": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "320x640",
+      "shots": ["prod-habits-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 338,
+        "dcl": 1016,
+        "load": 1016,
+        "lcp": 1444,
+        "cls": 0.314,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 5
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Better Habits | AirAware AI",
+        "url": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 640,
+        "docHeight": 2758,
+        "screens": 4.3,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 492,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Better Habits"],
+        "headings": [
+          "H1 Better Habits",
+          "H2 Daily commuting and vehicle idling",
+          "H3 Switch off the engine while you wait",
+          "H2 Waste",
+          "H3 Don't burn waste or leaves",
+          "H2 Cooking",
+          "H3 Consider a cleaner cooking fuel where possible",
+          "H2 Energy use",
+          "H3 Choose star-labelled appliances",
+          "H3 Use fans first, and keep the AC at 24 °C",
+          "H3 Switch off lights you are not using"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/recommendations/guides?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "habits",
+      "state": "default",
+      "path": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "390x844",
+      "shots": [
+        "prod-habits-default-390x844-first.jpg",
+        "prod-habits-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 293,
+        "dcl": 980,
+        "load": 980,
+        "lcp": 1412,
+        "cls": 0.284,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 5
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Better Habits | AirAware AI",
+        "url": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 844,
+        "docHeight": 2445,
+        "screens": 2.9,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 418,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Better Habits"],
+        "headings": [
+          "H1 Better Habits",
+          "H2 Daily commuting and vehicle idling",
+          "H3 Switch off the engine while you wait",
+          "H2 Waste",
+          "H3 Don't burn waste or leaves",
+          "H2 Cooking",
+          "H3 Consider a cleaner cooking fuel where possible",
+          "H2 Energy use",
+          "H3 Choose star-labelled appliances",
+          "H3 Use fans first, and keep the AC at 24 °C",
+          "H3 Switch off lights you are not using"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": "page",
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/recommendations/guides?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "habits",
+      "state": "default",
+      "path": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "768x1024",
+      "shots": ["prod-habits-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 361,
+        "dcl": 1091,
+        "load": 1091,
+        "lcp": 1536,
+        "cls": 0.157,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 5
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Better Habits | AirAware AI",
+        "url": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 1024,
+        "docHeight": 2127,
+        "screens": 2.1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 406,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Better Habits"],
+        "headings": [
+          "H1 Better Habits",
+          "H2 Daily commuting and vehicle idling",
+          "H3 Switch off the engine while you wait",
+          "H2 Waste",
+          "H3 Don't burn waste or leaves",
+          "H2 Cooking",
+          "H3 Consider a cleaner cooking fuel where possible",
+          "H2 Energy use",
+          "H3 Choose star-labelled appliances",
+          "H3 Use fans first, and keep the AC at 24 °C",
+          "H3 Switch off lights you are not using"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/recommendations/guides?… 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "habits",
+      "state": "default",
+      "path": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-habits-default-1280x720-first.jpg",
+        "prod-habits-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 552,
+        "dcl": 1258,
+        "load": 1259,
+        "lcp": 1636,
+        "cls": 0.196,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 5
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Better Habits | AirAware AI",
+        "url": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 720,
+        "docHeight": 1871,
+        "screens": 2.6,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 381,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Better Habits"],
+        "headings": [
+          "H1 Better Habits",
+          "H2 Daily commuting and vehicle idling",
+          "H3 Switch off the engine while you wait",
+          "H2 Waste",
+          "H3 Don't burn waste or leaves",
+          "H2 Cooking",
+          "H3 Consider a cleaner cooking fuel where possible",
+          "H2 Energy use",
+          "H3 Choose star-labelled appliances",
+          "H3 Use fans first, and keep the AC at 24 °C",
+          "H3 Switch off lights you are not using"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/recommendations/guides?… 200",
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "habits",
+      "state": "default",
+      "path": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1440x900",
+      "shots": ["prod-habits-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 371,
+        "dcl": 1050,
+        "load": 1051,
+        "lcp": 1460,
+        "cls": 0.143,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 3,
+            "kb": 5
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Better Habits | AirAware AI",
+        "url": "/app/habits?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 900,
+        "docHeight": 1903,
+        "screens": 2.1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": 381,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Better Habits"],
+        "headings": [
+          "H1 Better Habits",
+          "H2 Daily commuting and vehicle idling",
+          "H3 Switch off the engine while you wait",
+          "H2 Waste",
+          "H3 Don't burn waste or leaves",
+          "H2 Cooking",
+          "H3 Consider a cleaner cooking fuel where possible",
+          "H2 Energy use",
+          "H3 Choose star-labelled appliances",
+          "H3 Use fans first, and keep the AC at 24 °C",
+          "H3 Switch off lights you are not using"
+        ],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": "page",
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 10
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/recommendations/guides?… 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "profile",
+      "state": "default",
+      "path": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "320x640",
+      "shots": ["prod-profile-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 402,
+        "dcl": 1078,
+        "load": 1078,
+        "lcp": 1128,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Profile | AirAware AI",
+        "url": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 640,
+        "docHeight": 2237,
+        "screens": 3.5,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Profile"],
+        "headings": ["H1 My Profile", "H2 Your household (optional)"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": "page",
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 640,
+            "top": 583
+          }
+        ],
+        "buttons": 12
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "profile",
+      "state": "default",
+      "path": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "390x844",
+      "shots": [
+        "prod-profile-default-390x844-first.jpg",
+        "prod-profile-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 320,
+        "dcl": 994,
+        "load": 994,
+        "lcp": 1040,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 149
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 149kB"]
+      },
+      "m": {
+        "title": "My Profile | AirAware AI",
+        "url": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 844,
+        "docHeight": 2116,
+        "screens": 2.5,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Profile"],
+        "headings": ["H1 My Profile", "H2 Your household (optional)"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": "page",
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 12
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "profile",
+      "state": "default",
+      "path": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "768x1024",
+      "shots": ["prod-profile-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 257,
+        "dcl": 1033,
+        "load": 1033,
+        "lcp": 1084,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Profile | AirAware AI",
+        "url": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 1024,
+        "docHeight": 1883,
+        "screens": 1.8,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Profile"],
+        "headings": ["H1 My Profile", "H2 Your household (optional)"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": "page",
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 12
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "profile",
+      "state": "default",
+      "path": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-profile-default-1280x720-first.jpg",
+        "prod-profile-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 355,
+        "dcl": 1134,
+        "load": 1134,
+        "lcp": 1184,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Profile | AirAware AI",
+        "url": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 720,
+        "docHeight": 1847,
+        "screens": 2.6,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Profile"],
+        "headings": ["H1 My Profile", "H2 Your household (optional)"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": "page",
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 12
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/sources 200",
+        "GET /api/v1/air-quality/forecast?… 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "profile",
+      "state": "default",
+      "path": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+      "viewport": "1440x900",
+      "shots": ["prod-profile-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 607,
+        "dcl": 1295,
+        "load": 1295,
+        "lcp": 1348,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 2,
+            "kb": 2
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "My Profile | AirAware AI",
+        "url": "/app/profile?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86",
+        "innerHeight": 900,
+        "docHeight": 1879,
+        "screens": 2.1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 3,
+          "24-hour": 0,
+          "model": 1,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["My Profile"],
+        "headings": ["H1 My Profile", "H2 Your household (optional)"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": "page",
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 12
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": [
+        "GET /api/v1/air-quality/forecast?… 200",
+        "GET /api/v1/air-quality/sources 200"
+      ]
+    },
+    {
+      "source": "prod",
+      "route": "privacy",
+      "state": "default",
+      "path": "/privacy",
+      "viewport": "320x640",
+      "shots": ["prod-privacy-default-320x640-first.jpg"],
+      "perf": {
+        "ttfb": 564,
+        "dcl": 1246,
+        "load": 1246,
+        "lcp": 1284,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Privacy | AirAware AI",
+        "url": "/privacy",
+        "innerHeight": 640,
+        "docHeight": 3411,
+        "screens": 5.3,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Privacy"],
+        "headings": [
+          "H1 Privacy",
+          "H2 What stays in your browser",
+          "H2 What Open-Meteo receives",
+          "H2 What the AI writers receive",
+          "H2 What happens to your questions",
+          "H2 What Supabase stores",
+          "H2 How to delete",
+          "H2 No analytics"
+        ],
+        "navs": [],
+        "buttons": 3
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "privacy",
+      "state": "default",
+      "path": "/privacy",
+      "viewport": "390x844",
+      "shots": [
+        "prod-privacy-default-390x844-first.jpg",
+        "prod-privacy-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 565,
+        "dcl": 1249,
+        "load": 1249,
+        "lcp": 1288,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Privacy | AirAware AI",
+        "url": "/privacy",
+        "innerHeight": 844,
+        "docHeight": 2891,
+        "screens": 3.4,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Privacy"],
+        "headings": [
+          "H1 Privacy",
+          "H2 What stays in your browser",
+          "H2 What Open-Meteo receives",
+          "H2 What the AI writers receive",
+          "H2 What happens to your questions",
+          "H2 What Supabase stores",
+          "H2 How to delete",
+          "H2 No analytics"
+        ],
+        "navs": [],
+        "buttons": 3
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "privacy",
+      "state": "default",
+      "path": "/privacy",
+      "viewport": "768x1024",
+      "shots": ["prod-privacy-default-768x1024-first.jpg"],
+      "perf": {
+        "ttfb": 525,
+        "dcl": 1200,
+        "load": 1200,
+        "lcp": 1232,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Privacy | AirAware AI",
+        "url": "/privacy",
+        "innerHeight": 1024,
+        "docHeight": 2015,
+        "screens": 2,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Privacy"],
+        "headings": [
+          "H1 Privacy",
+          "H2 What stays in your browser",
+          "H2 What Open-Meteo receives",
+          "H2 What the AI writers receive",
+          "H2 What happens to your questions",
+          "H2 What Supabase stores",
+          "H2 How to delete",
+          "H2 No analytics"
+        ],
+        "navs": [],
+        "buttons": 3
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "privacy",
+      "state": "default",
+      "path": "/privacy",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-privacy-default-1280x720-first.jpg",
+        "prod-privacy-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 350,
+        "dcl": 1039,
+        "load": 1039,
+        "lcp": 1080,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Privacy | AirAware AI",
+        "url": "/privacy",
+        "innerHeight": 720,
+        "docHeight": 2015,
+        "screens": 2.8,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Privacy"],
+        "headings": [
+          "H1 Privacy",
+          "H2 What stays in your browser",
+          "H2 What Open-Meteo receives",
+          "H2 What the AI writers receive",
+          "H2 What happens to your questions",
+          "H2 What Supabase stores",
+          "H2 How to delete",
+          "H2 No analytics"
+        ],
+        "navs": [],
+        "buttons": 3
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "privacy",
+      "state": "default",
+      "path": "/privacy",
+      "viewport": "1440x900",
+      "shots": ["prod-privacy-default-1440x900-first.jpg"],
+      "perf": {
+        "ttfb": 283,
+        "dcl": 962,
+        "load": 962,
+        "lcp": 1000,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Privacy | AirAware AI",
+        "url": "/privacy",
+        "innerHeight": 900,
+        "docHeight": 2015,
+        "screens": 2.2,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 5,
+          "24-hour": 1,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Privacy"],
+        "headings": [
+          "H1 Privacy",
+          "H2 What stays in your browser",
+          "H2 What Open-Meteo receives",
+          "H2 What the AI writers receive",
+          "H2 What happens to your questions",
+          "H2 What Supabase stores",
+          "H2 How to delete",
+          "H2 No analytics"
+        ],
+        "navs": [],
+        "buttons": 3
+      },
+      "edge": [],
+      "small": [],
+      "console": [],
+      "failed": [],
+      "api": []
+    },
+    {
+      "source": "prod",
+      "route": "unknown-app",
+      "state": "default",
+      "path": "/app/nope",
+      "viewport": "390x844",
+      "shots": [
+        "prod-unknown-app-default-390x844-first.jpg",
+        "prod-unknown-app-default-390x844-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 550,
+        "dcl": 1227,
+        "load": 1227,
+        "lcp": 1276,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 844,
+        "docHeight": 964,
+        "screens": 1.1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 56
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 56
+              }
+            ],
+            "position": "fixed",
+            "bottom": 844,
+            "top": 787
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "unknown-app",
+      "state": "default",
+      "path": "/app/nope",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-unknown-app-default-1280x720-first.jpg",
+        "prod-unknown-app-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 493,
+        "dcl": 1169,
+        "load": 1169,
+        "lcp": 1224,
+        "cls": 0.007,
+        "docKb": 1,
+        "resources": {
+          "link": {
+            "n": 2,
+            "kb": 54
+          },
+          "script": {
+            "n": 1,
+            "kb": 148
+          },
+          "fetch": {
+            "n": 1,
+            "kb": 1
+          }
+        },
+        "fonts": ["inter-latin-wght-normal.woff2 47kB"],
+        "scripts": ["index-C11ewqej.js 148kB"]
+      },
+      "m": {
+        "title": "Welcome | AirAware AI",
+        "url": "/app/welcome",
+        "innerHeight": 720,
+        "docHeight": 868,
+        "screens": 1.2,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 2,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Where should we check air quality?"],
+        "headings": ["H1 Where should we check air quality?"],
+        "navs": [
+          {
+            "label": "Main",
+            "items": [
+              {
+                "name": "TodayToday",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "AskAsk AirAware",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HomeMy Home",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "HabitsBetter Habits",
+                "current": null,
+                "h": 44
+              },
+              {
+                "name": "ProfileMy Profile",
+                "current": null,
+                "h": 44
+              }
+            ],
+            "position": "static",
+            "bottom": 54,
+            "top": 10
+          }
+        ],
+        "buttons": 11
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [],
+      "failed": [],
+      "api": ["GET /api/v1/air-quality/sources 200"]
+    },
+    {
+      "source": "prod",
+      "route": "unknown",
+      "state": "default",
+      "path": "/nope",
+      "viewport": "1280x720",
+      "shots": [
+        "prod-unknown-default-1280x720-first.jpg",
+        "prod-unknown-default-1280x720-full.jpg"
+      ],
+      "perf": {
+        "ttfb": 665,
+        "dcl": 746,
+        "load": 768,
+        "lcp": 784,
+        "cls": 0,
+        "docKb": 1,
+        "resources": {},
+        "fonts": [],
+        "scripts": []
+      },
+      "m": {
+        "title": "Page not found",
+        "url": "/nope",
+        "innerHeight": 720,
+        "docHeight": 720,
+        "screens": 1,
+        "y": {
+          "verdict": null,
+          "recommendationHeading": null,
+          "firstWhy": null,
+          "modelForecast": null,
+          "notCurrent": null,
+          "checkMyAir": null
+        },
+        "terms": {
+          "forecast": 0,
+          "24-hour": 0,
+          "model": 0,
+          "CPCB": 0,
+          "PM2.5": 0,
+          "µg/m³": 0,
+          "GMT+5:30": 0,
+          "AQI": 0
+        },
+        "bannedWords": [],
+        "h1": ["Page not found"],
+        "headings": ["H1 Page not found"],
+        "navs": [],
+        "buttons": 1
+      },
+      "edge": [],
+      "small": [],
+      "axe": [],
+      "console": [
+        "error: Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "failed": ["404 https://airaware-ai.netlify.app/nope"],
+      "api": []
+    }
+  ],
+  "keyboard": [
+    {
+      "route": "landing",
+      "viewport": "1280x720",
+      "steps": [
+        {
+          "tag": "a",
+          "name": "AirAware AI",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Check My Air",
+          "top": 587,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Meet Your Assistant",
+          "top": 587,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "input",
+          "name": "",
+          "top": 740,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Check conditions before outdoor ex",
+          "top": 2175,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Use the kitchen exhaust while cook",
+          "top": 2612,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Combine trips and avoid idling)",
+          "top": 3085,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Run your air purifier where people",
+          "top": 3529,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo Air Quality API",
+          "top": 3777,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "National Ambient Air Quality Standards (",
+          "top": 3821,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Check My Air",
+          "top": 5228,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 5490,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 5541,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "landing",
+      "viewport": "390x844",
+      "steps": [
+        {
+          "tag": "a",
+          "name": "AirAware AI",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Check My Air",
+          "top": 357,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Meet Your Assistant",
+          "top": 417,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "input",
+          "name": "",
+          "top": 590,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Check conditions before outdoor ex",
+          "top": 3270,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Use the kitchen exhaust while cook",
+          "top": 3879,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Combine trips and avoid idling)",
+          "top": 4606,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why? (Run your air purifier where people",
+          "top": 5319,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo Air Quality API",
+          "top": 5607,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "National Ambient Air Quality Standards (",
+          "top": 5651,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Check My Air",
+          "top": 7530,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 7760,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 7831,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "today",
+      "viewport": "1280x720",
+      "steps": [
+        {
+          "tag": "a",
+          "name": "Skip to content",
+          "top": 8,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "AirAware AI",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Today",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Ask AirAware",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Home",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Better Habits",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Profile",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Change place: Pune, Maharashtra",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why this recommendation? (Cut indoor smo",
+          "top": 536,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "See your full day",
+          "top": 669,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Make it personal: 2 quick questions",
+          "top": 787,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Not now",
+          "top": 787,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Outdoor activitiesWalks, exercise, commu",
+          "top": 949,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My homeCooking, windows, purifiers",
+          "top": 949,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My familyChildren, older adults, school ",
+          "top": 949,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Greener habitsSmall swaps that cut smoke",
+          "top": 949,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "input",
+          "name": "",
+          "top": 1207,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Send",
+          "top": 1207,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Can I go for a morning walk today?",
+          "top": 1267,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Is it a good idea to open my windows?",
+          "top": 1267,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "How can I improve my indoor air?",
+          "top": 1267,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Air quality details",
+          "top": 1369,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 1536,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 1587,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "today",
+      "viewport": "390x844",
+      "steps": [
+        {
+          "tag": "a",
+          "name": "Skip to content",
+          "top": 8,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "AirAware AI",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Today",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Ask AirAware",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Home",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Better Habits",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Profile",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Change place: Pune, Maharashtra",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Why this recommendation? (Cut indoor smo",
+          "top": 1049,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "See your full day",
+          "top": 1202,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Make it personal: 2 quick questions",
+          "top": 1316,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Not now",
+          "top": 1372,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Outdoor activitiesWalks, exercise, commu",
+          "top": 1562,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My homeCooking, windows, purifiers",
+          "top": 1657,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My familyChildren, older adults, school ",
+          "top": 1752,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Greener habitsSmall swaps that cut smoke",
+          "top": 1847,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "input",
+          "name": "",
+          "top": 2096,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Send",
+          "top": 2096,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Can I go for a morning walk today?",
+          "top": 2156,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Is it a good idea to open my windows?",
+          "top": 2208,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "How can I improve my indoor air?",
+          "top": 2260,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "summary",
+          "name": "Air quality details",
+          "top": 2358,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 2529,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 2600,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "ask",
+      "viewport": "1280x720",
+      "steps": [
+        {
+          "tag": "a",
+          "name": "Skip to content",
+          "top": 8,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "AirAware AI",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Today",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Ask AirAware",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Home",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Better Habits",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Profile",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Change place: Pune, Maharashtra",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Edit your answers in My Profile",
+          "top": 157,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Outdoor activities",
+          "top": 266,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Windows and ventilation",
+          "top": 266,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Indoor air",
+          "top": 266,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "My family",
+          "top": 266,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Commuting",
+          "top": 318,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Greener habits",
+          "top": 318,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Can I go for a morning walk today?",
+          "top": 378,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Is it a good idea to open my windows?",
+          "top": 430,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "How can I improve my indoor air?",
+          "top": 482,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "What should I consider for my children's",
+          "top": 534,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "How can I reduce pollution while commuti",
+          "top": 586,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "input",
+          "name": "",
+          "top": 733,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Send",
+          "top": 733,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 920,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 971,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "ask",
+      "viewport": "390x844",
+      "steps": [
+        {
+          "tag": "a",
+          "name": "Skip to content",
+          "top": 8,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "AirAware AI",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Today",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Ask AirAware",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Home",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Better Habits",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "My Profile",
+          "top": 788,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Change place: Pune, Maharashtra",
+          "top": 10,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Edit your answers in My Profile",
+          "top": 161,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Outdoor activities",
+          "top": 315,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Windows and ventilation",
+          "top": 367,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Indoor air",
+          "top": 419,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "My family",
+          "top": 419,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Commuting",
+          "top": 471,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Greener habits",
+          "top": 471,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Can I go for a morning walk today?",
+          "top": 531,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Is it a good idea to open my windows?",
+          "top": 583,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "How can I improve my indoor air?",
+          "top": 635,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "What should I consider for my children's",
+          "top": 687,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "How can I reduce pollution while commuti",
+          "top": 739,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "input",
+          "name": "",
+          "top": 878,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Send",
+          "top": 878,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 1065,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 1136,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "welcome",
+      "viewport": "1280x720",
+      "steps": [
+        {
+          "tag": "input",
+          "name": "",
+          "top": 274,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Use my location",
+          "top": 374,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 597,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 648,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    },
+    {
+      "route": "welcome",
+      "viewport": "390x844",
+      "steps": [
+        {
+          "tag": "input",
+          "name": "",
+          "top": 310,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "button",
+          "name": "Use my location",
+          "top": 410,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Open-Meteo.com",
+          "top": 633,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        {
+          "tag": "a",
+          "name": "Privacy",
+          "top": 704,
+          "visibleRing": true,
+          "obscured": false,
+          "focusVisible": true
+        },
+        null
+      ]
+    }
+  ],
+  "motion": [
+    {
+      "route": "today",
+      "reducedMotion": "no-preference",
+      "animations": [
+        {
+          "name": "cloud-drift",
+          "state": "running",
+          "iterations": 1,
+          "duration": 4800
+        },
+        {
+          "name": "rain-fall",
+          "state": "running",
+          "iterations": 6,
+          "duration": 800
+        }
+      ]
+    },
+    {
+      "route": "today",
+      "reducedMotion": "reduce",
+      "animations": []
+    }
+  ],
+  "errors": [],
+  "meta": {
+    "lang": "en",
+    "title": "AirAware AI: hourly air-quality forecasts for Indian cities",
+    "description": "Hourly air-quality forecasts for Indian cities, with the source, unit and time shown for every value.",
+    "viewport": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+    "themeColor": [" #080f1c"],
+    "icons": ["icon /favicon.svg"],
+    "manifest": null,
+    "og": []
+  },
+  "finishedAt": "2026-11-24T03:48:13.960Z",
+  "apiCallCount": 82
+}

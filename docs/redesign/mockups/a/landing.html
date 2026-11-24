@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>
+      AirAware AI: hourly air-quality forecasts for Indian cities (mockup A)
+    </title>
+    <meta name="description" content="Direction A mockup: landing page." />
+    <link rel="stylesheet" href="../tokens.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="landing on-dark">
+    <!-- Stage 1 mockup, Direction A "Calm atmosphere". Static illustration; not application code. -->
+    <svg
+      width="0"
+      height="0"
+      class="sprite"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+        />
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24">
+        <path
+          d="M20.5 11.5a8 8 0 0 1-11.7 7.1L3.5 20l1.4-4.9a8 8 0 1 1 15.6-3.6z"
+        />
+      </symbol>
+      <symbol id="i-house" viewBox="0 0 24 24">
+        <path d="M3.5 10.5 12 4l8.5 6.5V20h-5.5v-6h-6v6H3.5z" />
+      </symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path
+          d="M5 19.5C5 10 10.5 4.5 20 4.5c0 9.5-5.5 15-15 15zM5 19.5l7.5-7.5"
+        />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="10" r="3" />
+        <path d="M6.6 18.2a6.5 6.5 0 0 1 10.8 0" />
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path
+          d="M12 21s-6.5-5.8-6.5-11a6.5 6.5 0 0 1 13 0c0 5.2-6.5 11-6.5 11z"
+        />
+        <circle cx="12" cy="10" r="2.3" />
+      </symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24">
+        <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+      </symbol>
+      <symbol id="i-feet" viewBox="0 0 24 24">
+        <path
+          d="M7.5 3.5c1.8 0 2.8 2 2.8 4.6S9.2 12 7.5 12 4.7 10.7 4.7 8.1 5.7 3.5 7.5 3.5zM5.5 14.5h4v2.2a2 2 0 0 1-4 0zM16.5 7.5c1.8 0 2.8 2 2.8 4.6S18.2 16 16.5 16s-2.8-1.3-2.8-3.9 1-4.6 2.8-4.6zM14.5 18.5h4v.5a2 2 0 0 1-4 0z"
+        />
+      </symbol>
+      <symbol id="i-family" viewBox="0 0 24 24">
+        <circle cx="8" cy="7" r="2.8" />
+        <circle cx="17" cy="9.5" r="2.2" />
+        <path
+          d="M3 20v-2.5a5 5 0 0 1 10 0V20M13.5 20v-1.8a3.5 3.5 0 0 1 7 0V20"
+        />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 2" />
+      </symbol>
+    </svg>
+    <a class="skip sr-only" href="#main">Skip to content</a>
+    <header class="land-header">
+      <div class="land-bar">
+        <a class="logo" href="landing.html">AirAware AI</a>
+        <p class="sample-label" data-m="sample-label">
+          Illustrative sample — not live data
+        </p>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="hero" aria-labelledby="hero-h">
+        <div class="hero-inner">
+          <h1 id="hero-h">The air around you matters.</h1>
+          <p class="lede">
+            Understand your city's air quality. Discover smarter daily routines.
+            Make better choices for your home and community.
+          </p>
+          <div class="actions">
+            <a class="pill pill-primary" href="today-success.html"
+              >Check My Air</a
+            >
+            <a class="pill pill-outline" href="#">Meet Your Assistant</a>
+          </div>
+          <form
+            class="land-search"
+            role="search"
+            action="#"
+            onsubmit="return false;"
+          >
+            <p class="muted small">Or search a city</p>
+            <label for="city">Search for a city or area in India</label>
+            <p id="city-hint" class="small">
+              Type at least 2 letters, then choose a place from the list.
+            </p>
+            <div class="search-row">
+              <input
+                id="city"
+                type="text"
+                autocomplete="off"
+                aria-describedby="city-hint"
+              />
+              <button
+                type="submit"
+                class="pill pill-outline"
+                data-m="search-submit"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+        <div class="panorama-box">
+          <svg
+            class="panorama"
+            viewBox="0 0 800 160"
+            preserveAspectRatio="xMidYMax slice"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              class="p-far"
+              d="M0 160V98H24V76H40V90H62V60H76V52H84V60H96V86H122V68H146V94H168V72H182V48H192V72H204V88H232V64H256V82H278V56H296V92H322V74H340V62H358V80H384V52H398V44H406V52H420V84H446V68H470V90H492V58H510V76H534V66H554V50H564V66H578V86H604V72H626V56H642V80H668V64H694V88H716V70H738V54H750V74H774V92H800V160Z"
+            />
+            <path
+              class="p-mid"
+              d="M0 160V112H36V100H70V118H96V92H134V108H152V100H188V120H216V96H248V110H272V88H304V114H332V102H364V118H388V94H422V106H446V90H476V116H502V100H536V112H558V92H592V108H618V98H652V120H678V96H710V110H738V100H772V116H800V160Z"
+            />
+            <path
+              class="p-near"
+              d="M0 160V134H26V126H58V138H74V160ZM86 160V122H120V132H136V160ZM150 160V128H178V140H190V160ZM204 160V124H238V136H248V160ZM262 160V130H292V142H300V160ZM314 160V126H346V134H358V160ZM372 160V120H406V132H418V160ZM432 160V128H462V140H472V160ZM486 160V124H520V136H530V160ZM544 160V130H576V142H586V160ZM600 160V126H634V134H646V160ZM660 160V122H694V132H706V160ZM720 160V128H752V138H764V160ZM776 160V132H800V160Z"
+            />
+            <path
+              class="p-near"
+              d="M92 122v-7h11v7zM210 124v-6h10v6zM378 120v-7h11v7zM492 124v-6h10v6zM666 122v-7h11v7z"
+            />
+          </svg>
+        </div>
+      </section>
+
+      <section class="land-sec split" aria-labelledby="s2">
+        <div class="sec-text">
+          <h2 id="s2">Understand your air</h2>
+          <p class="sec-lede">
+            One sentence tells you how today's forecast compares with India's
+            24-hour limits, labelled Model forecast with the time it was
+            updated. Every number, unit and source is one tap away, under Air
+            quality details.
+          </p>
+        </div>
+        <figure class="preview-fig">
+          <figcaption class="muted small">
+            Drawing of the Today page, not today's forecast. Open the app for
+            current values.
+          </figcaption>
+          <div
+            class="preview"
+            role="img"
+            aria-label="Drawing of the Today page for Pune: the forecast verdict with its tag, the Model forecast label and an HH:MM time"
+          >
+            <div class="pv-bar">
+              <span class="pv-logo">AirAware AI</span
+              ><span class="pv-chip">Pune</span>
+            </div>
+            <div class="pv-sky">
+              <span class="pv-greet">Good afternoon</span>
+              <span class="pv-h1">Today in Pune, Maharashtra</span>
+              <span class="pv-card">
+                <span class="pv-weather"
+                  >Weather for {day}, HH:MM: temperature and cloud cover from
+                  Open-Meteo</span
+                >
+                <span class="pv-verdict"
+                  >Forecast within India's 24-hour limits</span
+                >
+                <span class="pv-prov"
+                  ><span class="pv-tag">Within the limit</span> Model forecast ·
+                  Open-Meteo · updated HH:MM</span
+                >
+                <span class="pv-caveat"
+                  >Being within the national limit does not mean the air is
+                  clean or free of risk.</span
+                >
+              </span>
+              <svg
+                class="pv-city"
+                viewBox="0 0 800 160"
+                preserveAspectRatio="xMidYMax slice"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  class="far"
+                  d="M0 160V98H24V76H40V90H62V60H76V52H84V60H96V86H122V68H146V94H168V72H182V48H192V72H204V88H232V64H256V82H278V56H296V92H322V74H340V62H358V80H384V52H398V44H406V52H420V84H446V68H470V90H492V58H510V76H534V66H554V50H564V66H578V86H604V72H626V56H642V80H668V64H694V88H716V70H738V54H750V74H774V92H800V160Z"
+                />
+                <path
+                  class="mid"
+                  d="M0 160V112H36V100H70V118H96V92H134V108H152V100H188V120H216V96H248V110H272V88H304V114H332V102H364V118H388V94H422V106H446V90H476V116H502V100H536V112H558V92H592V108H618V98H652V120H678V96H710V110H738V100H772V116H800V160Z"
+                />
+                <path
+                  class="near"
+                  d="M0 160V134H26V126H58V138H74V160ZM86 160V122H120V132H136V160ZM150 160V128H178V140H190V160ZM204 160V124H238V136H248V160ZM262 160V130H292V142H300V160ZM314 160V126H346V134H358V160ZM372 160V120H406V132H418V160ZM432 160V128H462V140H472V160ZM486 160V124H520V136H530V160ZM544 160V130H576V142H586V160ZM600 160V126H634V134H646V160ZM660 160V122H694V132H706V160ZM720 160V128H752V138H764V160ZM776 160V132H800V160Z"
+                />
+              </svg>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <section class="land-sec" aria-labelledby="s3">
+        <h2 id="s3">What AirAware helps with</h2>
+        <ul class="helps">
+          <li>
+            <svg class="help-svg" aria-hidden="true" focusable="false">
+              <use href="#i-feet" /></svg
+            ><span class="help-title">Outdoor activities</span
+            ><span class="muted">Walks, exercise, commutes</span>
+          </li>
+          <li>
+            <svg class="help-svg" aria-hidden="true" focusable="false">
+              <use href="#i-house" /></svg
+            ><span class="help-title">My home</span
+            ><span class="muted">Cooking, windows, purifiers</span>
+          </li>
+          <li>
+            <svg class="help-svg" aria-hidden="true" focusable="false">
+              <use href="#i-family" /></svg
+            ><span class="help-title">My family</span
+            ><span class="muted">Children, older adults, school runs</span>
+          </li>
+          <li>
+            <svg class="help-svg" aria-hidden="true" focusable="false">
+              <use href="#i-leaf" /></svg
+            ><span class="help-title">Greener habits</span
+            ><span class="muted">Small swaps that cut smoke and exhaust</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="land-sec split" aria-labelledby="s4">
+        <div class="sec-text">
+          <h2 id="s4">Explainable AI</h2>
+          <p class="sec-lede">
+            AI can arrange our rules' suggestions and word them for your day,
+            but it never decides them. Every suggestion opens to its reason, the
+            answers and forecast check it used, its sources and its limits.
+          </p>
+          <a class="pill pill-primary compact" href="today-success.html"
+            >Check My Air</a
+          >
+        </div>
+        <figure class="ex-fig">
+          <figcaption class="muted small">
+            Example from our rules, for a day when the forecast is above India's
+            24-hour limit.
+          </figcaption>
+          <div class="on-light example">
+            <article class="card">
+              <h3>Run your air purifier where people spend most time</h3>
+              <p>
+                Consider running the purifier in the room your household uses
+                most, following the maker's instructions.
+              </p>
+              <details open>
+                <summary>
+                  Why?<span class="sr-only">
+                    (Run your air purifier where people spend most time)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      You said you have an air purifier, and the forecast is
+                      above the national 24-hour limit.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>today's forecast check</dd>
+                  </div>
+                  <div>
+                    <dt>What it used</dt>
+                    <dd>
+                      <ul>
+                        <li>Your answer to "Do you have an air purifier?"</li>
+                        <li>the 24-hour forecast check</li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li>
+                          <a
+                            href="https://open-meteo.com/en/docs/air-quality-api"
+                            >Open-Meteo Air Quality API</a
+                          >
+                        </li>
+                        <li>
+                          <a
+                            href="https://cpcb.nic.in/uploads/National_Ambient_Air_Quality_Standards.pdf"
+                            >National Ambient Air Quality Standards (CPCB, 18
+                            November 2009)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Caveat</dt>
+                    <dd>
+                      A purifier helps with particles in that room; it does not
+                      remove every pollutant.
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+          </div>
+        </figure>
+      </section>
+
+      <section class="land-sec" aria-labelledby="s5">
+        <h2 id="s5">My Home and Better Habits</h2>
+        <div class="pair">
+          <div class="pair-item">
+            <h3>Improve indoor air</h3>
+            <p class="muted">
+              Indoor suggestions look at what you cook with and what burns
+              inside, as well as the air outside.
+            </p>
+            <p class="muted small">Example from our rules.</p>
+            <div class="on-light example">
+              <article class="card">
+                <h4>Use the kitchen exhaust while cooking</h4>
+                <p>
+                  Switch the exhaust on before you start cooking and leave it
+                  running for a few minutes after.
+                </p>
+                <details>
+                  <summary>
+                    Why?<span class="sr-only">
+                      (Use the kitchen exhaust while cooking)</span
+                    >
+                  </summary>
+                  <dl class="why-list">
+                    <div>
+                      <dt>Reason</dt>
+                      <dd>
+                        You said your kitchen has an exhaust. Removing cooking
+                        smoke at the source comes first.
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Based on</dt>
+                      <dd>general guidance</dd>
+                    </div>
+                    <div>
+                      <dt>What it used</dt>
+                      <dd>
+                        <ul>
+                          <li>
+                            Your answer to "Does your kitchen have an exhaust
+                            fan or chimney?"
+                          </li>
+                        </ul>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Sources</dt>
+                      <dd>No external source; this is general guidance.</dd>
+                    </div>
+                    <div>
+                      <dt>Caveat</dt>
+                      <dd>
+                        Some kitchen hoods recirculate air instead of venting it
+                        outside.
+                      </dd>
+                    </div>
+                  </dl>
+                </details>
+              </article>
+            </div>
+          </div>
+          <div class="pair-item">
+            <h3>Sustainable everyday choices</h3>
+            <p class="muted">
+              Practical habits that cut pollution for you and your neighbours.
+              We never show an emissions saving we can't calculate.
+            </p>
+            <p class="muted small">Example from our rules.</p>
+            <div class="on-light example">
+              <article class="card">
+                <h4>Combine trips and avoid idling</h4>
+                <p>
+                  Combining errands into one trip and switching off the engine
+                  while waiting cut your vehicle's exhaust. For some trips,
+                  public transport, carpooling, walking or cycling may also be
+                  practical.
+                </p>
+                <details>
+                  <summary>
+                    Why?<span class="sr-only">
+                      (Combine trips and avoid idling)</span
+                    >
+                  </summary>
+                  <dl class="why-list">
+                    <div>
+                      <dt>Reason</dt>
+                      <dd>You said you get around by car.</dd>
+                    </div>
+                    <div>
+                      <dt>Based on</dt>
+                      <dd>general guidance</dd>
+                    </div>
+                    <div>
+                      <dt>What it used</dt>
+                      <dd>
+                        <ul>
+                          <li>
+                            Your answer to "How do you usually travel to work or
+                            college?"
+                          </li>
+                        </ul>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Sources</dt>
+                      <dd>No external source; this is general guidance.</dd>
+                    </div>
+                    <div>
+                      <dt>Caveat</dt>
+                      <dd>
+                        We do not estimate emission savings, because we have no
+                        documented method for your vehicle and trips.
+                      </dd>
+                    </div>
+                  </dl>
+                </details>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="land-sec" aria-labelledby="s6">
+        <h2 id="s6">How AirAware works</h2>
+        <p class="sec-lede">Forecasts for the next 48 hours, hour by hour.</p>
+        <ol class="steps" aria-label="How a forecast reaches you">
+          <li>
+            <h3>CAMS global model</h3>
+            <p class="muted">
+              Copernicus runs it every 12 hours on a grid about 45 km wide.
+            </p>
+          </li>
+          <li>
+            <h3>Open-Meteo</h3>
+            <p class="muted">
+              Serves its hourly PM2.5, PM10 and four gases, each with a unit.
+            </p>
+          </li>
+          <li>
+            <h3>AirAware server</h3>
+            <p class="muted">
+              Asks only for a location rounded to about 1 km and reuses each
+              answer for 10 minutes.
+            </p>
+          </li>
+          <li>
+            <h3>Your screen</h3>
+            <p class="muted">
+              Every value with its unit, its hour and the label Model forecast.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="land-sec closing" aria-labelledby="s7">
+        <p class="statement">
+          Forecasts are model estimates, not station measurements, and not the
+          CPCB National AQI.
+        </p>
+        <p class="muted">Official CPCB observations are not connected yet.</p>
+        <h2 id="s7">Your city, the next two days</h2>
+        <a class="pill pill-primary" href="today-success.html">Check My Air</a>
+      </section>
+    </main>
+    <footer class="land-footer">
+      <div class="land-foot-inner">
+        <p class="foot-name">AirAware AI</p>
+        <p>
+          Air-quality forecasts from
+          <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0),
+          based on CAMS global forecasts from the Copernicus Atmosphere
+          Monitoring Service.
+        </p>
+        <nav aria-label="Footer">
+          <a class="footer-link" href="#">Privacy</a>
+        </nav>
+        <p class="mock-note">
+          Mockup note, not app copy. Proposed, needs owner OK: the "Search"
+          submit button; the headings "What AirAware helps with" and "My Home
+          and Better Habits"; the drawn Today preview and its caption (in place
+          of the dated screenshot, which shows clock times and values).
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+257352e 2026-11-23 fix(client): say "Too many requests" when saving or a saved plan is rate-limited
+66c7441 2026-11-23 fix(ai): numbers in an answer must come from the input's values
+cefe205 2026-11-23 fix(plan): say "Try again in a minute" when Save plan is rate-limited
+c0c054b 2026-11-23 fix(ai): catch the number words the answer check missed
+3c5f5e1 2026-11-22 chore(landing): recapture both screenshots from the live app (22 Nov)
+1c0cd94 2026-11-22 fix(backdrop): the remaining deferred minors
+4d2d4ed 2026-11-22 fix: the cityscape review's deferred minors
+803697c 2026-11-22 fix(scene): pass tower's index explicitly (SonarCloud S7727)
+a12e883 2026-11-22 feat(scene): the air look fades over 700 ms; overcast keeps the within hue
+83163f3 2026-11-22 feat(scene): the mixed-street city, with no landmark
+fb11b56 2026-11-22 feat(scene): variant B's skyline as path data
+868e945 2026-11-22 fix(backdrop): My Home reloads its sky with its plan; the footer names the level
+9529bde 2026-11-21 fix: the guided chat review's deferred minors
+c7eaa6a 2026-11-21 fix: the guided chat review's Important findings
+fb76318 2026-11-21 feat(ask): the guided chat on screen
+97259cd 2026-11-21 feat(ask): a conversation thread with questions back and local replies
+8d6f4f0 2026-11-21 feat(profile): the form follows answers given elsewhere in the app
+38a223d 2026-11-21 feat(ask): the server offers follow-up questions that change today's cards
+5254a29 2026-11-21 fix: the two SonarCloud reliability issues failing the quality gate
+934678c 2026-11-21 fix: the plan's air line says "Today:" and never shows an unknown verdict
+dcebdaf 2026-11-21 fix: the Phase 10 review's two Important findings
+1b97dff 2026-11-21 fix: the Phase 9 review's deferred minors
+5c89357 2026-11-21 fix(a11y): chosen chips show in Windows High Contrast
+58bf983 2026-11-21 fix(a11y): the Phase 9 review's header and High Contrast findings
+c6fa686 2026-11-21 feat(a11y): the backdrop steps aside in forced colours
+d32668b 2026-11-21 test(e2e): 200 % text and WCAG text spacing on every page
+5e52cd0 2026-11-21 test(e2e): edges, one h1, 44 px targets and axe on every page and size
+40653e8 2026-11-21 fix: the backdrop review's deferred minors
+9a6dd36 2026-11-20 fix(scene): hide the city on screens under 24rem tall
+d478504 2026-11-20 test(landing): the page never says safe, healthy or clean air
+608441c 2026-11-20 fix(landing): the details screenshot reads on a 320 px phone
+0168fc1 2026-11-20 fix(landing): no step arrows in the 2x2 grid
+3ccade6 2026-11-20 fix(landing): sections finish rising in 120 px into view on phones too
+042baf0 2026-11-20 docs: the backdrop in DESIGN, ACCESSIBILITY and CHANGELOG; recapture the landing shot
+6a99048 2026-11-20 fix(scene): veils and fog fade from the city's visible top
+f43976c 2026-11-20 feat(ui): solid panels over the backdrop, a dark title block
+9e32b90 2026-11-20 feat(shell): one full-screen backdrop behind every app page
+6a9aa66 2026-11-20 feat(scene): what the app backdrop shows, and a request's previous data
+f28eacc 2026-11-20 chore(landing): recapture the Today phone shot with the new skyline
+497ead9 2026-11-20 fix: the cityscape review's deferred minors
+f8bb988 2026-11-20 fix(scene): the glow needs a known sky and rain
+dcc5160 2026-11-20 feat(scene): a still skyline while the forecast loads
+4814ae1 2026-11-20 feat(scene): a layered city whose look follows the air check and weather
+8fb6fa4 2026-11-20 feat(weather): day or night for this hour
+d6bff3f 2026-11-20 feat(landing): sections rise in as they scroll into view
+7a4a037 2026-11-20 feat(landing): eight sections, with the open details and how AirAware works
+c81f5dd 2026-11-20 feat(landing): hero with Check My Air, Meet Your Assistant and a phone shot of Today
+110bd3b 2026-11-20 chore(client): delete the unused Placeholder page
+24b83ff 2026-11-20 fix(ask): everyday health questions get the medical reply
+26dfb5a 2026-11-20 docs: Ask AirAware as built
+5657446 2026-11-20 feat(app): Today hands questions and topics to Ask
+24d3bb3 2026-11-20 feat(ask): the Ask AirAware page
+0e23712 2026-11-20 feat(ask): an in-memory conversation for the visit
+fa36381 2026-11-20 feat(ask): client call and Ask wording
+8219d14 2026-11-20 feat(ask): answers from the forecast, the cards and the plan writer
+3b3ccbb 2026-11-20 feat(ask): up to three cards per topic, yours first
+4af15e6 2026-11-20 feat(ask): choose the topic from fixed words, medical first
+e025f12 2026-11-20 refactor(ai): one plan writer for every AI caller
+9e86c87 2026-11-20 fix(app): My Home explains a stale plan instead of dropping the section
+83d0346 2026-11-20 docs: guide library approved; the plan builds on My Home too
+0eb6cd2 2026-11-20 test: lock the guide wording to its spec; a no-answers plan on My Home
+be48c02 2026-11-20 fix(app): My Home shows today's plan building or failing; focus stays on retry
+85741a1 2026-11-20 fix(app): My Home shows only a current plan, says who made it, never contradicts
+eb7e476 2026-11-20 feat(app): Better Habits
+55bb2bd 2026-11-20 feat(app): My Home
+0701564 2026-11-20 feat(app): the plan reports itself and builds on My Home too
+c5b3099 2026-11-20 feat(api): guides endpoint
+0bc17a9 2026-11-20 feat(api): guide library
+2704215 2026-11-20 test: Today's verdict matches the rules; fix leftovers
+d4a2a8a 2026-11-20 fix(app): Air quality details gets its own h2; "Today near you"
+926c893 2026-11-20 fix(app): focus follows Today's links and retry; modified clicks open new tabs
+286d299 2026-11-20 fix(app): the verdict refreshes with the plan; plan notices name the forecast
+3f9c288 2026-11-20 fix(app): build once with saved answers; keep who made it in view
+a5d61ce 2026-11-20 fix(app): the verdict comes before the invite
+0b1087f 2026-11-20 feat(app): saved plans open in My Profile
+6c23d25 2026-11-20 feat(app): help choices, ask box and air details
+f680943 2026-11-20 feat(app): the recommendation builds itself
+4a675d1 2026-11-20 feat(app): today leads with the verdict
+6990312 2026-11-20 feat(app): today helpers
+9fcbaa3 2026-11-20 fix(app): Welcome keeps cleared answers, starts from saved ones, and keeps focus
+828938f 2026-11-20 docs(privacy): what Remember on this device keeps
+23eeb3b 2026-11-20 fix(app): status as output; a first visit to /app opens Welcome
+11902c8 2026-11-20 feat(app): welcome or today, and a remembered place
+1945929 2026-11-20 feat(app): three-step welcome
+1021f0d 2026-11-20 feat(app): preferences carry the remembered place
+e503d06 2026-11-20 feat(api): remembered place in saved preferences
+6a8a10a 2026-11-20 fix(app): keep the plan across pages; address follows the place; nav scrolls to top
+e289ae5 2026-11-20 test: the place is read on any app path
+564a420 2026-11-20 fix(app): keep the logo on one line beside the place button
+758201f 2026-11-20 test: dialog stub without unbound-method warnings
+c58073f 2026-11-20 feat(app): place chip
+3aa3a51 2026-11-20 feat(app): My Profile holds answers and saved plans
+6370082 2026-11-20 feat(app): one shell with five-item navigation
+5a01d93 2026-11-20 feat(app): app paths and in-app navigation
+98254dd 2026-11-20 fix(ui): a fade, not a scale, for reduced-motion presses
+3e6aea2 2026-11-20 fix(ui): keep tap feedback under reduced motion; drop a no-op font rule
+75f30c1 2026-11-20 feat(ui): press feedback and tap baseline
+ca7143a 2026-11-20 feat(ui): self-hosted Inter, favicon and elevated token

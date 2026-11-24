@@ -26,3 +26,9 @@ test-results/
 # Stitch design exports (reference only; kept out of git for the 10 MB limit)
 stitch_design_system_implementation/
 stitch_design_system_implementation.zip
+
+# Redesign audit screenshots (8.8 MB; kept out of git for the 10 MB limit)
+docs/redesign/audit/screenshots/
+
+# Cityscape background art direction (5.1 MB; reference only, source rights unconfirmed)
+AirAware_Cityscape_Background_Assets/

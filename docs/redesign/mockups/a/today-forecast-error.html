@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Today, forecast failed | AirAware AI (mockup A)</title>
+    <meta
+      name="description"
+      content="Direction A mockup: Today when the forecast provider failed."
+    />
+    <link rel="stylesheet" href="../tokens.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="app">
+    <!-- Stage 1 mockup, Direction A "Calm atmosphere". Static illustration; not application code. -->
+    <svg
+      width="0"
+      height="0"
+      class="sprite"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+        />
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24">
+        <path
+          d="M20.5 11.5a8 8 0 0 1-11.7 7.1L3.5 20l1.4-4.9a8 8 0 1 1 15.6-3.6z"
+        />
+      </symbol>
+      <symbol id="i-house" viewBox="0 0 24 24">
+        <path d="M3.5 10.5 12 4l8.5 6.5V20h-5.5v-6h-6v6H3.5z" />
+      </symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path
+          d="M5 19.5C5 10 10.5 4.5 20 4.5c0 9.5-5.5 15-15 15zM5 19.5l7.5-7.5"
+        />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="10" r="3" />
+        <path d="M6.6 18.2a6.5 6.5 0 0 1 10.8 0" />
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path
+          d="M12 21s-6.5-5.8-6.5-11a6.5 6.5 0 0 1 13 0c0 5.2-6.5 11-6.5 11z"
+        />
+        <circle cx="12" cy="10" r="2.3" />
+      </symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24">
+        <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+      </symbol>
+      <symbol id="i-feet" viewBox="0 0 24 24">
+        <path
+          d="M7.5 3.5c1.8 0 2.8 2 2.8 4.6S9.2 12 7.5 12 4.7 10.7 4.7 8.1 5.7 3.5 7.5 3.5zM5.5 14.5h4v2.2a2 2 0 0 1-4 0zM16.5 7.5c1.8 0 2.8 2 2.8 4.6S18.2 16 16.5 16s-2.8-1.3-2.8-3.9 1-4.6 2.8-4.6zM14.5 18.5h4v.5a2 2 0 0 1-4 0z"
+        />
+      </symbol>
+      <symbol id="i-family" viewBox="0 0 24 24">
+        <circle cx="8" cy="7" r="2.8" />
+        <circle cx="17" cy="9.5" r="2.2" />
+        <path
+          d="M3 20v-2.5a5 5 0 0 1 10 0V20M13.5 20v-1.8a3.5 3.5 0 0 1 7 0V20"
+        />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 2" />
+      </symbol>
+    </svg>
+    <a class="skip sr-only" href="#main">Skip to content</a>
+    <div class="backdrop" data-air="unknown" aria-hidden="true">
+      <div class="city">
+        <svg
+          class="city-svg"
+          viewBox="0 0 800 160"
+          preserveAspectRatio="xMidYMax slice"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            class="far"
+            d="M0 160V98H24V76H40V90H62V60H76V52H84V60H96V86H122V68H146V94H168V72H182V48H192V72H204V88H232V64H256V82H278V56H296V92H322V74H340V62H358V80H384V52H398V44H406V52H420V84H446V68H470V90H492V58H510V76H534V66H554V50H564V66H578V86H604V72H626V56H642V80H668V64H694V88H716V70H738V54H750V74H774V92H800V160Z"
+          />
+          <path
+            class="mid"
+            d="M0 160V112H36V100H70V118H96V92H134V108H152V100H188V120H216V96H248V110H272V88H304V114H332V102H364V118H388V94H422V106H446V90H476V116H502V100H536V112H558V92H592V108H618V98H652V120H678V96H710V110H738V100H772V116H800V160Z"
+          />
+          <path
+            class="mid-detail"
+            d="M100 100h30v2h-30zM100 108h30v2h-30zM276 96h24v2h-24zM276 104h24v2h-24zM392 102h26v2h-26zM450 98h22v2h-22zM450 106h22v2h-22zM562 100h26v2h-26zM682 104h24v2h-24z"
+          />
+          <path
+            class="near"
+            d="M0 160V134H26V126H58V138H74V160ZM86 160V122H120V132H136V160ZM150 160V128H178V140H190V160ZM204 160V124H238V136H248V160ZM262 160V130H292V142H300V160ZM314 160V126H346V134H358V160ZM372 160V120H406V132H418V160ZM432 160V128H462V140H472V160ZM486 160V124H520V136H530V160ZM544 160V130H576V142H586V160ZM600 160V126H634V134H646V160ZM660 160V122H694V132H706V160ZM720 160V128H752V138H764V160ZM776 160V132H800V160Z"
+          />
+          <path
+            class="near"
+            d="M92 122v-7h11v7zM210 124v-6h10v6zM378 120v-7h11v7zM492 124v-6h10v6zM666 122v-7h11v7z"
+          />
+          <path
+            class="win"
+            d="M92 130h6v5h-6zM104 130h6v5h-6zM92 142h6v5h-6zM104 142h6v5h-6zM210 132h6v5h-6zM222 132h6v5h-6zM378 128h6v5h-6zM390 128h6v5h-6zM378 140h6v5h-6zM390 140h6v5h-6zM492 132h6v5h-6zM504 132h6v5h-6zM666 130h6v5h-6zM678 130h6v5h-6zM666 142h6v5h-6zM678 142h6v5h-6z"
+          />
+        </svg>
+      </div>
+    </div>
+    <header class="app-header on-dark">
+      <div class="bar">
+        <a class="logo" href="today-success.html">AirAware AI</a>
+        <button
+          type="button"
+          class="chip"
+          aria-label="Change place: Pune, Maharashtra"
+        >
+          <svg class="chip-svg" aria-hidden="true" focusable="false">
+            <use href="#i-pin" /></svg
+          ><span>Pune</span
+          ><svg class="chip-svg" aria-hidden="true" focusable="false">
+            <use href="#i-chev" />
+          </svg>
+        </button>
+        <nav class="nav" aria-label="Main" data-m="bottom-bar">
+          <ul>
+            <li>
+              <a
+                href="today-success.html"
+                aria-label="Today"
+                aria-current="page"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-sun" /></svg></span
+                ><span class="short">Today</span
+                ><span class="full">Today</span></a
+              >
+            </li>
+            <li>
+              <a href="#" aria-label="Ask AirAware"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-chat" /></svg></span
+                ><span class="short">Ask</span
+                ><span class="full">Ask AirAware</span></a
+              >
+            </li>
+            <li>
+              <a href="home.html" aria-label="My Home"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-house" /></svg></span
+                ><span class="short">Home</span
+                ><span class="full">My Home</span></a
+              >
+            </li>
+            <li>
+              <a href="#" aria-label="Better Habits"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-leaf" /></svg></span
+                ><span class="short">Habits</span
+                ><span class="full">Better Habits</span></a
+              >
+            </li>
+            <li>
+              <a href="#" aria-label="My Profile"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-user" /></svg></span
+                ><span class="short">Profile</span
+                ><span class="full">My Profile</span></a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main" tabindex="-1" class="page">
+      <div class="title-block">
+        <div class="title-row">
+          <p class="greeting">Good morning</p>
+          <p class="sample-label" data-m="sample-label">
+            Illustrative sample — not live data
+          </p>
+        </div>
+        <h1>Today in Pune, Maharashtra</h1>
+      </div>
+      <div class="today-grid">
+        <div class="col">
+          <div class="panel error-card" role="alert">
+            <h2 data-m="verdict">We couldn't load the forecast</h2>
+            <p>Forecast provider unavailable.</p>
+            <button type="button" class="btn btn-outline">Try again</button>
+          </div>
+        </div>
+        <div class="col">
+          <section class="panel rec" aria-labelledby="rec-h">
+            <h2 id="rec-h" data-m="rec-heading">
+              Your recommendation for today
+            </h2>
+            <output class="sr-only">Your plan is ready.</output>
+            <p class="plan-note" data-m="provenance">
+              Air information is unavailable for this plan.
+            </p>
+            <article class="card top-card">
+              <h3 data-m="rec-title">Cut indoor smoke at the source</h3>
+              <p>
+                Incense, mosquito coils, candles and tobacco all add smoke
+                indoors. Using them less, or not indoors, is the simplest
+                indoor-air step.
+              </p>
+              <details>
+                <summary data-m="why">
+                  Why?<span class="sr-only">
+                    (Cut indoor smoke at the source)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      These are common indoor pollution sources in any home.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>general guidance</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>No external source; this is general guidance.</dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+            <p class="meta">
+              Made by our rules. General information only, not medical advice.
+              Follow local public-health advisories.
+            </p>
+            <details class="full-day">
+              <summary>See your full day</summary>
+              <div class="full-day-body">
+                <div class="plan-head">
+                  <p class="plan-for">Plan for Pune, Maharashtra</p>
+                  <p class="meta">
+                    Made by our rules. AI personalisation is unavailable right
+                    now.
+                  </p>
+                </div>
+                <section class="plan-part" aria-labelledby="pt-out">
+                  <h3 id="pt-out">Outdoors and travel</h3>
+                  <p class="meta">
+                    No suggestions in this area for your answers today.
+                  </p>
+                </section>
+                <section class="plan-part" aria-labelledby="pt-in">
+                  <h3 id="pt-in">Indoor air</h3>
+                  <article class="card card-boxed">
+                    <h4>Cut indoor smoke at the source</h4>
+                    <p>
+                      Incense, mosquito coils, candles and tobacco all add smoke
+                      indoors. Using them less, or not indoors, is the simplest
+                      indoor-air step.
+                    </p>
+                    <details>
+                      <summary>
+                        Why?<span class="sr-only">
+                          (Cut indoor smoke at the source)</span
+                        >
+                      </summary>
+                      <dl class="why-list">
+                        <div>
+                          <dt>Reason</dt>
+                          <dd>
+                            These are common indoor pollution sources in any
+                            home.
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Based on</dt>
+                          <dd>general guidance</dd>
+                        </div>
+                        <div>
+                          <dt>Sources</dt>
+                          <dd>No external source; this is general guidance.</dd>
+                        </div>
+                      </dl>
+                    </details>
+                  </article>
+                </section>
+                <section class="plan-part" aria-labelledby="pt-swap">
+                  <h3 id="pt-swap">Sustainable swaps</h3>
+                  <article class="card card-boxed">
+                    <h4>Don't burn waste or leaves</h4>
+                    <p>
+                      Hand waste and garden leaves to municipal collection or
+                      composting instead of burning them; open burning adds
+                      smoke for the whole neighbourhood.
+                    </p>
+                    <details>
+                      <summary>
+                        Why?<span class="sr-only">
+                          (Don't burn waste or leaves)</span
+                        >
+                      </summary>
+                      <dl class="why-list">
+                        <div>
+                          <dt>Reason</dt>
+                          <dd>
+                            Open burning is a local pollution source any
+                            household can avoid.
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Based on</dt>
+                          <dd>general guidance</dd>
+                        </div>
+                        <div>
+                          <dt>Sources</dt>
+                          <dd>No external source; this is general guidance.</dd>
+                        </div>
+                      </dl>
+                    </details>
+                  </article>
+                </section>
+                <p class="meta">
+                  General information only, not medical advice. Follow local
+                  public-health advisories.
+                </p>
+                <div class="save">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    aria-describedby="save-note"
+                  >
+                    Save plan
+                  </button>
+                  <p id="save-note" class="meta">
+                    Saved on this browser only. Clearing your browser data or
+                    switching devices loses it.
+                  </p>
+                </div>
+              </div>
+            </details>
+          </section>
+        </div>
+      </div>
+      <section class="panel" aria-labelledby="help-h">
+        <h2 id="help-h">What would you like help with?</h2>
+        <ul class="choices">
+          <li>
+            <a href="#"
+              ><svg class="choice-svg" aria-hidden="true" focusable="false">
+                <use href="#i-feet" /></svg
+              ><span class="choice-title">Outdoor activities</span
+              ><span class="choice-line">Walks, exercise, commutes</span></a
+            >
+          </li>
+          <li>
+            <a href="home.html"
+              ><svg class="choice-svg" aria-hidden="true" focusable="false">
+                <use href="#i-house" /></svg
+              ><span class="choice-title">My home</span
+              ><span class="choice-line">Cooking, windows, purifiers</span></a
+            >
+          </li>
+          <li>
+            <a href="#"
+              ><svg class="choice-svg" aria-hidden="true" focusable="false">
+                <use href="#i-family" /></svg
+              ><span class="choice-title">My family</span
+              ><span class="choice-line"
+                >Children, older adults, school runs</span
+              ></a
+            >
+          </li>
+          <li>
+            <a href="#"
+              ><svg class="choice-svg" aria-hidden="true" focusable="false">
+                <use href="#i-leaf" /></svg
+              ><span class="choice-title">Greener habits</span
+              ><span class="choice-line"
+                >Small swaps that cut smoke and exhaust</span
+              ></a
+            >
+          </li>
+        </ul>
+        <div class="invite">
+          <a class="btn btn-outline" href="#"
+            >Make it personal: 2 quick questions</a
+          >
+          <button type="button" class="btn btn-text">Not now</button>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="ask-h">
+        <h2 id="ask-h">Ask AirAware anything</h2>
+        <form class="ask-form" action="#" onsubmit="return false;">
+          <label for="ask-q">Ask about your air, home or day</label>
+          <div class="ask-row">
+            <input
+              id="ask-q"
+              type="text"
+              maxlength="200"
+              autocomplete="off"
+              enterkeyhint="send"
+              required
+            />
+            <button type="submit" class="btn btn-primary">Send</button>
+          </div>
+        </form>
+        <ul class="starters">
+          <li>
+            <button type="button">Can I go for a morning walk today?</button>
+          </li>
+          <li>
+            <button type="button">Is it a good idea to open my windows?</button>
+          </li>
+          <li>
+            <button type="button">How can I improve my indoor air?</button>
+          </li>
+        </ul>
+      </section>
+      <div>
+        <h2 id="details-h" class="sr-only">Air quality details</h2>
+        <details class="panel details-panel">
+          <summary>Air quality details</summary>
+          <div class="details-body">
+            <p class="mock-note">
+              Mockup: with no forecast, this panel shows only "Official CPCB
+              observations are not connected yet." and the source list, as
+              shipped (AirDetails.tsx:48-77).
+            </p>
+            <p>Official CPCB observations are not connected yet.</p>
+          </div>
+        </details>
+      </div>
+    </main>
+    <footer class="app-footer">
+      <div class="inner">
+        <p class="attr">
+          Air-quality forecasts from
+          <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0),
+          based on CAMS global forecasts from the Copernicus Atmosphere
+          Monitoring Service.
+        </p>
+        <a class="footer-link" href="#">Privacy</a>
+        <p class="mock-note">
+          Mockup note, not app copy. Proposed, needs owner OK: the single "Why?"
+          label (F-23; shipped "Why this recommendation?"); the outlined "Make
+          it personal" placement under the help choices; the help choices 2 x 2
+          on phones (shipped: one column below 640 px). Shipped variant: when
+          the plan's own forecast call succeeded, the card shows the plan's air
+          line instead of "Air information is unavailable for this plan."
+          (local-today-unavailable-390x844-first.jpg).
+        </p>
+      </div>
+    </footer>
+    <div class="end-space" aria-hidden="true"></div>
+  </body>
+</html>

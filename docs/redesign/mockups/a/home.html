@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>My Home | AirAware AI (mockup A)</title>
+    <meta name="description" content="Direction A mockup: My Home." />
+    <link rel="stylesheet" href="../tokens.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="app">
+    <!-- Stage 1 mockup, Direction A "Calm atmosphere". Static illustration; not application code. -->
+    <svg
+      width="0"
+      height="0"
+      class="sprite"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+        />
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24">
+        <path
+          d="M20.5 11.5a8 8 0 0 1-11.7 7.1L3.5 20l1.4-4.9a8 8 0 1 1 15.6-3.6z"
+        />
+      </symbol>
+      <symbol id="i-house" viewBox="0 0 24 24">
+        <path d="M3.5 10.5 12 4l8.5 6.5V20h-5.5v-6h-6v6H3.5z" />
+      </symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path
+          d="M5 19.5C5 10 10.5 4.5 20 4.5c0 9.5-5.5 15-15 15zM5 19.5l7.5-7.5"
+        />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="10" r="3" />
+        <path d="M6.6 18.2a6.5 6.5 0 0 1 10.8 0" />
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path
+          d="M12 21s-6.5-5.8-6.5-11a6.5 6.5 0 0 1 13 0c0 5.2-6.5 11-6.5 11z"
+        />
+        <circle cx="12" cy="10" r="2.3" />
+      </symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24">
+        <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+      </symbol>
+      <symbol id="i-feet" viewBox="0 0 24 24">
+        <path
+          d="M7.5 3.5c1.8 0 2.8 2 2.8 4.6S9.2 12 7.5 12 4.7 10.7 4.7 8.1 5.7 3.5 7.5 3.5zM5.5 14.5h4v2.2a2 2 0 0 1-4 0zM16.5 7.5c1.8 0 2.8 2 2.8 4.6S18.2 16 16.5 16s-2.8-1.3-2.8-3.9 1-4.6 2.8-4.6zM14.5 18.5h4v.5a2 2 0 0 1-4 0z"
+        />
+      </symbol>
+      <symbol id="i-family" viewBox="0 0 24 24">
+        <circle cx="8" cy="7" r="2.8" />
+        <circle cx="17" cy="9.5" r="2.2" />
+        <path
+          d="M3 20v-2.5a5 5 0 0 1 10 0V20M13.5 20v-1.8a3.5 3.5 0 0 1 7 0V20"
+        />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 2" />
+      </symbol>
+    </svg>
+    <a class="skip sr-only" href="#main">Skip to content</a>
+    <div class="backdrop" data-air="within" aria-hidden="true">
+      <div class="city">
+        <svg
+          class="city-svg"
+          viewBox="0 0 800 160"
+          preserveAspectRatio="xMidYMax slice"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            class="far"
+            d="M0 160V98H24V76H40V90H62V60H76V52H84V60H96V86H122V68H146V94H168V72H182V48H192V72H204V88H232V64H256V82H278V56H296V92H322V74H340V62H358V80H384V52H398V44H406V52H420V84H446V68H470V90H492V58H510V76H534V66H554V50H564V66H578V86H604V72H626V56H642V80H668V64H694V88H716V70H738V54H750V74H774V92H800V160Z"
+          />
+          <path
+            class="mid"
+            d="M0 160V112H36V100H70V118H96V92H134V108H152V100H188V120H216V96H248V110H272V88H304V114H332V102H364V118H388V94H422V106H446V90H476V116H502V100H536V112H558V92H592V108H618V98H652V120H678V96H710V110H738V100H772V116H800V160Z"
+          />
+          <path
+            class="mid-detail"
+            d="M100 100h30v2h-30zM100 108h30v2h-30zM276 96h24v2h-24zM276 104h24v2h-24zM392 102h26v2h-26zM450 98h22v2h-22zM450 106h22v2h-22zM562 100h26v2h-26zM682 104h24v2h-24z"
+          />
+          <path
+            class="near"
+            d="M0 160V134H26V126H58V138H74V160ZM86 160V122H120V132H136V160ZM150 160V128H178V140H190V160ZM204 160V124H238V136H248V160ZM262 160V130H292V142H300V160ZM314 160V126H346V134H358V160ZM372 160V120H406V132H418V160ZM432 160V128H462V140H472V160ZM486 160V124H520V136H530V160ZM544 160V130H576V142H586V160ZM600 160V126H634V134H646V160ZM660 160V122H694V132H706V160ZM720 160V128H752V138H764V160ZM776 160V132H800V160Z"
+          />
+          <path
+            class="near"
+            d="M92 122v-7h11v7zM210 124v-6h10v6zM378 120v-7h11v7zM492 124v-6h10v6zM666 122v-7h11v7z"
+          />
+          <path
+            class="win"
+            d="M92 130h6v5h-6zM104 130h6v5h-6zM92 142h6v5h-6zM104 142h6v5h-6zM210 132h6v5h-6zM222 132h6v5h-6zM378 128h6v5h-6zM390 128h6v5h-6zM378 140h6v5h-6zM390 140h6v5h-6zM492 132h6v5h-6zM504 132h6v5h-6zM666 130h6v5h-6zM678 130h6v5h-6zM666 142h6v5h-6zM678 142h6v5h-6z"
+          />
+        </svg>
+      </div>
+    </div>
+    <header class="app-header on-dark">
+      <div class="bar">
+        <a class="logo" href="today-success.html">AirAware AI</a>
+        <button
+          type="button"
+          class="chip"
+          aria-label="Change place: Pune, Maharashtra"
+        >
+          <svg class="chip-svg" aria-hidden="true" focusable="false">
+            <use href="#i-pin" /></svg
+          ><span>Pune</span
+          ><svg class="chip-svg" aria-hidden="true" focusable="false">
+            <use href="#i-chev" />
+          </svg>
+        </button>
+        <nav class="nav" aria-label="Main" data-m="bottom-bar">
+          <ul>
+            <li>
+              <a href="today-success.html" aria-label="Today"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-sun" /></svg></span
+                ><span class="short">Today</span
+                ><span class="full">Today</span></a
+              >
+            </li>
+            <li>
+              <a href="#" aria-label="Ask AirAware"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-chat" /></svg></span
+                ><span class="short">Ask</span
+                ><span class="full">Ask AirAware</span></a
+              >
+            </li>
+            <li>
+              <a href="home.html" aria-label="My Home" aria-current="page"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-house" /></svg></span
+                ><span class="short">Home</span
+                ><span class="full">My Home</span></a
+              >
+            </li>
+            <li>
+              <a href="#" aria-label="Better Habits"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-leaf" /></svg></span
+                ><span class="short">Habits</span
+                ><span class="full">Better Habits</span></a
+              >
+            </li>
+            <li>
+              <a href="#" aria-label="My Profile"
+                ><span class="ico"
+                  ><svg class="ico-svg" aria-hidden="true" focusable="false">
+                    <use href="#i-user" /></svg></span
+                ><span class="short">Profile</span
+                ><span class="full">My Profile</span></a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main" tabindex="-1" class="page">
+      <div class="title-block">
+        <div class="title-row">
+          <h1>My Home</h1>
+          <p class="sample-label" data-m="sample-label">
+            Illustrative sample — not live data
+          </p>
+        </div>
+        <p class="purpose">
+          Suggestions for your home today, then ways to improve indoor air on
+          any day.
+        </p>
+      </div>
+      <section class="panel today-home" aria-labelledby="th-h">
+        <h2 id="th-h">Today, for your home</h2>
+        <output class="sr-only">Today's suggestions are ready.</output>
+        <p class="meta" data-m="provenance">
+          Today: Forecast within India's 24-hour limits · Model forecast ·
+          Open-Meteo · updated HH:MM
+        </p>
+        <div class="card-grid">
+          <article class="card card-boxed">
+            <h3>Cut indoor smoke at the source</h3>
+            <p>
+              Incense, mosquito coils, candles and tobacco all add smoke
+              indoors. Using them less, or not indoors, is the simplest
+              indoor-air step.
+            </p>
+            <details>
+              <summary>
+                Why?<span class="sr-only">
+                  (Cut indoor smoke at the source)</span
+                >
+              </summary>
+              <dl class="why-list">
+                <div>
+                  <dt>Reason</dt>
+                  <dd>
+                    These are common indoor pollution sources in any home.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Based on</dt>
+                  <dd>general guidance</dd>
+                </div>
+                <div>
+                  <dt>Sources</dt>
+                  <dd>No external source; this is general guidance.</dd>
+                </div>
+              </dl>
+            </details>
+          </article>
+        </div>
+        <p class="meta">
+          Made by our rules. General information only, not medical advice.
+          Follow local public-health advisories.
+        </p>
+      </section>
+      <section class="panel ways" aria-labelledby="ways-h">
+        <h2 id="ways-h">Ways to improve indoor air</h2>
+        <div class="groups">
+          <section class="group n2" aria-labelledby="g0">
+            <h3 id="g0">Cooking and smoke</h3>
+            <article class="card card-boxed">
+              <h4>Use the kitchen exhaust while cooking</h4>
+              <p>
+                Switch the exhaust or chimney on before you start cooking and
+                leave it running for a few minutes after.
+              </p>
+              <details>
+                <summary>
+                  Why?<span class="sr-only">
+                    (Use the kitchen exhaust while cooking)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      Cooking gives off smoke and fine particles, and removing
+                      them where they start comes first.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>general guidance</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li>
+                          <a
+                            href="https://www.epa.gov/indoor-air-quality-iaq/sources-indoor-particulate-matter-pm"
+                            >Sources of Indoor Particulate Matter (US EPA)</a
+                          >
+                        </li>
+                        <li>
+                          <a
+                            href="https://ncdc.mohfw.gov.in/uploads/pdf/air2.pdf"
+                            >Health Advisory on Air Pollution (Ministry of
+                            Health and Family Welfare, NCDC, 2025)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Caveat</dt>
+                    <dd>
+                      Some kitchen hoods recirculate air instead of venting it
+                      outside.
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+            <article class="card card-boxed">
+              <h4>Consider a cleaner cooking fuel where possible</h4>
+              <p>
+                Wood, dung or crop waste fires make a lot of indoor smoke. Where
+                it is practical, cooking with LPG or electricity cuts this smoke
+                at the source.
+              </p>
+              <details>
+                <summary>
+                  Why?<span class="sr-only">
+                    (Consider a cleaner cooking fuel where possible)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      Cooking with wood, dung, crop waste, coal or kerosene is a
+                      major cause of household air pollution.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>general guidance</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li>
+                          <a
+                            href="https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health"
+                            >Household air pollution (WHO fact sheet)</a
+                          >
+                        </li>
+                        <li>
+                          <a
+                            href="https://ncdc.mohfw.gov.in/uploads/pdf/air2.pdf"
+                            >Health Advisory on Air Pollution (Ministry of
+                            Health and Family Welfare, NCDC, 2025)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Caveat</dt>
+                    <dd>
+                      Until then, good kitchen ventilation and keeping others
+                      away from the stove help.
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+          </section>
+          <section class="group" aria-labelledby="g1">
+            <h3 id="g1">Ventilation</h3>
+            <article class="card card-boxed">
+              <h4>Air out while you cook or burn incense</h4>
+              <p>
+                Open windows or switch on an exhaust fan while you cook or burn
+                incense or candles. When the air outside is poor, keep windows
+                open for shorter spells.
+              </p>
+              <details>
+                <summary>
+                  Why?<span class="sr-only">
+                    (Air out while you cook or burn incense)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      Fresh air carries indoor smoke away, but on polluted days
+                      it also brings outdoor particles in.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>general guidance</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li>
+                          <a
+                            href="https://ncdc.mohfw.gov.in/uploads/pdf/air2.pdf"
+                            >Health Advisory on Air Pollution (Ministry of
+                            Health and Family Welfare, NCDC, 2025)</a
+                          >
+                        </li>
+                        <li>
+                          <a
+                            href="https://www.epa.gov/indoor-air-quality-iaq/sources-indoor-particulate-matter-pm"
+                            >Sources of Indoor Particulate Matter (US EPA)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Caveat</dt>
+                    <dd>
+                      There is no single rule for windows: it depends on what is
+                      happening indoors and outside.
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+          </section>
+          <section class="group" aria-labelledby="g2">
+            <h3 id="g2">Dust and cleaning</h3>
+            <article class="card card-boxed">
+              <h4>Clean with a damp cloth or mop</h4>
+              <p>
+                Dust surfaces with a damp cloth and mop floors instead of
+                sweeping them dry.
+              </p>
+              <details>
+                <summary>
+                  Why?<span class="sr-only">
+                    (Clean with a damp cloth or mop)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      Dry sweeping and dusting lift settled dust back into the
+                      air.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>general guidance</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li>
+                          <a
+                            href="https://www.epa.gov/indoor-air-quality-iaq/sources-indoor-particulate-matter-pm"
+                            >Sources of Indoor Particulate Matter (US EPA)</a
+                          >
+                        </li>
+                        <li>
+                          <a
+                            href="https://ncdc.mohfw.gov.in/uploads/pdf/air2.pdf"
+                            >Health Advisory on Air Pollution (Ministry of
+                            Health and Family Welfare, NCDC, 2025)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+          </section>
+          <section class="group" aria-labelledby="g3">
+            <h3 id="g3">Filtration</h3>
+            <article class="card card-boxed">
+              <h4>If you use an air purifier, match it to the room</h4>
+              <p>
+                A portable purifier cleans the air of one room. Choose one rated
+                for that room's size, and keep its doors and windows closed
+                while it runs.
+              </p>
+              <details>
+                <summary>
+                  Why?<span class="sr-only">
+                    (If you use an air purifier, match it to the room)</span
+                  >
+                </summary>
+                <dl class="why-list">
+                  <div>
+                    <dt>Reason</dt>
+                    <dd>
+                      A purifier works best in a closed room that matches its
+                      rating.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Based on</dt>
+                    <dd>general guidance</dd>
+                  </div>
+                  <div>
+                    <dt>Sources</dt>
+                    <dd>
+                      <ul>
+                        <li>
+                          <a
+                            href="https://www.epa.gov/sites/default/files/2018-07/documents/guide_to_air_cleaners_in_the_home_2nd_edition.pdf"
+                            >Guide to Air Cleaners in the Home (US EPA, 2018)</a
+                          >
+                        </li>
+                      </ul>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Caveat</dt>
+                    <dd>A purifier does not remove every pollutant.</dd>
+                  </div>
+                </dl>
+              </details>
+            </article>
+          </section>
+        </div>
+        <p class="meta">
+          General information only, not medical advice. Follow local
+          public-health advisories.
+        </p>
+      </section>
+    </main>
+    <footer class="app-footer">
+      <div class="inner">
+        <p>
+          Background: model forecast for Pune, Maharashtra. Within the limit.
+        </p>
+        <p class="attr">
+          Air-quality forecasts from
+          <a href="https://open-meteo.com/">Open-Meteo.com</a> (CC BY 4.0),
+          based on CAMS global forecasts from the Copernicus Atmosphere
+          Monitoring Service.
+        </p>
+        <a class="footer-link" href="#">Privacy</a>
+        <p class="mock-note">
+          Mockup note, not app copy. Proposed, needs owner OK: the purpose line
+          under "My Home" (draft wording; WIREFRAMES.md §15 reuses a shipped
+          landing line instead); the single "Why?" label (F-23; shipped "Why it
+          matters"). The grid here differs from DESIGN_SYSTEM_PROPOSAL.md §3.3:
+          each group spans as many columns as it has cards (subgrid). "Indoor
+          habits" and "Near a busy road" are hidden, as shipped (its card is in
+          today's plan; no "near a busy road" answer).
+        </p>
+      </div>
+    </footer>
+    <div class="end-space" aria-hidden="true"></div>
+  </body>
+</html>

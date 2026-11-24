@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AirAware AI redesign mockups (Stage 1)</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      body {
+        padding: 1.5rem;
+        background: var(--color-rule);
+      }
+      h1 {
+        margin-block: 0 0.25rem;
+      }
+      .note {
+        margin-block: 0 1.5rem;
+        max-inline-size: 60rem;
+      }
+      section {
+        margin-block-end: 2.5rem;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        font-size: 0.875rem;
+        margin-block-end: 0.25rem;
+      }
+      .phone {
+        inline-size: 390px;
+        block-size: 844px;
+      }
+      .desk-wrap {
+        inline-size: 640px;
+        block-size: 360px;
+        overflow: hidden;
+      }
+      .desk {
+        inline-size: 1280px;
+        block-size: 720px;
+        transform: scale(0.5);
+        transform-origin: 0 0;
+      }
+      iframe {
+        border: 1px solid var(--color-text-dark-muted);
+        background: var(--color-surface-light);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Redesign mockups: Direction A and Direction B</h1>
+    <p class="note">
+      Design artifacts for review, not application code. Every screen is an
+      illustrative sample with no live data. Each page is also a standalone file
+      you can open and resize: <code>a/*.html</code> and <code>b/*.html</code>.
+      Phone frames are 390×844; desktop frames are 1280×720, shown at half size.
+    </p>
+    <div id="gallery"></div>
+    <script>
+      const pages = [
+        ['landing', 'Landing'],
+        ['today-success', 'Today'],
+        ['today-stale', 'Today, stale forecast'],
+        ['today-forecast-error', 'Today, forecast failed'],
+        ['today-incomplete', 'Today, incomplete 24-hour check'],
+        ['home', 'My Home'],
+      ];
+      const gallery = document.getElementById('gallery');
+      for (const [dir, name] of [
+        ['a', 'Direction A, Calm atmosphere'],
+        ['b', 'Direction B, Editorial city'],
+      ]) {
+        const h = document.createElement('h2');
+        h.textContent = name;
+        gallery.append(h);
+        for (const [file, label] of pages) {
+          const s = document.createElement('section');
+          s.innerHTML = `<h3>${label}</h3><div class="row">
+            <figure><figcaption>Phone 390×844</figcaption>
+              <iframe class="phone" loading="lazy" title="${name}: ${label}, phone" src="${dir}/${file}.html"></iframe></figure>
+            <figure><figcaption>Desktop 1280×720 (half size)</figcaption>
+              <div class="desk-wrap"><iframe class="desk" loading="lazy" title="${name}: ${label}, desktop" src="${dir}/${file}.html"></iframe></div></figure>
+          </div>`;
+          gallery.append(s);
+        }
+      }
+    </script>
+  </body>
+</html>
