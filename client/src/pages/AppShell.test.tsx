@@ -1524,6 +1524,62 @@ describe('AppShell', () => {
     expect(window.location.search).toBe(second);
   });
 
+  it('the logo goes to /app and keeps the place', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    const header = screen.getByRole('banner');
+    expect(
+      within(header)
+        .getByRole('link', { name: 'AirAware AI' })
+        .getAttribute('href'),
+    ).toBe('/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86');
+  });
+
+  it('header order is the logo, the place chip, then the navigation', () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    const header = screen.getByRole('banner');
+    const logo = within(header).getByRole('link', { name: 'AirAware AI' });
+    const chip = within(header).getByRole('button', {
+      name: /^(Change place: |Choose a place$)/,
+    });
+    const nav = within(header).getByRole('navigation', { name: 'Main' });
+    expect(
+      logo.compareDocumentPosition(chip) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      chip.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('an unknown app page becomes Today for the same place, by replace', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/nope?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    const before = window.history.length;
+    routeFetch(ok());
+    render(<AppShell />);
+
+    expect(window.location.pathname).toBe('/app');
+    expect(window.location.search).toBe(
+      '?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    expect(window.history.length).toBe(before);
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Today in Pune, Maharashtra',
+      }),
+    ).toBeDefined();
+  });
+
   it('reads the place on any app path', async () => {
     window.history.replaceState(
       null,

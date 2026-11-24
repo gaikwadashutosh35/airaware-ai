@@ -45,3 +45,21 @@ for (const [path, group] of [
     await expectNoAxeViolations(page);
   });
 }
+
+// NF-01: the branded 404 page, on a deployed site only (Netlify serves
+// public/404.html with status 404; the local server answers JSON).
+test('an unknown path shows the branded 404 page', async ({ page }) => {
+  test.skip(!process.env.E2E_BASE_URL, 'Netlify only: set E2E_BASE_URL');
+  const response = await page.goto('/no-such-page');
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole('heading', { name: "We couldn't find that page" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Go to AirAware' }),
+  ).toHaveAttribute('href', '/app');
+  await expect(page.getByRole('link', { name: 'Home' })).toHaveAttribute(
+    'href',
+    '/',
+  );
+});

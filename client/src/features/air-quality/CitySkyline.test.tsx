@@ -102,7 +102,7 @@ describe('CitySkyline', () => {
       for (const name of [
         'h-[min(8rem,20vh)]',
         'sm:h-[min(11rem,20vh)]',
-        'bottom-[calc(3.5rem+env(safe-area-inset-bottom))]',
+        'bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]',
         'md:bottom-0',
         // Final review: under 24rem tall a wrapped title can reach the
         // band, so the city hides and the sky alone carries the look.

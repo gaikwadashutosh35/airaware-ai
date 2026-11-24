@@ -27,6 +27,11 @@ describe('AppNav', () => {
     expect(current.map((link) => link.getAttribute('href'))).toEqual([
       '/app/profile',
     ]);
+    // Not colour alone: a ring on desktop, an underline in forced colours.
+    expect(current[0]!.className).toContain('md:aria-[current=page]:shadow-');
+    expect(current[0]!.className).toContain(
+      'forced-colors:aria-[current=page]:underline',
+    );
   });
 
   it('names each item by its label', async () => {
@@ -50,6 +55,16 @@ describe('AppNav', () => {
     for (const link of screen.getAllByRole('link')) {
       expect(link.classList.contains('whitespace-nowrap')).toBe(true);
     }
+  });
+
+  // F-38: the bar clears the notch and the home indicator, with a 0 fallback.
+  it('the bar pads for the safe areas on three sides', () => {
+    render(<AppNav page="today" />);
+    const bar = screen.getByRole('navigation', { name: 'Main' }).className;
+    for (const side of ['left', 'right', 'bottom']) {
+      expect(bar).toContain(`env(safe-area-inset-${side},0px)`);
+    }
+    expect(bar).not.toContain('max(');
   });
 
   it('navigates in place, keeping the place in the address', () => {

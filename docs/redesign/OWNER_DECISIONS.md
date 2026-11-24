@@ -73,6 +73,12 @@ Each recommendation follows the same principles:
 | C9 | F-12: 200% text | **Approve**: the header wraps, and Send wraps below the input | Usable at large text |
 | C10 | F-39: `env()` fallbacks | **Approve** `, 0px` fallbacks in P2 | Harmless robustness |
 
+**Ruling during P2, approved by the owner on 24 Nov 2026:**
+
+| ID | Decision | Answer |
+|---|---|---|
+| C11 | At 768 px the logo and five nav links leave the chip about 105–120 px, so "Mumbai" shows "Mum…", "Thiruvananthapuram" shows "Thi…" and "Choose a place" is cut ("Pune" fits, as C3 requires) | **Keep as is**: the header stays one row; the chip's accessible name and the page title keep the full place. Tightening the tablet nav was not chosen |
+
 ## D. Ask AirAware (P4)
 
 | ID | Decision | Recommended answer | Why |

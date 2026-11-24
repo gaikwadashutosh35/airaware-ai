@@ -21,7 +21,7 @@ import {
   type Place,
 } from '../features/location/place.ts';
 import { isOlderThan, useNow } from '../lib/clock.ts';
-import { appPage, navigate, usePath } from '../lib/navigation.ts';
+import { appPage, follow, navigate, usePath } from '../lib/navigation.ts';
 import { currentToken, tokenForSave } from '../lib/supabase.ts';
 import { getForecast, getSources, savePreferences } from '../services/api.ts';
 import { Ask } from './Ask.tsx';
@@ -57,7 +57,8 @@ const TITLES = {
 
 function AppShell() {
   const path = usePath();
-  const page = appPage(path);
+  const route = appPage(path);
+  const page = route === 'unknown' ? 'today' : route;
   // A searched place may arrive in the address (from the landing page or a
   // shared link).
   const [place, setPlace] = useState<Place | null>(() =>
@@ -110,6 +111,12 @@ function AppShell() {
   const [remembered, setRemembered] = useState<SavedPlace | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [inviteDismissed, setInviteDismissed] = useState(false);
+
+  // An unknown app page becomes Today, keeping the place (Welcome follows
+  // below when there is none).
+  useEffect(() => {
+    if (route === 'unknown') navigate('/app', { replace: true });
+  }, [route]);
 
   // Today with no place: once saved answers are checked, Welcome opens.
   useEffect(() => {
@@ -268,17 +275,18 @@ function AppShell() {
         Skip to content
       </a>
       <header className="on-dark bg-bg text-text">
-        {/* With enlarged text the row can outgrow the screen: it scrolls
-            sideways then, so every control stays reachable. At normal text
-            the place chip shrinks first and nothing scrolls. */}
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 overflow-x-auto px-4 sm:px-6">
+        {/* DOM order is the Tab order: logo, place chip, navigation. With
+            enlarged text the row wraps onto a second line, so every control
+            stays reachable. At normal text the chip (zero flex basis, grows to its
+            content) gives way before the row wraps. */}
+        <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:gap-x-4 sm:px-6">
           <a
-            href="/"
+            href={`/app${placeQuery}`}
+            onClick={(event) => follow(event, '/app')}
             className="inline-flex min-h-11 shrink-0 items-center text-lg font-semibold whitespace-nowrap"
           >
             AirAware AI
           </a>
-          <AppNav page={page} />
           <PlaceChip
             label={place?.label}
             open={placeDialogOpen}
@@ -287,6 +295,7 @@ function AppShell() {
             onLocateStart={locateStart}
             onLocate={locate}
           />
+          <AppNav page={page} />
         </div>
       </header>
       <main
@@ -492,7 +501,7 @@ function AppShell() {
           every page ends on the whole city with no text resting on it. */}
       <div
         aria-hidden="true"
-        className="h-[calc(min(8rem,20vh)+3.5rem+env(safe-area-inset-bottom))] sm:h-[calc(min(11rem,20vh)+3.5rem+env(safe-area-inset-bottom))] md:h-[min(11rem,20vh)]"
+        className="h-[calc(min(8rem,20vh)+3.5rem+env(safe-area-inset-bottom,0px))] sm:h-[calc(min(11rem,20vh)+3.5rem+env(safe-area-inset-bottom,0px))] md:h-[min(11rem,20vh)]"
       />
     </>
   );

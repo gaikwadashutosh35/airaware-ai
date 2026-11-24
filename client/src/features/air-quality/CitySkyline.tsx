@@ -73,7 +73,7 @@ const ROOT =
   'pointer-events-none fixed inset-0 -z-10 overflow-hidden forced-colors:hidden';
 const FILL = 'absolute inset-0 size-full';
 const CITY =
-  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:24rem)]:hidden';
+  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:24rem)]:hidden';
 
 // The city's rows share one drawing box, stacked as layers so the veils
 // can sit between them as HTML. They fade in from the top of the

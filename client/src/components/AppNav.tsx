@@ -39,9 +39,9 @@ export function AppNav({ page }: { page: AppPage }) {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-rule-dark bg-bg pb-[env(safe-area-inset-bottom,0px)] md:static md:ml-auto md:border-0 md:bg-transparent md:pb-0"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-rule-dark bg-bg pr-[env(safe-area-inset-right,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] md:static md:ml-auto md:border-0 md:bg-transparent md:p-0"
     >
-      <ul className="grid grid-cols-5 md:flex md:gap-1">
+      <ul className="grid grid-cols-5 md:flex md:flex-wrap md:justify-end md:gap-1">
         {ITEMS.map(({ page: target, href, name, short, Icon }) => (
           <li key={target}>
             <a
@@ -49,7 +49,7 @@ export function AppNav({ page }: { page: AppPage }) {
               aria-label={name}
               aria-current={target === page ? 'page' : undefined}
               onClick={(event) => follow(event, href)}
-              className="press group flex min-h-14 whitespace-nowrap flex-col items-center justify-center gap-0.5 text-xs text-text-muted aria-[current=page]:font-semibold aria-[current=page]:text-text md:min-h-11 md:flex-row md:gap-2 md:rounded-full md:px-3 md:text-sm md:aria-[current=page]:bg-elevated"
+              className="press group flex min-h-14 whitespace-nowrap flex-col items-center justify-center gap-0.5 text-xs text-text-muted aria-[current=page]:font-semibold aria-[current=page]:text-text md:min-h-11 md:flex-row md:gap-2 md:rounded-full md:px-3 md:text-sm md:aria-[current=page]:bg-elevated md:aria-[current=page]:shadow-[inset_0_0_0_1px_var(--color-text-muted)] forced-colors:aria-[current=page]:underline"
             >
               <span className="flex h-7 w-12 items-center justify-center rounded-full group-aria-[current=page]:bg-elevated md:h-auto md:w-auto md:group-aria-[current=page]:bg-transparent">
                 <Icon

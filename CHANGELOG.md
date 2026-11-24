@@ -195,6 +195,15 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P2, shell and navigation (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows C1–C11):
+  - the header reads logo, place chip, navigation, and Tab follows that order on phones and desktop;
+  - the place chip shows the text before the first comma below 1024 px ("Pune") and the whole place from 1024 px; its accessible name stays "Change place: {place}" and its border is `text-muted`;
+  - the current page on desktop has a `text-muted` outline beside its pill, and an underline under forced colours;
+  - the bottom bar also pads for the left and right safe areas, and every `env()` has a `0px` fallback;
+  - the in-app logo opens Today and keeps the place; an unknown `/app/…` page becomes Today (Welcome with no place) without a new history entry;
+  - at 200 % text the header wraps onto a second line instead of scrolling sideways;
+  - a static `404.html` (no script, token colours only) for paths outside the app: "We couldn't find that page", with "Go to AirAware" and "Home";
+  - `e2e/firstscreen.spec.ts` (fully stubbed) checks the bar, the chip label, the logo link, the Tab order, 200 % text, the one-row header, forced colours and the unknown-page redirect; `e2e/pages.spec.ts` checks the 404 page on a deployed site only.
 - Redesign P1, approved copy (24 Nov; owner's decision sheet `docs/redesign/OWNER_DECISIONS.md`, rows A1–A8):
   - saving says what it does: "Saving creates an anonymous account (no email or name). Your answers are stored on AirAware's database host, and this browser keeps the sign-in. Delete them any time in My Profile. Clearing this browser's data loses access but does not delete them." (the Save plan note says "Your plan … Delete it …"); success reads "Saved to your anonymous account."; the Remember hint names the account too;
   - "Live air information unavailable" is now "Air information unavailable" (the app has no live readings);

@@ -18,7 +18,7 @@ describe('navigation', () => {
     for (const page of ['welcome', 'ask', 'home', 'habits', 'profile']) {
       expect(appPage(`/app/${page}`)).toBe(page);
     }
-    expect(appPage('/app/unknown')).toBe('today');
+    expect(appPage('/app/unknown')).toBe('unknown');
   });
 
   it('navigate keeps the query and notifies', () => {

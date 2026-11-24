@@ -205,8 +205,11 @@ test.describe('a long place in the header', () => {
       await page.goto(
         PUNE.replace('Pune%2C%20Maharashtra', encodeURIComponent(LONG_PLACE)),
       );
-      // The long name really is in the chip and the title.
-      await expect(page.locator('header .truncate')).toHaveText(LONG_PLACE);
+      // The long name really is in the chip (the text before the first comma
+      // below lg, the whole name from lg) and the title.
+      await expect(page.locator('header .truncate:visible')).toHaveText(
+        width < 1024 ? LONG_PLACE.split(',')[0]! : LONG_PLACE,
+      );
       await expect(page.locator('main h1:visible').first()).toContainText(
         LONG_PLACE,
       );
@@ -220,6 +223,12 @@ test.describe('a long place in the header', () => {
             items.map((li) => Math.round(li.getBoundingClientRect().top)),
           );
         expect(new Set(tops).size).toBe(1);
+        // ...and so do the logo, the chip and the nav (one 64 px header row).
+        expect(
+          await page
+            .locator('header > div')
+            .evaluate((el) => Math.round(el.getBoundingClientRect().height)),
+        ).toBe(64);
       }
     });
   }
@@ -337,7 +346,7 @@ test.describe('the header at normal text with a scrollbar', () => {
         encodeURIComponent('Mumbai, Maharashtra'),
       ),
     );
-    const label = page.locator('header .truncate');
+    const label = page.locator('header .truncate:visible');
     await expect(label).toHaveText('Mumbai, Maharashtra');
     const [scroll, client] = await label.evaluate((el) => [
       el.scrollWidth,

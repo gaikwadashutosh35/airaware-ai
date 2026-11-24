@@ -38,10 +38,16 @@ export function PlaceChip({
         type="button"
         aria-label={label ? `Change place: ${label}` : 'Choose a place'}
         onClick={() => onOpenChange(true)}
-        className="ml-auto flex min-h-11 max-w-44 min-w-0 items-center gap-1.5 rounded-full border border-rule-dark px-3 text-sm md:ml-2 md:max-w-56"
+        className="ml-auto flex min-h-11 min-w-0 max-w-fit grow basis-0 items-center gap-1.5 rounded-full border border-text-muted px-3 text-sm md:ml-0"
       >
         <MapPin aria-hidden="true" className="size-4 flex-none" />
-        <span className="truncate">{label ?? 'Choose a place'}</span>
+        {/* Below lg only the text before the first comma shows. */}
+        <span className="max-w-[6.625rem] truncate md:max-w-[9.625rem] lg:hidden">
+          {label ? label.split(',')[0] : 'Choose a place'}
+        </span>
+        <span className="hidden max-w-[6.625rem] truncate md:max-w-[9.625rem] lg:inline">
+          {label ?? 'Choose a place'}
+        </span>
         <ChevronDown aria-hidden="true" className="size-4 flex-none" />
       </button>
       <dialog

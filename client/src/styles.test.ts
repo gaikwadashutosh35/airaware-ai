@@ -73,6 +73,15 @@ describe('design system base', () => {
     );
   });
 
+  it('the 404 page uses only the design tokens and no script', () => {
+    const page = readFileSync('public/404.html', 'utf8');
+    expect(page).not.toMatch(/<script/i);
+    const hexes = page.match(/#[0-9a-f]{6}/gi) ?? [];
+    expect(hexes.length).toBeGreaterThan(0);
+    for (const hex of hexes)
+      expect(css.toLowerCase()).toContain(hex.toLowerCase());
+  });
+
   it('a modal dialog never scrolls the page behind it', () => {
     // modern-web-guidance `dialog`: both rules are needed.
     expect(css).toMatch(/dialog:modal\s*{[^}]*overscroll-behavior: contain;/);

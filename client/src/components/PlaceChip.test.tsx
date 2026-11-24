@@ -31,6 +31,16 @@ describe('PlaceChip', () => {
       name: 'Change place: Pune, Maharashtra',
     });
     expect(chip.textContent).toContain('Pune, Maharashtra');
+    // Below lg only the text before the first comma shows; from lg, all.
+    expect(chip.querySelector('[class~="lg:hidden"]')?.textContent).toBe(
+      'Pune',
+    );
+    expect(chip.querySelector('[class~="lg:inline"]')?.textContent).toBe(
+      'Pune, Maharashtra',
+    );
+    // C6 border; the chip is the row's flexible item (it gives way, not the row).
+    expect(chip.className).toContain('border-text-muted');
+    expect(chip.className).toContain('basis-0');
     expect(
       screen.queryByRole('combobox', {
         name: 'Search for a city or area in India',
@@ -50,6 +60,17 @@ describe('PlaceChip', () => {
       }),
     ).toBeDefined();
     await expectNoAxeViolations(container);
+  });
+
+  it('a label with no comma shows whole at every width', () => {
+    render(<Harness label="Mumbai" />);
+    const chip = screen.getByRole('button', { name: 'Change place: Mumbai' });
+    expect(chip.querySelector('[class~="lg:hidden"]')?.textContent).toBe(
+      'Mumbai',
+    );
+    expect(chip.querySelector('[class~="lg:inline"]')?.textContent).toBe(
+      'Mumbai',
+    );
   });
 
   it('says "Choose a place" when there is none', () => {

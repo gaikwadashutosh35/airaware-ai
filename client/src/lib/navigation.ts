@@ -30,9 +30,11 @@ export function navigate(to: string, { replace = false } = {}): void {
 const PAGES = ['welcome', 'ask', 'home', 'habits', 'profile'] as const;
 export type AppPage = 'today' | (typeof PAGES)[number];
 
-export function appPage(path: string): AppPage {
+// 'unknown' is a name that is no page (the shell sends it to Today).
+export function appPage(path: string): AppPage | 'unknown' {
   const name = path.replace(/^\/app\/?/, '').replace(/\/$/, '');
-  return PAGES.find((page) => page === name) ?? 'today';
+  if (name === '') return 'today';
+  return PAGES.find((page) => page === name) ?? 'unknown';
 }
 
 // Same-tab, unmodified clicks stay in the app; others open as normal links.

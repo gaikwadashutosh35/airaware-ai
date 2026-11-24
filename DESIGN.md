@@ -112,7 +112,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 - `EmptyState`, `ErrorState`, `StaleDataState`, `Skeleton`
 - **Built in the assistant redesign:**
   - `AppShell`: the frame for every `/app` page.
-  - `AppNav`: one `<nav aria-label="Main">`. It is a bottom bar on phones, inline in the navy top bar from `md`, and marks the current page with `aria-current="page"`, an elevated pill and a teal icon.
+  - `AppNav`: one `<nav aria-label="Main">`. It is a bottom bar on phones, inline in the navy top bar from `md`, and marks the current page with `aria-current="page"`, an elevated pill and a teal icon; on desktop the pill also has a `text-muted` outline, and under forced colours the current item is underlined. The bottom bar pads for the bottom, left and right safe areas.
   - `PlaceChip`: the place button and a native modal `<dialog>` holding `LocationSearch` and `UseMyLocation`.
   - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans. An opened plan shows below the list under its snapshot banner, with "Close", which returns focus to its Open button.
   - `TodayLead`: the weather strip (the backdrop's words), verdict (`h2`), word tag, provenance line, stale banner and caveat.
@@ -181,8 +181,8 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - at 320: 44 px targets, except links inside a sentence;
   - at 900, 1024 and 1280: 200 % text, nothing clipped;
   - at 320: WCAG text spacing, nothing clipped;
-  - a long place keeps the header on screen and, at normal text, the top nav on one row, also with a desktop scrollbar's width taken (simulated, since headless Chromium hides scrollbars).
-- **Top bar:** at normal text the place chip shrinks (its label truncates), so the nav always stays on one row. With text enlarged past the breakpoints, the header row scrolls sideways, so every control stays reachable.
+  - a long place keeps the header on screen and, at normal text, the header one 64 px row with the nav on one line, also with a desktop scrollbar's width taken (simulated, since headless Chromium hides scrollbars).
+- **Top bar:** logo, place chip, then the nav, which is also the Tab order. Below 1024 px the chip shows the text before the first comma ("Pune"), and from 1024 px the whole place. At normal text the chip gives way first (its label truncates), so the header stays one 64 px row; at 768 px a longer first word such as "Mumbai" is cut (owner ruling C11). With text enlarged past the breakpoints, the header row wraps onto a second line, so every control stays reachable.
 
 ## 11. Accessibility requirements
 

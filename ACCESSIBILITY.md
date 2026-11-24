@@ -82,8 +82,9 @@ A screen-reader pass with a real reader has not been done yet.
 - **Touch targets of 44 px or more at 320** on every page. Links inside a sentence are exempt (WCAG 2.5.8). Fixed in Phase 9: the header wordmarks, the footer "Privacy" links and the source links.
 - **axe at 320** on every page: no violations.
 - **200 % text** (text enlarged, breakpoints fixed) at 900, 1024 and 1280: nothing past the screen and no clipped text.
-  - Fixed in Phase 9: the header row scrolls sideways when enlarged text makes it outgrow the screen, so the nav and the place chip stay reachable.
-  - At normal text nothing scrolls: the chip shrinks and the nav stays on one row, also with a desktop scrollbar's width taken.
+  - Fixed in Phase 9, changed in redesign P2: when enlarged text makes the header row outgrow the screen, it wraps onto a second line (it scrolled sideways before), so the nav and the place chip stay reachable.
+  - At normal text the header stays one 64 px row: the chip's label truncates first, also with a desktop scrollbar's width taken.
+- **Header Tab order** (redesign P2): logo, place chip, then the five nav items, on phones and desktop, matching what is seen.
 - **Wider text spacing** (WCAG 1.4.12) at 320: no clipped text on any page.
 - **Long places:** at 320×640, "Chhatrapati Sambhajinagar, Maharashtra" keeps the verdict above the bottom bar. A 70-character place keeps the header on screen at every size.
 - **Windows High Contrast** (forced colours, emulated):
