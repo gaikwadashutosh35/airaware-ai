@@ -12,6 +12,9 @@ afterEach(cleanup);
 // relative to client/, Vitest's root.
 const css = readFileSync('src/index.css', 'utf8');
 
+const CITY_HUE_UNKNOWN =
+  '[--city-hue:color-mix(in_oklab,var(--color-secondary)_30%,var(--color-rule))]';
+
 function scene(fields: Partial<Scene> = {}): Scene {
   return {
     air: 'within',
@@ -40,15 +43,17 @@ const opacityOf = (container: HTMLElement, name: string) => {
       ((el as HTMLElement | null)?.style.opacity || 1),
   );
 };
-// The class of the first stop of the gradient the sky is filled with.
-function topStop(container: HTMLElement): string {
+// The class of the first (or second) stop of the gradient the sky is filled with.
+function skyStop(container: HTMLElement, n: number): string {
   const sky = part(container, 'sky');
   const ref = /url\(#([^)]+)\)/.exec(sky?.getAttribute('fill') ?? '')?.[1];
   const gradient = [...container.querySelectorAll('linearGradient')].find(
     (g) => g.id === ref,
   );
-  return gradient?.querySelector('stop')?.getAttribute('class') ?? '';
+  return gradient?.querySelectorAll('stop')[n]?.getAttribute('class') ?? '';
 }
+const topStop = (c: HTMLElement) => skyStop(c, 0);
+const bottomStop = (c: HTMLElement) => skyStop(c, 1);
 
 // A token-only duration check, shared by the rain and the drift.
 function seconds(token: string) {
@@ -104,9 +109,10 @@ describe('CitySkyline', () => {
         'sm:h-[min(11rem,20vh)]',
         'bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]',
         'md:bottom-0',
-        // Final review: under 24rem tall a wrapped title can reach the
-        // band, so the city hides and the sky alone carries the look.
-        '[@media(max-height:24rem)]:hidden',
+        // Final review, P8 D7: on a screen under 30.2rem tall (a phone held
+        // sideways, or text enlarged) a wrapped title can reach the band, so
+        // the city hides and the sky alone carries the look.
+        '[@media(max-height:30.2rem)]:hidden',
       ]) {
         expect(classes).toContain(name);
       }
@@ -128,23 +134,75 @@ describe('CitySkyline', () => {
     }
   });
 
-  // Cityscape D1: one look per server level, from tokens only.
+  // Cityscape D1: one look per server level, from tokens only. P8 (H4): the
+  // within sky is crisper and cyan (secondary with primary), the above sky
+  // a muted haze (rule with a touch of warning), the unknown one a cool
+  // neutral (rule with a little secondary).
   it('the sky follows the air state', () => {
-    expect(topStop(draw({ air: 'within' }))).toContain(
-      'var(--color-secondary)_46%',
-    );
-    expect(topStop(draw({ air: 'above' }))).toContain(
-      'var(--color-secondary)_14%',
-    );
+    const within = topStop(draw({ air: 'within' }));
+    expect(within).toContain('var(--color-secondary)_55%,var(--color-primary)');
+    expect(within).toContain('_68%,var(--color-surface-light)');
+    const above = topStop(draw({ air: 'above' }));
+    expect(above).toContain('var(--color-secondary)_24%,var(--color-rule)');
+    expect(above).toContain('_93%,var(--color-warning)');
     const unknown = topStop(draw({ air: 'unknown' }));
-    expect(unknown).toContain('var(--color-rule)');
-    expect(unknown).not.toContain('secondary');
+    expect(unknown).toContain('var(--color-secondary)_12%,var(--color-rule)');
+    expect(unknown).not.toContain('warning');
+    expect(unknown).not.toContain('primary');
+    // The bottom stops, which the city and the title sit over.
+    expect(bottomStop(draw({ air: 'within' }))).toContain(
+      'var(--color-primary)_24%,var(--color-surface-light)',
+    );
+    expect(bottomStop(draw({ air: 'above' }))).toContain(
+      'var(--color-warning)_16%',
+    );
+    expect(bottomStop(draw({ air: 'unknown' }))).toContain(
+      'var(--color-rule)_60%,var(--color-surface-light)',
+    );
     // Overcast mutes the top of the sky (weather, not air), and the within
     // sky keeps most of its colour strength, so it never passes for an
     // above one (brief §4.3).
     expect(topStop(draw({ air: 'within', clouds: 3 }))).toMatch(
       /_75%,var\(--color-rule\)\)\]/,
     );
+  });
+
+  // P8 (H4): the city is tonal, in the sky's own hue (set once on the
+  // backdrop as --city-hue, from tokens), lighter far and darker near.
+  it('the city takes the look hue, lighter far and darker near', () => {
+    const hue = (air: SceneAir) =>
+      draw({ air }).firstElementChild?.getAttribute('class') ?? '';
+    expect(hue('within')).toContain(
+      '[--city-hue:color-mix(in_oklab,var(--color-secondary)_70%,var(--color-primary))]',
+    );
+    expect(hue('above')).toContain(
+      '[--city-hue:color-mix(in_oklab,var(--color-secondary)_10%,color-mix(in_oklab,var(--color-rule)_80%,var(--color-warning)))]',
+    );
+    expect(hue('unknown')).toContain(CITY_HUE_UNKNOWN);
+    const container = draw();
+    const share = (el: Element) =>
+      Number(
+        /var\(--color-text-dark-muted\)_(\d+)%,var\(--city-hue\)/.exec(
+          el.getAttribute('class') ?? '',
+        )?.[1],
+      );
+    const far = share(part(container, 'far')!);
+    const mid = share(part(container, 'mid')!);
+    const near = share(part(container, 'near')!.parentElement!);
+    expect(far).toBeGreaterThan(0);
+    expect(far).toBeLessThan(mid);
+    expect(mid).toBeLessThan(near);
+  });
+
+  // P8: the silhouette wears the unknown look's city colours.
+  it('the loading silhouette uses the unknown look city colours', () => {
+    const root = draw(null).firstElementChild;
+    expect(root?.getAttribute('class')).toContain(CITY_HUE_UNKNOWN);
+    const rows = [...root!.querySelectorAll('[data-layer="city"] svg > g')];
+    expect(rows).toHaveLength(2);
+    for (const g of rows) {
+      expect(g.getAttribute('class')).toContain('var(--city-hue)');
+    }
   });
 
   it('veils follow the air state only', () => {
@@ -227,7 +285,7 @@ describe('CitySkyline', () => {
       // What fades: the sky's colours, the glow's and veils' opacity, and
       // the far veil's colour.
       expect(cls).toContain(
-        'motion-safe:transition-[stop-color,opacity,background-color]',
+        'motion-safe:transition-[stop-color,opacity,background-color,fill]',
       );
       expect(cls).not.toMatch(/(^|\s)(transition|duration)-/);
     }

@@ -195,6 +195,12 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P8, backdrop art direction and large text (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows H1–H4 and D7):
+  - the backdrop's three air looks are retuned toward the art-direction images, with existing tokens only: a crisp, slightly cyan sky within the limits, a warmer, hazier sky above them (never orange), a cool neutral sky for unknown; nothing from the image folder is shipped;
+  - the city is now light and tonal in the sky's own hue instead of dark silhouettes, so the answer reads first: the near row against the sky fell from about 10:1 to about 2:1 in every look;
+  - with large browser text the city steps aside (it hides on screens under 30.2rem tall), so no title sits over it: checked at 16 to 32 px default text on ten screen sizes and six pages; at normal text it still shows on phones;
+  - title text keeps at least 4.58:1 against every colour behind it, now including the city rows;
+  - the weather, day/night, stale and reduced-motion rules are unchanged; type sizes (H3) and corners (H2) needed no change.
 - Redesign P7, Landing (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows G1–G7):
   - seven sections: hero, "Understand your air", "What AirAware helps with" (the four help choices), "Explainable AI" (with the former "Your personal daily plan" text and a mid-page "Check My Air"), "My Home and Better Habits", "How AirAware works", and "Your city, the next two days" with the limits and the final "Check My Air";
   - the hero is top-aligned from 1024 px, so the search is on the first 1280×720 screen; the dated Today screenshot stays beside it (G3) and a still, decorative skyline runs along its bottom (G2);

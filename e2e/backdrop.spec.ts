@@ -114,8 +114,12 @@ test('the backdrop stays put between pages', async ({ page }) => {
 });
 
 // The lowest contrast between the title block's text colours and every
-// colour that can pass behind it: each sky stop alone, each cloud, deck and
-// glow centre over each sky stop, and a rain streak over all of those.
+// colour that can pass behind it: each sky stop alone, each cloud, deck,
+// glow centre and city row (far and middle, at their own opacity) over each
+// sky stop, the middle row over the far one, and a rain streak over all of
+// those. The near row is left out: the large-text test below keeps the title
+// off the whole city at the sizes it samples, and the near row is quiet on
+// purpose (CS-10).
 function titleContrast(page: Page) {
   return page.evaluate(() => {
     const canvas = document.createElement('canvas');
@@ -162,6 +166,15 @@ function titleContrast(page: Page) {
         alpha: Number(style.opacity),
       });
     }
+    for (const row of root.querySelectorAll(
+      '[data-part="far"], [data-part="mid"]',
+    )) {
+      layers.push({
+        name: 'city ' + row.getAttribute('data-part'),
+        color: rgb(getComputedStyle(row).fill),
+        alpha: Number(getComputedStyle(row).opacity),
+      });
+    }
     const glow = root.querySelector('[data-part="glow"]');
     if (glow) {
       layers.push({
@@ -183,12 +196,26 @@ function titleContrast(page: Page) {
     const rain = layers.filter((l) => l.name === 'rain');
     const bases = [
       ...skies.map((color) => ({ name: 'sky', color })),
-      ...skies.flatMap((sky) =>
+      ...skies.flatMap((sky, i) =>
         layers
-          .filter((l) => l.name !== 'rain')
+          // The city stands in the band at the foot of the screen, over the
+          // sky's bottom stop.
+          .filter(
+            (l) =>
+              l.name !== 'rain' &&
+              (!l.name.startsWith('city') || i === skies.length - 1),
+          )
           .map((l) => ({ name: l.name, color: over(l.color, l.alpha, sky) })),
       ),
     ];
+    // The middle row stands in front of the far one.
+    const far = layers.find((l) => l.name === 'city far')!;
+    const mid = layers.find((l) => l.name === 'city mid')!;
+    const farOver = over(far.color, far.alpha, skies[skies.length - 1]!);
+    bases.push({
+      name: 'city mid over far',
+      color: over(mid.color, mid.alpha, farOver),
+    });
     const behind = [
       ...bases,
       ...bases.flatMap((base) =>
@@ -246,6 +273,18 @@ for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
         LOOK[level],
       );
       const worst = await titleContrast(page);
+      // Each look's city rows are among the colours tried.
+      expect(worst.layers).toEqual(
+        expect.arrayContaining(['city far', 'city mid']),
+      );
+      console.log(
+        'title contrast ' +
+          level +
+          ': ' +
+          worst.ratio.toFixed(2) +
+          ' ' +
+          worst.behind,
+      );
       expect(
         worst.ratio,
         JSON.stringify({ weather, worst }),
@@ -345,4 +384,137 @@ test('nothing reaches past a 320 px screen: Welcome', async ({ page }) => {
   await page.goto('/app/welcome');
   await expect(visibleH1(page)).toBeVisible();
   expect(await pastTheEdge(page)).toEqual([]);
+});
+
+// P8 CS-10: the near row, at its own opacity over the sky's bottom stop, is a
+// shape but quieter than the P7 dark silhouette. The "before" ratios were
+// measured on the P7 code (HEAD 57ff77c; near fill text-dark at 0.9 over the
+// bottom stop) at both sizes.
+const NEAR_BEFORE: Record<Level, number> = {
+  not_elevated: 10.93,
+  elevated: 9.91,
+  unknown: 10.93,
+};
+for (const [width, height] of [
+  [1280, 720],
+  [1440, 900],
+] as const) {
+  for (const level of ['not_elevated', 'elevated', 'unknown'] as const) {
+    test(`the near row is quieter against the sky: ${LOOK[level]} ${width}x${height}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await stub(page, level);
+      await page.goto(PUNE);
+      await expect(page.locator('[data-air]')).toHaveAttribute(
+        'data-air',
+        LOOK[level],
+      );
+      const ratio = await page.evaluate(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+        const rgb = (css: string) => {
+          ctx.clearRect(0, 0, 1, 1);
+          ctx.fillStyle = '#000';
+          ctx.fillStyle = css;
+          ctx.fillRect(0, 0, 1, 1);
+          return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+        };
+        const lum = (c: number[]) => {
+          const [r, g, b] = c.map((v) => {
+            const s = v / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+        };
+        const root = document.querySelector('[data-air]')!;
+        const stops = root.querySelectorAll('linearGradient stop');
+        const bottom = rgb(getComputedStyle(stops[1]!).stopColor);
+        const layer = root.querySelector('[data-part="near"]')!.parentElement!;
+        const alpha = Number(getComputedStyle(layer).opacity);
+        const fill = rgb(getComputedStyle(layer).fill);
+        const near = fill.map((c, i) => c * alpha + bottom[i]! * (1 - alpha));
+        const [hi, lo] = [lum(near), lum(bottom)].sort((a, b) => b - a);
+        return (hi! + 0.05) / (lo! + 0.05);
+      });
+      console.log(
+        `near vs sky bottom ${LOOK[level]} ${width}x${height}: ${ratio.toFixed(2)} (before ${NEAR_BEFORE[level]})`,
+      );
+      expect(ratio).toBeLessThan(NEAR_BEFORE[level]);
+      // Still clearly a shape.
+      expect(ratio).toBeGreaterThan(1.5);
+    });
+  }
+}
+
+// P8 D7: with the browser's own default font size at 16, 24 and 32 px (the
+// real setting: media queries ignore a CSS font-size on html), no page's title
+// block reaches the top of the city that shows on first load; at 16 px the
+// city still shows on a 320x640 phone and every taller screen below.
+const PAGES = [
+  '/app',
+  '/app/ask',
+  '/app/home',
+  '/app/habits',
+  '/app/profile',
+  '/app/welcome',
+];
+const abortOutside = (page: Page) =>
+  page.route(
+    (url) => !['localhost', '127.0.0.1'].includes(url.hostname),
+    (route) => route.abort(),
+  );
+test('large text keeps every title off the city', async ({ page }) => {
+  test.setTimeout(900_000);
+  const cdp = await page.context().newCDPSession(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const overlaps: string[] = [];
+  const hiddenAt16: string[] = [];
+  for (const font of [16, 20, 24, 28, 32]) {
+    await cdp.send('Page.setFontSizes', {
+      fontSizes: { standard: font, fixed: 13 },
+    });
+    for (const [width, height] of [
+      [320, 640],
+      [375, 667],
+      [390, 844],
+      [393, 873],
+      [412, 915],
+      [414, 896],
+      [430, 932],
+      [768, 1024],
+      [1280, 720],
+      [1440, 900],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      for (const path of PAGES) {
+        await abortOutside(page);
+        await stub(page, 'not_elevated');
+        await page.goto(path === '/app/welcome' ? path : at(path));
+        await expect(visibleH1(page)).toBeVisible();
+        await page.waitForLoadState('networkidle');
+        const seen = await page.evaluate(() => {
+          const block = [
+            ...document.querySelectorAll('[data-part="title-block"]'),
+          ].find((el) => el.checkVisibility())!;
+          const city = document.querySelector('[data-layer="city"]')!;
+          return {
+            shown: city.checkVisibility(),
+            bottom: block.getBoundingClientRect().bottom,
+            top: city.getBoundingClientRect().top,
+          };
+        });
+        const where = `font ${font}px ${width}x${height} ${path}`;
+        if (seen.shown && seen.bottom > seen.top) {
+          overlaps.push(`${where}: ${Math.round(seen.bottom - seen.top)} px`);
+        }
+        if (font === 16 && !seen.shown && height >= 640) hiddenAt16.push(where);
+        await page.unrouteAll();
+      }
+    }
+  }
+  expect(overlaps).toEqual([]);
+  expect(hiddenAt16).toEqual([]);
 });

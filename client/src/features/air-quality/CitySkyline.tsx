@@ -21,33 +21,57 @@ const RAIN_TILE: Array<[number, number]> = [
 // Token colours as whole class strings, so Tailwind emits them. The sky's
 // top mutes towards `rule` under an overcast deck (weather, not air); the
 // within sky keeps most of its colour strength (chroma) there, so it never
-// passes for an above one.
+// passes for an above one. Within: a crisper, cyan daylight (secondary with
+// primary). Above: a muted haze (rule with a touch of warning, never an
+// alarm colour). Unknown: a cool neutral (rule with a little secondary).
 const SKY: Record<SceneAir, { top: string; overcast: string; bottom: string }> =
   {
     within: {
-      top: '[stop-color:color-mix(in_oklab,var(--color-secondary)_46%,var(--color-surface-light))]',
+      top: '[stop-color:color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_55%,var(--color-primary))_68%,var(--color-surface-light))]',
       overcast:
-        '[stop-color:color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_46%,var(--color-surface-light))_75%,var(--color-rule))]',
-      bottom: '[stop-color:var(--color-surface-light)]',
+        '[stop-color:color-mix(in_oklab,color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_55%,var(--color-primary))_68%,var(--color-surface-light))_75%,var(--color-rule))]',
+      bottom:
+        '[stop-color:color-mix(in_oklab,var(--color-primary)_24%,var(--color-surface-light))]',
     },
     above: {
-      top: '[stop-color:color-mix(in_oklab,var(--color-secondary)_14%,var(--color-rule))]',
+      top: '[stop-color:color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_24%,var(--color-rule))_93%,var(--color-warning))]',
       overcast:
-        '[stop-color:color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_14%,var(--color-rule))_45%,var(--color-rule))]',
+        '[stop-color:color-mix(in_oklab,color-mix(in_oklab,color-mix(in_oklab,var(--color-secondary)_24%,var(--color-rule))_93%,var(--color-warning))_45%,var(--color-rule))]',
       bottom:
-        '[stop-color:color-mix(in_oklab,var(--color-rule)_45%,var(--color-surface-light))]',
+        '[stop-color:color-mix(in_oklab,var(--color-warning)_16%,color-mix(in_oklab,var(--color-rule)_55%,var(--color-surface-light)))]',
     },
     unknown: {
-      top: '[stop-color:var(--color-rule)]',
+      top: '[stop-color:color-mix(in_oklab,var(--color-secondary)_12%,var(--color-rule))]',
       overcast: '[stop-color:var(--color-rule)]',
-      bottom: '[stop-color:var(--color-surface-light)]',
+      bottom:
+        '[stop-color:color-mix(in_oklab,var(--color-rule)_60%,var(--color-surface-light))]',
     },
   };
+// The city's own hue per look, set once on the backdrop: the rows below mix
+// it with `text-dark-muted`, so the city is tonal, in the sky's colour.
+const CITY_HUE: Record<SceneAir | 'loading', string> = {
+  within:
+    '[--city-hue:color-mix(in_oklab,var(--color-secondary)_70%,var(--color-primary))]',
+  above:
+    '[--city-hue:color-mix(in_oklab,var(--color-secondary)_10%,color-mix(in_oklab,var(--color-rule)_80%,var(--color-warning)))]',
+  unknown:
+    '[--city-hue:color-mix(in_oklab,var(--color-secondary)_30%,var(--color-rule))]',
+  // Loading wears the unknown look's colours.
+  loading:
+    '[--city-hue:color-mix(in_oklab,var(--color-secondary)_30%,var(--color-rule))]',
+};
+// Far (lightest) to near (darkest): the share of `text-dark-muted` in the hue.
+const FILL_FAR =
+  '[fill:color-mix(in_oklab,var(--color-text-dark-muted)_10%,var(--city-hue))]';
+const FILL_MID =
+  '[fill:color-mix(in_oklab,var(--color-text-dark-muted)_14%,var(--city-hue))]';
+const FILL_NEAR =
+  '[fill:color-mix(in_oklab,var(--color-text-dark-muted)_35%,var(--city-hue))]';
 const GLOW: Record<SceneAir, number> = { within: 0.6, above: 0.22, unknown: 0 };
 // The air look changes over 700 ms (brief §5.2), and at once under reduced
 // motion. The glow and the middle veil stay mounted at 0 so they can fade.
 const FADE =
-  'motion-safe:transition-[stop-color,opacity,background-color] motion-safe:duration-700 motion-safe:ease-out';
+  'motion-safe:transition-[stop-color,opacity,background-color,fill] motion-safe:duration-700 motion-safe:ease-out';
 const VEIL_FAR: Record<SceneAir, number> = {
   within: 0.05,
   above: 0.42,
@@ -65,15 +89,18 @@ const paths = (ds: string[]) => ds.map((d, i) => <path key={i} d={d} />);
 
 // The fixed full-screen backdrop and its layers (backdrop design §5.1). The
 // city band never takes over a fifth of the screen, and sits above the phone
-// bar (56 px plus the safe area) below md. Under 24rem tall (a phone held
-// sideways) a wrapped title could reach the band, so the city hides and the
-// sky alone carries the look. In Windows High Contrast (forced colours) the
+// bar (56 px plus the safe area) below md. Under 30.2rem tall (a phone held
+// sideways, or text enlarged: rem follows the browser's own font size, so
+// 24 px text hides it on a 640 px phone, and 28 px text on an 844 px one,
+// the binding case: 844 / 28 = 30.14rem) a
+// wrapped title could reach the band, so the city hides and the sky alone
+// carries the look. In Windows High Contrast (forced colours) the
 // whole backdrop steps aside, so the words sit on the system background.
 const ROOT =
   'pointer-events-none fixed inset-0 -z-10 overflow-hidden forced-colors:hidden';
 const FILL = 'absolute inset-0 size-full';
 const CITY =
-  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:24rem)]:hidden';
+  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:30.2rem)]:hidden';
 
 // The city's rows share one drawing box, stacked as layers so the veils
 // can sit between them as HTML. They fade in from the top of the
@@ -98,16 +125,20 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
 
   if (!scene) {
     return (
-      <div aria-hidden="true" data-air="loading" className={ROOT}>
+      <div
+        aria-hidden="true"
+        data-air="loading"
+        className={`${ROOT} ${CITY_HUE.loading}`}
+      >
         <svg data-layer="sky" className={FILL}>
           <rect width="100%" height="100%" className="fill-surface-light" />
         </svg>
         <div data-layer="city" className={CITY}>
           <svg {...ROW}>
-            <g className="fill-rule" opacity="0.7">
+            <g className={FILL_FAR} opacity="0.42">
               <path d={SKYLINE.far} />
             </g>
-            <g className="fill-rule">
+            <g className={FILL_NEAR} opacity="0.9">
               {paths(SKYLINE.near)}
               {paths(SKYLINE.tanks)}
             </g>
@@ -124,7 +155,7 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
       aria-hidden="true"
       data-air={scene.air}
       data-clouds={scene.clouds}
-      className={ROOT}
+      className={`${ROOT} ${CITY_HUE[scene.air]}`}
     >
       <svg
         data-layer="sky"
@@ -207,7 +238,7 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
       </svg>
       <div data-layer="city" className={CITY}>
         <svg {...ROW}>
-          <g data-part="far" className="fill-text-dark-muted" opacity="0.42">
+          <g data-part="far" className={`${FILL_FAR} ${FADE}`} opacity="0.36">
             <path d={SKYLINE.far} />
           </g>
         </svg>
@@ -217,18 +248,14 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
           style={{ opacity: VEIL_FAR[scene.air] }}
         />
         <svg {...ROW}>
-          <g
-            data-part="mid"
-            className="[fill:color-mix(in_oklab,var(--color-text-dark-muted)_55%,var(--color-text-dark))]"
-            opacity="0.62"
-          >
+          <g data-part="mid" className={`${FILL_MID} ${FADE}`} opacity="0.4">
             {paths(SKYLINE.mid)}
           </g>
           {/* Railings, window squares and glass fins, at every width. */}
           <g
             data-part="mid-detail"
             className="fill-surface-light"
-            opacity="0.28"
+            opacity="0.2"
           >
             {paths(SKYLINE.midDetail)}
           </g>
@@ -241,7 +268,7 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
         <svg {...ROW}>
           {/* One translucent layer, so a tank meeting its parapet doesn't
               draw darker where they overlap. */}
-          <g className="fill-text-dark" opacity="0.9">
+          <g className={`${FILL_NEAR} ${FADE}`} opacity="0.9">
             <g data-part="near">{paths(SKYLINE.near)}</g>
             <g data-part="tanks">{paths(SKYLINE.tanks)}</g>
           </g>
@@ -250,7 +277,7 @@ export function CitySkyline({ scene }: { scene: Scene | null }) {
           <g
             data-part="windows"
             className="fill-surface-light max-sm:hidden"
-            opacity="0.5"
+            opacity="0.3"
           >
             {paths(SKYLINE.nearDetail)}
           </g>

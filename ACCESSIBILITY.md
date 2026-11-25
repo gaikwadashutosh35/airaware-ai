@@ -152,7 +152,7 @@ No real screen reader has been confirmed yet.
 - **Order:** title, intro, context line, the question box, topics, three starters, "More questions" (a native `<details>`, 44 px summary), then the conversation. The DOM follows the screen; `e2e/keyboard.spec.ts`'s Tab walk on Ask passes on both projects.
 - **New answer:** the exchange scrolls instantly to the top of the view, then its heading takes focus with `preventScroll`, so there is no second jump and nothing animates the scroll (AK-04, AK-05 in `e2e/firstscreen.spec.ts`).
 - **Large text:** Send drops below the input; at 200 % text the input fills its row on phones (AK-10).
-- **Known issue at 200 % text:** at 390×844 the Ask title block reaches about 165 px into the fixed city drawing on first load (29 px without the new intro line; Today's reaches none), so the end of the context line and "Edit" sit over the buildings until the page is scrolled. Measured with a 32 px browser default font as well as CSS. Not yet fixed.
+- **200 % text (fixed in P8, D7):** at 390×844 the Ask title block used to reach about 165 px into the fixed city drawing on first load. The city now hides on screens under 30.2rem tall, so with large browser text it steps aside first (see P8 below).
 - **Place-dialog keyboard test:** across the P3 and P4 runs on 24 Nov it failed 3 times (twice in a full 8- or 7-spec run, once in a run of `keyboard.spec.ts` alone) and passed in the other full runs and 50 of 50 repeats on its own. Fixed on 25 Nov: the browser closes the dialog on Escape a task before its `close` event, so a tap on the place chip in that gap was lost. Reproduced every time in Chromium with `requestClose()` then a chip click; the chip now reopens the dialog in that gap (focus in the search box) and a late `close` is ignored. `PlaceChip.test.tsx` pins it, and the keyboard test then passed 50 of 50.
 
 ## Redesign P5, My Home and Better Habits (2026-11-25)
@@ -181,3 +181,10 @@ No real screen reader has been confirmed yet.
 - **Skyline:** `aria-hidden`, not focusable, still under every motion setting.
 - **Checked by e2e** (both projects, every request to another server blocked and counted at 0): nothing past the screen at 320, no layout shift at 390 and 1280, the search on the first 1280×720 screen.
 - Not checked: a real screen reader on the new Search button.
+
+## Redesign P8, backdrop and large text (2026-11-25)
+
+- **Large text (D7):** the city band hides on screens under 30.2rem tall. Checked with Chromium's own default-font setting at 16, 20, 24, 28 and 32 px, on ten screen sizes (320×640 to 1440×900, including 375×667, 393×873, 412×915, 414×896 and 430×932) and six pages: no title block reaches the visible city (0 px). At 16 px the city still shows on every phone 640 px tall or more.
+- **Title contrast:** `text-dark` title-block text against every colour that can pass behind it, now including the far and middle city rows as drawn: at least 4.58:1 (within), 4.95:1 (above) and 5.04:1 (unknown).
+- **The city no longer competes with the answer (CS-10):** the near row against the sky's bottom stop fell from 10.93:1 to 2.39:1 (within), 9.91:1 to 1.76:1 (above) and 10.93:1 to 1.92:1 (unknown), and stays above 1.5:1 so it is still a shape.
+- Unchanged: the backdrop is `aria-hidden`, hides under forced colours, and is still under reduced motion.
