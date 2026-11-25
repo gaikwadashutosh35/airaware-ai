@@ -273,6 +273,101 @@ describe('LocationSearch', () => {
     );
   });
 
+  describe('with a submit button (the landing page)', () => {
+    const search = () => screen.getByRole('button', { name: 'Search' });
+
+    it('has no button without the prop', () => {
+      render(<LocationSearch onSelect={() => {}} />);
+
+      expect(screen.queryByRole('button')).toBeNull();
+    });
+
+    it('Enter and the button both open the list and pick nothing', async () => {
+      respondWith({ data: searchFixture });
+      const onSelect = vi.fn();
+      render(<LocationSearch onSelect={onSelect} submitLabel="Search" />);
+      await type('Pune');
+      await pause();
+      const input = screen.getByRole('combobox');
+
+      for (const press of [
+        () => fireEvent.click(search()),
+        () => fireEvent.keyDown(input, { key: 'Enter' }),
+      ]) {
+        fireEvent.keyDown(input, { key: 'Escape' });
+        expect(input.getAttribute('aria-expanded')).toBe('false');
+        press();
+        expect(input.getAttribute('aria-expanded')).toBe('true');
+        expect(screen.getAllByRole('option')).toHaveLength(5);
+        expect(input.getAttribute('aria-activedescendant')).toBeNull();
+      }
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it('the button opens the results of text typed a moment ago', async () => {
+      respondWith({ data: searchFixture });
+      const onSelect = vi.fn();
+      render(<LocationSearch onSelect={onSelect} submitLabel="Search" />);
+
+      await type('Pune');
+      fireEvent.click(search());
+      await pause();
+
+      expect(screen.getAllByRole('option')).toHaveLength(5);
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it('the button chooses the highlighted option, as Enter does', async () => {
+      respondWith({ data: searchFixture });
+      const onSelect = vi.fn();
+      render(<LocationSearch onSelect={onSelect} submitLabel="Search" />);
+      await type('Pune');
+      await pause();
+
+      const input = screen.getByRole('combobox');
+      act(() => input.focus());
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      // As in a browser: a press does not take focus from the input, and Tab
+      // moves focus to the button before the click.
+      expect(fireEvent.mouseDown(search())).toBe(false);
+      act(() => search().focus());
+      fireEvent.click(search());
+
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(onSelect).toHaveBeenCalledWith({
+        label: 'Pune, Maharashtra',
+        latitude: 18.51957,
+        longitude: 73.85535,
+      });
+    });
+
+    it('the button searches again after a failed search', async () => {
+      const fetchSpy = respondWith({ error: { code: 'X' } }, 500);
+      render(<LocationSearch onSelect={() => {}} submitLabel="Search" />);
+      await type('Pune');
+      await pause();
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(search());
+      await pause();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('does nothing for fewer than 2 letters', async () => {
+      const fetchSpy = respondWith({ data: searchFixture });
+      const onSelect = vi.fn();
+      render(<LocationSearch onSelect={onSelect} submitLabel="Search" />);
+      await type('P');
+
+      fireEvent.click(search());
+      await pause(400);
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+  });
+
   it('has no axe violations with results open', async () => {
     respondWith({ data: searchFixture });
     const { container } = render(<LocationSearch onSelect={() => {}} />);

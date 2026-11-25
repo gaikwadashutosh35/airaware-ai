@@ -135,6 +135,12 @@ Each recommendation follows the same principles:
 | G6 | Landing labels ("Search", section headings) | **Approve** | New elements |
 | G7 | Landing footer `<nav>` | **Keep** as shipped | No document proposes it |
 
+**Ruling during P7, from the owner on 25 Nov 2026:**
+
+| ID | Decision | Answer |
+|---|---|---|
+| G4 | Recapture the landing's Today screenshot from the redesigned Today (one real plan request), or keep the 22 Nov capture | **Keep the 22 Nov capture.** It stays labelled "A past screenshot of Today for Pune, 22 Nov 2026", so it shows the pre-redesign Today truthfully; no plan request was made |
+
 ## H. Direction A visuals (P8)
 
 | ID | Decision | Recommended answer | Why |

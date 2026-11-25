@@ -195,6 +195,14 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P7, Landing (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows G1–G7):
+  - seven sections: hero, "Understand your air", "What AirAware helps with" (the four help choices), "Explainable AI" (with the former "Your personal daily plan" text and a mid-page "Check My Air"), "My Home and Better Habits", "How AirAware works", and "Your city, the next two days" with the limits and the final "Check My Air";
+  - the hero is top-aligned from 1024 px, so the search is on the first 1280×720 screen; the dated Today screenshot stays beside it (G3) and a still, decorative skyline runs along its bottom (G2);
+  - the landing search has an outlined "Search" button: it and Enter choose a highlighted place, otherwise open the list, never pick one on their own, and search again after a failed search (G5); Welcome, Ask and the place dialog are unchanged;
+  - the Air quality details screenshot is gone (G1), so the page loads one image (125 kB, was about 223 kB);
+  - shorter: 10.5 / 7.4 / 5.3 / 5.9 / 4.7 screens at 320 / 390 / 768 / 1280 / 1440 (was 13.4 / 9.4 / 6.7 / 7.8 / 6.3), with tighter spacing and, on phones only, smaller section headings;
+  - the help choices' data moved to `helpChoices.ts`, shared by Today and the landing page;
+  - `e2e/landing.spec.ts` now blocks and counts any request to another server, and adds the page length, first-screen search, Search button, links, skyline and image-weight checks.
 - Redesign P6, My Profile, Welcome and Privacy (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows F1–F5, A9 and A10):
   - My Profile reads "Your place" (when remembered), the household form, "Saved plans", then a new "Your data"; from 1024 px the form is on the left and the rest on the right;
   - "Your data" holds the full save note and "Delete my saved data", which now shows only when something is saved; "Save my answers" keeps the note's first sentence beside it;

@@ -172,3 +172,12 @@ No real screen reader has been confirmed yet.
 - **Privacy:** a "Back to AirAware" link (44 px) and the app's navy header; the logo and the focus ring use the header's dark-theme colours.
 - **Checked by e2e** (both projects, every non-localhost request aborted): no page creates an account or calls Supabase sign-in without Save or Remember (0 requests, no stored session); location is read only after "Use my location" (0 calls on load, 1 after one click).
 - Not checked: the "with saved data" states in a real browser (a session needs Supabase), and a real screen reader.
+
+## Redesign P7, Landing (2026-11-25)
+
+- **Headings:** one `h1`, an `h2` per section in order, and `h3`s for "Improve indoor air" and "Sustainable everyday choices" (their rule cards are `h4`).
+- **Search:** the landing-only "Search" button is 88×48 px with an accessible name. A mouse press keeps focus in the combobox, so the highlighted option is chosen as with Enter; Tab to the button keeps the list open, and Tab away closes it. The combobox, listbox and announcements are unchanged.
+- **Labels before images:** the hero screenshot's "A past screenshot…" caption and each rule card's "Example from our rules." are still read first.
+- **Skyline:** `aria-hidden`, not focusable, still under every motion setting.
+- **Checked by e2e** (both projects, every request to another server blocked and counted at 0): nothing past the screen at 320, no layout shift at 390 and 1280, the search on the first 1280×720 screen.
+- Not checked: a real screen reader on the new Search button.

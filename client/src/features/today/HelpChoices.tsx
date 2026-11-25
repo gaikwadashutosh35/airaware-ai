@@ -1,44 +1,6 @@
-import { Footprints, House, Leaf, Users, type LucideIcon } from 'lucide-react';
 import { useId } from 'react';
-import type { AskTopic } from '../../../../shared/contracts.ts';
 import { follow } from '../../lib/navigation.ts';
-
-type Topic = Extract<AskTopic, 'outdoors' | 'family'>;
-
-const CHOICES: Array<{
-  title: string;
-  line: string;
-  to: string;
-  topic?: Topic;
-  Icon: LucideIcon;
-}> = [
-  {
-    title: 'Outdoor activities',
-    line: 'Walks, exercise, commutes',
-    to: '/app/ask',
-    topic: 'outdoors',
-    Icon: Footprints,
-  },
-  {
-    title: 'My home',
-    line: 'Cooking, windows, purifiers',
-    to: '/app/home',
-    Icon: House,
-  },
-  {
-    title: 'My family',
-    line: 'Children, older adults, school runs',
-    to: '/app/ask',
-    topic: 'family',
-    Icon: Users,
-  },
-  {
-    title: 'Better habits',
-    line: 'Small swaps that cut smoke and exhaust',
-    to: '/app/habits',
-    Icon: Leaf,
-  },
-];
+import { CHOICES, type Topic } from './helpChoices.ts';
 
 // "What would you like help with?": four ways in. Outdoor and Family open
 // Ask with their topic held in memory, never in the address.

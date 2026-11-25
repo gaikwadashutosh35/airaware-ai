@@ -68,14 +68,15 @@ Do not use these colors as the only indicators. Every AQI/status signal also nee
 
 ## 6. Marketing homepage story
 
-Eight sections (assistant redesign, Phase 4). Every screenshot is a real capture of the app, labelled as a past screenshot with its date, before the image.
+Seven sections (redesign P7, owner rulings G1–G7; before: eight, from the assistant redesign's Phase 4). Every screenshot is a real capture of the app, labelled as a past screenshot with its date, before the image. Three “Check My Air” links: hero, mid-page and final.
 
-1. **Hero — “The air around you matters.”** One line on what AirAware does, “Check My Air” (`/app`), “Meet Your Assistant” (`/app/ask`), then the place search under “Or search a city”. Beside them, a phone screenshot of Today at its real size.
-2. **Understand your air.** The verdict and the “Model forecast” label in plain words, with a screenshot of the open “Air quality details”.
-3. **Your personal daily plan**, 4. **Improve indoor air**, 5. **Sustainable everyday choices:** each with a real rule card, labelled “Example from our rules”.
-6. **Explainable AI.** AI arranges and words the rules' suggestions but never decides them; the example's “Why?” is open, with its sources.
-7. **How AirAware works.** The 4 real steps as a flow, then the limits: model estimates, not station measurements, not the CPCB National AQI; observations not connected.
-8. **Your city, the next two days.** “Check My Air” again.
+1. **Hero — “The air around you matters.”** One line on what AirAware does, “Check My Air” (`/app`), “Meet Your Assistant” (`/app/ask`), then the place search under “Or search a city” with an outlined “Search” button (landing only: Enter and the button choose a highlighted place, otherwise open the list, and never pick one on their own). Top-aligned from 1024 px, so the search is on the first 1280×720 screen. Beside it from 1024 px (after the search on phones), the dated phone screenshot of Today at its real size (G3). A still, decorative skyline (`aria-hidden`, the app's skyline paths, no air look) runs along the hero's bottom (G2).
+2. **Understand your air.** The verdict and the “Model forecast” label in plain words; no screenshot (the Air quality details capture was dropped, G1).
+3. **What AirAware helps with.** The four help choices' titles and lines, as plain text (the same data as Today's help choices).
+4. **Explainable AI.** AI arranges and words the rules' suggestions but never decides them, plus the former “Your personal daily plan” text (G1); the example's “Why?” is open, with its sources; then a compact “Check My Air”.
+5. **My Home and Better Habits.** “Improve indoor air” and “Sustainable everyday choices”, each with a real rule card labelled “Example from our rules”, side by side from 1024 px.
+6. **How AirAware works.** The 4 real steps as a flow.
+7. **Your city, the next two days.** The limits (model estimates, not station measurements, not the CPCB National AQI; observations not connected), then “Check My Air”.
 
 ## 7. Today information hierarchy
 

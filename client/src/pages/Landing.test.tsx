@@ -1,5 +1,6 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { CHOICES } from '../features/today/helpChoices.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
 import Landing from './Landing.tsx';
 import { LANDING_EXAMPLES } from './landingExamples.ts';
@@ -10,16 +11,21 @@ const SUBHEAD =
   "Understand your city's air quality. Discover smarter daily routines. Make better choices for your home and community.";
 const HERO_ALT =
   "Screenshot of AirAware's Today page on a phone, for Pune: the forecast verdict with its Model forecast label and the navigation bar";
-const DETAILS_ALT =
-  'Screenshot of the open Air quality details for Pune: the PM2.5 model forecast for one hour with its unit, and the 24-hour check in words';
 const UNDERSTAND_TEXT =
   "One sentence tells you how today's forecast compares with India's 24-hour limits, labelled Model forecast with the time it was retrieved. Every number, unit and source is one tap away, under Air quality details.";
 const EXPLAINABLE_TEXT =
   "AI can arrange our rules' suggestions and word them for your day, but it never decides them. Every suggestion opens to its reason, the answers and forecast check it used, its sources and its limits.";
-const CHAPTERS = [
-  'Understand your air',
-  ...LANDING_EXAMPLES.map((e) => e.heading),
+// The examples in their file order: the plan's text moves into Explainable
+// AI, and its card is no longer shown.
+const [PLAN, HOME, HABITS, EXPLAIN] = LANDING_EXAMPLES as [
+  (typeof LANDING_EXAMPLES)[number],
+  (typeof LANDING_EXAMPLES)[number],
+  (typeof LANDING_EXAMPLES)[number],
+  (typeof LANDING_EXAMPLES)[number],
 ];
+const HOME_HABITS = 'My Home and Better Habits';
+// The sections that carry a decorative chapter number, in order.
+const CHAPTERS = ['Understand your air', 'Explainable AI', HOME_HABITS];
 // Documented facts the page may state; any other digit would be invented.
 const REAL_FIGURES = [
   'PM2.5',
@@ -33,7 +39,7 @@ const REAL_FIGURES = [
   // From the real rule cards and their source's date.
   '24-hour',
   '18 November 2009',
-  // The screenshots' capture date.
+  // The screenshot's capture date.
   '22 Nov 2026',
 ];
 
@@ -49,9 +55,9 @@ describe('Landing', () => {
     expect(h1s).toHaveLength(1);
     expect(h1s[0]?.textContent).toBe('The air around you matters.');
     expect(screen.getByText(SUBHEAD)).toBeDefined();
-    // The hero's and the closing section's.
+    // The hero's, the middle one's and the closing section's.
     const actions = screen.getAllByRole('link', { name: ACTION });
-    expect(actions).toHaveLength(2);
+    expect(actions).toHaveLength(3);
     for (const link of actions) expect(link.getAttribute('href')).toBe('/app');
     const assistant = screen.getAllByRole('link', { name: ASSISTANT });
     expect(assistant).toHaveLength(1);
@@ -61,61 +67,119 @@ describe('Landing', () => {
     ).toBeNull();
   });
 
-  it('tells the story in seven sections, in order', () => {
+  it('tells the story in the hero and six sections, in order', () => {
     render(<Landing />);
 
     expect(
       screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
     ).toEqual([
       'Understand your air',
-      'Your personal daily plan',
-      'Improve indoor air',
-      'Sustainable everyday choices',
+      'What AirAware helps with',
       'Explainable AI',
+      HOME_HABITS,
       'How AirAware works',
       'Your city, the next two days',
     ]);
   });
 
-  it('shows the open details screenshot, labelled as past', () => {
-    render(<Landing />);
+  it('has the Understand section without an image', () => {
+    const { container } = render(<Landing />);
 
     const chapter = screen.getByRole('region', { name: 'Understand your air' });
     expect(within(chapter).getByText(UNDERSTAND_TEXT)).toBeDefined();
-    const image = within(chapter).getByAltText(DETAILS_ALT);
-    expect(image.getAttribute('loading')).toBe('lazy');
-    // The 22 Nov capture's size in CSS px; e2e/landing.spec.ts checks it
-    // against the file itself (2x).
-    expect([image.getAttribute('width'), image.getAttribute('height')]).toEqual(
-      ['358', '618'],
-    );
-    const caption = chapter.querySelector('figcaption');
-    expect(caption?.textContent).toBe(
-      'A past screenshot of Air quality details for Pune, 22 Nov 2026. Open the app for current values.',
-    );
+    expect(chapter.querySelector('img, figure')).toBeNull();
+    expect(container.querySelector('img[src*="air-details"]')).toBeNull();
+    expect(screen.queryByAltText(/Air quality details/)).toBeNull();
+    // The hero's Today capture is the page's only image.
+    expect(container.querySelectorAll('img')).toHaveLength(1);
+  });
+
+  it('lists the four help choices as static text, from the help data', () => {
+    render(<Landing />);
+
+    const section = screen.getByRole('region', {
+      name: 'What AirAware helps with',
+    });
+    expect(CHOICES.map((c) => c.title)).toEqual([
+      'Outdoor activities',
+      'My home',
+      'My family',
+      'Better habits',
+    ]);
+    expect(section.querySelector('a, button')).toBeNull();
     expect(
-      caption!.compareDocumentPosition(image) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      within(section)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(CHOICES.map((c) => c.title + c.line));
+  });
+
+  it('folds the personal daily plan into Explainable AI', () => {
+    render(<Landing />);
+
+    expect(
+      screen.queryByRole('region', { name: 'Your personal daily plan' }),
+    ).toBeNull();
+    expect(screen.queryByText(PLAN.candidate.title)).toBeNull();
+    const chapter = screen.getByRole('region', { name: 'Explainable AI' });
+    expect(within(chapter).getByText(PLAN.text)).toBeDefined();
+    // The middle "Check My Air" follows the card.
+    const card = within(chapter).getByRole('heading', {
+      level: 3,
+      name: EXPLAIN.candidate.title,
+    });
+    const link = within(chapter).getByRole('link', { name: ACTION });
+    expect(link.getAttribute('href')).toBe('/app');
+    expect(
+      card.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
-  it('shows a real rule card in each chapter, labelled as an example', () => {
+  it('puts My Home and Better Habits side by side, each with its card', () => {
     render(<Landing />);
 
-    for (const example of LANDING_EXAMPLES) {
-      const chapter = screen.getByRole('region', { name: example.heading });
-      expect(within(chapter).getByText(example.text)).toBeDefined();
+    const section = screen.getByRole('region', { name: HOME_HABITS });
+    expect(
+      within(section)
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent),
+    ).toEqual(['Improve indoor air', 'Sustainable everyday choices']);
+    for (const example of [HOME, HABITS]) {
+      expect(within(section).getByText(example.text)).toBeDefined();
       expect(
-        within(chapter).getByRole('figure').querySelector('figcaption')
-          ?.textContent,
-      ).toBe(example.caption);
-      expect(
-        within(chapter).getByRole('heading', {
-          level: 3,
+        within(section).getByRole('heading', {
+          level: 4,
           name: example.candidate.title,
         }),
       ).toBeDefined();
     }
+    const captions = [...section.querySelectorAll('figcaption')];
+    expect(captions.map((c) => c.textContent)).toEqual([
+      HOME.caption,
+      HABITS.caption,
+    ]);
+  });
+
+  it('draws a still, decorative skyline along the hero', () => {
+    const { container } = render(<Landing />);
+
+    const hero = container.querySelector('main > section')!;
+    const skyline = hero.querySelector('svg[aria-hidden="true"]')!;
+    expect(skyline).not.toBeNull();
+    expect(skyline.hasAttribute('data-air')).toBe(false);
+    expect(skyline.querySelectorAll('path').length).toBeGreaterThan(10);
+    expect(skyline.outerHTML).not.toMatch(/data-air|animate|<text/);
+  });
+
+  it('shows a real rule card in Explainable AI, labelled as an example', () => {
+    render(<Landing />);
+
+    const chapter = screen.getByRole('region', { name: EXPLAIN.heading });
+    expect(within(chapter).getByText(EXPLAIN.text)).toBeDefined();
+    expect(
+      within(chapter).getByRole('figure').querySelector('figcaption')
+        ?.textContent,
+    ).toBe(EXPLAIN.caption);
   });
 
   // Final review #1: the label is read before the card, so an example is
@@ -123,17 +187,17 @@ describe('Landing', () => {
   it('labels each example before its card', () => {
     render(<Landing />);
 
-    for (const example of LANDING_EXAMPLES) {
-      const chapter = screen.getByRole('region', { name: example.heading });
-      const caption = chapter.querySelector('figcaption');
-      const title = within(chapter).getByRole('heading', { level: 3 });
-      expect(
-        Boolean(
-          caption &&
-          caption.compareDocumentPosition(title) &
+    for (const name of ['Explainable AI', HOME_HABITS]) {
+      const chapter = screen.getByRole('region', { name });
+      const captions = [...chapter.querySelectorAll('figcaption')];
+      expect(captions.length).toBeGreaterThan(0);
+      for (const caption of captions) {
+        const card = caption.parentElement!.querySelector('article')!;
+        expect(
+          caption.compareDocumentPosition(card) &
             Node.DOCUMENT_POSITION_FOLLOWING,
-        ),
-      ).toBe(true);
+        ).toBeTruthy();
+      }
     }
   });
 
@@ -144,8 +208,7 @@ describe('Landing', () => {
     expect(within(chapter).getByText(EXPLAINABLE_TEXT)).toBeDefined();
     const why = chapter.querySelector('details');
     expect(why?.open).toBe(true);
-    const example = LANDING_EXAMPLES[3];
-    expect(within(chapter).getByText(example.candidate.reason)).toBeDefined();
+    expect(within(chapter).getByText(EXPLAIN.candidate.reason)).toBeDefined();
     for (const name of [
       'Open-Meteo Air Quality API',
       'National Ambient Air Quality Standards (CPCB, 18 November 2009)',
@@ -153,12 +216,13 @@ describe('Landing', () => {
       expect(within(chapter).getByRole('link', { name })).toBeDefined();
     }
     // The other examples start closed.
-    for (const heading of LANDING_EXAMPLES.slice(0, 3).map((e) => e.heading)) {
-      expect(
-        screen.getByRole('region', { name: heading }).querySelector('details')
-          ?.open,
-      ).toBe(false);
-    }
+    const others = [
+      ...screen
+        .getByRole('region', { name: HOME_HABITS })
+        .querySelectorAll('details'),
+    ];
+    expect(others).toHaveLength(2);
+    for (const details of others) expect(details.open).toBe(false);
   });
 
   it('puts the place search in the hero, after "Or search a city"', () => {
@@ -171,6 +235,7 @@ describe('Landing', () => {
     expect(
       lead.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Search' })).toBeDefined();
   });
 
   it('chapter numbers are decorative', () => {
@@ -230,6 +295,8 @@ describe('Landing', () => {
             Node.DOCUMENT_POSITION_FOLLOWING,
         ).toBeTruthy();
       });
+    // The two transparency lines moved to the last section.
+    expect(section.textContent).not.toContain('Official CPCB observations');
   });
 
   it('the hero screenshot is labelled as past, with its date', () => {
@@ -240,6 +307,9 @@ describe('Landing', () => {
     expect(caption?.textContent).toBe(
       'A past screenshot of Today for Pune, 22 Nov 2026. Open the app for current values.',
     );
+    expect([image.getAttribute('width'), image.getAttribute('height')]).toEqual(
+      ['390', '844'],
+    );
     // Final review B2: the label comes first, so it is never below the fold
     // while the figure shows.
     expect(
@@ -248,16 +318,31 @@ describe('Landing', () => {
     ).toBeTruthy();
   });
 
-  it('states its limits plainly', () => {
+  it('states its limits plainly, in the last section', () => {
     render(<Landing />);
 
-    const section = screen.getByRole('region', { name: 'How AirAware works' });
+    const section = screen.getByRole('region', {
+      name: 'Your city, the next two days',
+    });
     expect(section.textContent).toContain(
       'Forecasts are model estimates, not station measurements, and not the CPCB National AQI.',
     );
     expect(section.textContent).toContain(
       'Official CPCB observations are not connected yet.',
     );
+    const heading = within(section).getByRole('heading', { level: 2 });
+    const link = within(section).getByRole('link', { name: ACTION });
+    expect(
+      heading.compareDocumentPosition(
+        within(section).getByText(
+          'Official CPCB observations are not connected yet.',
+        ),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      section.querySelector('p')!.compareDocumentPosition(link) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('credits the data source in the footer', () => {
@@ -309,7 +394,7 @@ describe('Landing', () => {
 
     const [hero, ...rest] = container.querySelectorAll('main > section');
     expect(hero?.classList.contains('reveal')).toBe(false);
-    expect(rest).toHaveLength(7);
+    expect(rest).toHaveLength(6);
     for (const section of rest) {
       expect(section.classList.contains('reveal')).toBe(true);
     }

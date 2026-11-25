@@ -12,12 +12,16 @@ export function LocationSearch({
   onSelect,
   inputRef,
   offersLocation = true,
+  submitLabel,
 }: {
   onSelect: (place: Place) => void;
   // Lets the page move focus to the search (the place bar's "Change place").
   inputRef?: Ref<HTMLInputElement>;
   // Whether "Use my location" sits beside the search (not on the landing page).
   offersLocation?: boolean;
+  // The landing page's outlined submit button: it does what Enter does, and
+  // never picks a place nobody highlighted.
+  submitLabel?: string;
 }) {
   const id = useId();
   const inputId = `${id}-input`;
@@ -28,6 +32,9 @@ export function LocationSearch({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [status, setStatus] = useState('');
+  // Bumped by the submit button to search the same text again.
+  const [attempt, setAttempt] = useState(0);
+  const buttonEl = useRef<HTMLButtonElement | null>(null);
   // The label written into the input on selection must not search again.
   const selectedLabel = useRef<string | null>(null);
   // "Use my location" is beside the search and the browser can give a
@@ -81,7 +88,7 @@ export function LocationSearch({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, pointsToLocation]);
+  }, [query, pointsToLocation, attempt]);
 
   function select(result: LocationResult) {
     const place = placeFromResult(result);
@@ -90,6 +97,15 @@ export function LocationSearch({
     setOpen(false);
     setActive(-1);
     onSelect(place);
+  }
+
+  // A highlighted option is chosen; otherwise the list opens (the search for
+  // the typed text runs by itself and opens it when it answers).
+  function submit() {
+    const result = open ? results[active] : undefined;
+    if (result) select(result);
+    else if (results.length > 0) setOpen(true);
+    else if (query.trim().length >= MIN_QUERY_LENGTH) setAttempt((n) => n + 1);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -104,11 +120,9 @@ export function LocationSearch({
     } else if (event.key === 'Enter') {
       // Never commit while an IME (e.g. Hindi, Marathi) is composing text.
       if (event.nativeEvent.isComposing) return;
-      const result = open ? results[active] : undefined;
-      if (result) {
-        event.preventDefault();
-        select(result);
-      }
+      if (submitLabel || (open && results[active])) event.preventDefault();
+      if (submitLabel) submit();
+      else if (open && results[active]) select(results[active]);
     } else if (event.key === 'Escape' && open) {
       event.preventDefault();
       setOpen(false);
@@ -124,56 +138,80 @@ export function LocationSearch({
       <p id={hintId} className="text-sm">
         Type at least 2 letters, then choose a place from the list.
       </p>
-      <div className="relative">
-        <input
-          ref={inputRef}
-          id={inputId}
-          type="text"
-          role="combobox"
-          autoComplete="off"
-          spellCheck={false}
-          aria-autocomplete="list"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-describedby={hintId}
-          aria-activedescendant={
-            open && active >= 0 ? `${listId}-${active}` : undefined
-          }
-          value={query}
-          onChange={(event) => {
-            selectedLabel.current = null;
-            setQuery(event.target.value);
-          }}
-          onKeyDown={onKeyDown}
-          onBlur={() => setOpen(false)}
-          className="w-full min-h-12 rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
-        />
-        <ul
-          id={listId}
-          // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role, jsx-a11y/prefer-tag-over-role -- WAI-ARIA APG combobox popup: <select>/<datalist> cannot show async results with announcements.
-          role="listbox"
-          aria-label="Matching places"
-          hidden={!open}
-          className="absolute inset-x-0 z-10 mt-1 rounded-md border border-text-dark bg-surface-light text-text-dark"
-        >
-          {open &&
-            results.map((result, index) => (
-              // oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- keyboard is handled on the combobox input via aria-activedescendant (APG); options never take focus.
-              <li
-                key={result.id}
-                id={`${listId}-${index}`}
-                // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role, jsx-a11y/prefer-tag-over-role -- APG listbox option inside the combobox popup.
-                role="option"
-                aria-selected={index === active}
-                // Keep focus in the input so the list does not close first.
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => select(result)}
-                className="min-h-11 cursor-pointer px-3 py-2 aria-selected:bg-text-dark aria-selected:text-surface-light forced-colors:aria-selected:outline-2 forced-colors:aria-selected:-outline-offset-2"
-              >
-                {placeFromResult(result).label}
-              </li>
-            ))}
-        </ul>
+      <div className="flex gap-2">
+        <div className="relative min-w-0 flex-1">
+          <input
+            ref={inputRef}
+            id={inputId}
+            type="text"
+            role="combobox"
+            autoComplete="off"
+            spellCheck={false}
+            aria-autocomplete="list"
+            aria-expanded={open}
+            aria-controls={listId}
+            aria-describedby={hintId}
+            aria-activedescendant={
+              open && active >= 0 ? `${listId}-${active}` : undefined
+            }
+            value={query}
+            onChange={(event) => {
+              selectedLabel.current = null;
+              setQuery(event.target.value);
+            }}
+            onKeyDown={onKeyDown}
+            // Focus moving to the Search button keeps the list open for it.
+            onBlur={(event) => {
+              if (event.relatedTarget !== buttonEl.current) setOpen(false);
+            }}
+            className="min-h-12 w-full rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
+          />
+          <ul
+            id={listId}
+            // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role, jsx-a11y/prefer-tag-over-role -- WAI-ARIA APG combobox popup: <select>/<datalist> cannot show async results with announcements.
+            role="listbox"
+            aria-label="Matching places"
+            hidden={!open}
+            className="absolute inset-x-0 z-10 mt-1 rounded-md border border-text-dark bg-surface-light text-text-dark"
+          >
+            {open &&
+              results.map((result, index) => (
+                // oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- keyboard is handled on the combobox input via aria-activedescendant (APG); options never take focus.
+                <li
+                  key={result.id}
+                  id={`${listId}-${index}`}
+                  // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role, jsx-a11y/prefer-tag-over-role -- APG listbox option inside the combobox popup.
+                  role="option"
+                  aria-selected={index === active}
+                  // Keep focus in the input so the list does not close first.
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => select(result)}
+                  className="min-h-11 cursor-pointer px-3 py-2 aria-selected:bg-text-dark aria-selected:text-surface-light forced-colors:aria-selected:outline-2 forced-colors:aria-selected:-outline-offset-2"
+                >
+                  {placeFromResult(result).label}
+                </li>
+              ))}
+          </ul>
+        </div>
+        {submitLabel && (
+          <button
+            ref={buttonEl}
+            type="button"
+            // A press keeps focus in the input, so the list does not close.
+            onMouseDown={(event) => event.preventDefault()}
+            onBlur={(event) => {
+              if (event.relatedTarget?.id !== inputId) setOpen(false);
+            }}
+            onClick={() => {
+              submit();
+              // Back to the input, so the arrow keys work on the list.
+              document.getElementById(inputId)?.focus();
+            }}
+            className="press min-h-12 flex-none rounded-md border border-text px-4 font-semibold hover:bg-elevated"
+          >
+            {submitLabel}
+          </button>
+        )}
       </div>
       <output className="block min-h-6 text-sm">{status}</output>
     </search>
