@@ -37,7 +37,12 @@ export function PlaceChip({
       <button
         type="button"
         aria-label={label ? `Change place: ${label}` : 'Choose a place'}
-        onClick={() => onOpenChange(true)}
+        onClick={() => {
+          // Escape closes the dialog a task before its `close` event resets
+          // `open`: a tap in that gap reopens it, content still mounted.
+          if (open && !dialogRef.current?.open) dialogRef.current?.showModal();
+          else onOpenChange(true);
+        }}
         className="ml-auto flex min-h-11 min-w-0 max-w-fit grow basis-0 items-center gap-1.5 rounded-full border border-text-muted px-3 text-sm md:ml-0"
       >
         <MapPin aria-hidden="true" className="size-4 flex-none" />
@@ -53,7 +58,10 @@ export function PlaceChip({
       <dialog
         ref={dialogRef}
         aria-labelledby={titleId}
-        onClose={() => onOpenChange(false)}
+        // Stale when the chip has reopened it since.
+        onClose={() => {
+          if (!dialogRef.current?.open) onOpenChange(false);
+        }}
         // Click outside also closes, where supported (Escape always does).
         {...({ closedby: 'any' } as object)}
         className="on-light m-auto w-[min(32rem,calc(100%-2rem))] rounded-xl bg-surface-light p-5 text-text-dark backdrop:bg-bg/60 sm:p-6"

@@ -80,6 +80,25 @@ describe('PlaceChip', () => {
     ).toBeDefined();
   });
 
+  it('a tap between Escape and its close event still opens the dialog', () => {
+    const { container } = render(<Harness label="Pune, Maharashtra" />);
+    const chip = screen.getByRole('button', { name: /^Change place/ });
+    fireEvent.click(chip);
+    const dialog = container.querySelector('dialog')!;
+
+    // Escape: the browser closes the dialog, and fires `close` a task later.
+    dialog.open = false;
+    fireEvent.click(chip);
+    fireEvent(dialog, new Event('close'));
+
+    expect(dialog.open).toBe(true);
+    expect(
+      screen.getByRole('combobox', {
+        name: 'Search for a city or area in India',
+      }),
+    ).toBeDefined();
+  });
+
   it('the Close button closes the dialog and empties it', () => {
     const { container } = render(<Harness label="Pune, Maharashtra" />);
     fireEvent.click(screen.getByRole('button', { name: /^Change place/ }));

@@ -195,6 +195,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Place chip (25 Nov): a tap on the chip right after Escape closed the dialog could be lost, because the browser closes the dialog a moment before it reports the close. The chip now reopens it in that moment, and the late report is ignored. This was the flaky "place dialog by keyboard" e2e test.
 - Redesign P4, Ask AirAware (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows D1–D6, A12 and C9):
   - the question box comes first, under the title, a new intro line ("Answers come from AirAware's rules and today's forecast.") and the context line; the greeting is gone; then the topics, three starters and "More questions" with the other two; then the conversation;
   - a new exchange scrolls instantly to the top of the view and its heading takes focus without a second jump, so the answer is on screen at 320×640, 390×844 and 1280×720;
