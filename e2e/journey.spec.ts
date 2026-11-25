@@ -176,10 +176,14 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
       await buildPlan(page);
     });
 
-    await test.step('6. open "Why this recommendation?"', async () => {
-      const why = page.locator('details', {
-        has: page.locator('summary', { hasText: 'Why this recommendation?' }),
-      });
+    await test.step('6. open "Why?" on the recommendation', async () => {
+      // Every card says "Why?", so take the recommendation's own (its first).
+      const why = page
+        .getByRole('region', { name: 'Your recommendation for today' })
+        .locator('article details', {
+          has: page.locator('summary', { hasText: 'Why?' }),
+        })
+        .first();
       await why.locator('summary').click();
       await expect(why.getByText('Reason', { exact: true })).toBeVisible();
     });

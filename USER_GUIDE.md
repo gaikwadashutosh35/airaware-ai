@@ -22,7 +22,7 @@ Once a place is chosen, the place button at the top shows it. Tap it to search a
 ## 2. Today
 Today answers "How is my air?" first, from top to bottom:
 - **The verdict:** one sentence from the model forecast's 24-hour check against India's 24-hour limits, with a word tag and "Model forecast · Open-Meteo · retrieved {time}". When the forecast is old, a "Not current" line sits under it. While Today stays open, it reloads the forecast and rebuilds the plan once an hour.
-- **Your recommendation for today:** one suggestion, with who made it (our rules or AI) and the safety note. **Why this recommendation?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
+- **Your recommendation for today:** one suggestion, with who made it (our rules or AI) and the safety note. **Why?** shows its reason and sources; **See your full day** opens the rest of the plan (section 4).
 - **What would you like help with?** Outdoor activities, My home, My family and Better habits. Outdoor activities and My family open Ask AirAware with that topic answered.
 - **Ask AirAware anything:** type a question or pick a starter question, then **Send** to get the answer on Ask AirAware.
 - **Air quality details**, closed until you open it: the PM2.5 figure, the chart and tables, the forecast location, how the 24-hour check works, and the sources and limitations.
@@ -56,7 +56,7 @@ Open **Why?** on any card to see the reason, whether it rests on today's forecas
 - **Today, for your home:** the indoor suggestions from today's plan, when there are any. My Home builds the plan too, if Today hasn't yet.
 - **Ways to improve indoor air:** general guides in groups: Cooking and smoke, Ventilation, Dust and cleaning, Indoor habits, Filtration, and Near a busy road (only if you said your home is near one). A guide that repeats one of today's suggestions is left out.
 
-Open **Why it matters** on any card for its reason and sources. The guides cite public sources such as India's Ministry of Health air-pollution advisory, WHO and the US EPA. They consider indoor sources and the air outside together: do not assume closing or opening windows is always correct.
+Open **Why?** on any card for its reason and sources. The guides cite public sources such as India's Ministry of Health air-pollution advisory, WHO and the US EPA. They consider indoor sources and the air outside together: do not assume closing or opening windows is always correct.
 
 ## 5a. Ask AirAware
 - **A conversation:** the question box comes first, then the topics and three starter questions (two more under **More questions**), then your questions and AirAware's answers in order, oldest first. A new answer scrolls into view.
@@ -73,7 +73,7 @@ Open **Why it matters** on any card for its reason and sources. The guides cite 
 - The line under the heading says which forecast is used (with "Not current" once it is over an hour old) and how many of your 10 household questions you have answered; **Edit** opens My Profile.
 
 ## 6. Better Habits
-General guides in four groups: Daily commuting and vehicle idling, Waste, Cooking, and Energy use. Each has **Why it matters** and its sources. Choose the changes that suit your life. The app never states how much pollution a change saves, because it has no documented way to calculate it.
+General guides in four groups: Daily commuting and vehicle idling, Waste, Cooking, and Energy use. Each has **Why?** and its sources. Choose the changes that suit your life. The app never states how much pollution a change saves, because it has no documented way to calculate it.
 
 ## 7. Manage saved data
 - **Save plan**, under See your full day, stores the plan in your anonymous account on AirAware's database host; this browser keeps the sign-in. The first save creates that account (no email, name or password).

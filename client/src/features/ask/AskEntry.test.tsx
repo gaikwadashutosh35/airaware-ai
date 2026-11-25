@@ -11,7 +11,7 @@ import {
 } from '../../test/askFixtures.ts';
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { ASK_COPY } from './ask.ts';
-import { AskEntry } from './AskEntry.tsx';
+import { AskEntry, StarterButtons } from './AskEntry.tsx';
 import type { AskEntry as Entry } from './useAsk.ts';
 
 const RETRIEVED = new Date('2026-11-17T17:05:00.000Z');
@@ -72,6 +72,23 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 afterEach(cleanup);
+
+describe('StarterButtons', () => {
+  // E5: a control's edge is the muted text colour, for 3:1 against the card.
+  it('draws each starter with the control border', () => {
+    render(
+      <StarterButtons
+        questions={[{ question: 'Is it a good day to walk?' }]}
+        busy={false}
+        onStarter={() => {}}
+      />,
+    );
+
+    const starter = screen.getByRole('button');
+    expect(starter.classList.contains('border-text-dark-muted')).toBe(true);
+    expect(starter.classList.contains('border-rule')).toBe(false);
+  });
+});
 
 describe('AskEntry', () => {
   it('an AI answer: heading, summary, made-by, based-on, cards, safety note', async () => {

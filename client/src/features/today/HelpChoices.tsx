@@ -63,7 +63,7 @@ export function HelpChoices({ onAsk }: { onAsk: (topic: Topic) => void }) {
                 // The choice hides with Today: focus the page it opened.
                 document.getElementById('main')?.focus();
               }}
-              className="press flex h-full min-h-11 items-start gap-3 rounded-lg border border-rule p-4 hover:border-text-dark"
+              className="press flex h-full min-h-11 items-start gap-3 rounded-lg border border-text-dark-muted p-4 hover:border-text-dark"
             >
               <Icon aria-hidden="true" className="mt-0.5 size-5 flex-none" />
               <span className="flex flex-col gap-1">

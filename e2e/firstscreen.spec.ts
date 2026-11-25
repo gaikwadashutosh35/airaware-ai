@@ -5,6 +5,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { rulesAskFixture } from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { at, stub, type Level } from './layout.ts';
+import { guideSet } from '../server/src/services/recommendations/guides.ts';
 import { planAt, PUNE } from './routes.ts';
 
 const PLACE = 'Pune, Maharashtra';
@@ -341,7 +342,7 @@ for (const [label, url] of [
   });
 }
 
-// TD-03: the lowest-priority top card still shows "Why this recommendation?".
+// TD-03: the lowest-priority top card still shows "Why?".
 test('TD-03: the card with no For you line keeps its summary above the bar at 390x844', async ({
   page,
 }) => {
@@ -772,4 +773,267 @@ for (const [width, height] of [
     console.log(`PF-01 Ask CLS ${width}x${height} = ${cls}`);
     expect(cls).toBeLessThan(0.1);
   });
+}
+
+// Redesign P5: My Home and Better Habits. Every page uses the stub, so no
+// request reaches the AI and nothing is saved.
+
+// The shipped guide library, answered from the stub: its groups and card
+// counts decide the layout, so the layout tests use it, not the short fixture.
+const realGuides = (page: Page) =>
+  page.route('**/api/v1/recommendations/guides**', (route) =>
+    route.fulfill({
+      json: {
+        data: guideSet(
+          route.request().url().includes('topic=habits') ? 'habits' : 'home',
+        ),
+      },
+    }),
+  );
+
+// MH-01 / E2: with a place, "Today, for your home" is there from the first
+// paint, even while the plan never answers; with no place it is absent.
+test('MH-01: My Home shows its plan section while the plan has not answered', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  // Never answers: the plan stays due.
+  await page.route('**/api/v1/recommendations/daily-plan', () => {});
+  await page.goto(at('/app/home'));
+  const today = page.getByRole('region', { name: 'Today, for your home' });
+  await expect(today).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Today, for your home' }),
+  ).toBeVisible();
+  await expect(today.getByText("Finding today's suggestions…")).toBeAttached();
+  console.log('MH-01 region and heading visible with the plan unanswered');
+});
+
+test('MH-01: My Home with no place has no plan section', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  await page.goto('/app/home');
+  await expect(
+    page.getByRole('heading', { name: 'Ways to improve indoor air' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Today, for your home' }),
+  ).toHaveCount(0);
+});
+
+// What the grid at `selector` laid out: each item by its place and width.
+type Cell = { text: string; top: number; left: number; width: number };
+async function cells(page: Page, selector: string, item: string) {
+  return page
+    .locator(selector)
+    .first()
+    .evaluate((grid, item) => {
+      const box = grid.getBoundingClientRect();
+      const style = getComputedStyle(grid);
+      const out: Cell[] = [];
+      for (const el of grid.querySelectorAll(`:scope > ${item}`)) {
+        const r = el.getBoundingClientRect();
+        out.push({
+          text: (el.querySelector('h2, h3')?.textContent ?? '').trim(),
+          top: Math.round(r.top),
+          left: Math.round(r.left - box.left),
+          width: Math.round(r.width),
+        });
+      }
+      const content =
+        box.width -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight);
+      return { out, content };
+    }, item);
+}
+function rowsOf(list: Cell[]): Cell[][] {
+  const rows: Cell[][] = [];
+  for (const c of list) {
+    const row = rows.find((r) => Math.abs(r[0]!.top - c.top) < 4);
+    if (row) row.push(c);
+    else rows.push([c]);
+  }
+  return rows;
+}
+
+// MH-03 / BH-02: at 1280 and 1440 every row of groups but the last fills the
+// grid's width, so no cell is empty.
+for (const [width, height] of [
+  [1280, 720],
+  [1440, 900],
+] as const) {
+  for (const [path, label] of [
+    ['/app/habits', 'Better Habits'],
+    ['/app/home', 'My Home'],
+  ] as const) {
+    test(`${label} groups fill their rows: ${width}x${height}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await stub(page, 'not_elevated');
+      await realGuides(page);
+      await page.goto(at(path));
+      await expect(
+        page.locator('main [class~="@container"]:visible'),
+      ).toBeVisible();
+      await page.waitForLoadState('networkidle');
+      const { out, content } = await cells(
+        page,
+        'main [class~="@container"]:visible',
+        'section',
+      );
+      const rows = rowsOf(out);
+      console.log(
+        `${label} ${width}x${height}: grid ${Math.round(content)}px; rows ` +
+          rows
+            .map(
+              (r) =>
+                '[' +
+                r.map((c) => `${c.text} ${c.left}+${c.width}`).join(', ') +
+                ']',
+            )
+            .join(' '),
+      );
+      for (const row of rows.slice(0, -1)) {
+        const end = Math.max(...row.map((c) => c.left + c.width));
+        expect(Math.abs(end - content)).toBeLessThanOrEqual(2);
+        expect(Math.min(...row.map((c) => c.left))).toBeLessThanOrEqual(2);
+      }
+    });
+  }
+
+  test(`My Home's plan cards leave no empty column: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await stub(page, 'not_elevated');
+    await page.goto(at('/app/home'));
+    await expect(
+      page
+        .getByRole('region', { name: 'Today, for your home' })
+        .locator('article')
+        .first(),
+    ).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    const { out } = await cells(page, '[aria-labelledby] > .grid', 'article');
+    const rows = rowsOf(out);
+    console.log(
+      `My Home plan cards ${width}x${height}: ` +
+        rows
+          .map((r) => `[${r.map((c) => `${c.left}+${c.width}`).join(', ')}]`)
+          .join(' '),
+    );
+    // Every row before the last has as many cards as the first has columns.
+    const columns = rows[0]!.length;
+    for (const row of rows.slice(0, -1)) expect(row).toHaveLength(columns);
+    expect(columns).toBeGreaterThan(1);
+  });
+}
+
+// PF-01 My Home and Better Habits: the guides land at about 0.8 s and, on
+// My Home, the plan at about 1.5 s; the layout shifts by under 0.1 in total.
+// My Home's plan is the one a user with no answers gets on a day within the
+// limit: the single indoor card every home gets (rules.ts, indoor.smoke-sources).
+for (const [width, height] of [
+  [320, 640],
+  [390, 844],
+  [768, 1024],
+  [1280, 720],
+  [1440, 900],
+] as const) {
+  for (const [path, label, ready] of [
+    ['/app/home', 'My Home', 'Cooking and smoke'],
+    ['/app/habits', 'Better Habits', 'Waste'],
+  ] as const) {
+    test(`${label}'s layout shift stays under 0.1: ${width}x${height}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await stub(page, 'not_elevated');
+      await realGuides(page);
+      const later = (pattern: string, ms: number) =>
+        page.route(pattern, async (route) => {
+          await new Promise((resolve) => setTimeout(resolve, ms));
+          await route.fallback();
+        });
+      await later('**/api/v1/recommendations/guides**', 800);
+      if (path === '/app/home') {
+        const smoke = rulesPlanFixture.featured.find(
+          (f) => f.candidate.id === 'indoor.smoke-sources',
+        )!;
+        const plan = planAt(
+          {
+            ...rulesPlanFixture,
+            air: {
+              ...rulesPlanFixture.air,
+              level: 'not_elevated' as const,
+              checks: [
+                {
+                  pollutant: 'PM2_5' as const,
+                  status: 'within_limit' as const,
+                  average24h: 41.2,
+                  limit: 60,
+                },
+                {
+                  pollutant: 'PM10' as const,
+                  status: 'within_limit' as const,
+                  average24h: 63.5,
+                  limit: 100,
+                },
+              ],
+            },
+            notices: [],
+            featured: [smoke],
+            more: [],
+          },
+          new Date(),
+        );
+        await page.route('**/api/v1/recommendations/daily-plan', async (r) => {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          await r.fulfill({ json: { data: plan } });
+        });
+      }
+      await page.addInitScript(() => {
+        const w = window as unknown as { cls: number };
+        w.cls = 0;
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const shift = entry as PerformanceEntry & {
+              value: number;
+              hadRecentInput: boolean;
+            };
+            if (!shift.hadRecentInput) w.cls += shift.value;
+          }
+        }).observe({ type: 'layout-shift', buffered: true });
+      });
+      await page.goto(at(path));
+      await expect(
+        page.getByRole('heading', { name: ready }).first(),
+      ).toBeVisible();
+      if (path === '/app/home') {
+        // The plan's cards, after the later of the two replies.
+        await expect(
+          page
+            .getByRole('region', { name: 'Today, for your home' })
+            .locator('article')
+            .first(),
+        ).toBeVisible();
+      }
+      await page.waitForLoadState('networkidle');
+      // A frame later, so the last shift is recorded.
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+      const cls = await page.evaluate(
+        () => (window as unknown as { cls: number }).cls,
+      );
+      console.log(`PF-01 ${label} CLS ${width}x${height} = ${cls}`);
+      expect(cls).toBeLessThan(0.1);
+    });
+  }
 }

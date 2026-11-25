@@ -28,6 +28,7 @@ import { PlanCard } from './PlanCard.tsx';
 import { PlanView } from './PlanView.tsx';
 import {
   NO_AIR,
+  NO_CARD,
   PLAN_STALE,
   planAirLine,
   type PlanReport,
@@ -43,7 +44,6 @@ const SAVE_PLAN_NOTE =
 const LIMIT = 'You can keep up to 20 saved plans. Delete one to save another.';
 const SAVE_FAILED = "Saving isn't available right now.";
 const RATE_LIMITED = 'Too many requests. Try again in a minute.';
-const NO_CARD = 'No suggestions for your answers today.';
 
 function saveFailure(error: unknown): string {
   if (!(error instanceof ApiError)) return SAVE_FAILED;
@@ -294,12 +294,7 @@ export function DailyPlanSection({
               </p>
             )}
           {top ? (
-            <PlanCard
-              item={top}
-              sources={built.plan.sources}
-              level={3}
-              whyLabel="Why this recommendation?"
-            />
+            <PlanCard item={top} sources={built.plan.sources} level={3} />
           ) : (
             <p>{NO_CARD}</p>
           )}

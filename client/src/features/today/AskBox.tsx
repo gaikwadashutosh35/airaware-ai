@@ -68,7 +68,7 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
                 setQuestion(starter);
                 inputRef.current?.focus();
               }}
-              className="min-h-11 rounded-full border border-rule px-4 text-left text-sm"
+              className="min-h-11 rounded-full border border-text-dark-muted px-4 text-left text-sm"
             >
               {starter}
             </button>

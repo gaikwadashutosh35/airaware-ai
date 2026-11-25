@@ -80,6 +80,14 @@ describe('AskBox', () => {
     expect(onAsk).not.toHaveBeenCalled();
   });
 
+  it('starter buttons use the control border', () => {
+    render(<AskBox onAsk={vi.fn()} />);
+
+    const button = screen.getByRole('button', { name: STARTERS[0]! });
+    expect(button.classList.contains('border-text-dark-muted')).toBe(true);
+    expect(button.classList.contains('border-rule')).toBe(false);
+  });
+
   it('the input row wraps, so Send can drop below at large text', () => {
     render(<AskBox onAsk={vi.fn()} />);
 

@@ -492,7 +492,7 @@ describe('DailyPlanSection', () => {
     expect(ai.closest('details')).toBeNull();
   });
 
-  it('shows only the top card, with Why this recommendation?', async () => {
+  it('shows only the top card, with Why?', async () => {
     routeFetch(() => planReply());
     const { container } = renderSection();
     await build();
@@ -504,9 +504,10 @@ describe('DailyPlanSection', () => {
     expect(
       within(shown[0]!).getByRole('heading', { level: 3 }).textContent,
     ).toBe(TOP);
-    expect(
-      within(shown[0]!).getByText('Why this recommendation?'),
-    ).toBeDefined();
+    expect(within(shown[0]!).getByText('Why?').textContent).toBe(
+      `Why? (${TOP})`,
+    );
+    expect(screen.queryByText('Why this recommendation?')).toBeNull();
   });
 
   it('the full day is folded and keeps Save plan', async () => {

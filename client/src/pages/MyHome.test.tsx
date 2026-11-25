@@ -16,6 +16,7 @@ import {
   rulesPlanFixture,
   unavailablePlanFixture,
 } from '../test/planFixtures.ts';
+import { LANDING_EXAMPLES } from './landingExamples.ts';
 import { MyHome } from './MyHome.tsx';
 
 const GUIDES = '/api/v1/recommendations/guides?topic=home';
@@ -35,9 +36,10 @@ const guidesOk = () =>
 function show(
   plan: DailyPlan | null = rulesPlanFixture,
   context: HouseholdContext = {},
+  hasPlace = true,
 ) {
   const today: PlanReport = plan ? { kind: 'ready', plan } : { kind: 'none' };
-  return render(<MyHome today={today} context={context} />);
+  return render(<MyHome today={today} context={context} hasPlace={hasPlace} />);
 }
 
 // The plan's indoor cards, in its order.
@@ -80,7 +82,7 @@ describe('MyHome', () => {
     ).toBeDefined();
   });
 
-  it("today's indoor cards come first, with Why it matters", async () => {
+  it("today's indoor cards come first, with Why?", async () => {
     routeGuides(guidesOk);
     show();
     await screen.findByRole('heading', { name: 'Cooking and smoke' });
@@ -96,7 +98,8 @@ describe('MyHome', () => {
         .getAllByRole('heading', { level: 3 })
         .map((h) => h.textContent),
     ).toEqual(PLAN_INDOOR);
-    expect(within(today).getAllByText('Why it matters')).toHaveLength(4);
+    expect(within(today).getAllByText('Why?')).toHaveLength(4);
+    expect(screen.queryByText('Why it matters')).toBeNull();
     const ways = screen.getByRole('heading', {
       level: 2,
       name: 'Ways to improve indoor air',
@@ -132,10 +135,10 @@ describe('MyHome', () => {
     expect(screen.getAllByText(/For you:/).length).toBeGreaterThan(0);
   });
 
-  // Review Focus 2.
-  it('without a plan, only the guides show', async () => {
+  // Review Focus 2, and E2: with no place there is no plan to wait for.
+  it('without a place, only the guides show', async () => {
     routeGuides(guidesOk);
-    show(null);
+    show(null, {}, false);
 
     expect(
       await screen.findByRole('heading', { level: 3, name: 'Indoor habits' }),
@@ -276,7 +279,7 @@ describe('MyHome', () => {
   it("says today's suggestions are on their way, then announces them", async () => {
     routeGuides(guidesOk);
     const { rerender } = render(
-      <MyHome today={{ kind: 'building' }} context={{}} />,
+      <MyHome today={{ kind: 'building' }} context={{}} hasPlace />,
     );
 
     const today = screen.getByRole('region', { name: 'Today, for your home' });
@@ -287,7 +290,11 @@ describe('MyHome', () => {
     expect(status.textContent).toBe("Finding today's suggestions…");
 
     rerender(
-      <MyHome today={{ kind: 'ready', plan: rulesPlanFixture }} context={{}} />,
+      <MyHome
+        today={{ kind: 'ready', plan: rulesPlanFixture }}
+        context={{}}
+        hasPlace
+      />,
     );
     expect(screen.getByRole('status')).toBe(status);
     expect(status.textContent).toBe("Today's suggestions are ready.");
@@ -305,6 +312,7 @@ describe('MyHome', () => {
           retry,
         }}
         context={{}}
+        hasPlace
       />,
     );
     await screen.findByRole('heading', { name: 'Cooking and smoke' });
@@ -365,6 +373,7 @@ describe('MyHome', () => {
           retry: vi.fn(),
         }}
         context={{}}
+        hasPlace
       />,
     );
     await screen.findByRole('heading', { name: 'Cooking and smoke' });
@@ -374,7 +383,7 @@ describe('MyHome', () => {
     });
     expect(document.activeElement).toBe(heading);
 
-    rerender(<MyHome today={{ kind: 'stale' }} context={{}} />);
+    rerender(<MyHome today={{ kind: 'stale' }} context={{}} hasPlace />);
 
     const today = screen.getByRole('region', { name: 'Today, for your home' });
     const STALE = 'The forecast behind this plan is more than an hour old.';
@@ -382,6 +391,65 @@ describe('MyHome', () => {
     expect(within(today).queryByRole('article')).toBeNull();
     expect(screen.getByRole('status').textContent).toBe(STALE);
     expect(document.activeElement).toBe(heading);
+  });
+
+  // MH-01 / E2 / E3: with a place the section is there from the first paint.
+  it('with a place and no plan yet, the section shows a placeholder', async () => {
+    routeGuides(guidesOk);
+    const { rerender } = render(
+      <MyHome today={{ kind: 'none' }} context={{}} hasPlace />,
+    );
+
+    const today = screen.getByRole('region', { name: 'Today, for your home' });
+    expect(
+      within(today).getByText("Finding today's suggestions…"),
+    ).toBeDefined();
+    expect(today.querySelector('[aria-busy="true"]')).not.toBeNull();
+
+    rerender(<MyHome today={{ kind: 'building' }} context={{}} hasPlace />);
+    expect(
+      within(
+        screen.getByRole('region', { name: 'Today, for your home' }),
+      ).getByText("Finding today's suggestions…"),
+    ).toBeDefined();
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+  });
+
+  it('a ready plan with no indoor card keeps the section and says so', async () => {
+    routeGuides(guidesOk);
+    const none: DailyPlan = {
+      ...rulesPlanFixture,
+      featured: rulesPlanFixture.featured.filter(
+        (f) => f.candidate.section !== 'indoor',
+      ),
+      more: [],
+    };
+    show(none);
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    const today = screen.getByRole('region', { name: 'Today, for your home' });
+    expect(
+      within(today).getByText('No suggestions for your answers today.'),
+    ).toBeDefined();
+    expect(within(today).queryByRole('article')).toBeNull();
+    // Nothing extra for a screen reader.
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
+  // E4: the one-line purpose is the landing page's line.
+  it('says its purpose in the landing page words', async () => {
+    routeGuides(guidesOk);
+    show();
+    await screen.findByRole('heading', { name: 'Cooking and smoke' });
+
+    const landing = LANDING_EXAMPLES.find(
+      (example) => example.heading === 'Improve indoor air',
+    )!;
+    const line = screen.getByText(landing.text);
+    expect(line.previousElementSibling).toBe(
+      screen.getByRole('heading', { level: 1, name: 'My Home' }),
+    );
+    expect(line.parentElement!.dataset.part).toBe('title-block');
   });
 
   it('shows the loading state', () => {

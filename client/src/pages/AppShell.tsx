@@ -341,7 +341,13 @@ function AppShell() {
             onFinish={finishWelcome}
           />
         )}
-        {page === 'home' && <MyHome today={todayPlan} context={context} />}
+        {page === 'home' && (
+          <MyHome
+            today={todayPlan}
+            context={context}
+            hasPlace={place !== null}
+          />
+        )}
         {page === 'habits' && <BetterHabits />}
         {page === 'ask' && (
           <Ask

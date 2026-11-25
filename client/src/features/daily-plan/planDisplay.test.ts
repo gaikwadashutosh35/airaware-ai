@@ -12,6 +12,7 @@ import {
   groupPlan,
   inputLabel,
   madeByLine,
+  NO_CARD,
   planAirLine,
 } from './planDisplay.ts';
 
@@ -166,5 +167,11 @@ describe('checkText', () => {
     expect(checkText(unavailablePlanFixture.air.checks[0])).toBe(
       'PM2.5: 24-hour average not available, limit 60 μg/m³',
     );
+  });
+});
+
+describe('NO_CARD', () => {
+  it('is the one string for a plan with no card', () => {
+    expect(NO_CARD).toBe('No suggestions for your answers today.');
   });
 });

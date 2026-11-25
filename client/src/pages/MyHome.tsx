@@ -6,6 +6,7 @@ import { PlanCard } from '../features/daily-plan/PlanCard.tsx';
 import {
   groupPlan,
   NO_AIR,
+  NO_CARD,
   PLAN_STALE,
   planAirLine,
   type PlanReport,
@@ -19,11 +20,16 @@ import { getGuides } from '../services/api.ts';
 export function MyHome({
   today,
   context,
+  hasPlace,
 }: {
   // Today's plan area: building, failed, or the current plan.
   today: PlanReport;
   // The answers on screen, saved or not.
   context: HouseholdContext;
+  // A place is chosen, so today's plan is due: the section shows from the
+  // first paint. Its placeholder is as tall as the plan a home with no
+  // answers gets (one indoor card), so the page does not jump when it lands.
+  hasPlace: boolean;
 }) {
   const guides = useRequest('guides:home', (signal) =>
     getGuides('home', signal),
@@ -53,11 +59,6 @@ export function MyHome({
     // Never contradict an answer: no exhaust, no "use the exhaust".
     (card.id === 'guide.kitchen-exhaust' &&
       context.home?.kitchenExhaust === false);
-  const showToday =
-    today.kind === 'building' ||
-    today.kind === 'error' ||
-    today.kind === 'stale' ||
-    cards.length > 0;
   // The plan builds on its own and can land later: say so politely.
   const announce =
     today.kind === 'building'
@@ -70,14 +71,15 @@ export function MyHome({
 
   return (
     <>
-      <h1
-        data-part="title-block"
-        className="text-3xl font-semibold tracking-tight"
-      >
-        My Home
-      </h1>
+      <div data-part="title-block" className="flex flex-col gap-2">
+        <h1 className="text-3xl font-semibold tracking-tight">My Home</h1>
+        <p className="text-sm text-text-dark">
+          Indoor suggestions look at what you cook with and what burns inside,
+          as well as the air outside.
+        </p>
+      </div>
       <output className="sr-only">{announce}</output>
-      {showToday && (
+      {hasPlace && (
         <section
           aria-labelledby={todayId}
           className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
@@ -90,8 +92,11 @@ export function MyHome({
           >
             Today, for your home
           </h2>
-          {today.kind === 'building' && (
-            <Loading label="Finding today's suggestions…" />
+          {(today.kind === 'none' || today.kind === 'building') && (
+            <Loading
+              label="Finding today's suggestions…"
+              className="min-h-[25.7rem] min-[360px]:min-h-[24.2rem] min-[390px]:min-h-[22.6rem] sm:min-h-[18.6rem] md:min-h-[18.9rem] lg:min-h-[16.1rem] min-[68.125rem]:min-h-[17.6rem]"
+            />
           )}
           {/* Never a stale plan as today's: say why there are no cards. */}
           {today.kind === 'stale' && <p>{PLAN_STALE}</p>}
@@ -107,20 +112,20 @@ export function MyHome({
               fallback="Something went wrong building your plan."
             />
           )}
+          {plan && cards.length === 0 && <p>{NO_CARD}</p>}
           {plan && cards.length > 0 && (
             <>
               {/* No verdict on this page: say which air the cards rest on. */}
               <p className="text-sm text-text-dark-muted">
                 {plan.forecast ? planAirLine(plan.air, plan.forecast) : NO_AIR}
               </p>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),1fr))] gap-4">
                 {cards.map((item) => (
                   <PlanCard
                     key={item.candidate.id}
                     item={item}
                     sources={plan.sources}
                     level={3}
-                    whyLabel="Why it matters"
                   />
                 ))}
               </div>
@@ -159,7 +164,10 @@ export function MyHome({
             fallback="Something went wrong loading the guides."
           />
         ) : (
-          <Loading label="Loading guides" />
+          <Loading
+            label="Loading guides"
+            className="min-h-[110.8rem] min-[360px]:min-h-[99.9rem] min-[390px]:min-h-[95.6rem] sm:min-h-[78.5rem] md:min-h-[63.4rem] lg:min-h-[51rem] min-[68.125rem]:min-h-[40.6rem]"
+          />
         )}
       </section>
     </>

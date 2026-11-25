@@ -35,6 +35,18 @@ describe('HelpChoices', () => {
     }
   });
 
+  // E5: a control's edge is the muted text colour, for 3:1 against the card.
+  it('draws each choice with the control border', () => {
+    render(<HelpChoices onAsk={vi.fn()} />);
+
+    for (const name of ['Outdoor activities', 'My home']) {
+      expect(choice(name).classList.contains('border-text-dark-muted')).toBe(
+        true,
+      );
+      expect(choice(name).classList.contains('border-rule')).toBe(false);
+    }
+  });
+
   // The choice hides with Today: focus goes to the page, not to nowhere.
   it('moves focus to the page it opens', () => {
     render(

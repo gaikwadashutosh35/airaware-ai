@@ -26,6 +26,9 @@ export type PlanReport =
 export const PLAN_STALE =
   'The forecast behind this plan is more than an hour old.';
 
+// A plan with no card for the place it is shown in says so, word for word.
+export const NO_CARD = 'No suggestions for your answers today.';
+
 export type Topic = 'action' | 'indoor' | 'swap';
 
 export interface PlanItem {

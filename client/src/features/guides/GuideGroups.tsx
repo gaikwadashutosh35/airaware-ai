@@ -26,7 +26,10 @@ export function GuideGroups({
     .filter((group) => group.cards.length > 0);
 
   return (
-    <div className="flex flex-col gap-8">
+    // F-25: the cards flow in as many 20rem columns as fit; a group with
+    // several cards takes as many of them as it has cards. DOM order is the
+    // visual order, so nothing is reordered.
+    <div className="@container grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),1fr))] gap-x-4 gap-y-8">
       {groups.map((group) => (
         <Group
           key={group.id}
@@ -35,7 +38,7 @@ export function GuideGroups({
           sources={set.sources}
         />
       ))}
-      <p className="text-sm">{set.safetyNote}</p>
+      <p className="col-span-full text-sm">{set.safetyNote}</p>
     </div>
   );
 }
@@ -52,33 +55,35 @@ function Group({
   const id = useId();
   const Heading = level === 2 ? 'h2' : 'h3';
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3">
+    <section
+      aria-labelledby={id}
+      className={`grid grid-cols-subgrid grid-rows-[auto_1fr] gap-y-3 ${
+        group.cards.length > 1 ? '@min-[41rem]:col-span-2' : ''
+      } ${group.cards.length > 2 ? '@min-[62rem]:col-span-3' : ''}`}
+    >
       <Heading
         id={id}
-        className={
+        className={`col-span-full ${
           level === 2
             ? 'text-2xl font-semibold tracking-tight'
             : 'text-xl font-semibold'
-        }
+        }`}
       >
         {group.heading}
       </Heading>
-      <div className="grid gap-4 md:grid-cols-2">
-        {group.cards.map((card) => (
-          <PlanCard
-            key={card.id}
-            item={{
-              candidate: card,
-              forYou: null,
-              period: null,
-              compact: false,
-            }}
-            sources={sources}
-            level={level === 2 ? 3 : 4}
-            whyLabel="Why it matters"
-          />
-        ))}
-      </div>
+      {group.cards.map((card) => (
+        <PlanCard
+          key={card.id}
+          item={{
+            candidate: card,
+            forYou: null,
+            period: null,
+            compact: false,
+          }}
+          sources={sources}
+          level={level === 2 ? 3 : 4}
+        />
+      ))}
     </section>
   );
 }

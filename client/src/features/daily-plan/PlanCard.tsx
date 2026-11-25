@@ -12,7 +12,6 @@ export function PlanCard({
   notice = false,
   openWhy = false,
   snapshot = false,
-  whyLabel = 'Why?',
 }: {
   item: PlanItem;
   sources: DailyPlan['sources'];
@@ -22,8 +21,6 @@ export function PlanCard({
   openWhy?: boolean;
   // A saved plan: "that day", never "today".
   snapshot?: boolean;
-  // Today's recommendation says "Why this recommendation?".
-  whyLabel?: string;
 }) {
   const { candidate, forYou, period, compact } = item;
   const Heading = (['h3', 'h4', 'h5'] as const)[level - 3];
@@ -57,7 +54,7 @@ export function PlanCard({
           )}
           <details open={openWhy}>
             <summary className="min-h-11 cursor-pointer py-2 font-medium">
-              {whyLabel}
+              Why?
               <span className="sr-only"> ({candidate.title})</span>
             </summary>
             <dl className="flex flex-col gap-2 text-sm">

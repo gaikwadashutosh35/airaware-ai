@@ -14,14 +14,19 @@ export function BetterHabits() {
 
   return (
     <>
-      <h1
-        data-part="title-block"
-        ref={headingRef}
-        tabIndex={-1}
-        className="text-3xl font-semibold tracking-tight"
-      >
-        Better Habits
-      </h1>
+      <div data-part="title-block" className="flex flex-col gap-2">
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-3xl font-semibold tracking-tight"
+        >
+          Better Habits
+        </h1>
+        <p className="text-sm text-text-dark">
+          Practical habits that cut pollution for you and your neighbours. We
+          never show an emissions saving we can&apos;t calculate.
+        </p>
+      </div>
       {guides.state.status === 'ready' ? (
         <div className="rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
           <GuideGroups set={guides.state.data} level={2} />
@@ -39,7 +44,10 @@ export function BetterHabits() {
           level={2}
         />
       ) : (
-        <Loading label="Loading guides" />
+        <Loading
+          label="Loading guides"
+          className="min-h-[132.4rem] min-[360px]:min-h-[120rem] min-[390px]:min-h-[114.1rem] sm:min-h-[92.4rem] md:min-h-[77.5rem] lg:min-h-[66.2rem] min-[68.125rem]:min-h-[43.2rem]"
+        />
       )}
     </>
   );

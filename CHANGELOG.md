@@ -195,6 +195,14 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P5, My Home and Better Habits (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows E1–E5):
+  - every card's disclosure says "Why?" (was "Why this recommendation?" on Today and "Why it matters" on My Home and Better Habits); its screen-reader name still adds the card title;
+  - My Home and Better Habits get a one-line purpose under the title, the landing page's own lines;
+  - with a place, "Today, for your home" shows from the first paint (a placeholder as tall as a no-answers plan while it builds), and says "No suggestions for your answers today." when the plan has no indoor card;
+  - the guide cards flow into as many 20rem columns as fit; a group with several cards takes as many columns as it has cards, so at 1280 and 1440 no row is half empty before more cards (Better Habits: Daily commuting, Waste, Cooking, then Energy use across three columns);
+  - the guides' loading placeholders are as tall as the loaded guides (stubbed layout shift on both pages at 320, 390, 768, 1280 and 1440: 0);
+  - help choices and starter pills have a visible border (`text-dark-muted`, 6.61:1);
+  - `e2e/firstscreen.spec.ts` adds MH-01, the row-fill checks and both pages' layout shift (fully stubbed, with the shipped guide library); `journey.spec.ts`'s "Why?" step is updated (not run).
 - Place chip (25 Nov): a tap on the chip right after Escape closed the dialog could be lost, because the browser closes the dialog a moment before it reports the close. The chip now reopens it in that moment, and the late report is ignored. This was the flaky "place dialog by keyboard" e2e test.
 - Redesign P4, Ask AirAware (24 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows D1–D6, A12 and C9):
   - the question box comes first, under the title, a new intro line ("Answers come from AirAware's rules and today's forecast.") and the context line; the greeting is gone; then the topics, three starters and "More questions" with the other two; then the conversation;

@@ -23,7 +23,7 @@ const MUTED = 'text-sm text-text-dark-muted';
 const CHIP =
   'inline-flex min-h-11 items-center rounded-full border border-text-dark-muted px-4 disabled:opacity-60';
 const STARTER =
-  'min-h-11 rounded-full border border-rule px-4 text-left text-sm disabled:opacity-60';
+  'min-h-11 rounded-full border border-text-dark-muted px-4 text-left text-sm disabled:opacity-60';
 
 // The six topics, as plain buttons: the thread already shows what was asked.
 export function TopicChips({

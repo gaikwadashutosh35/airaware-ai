@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { expectNoAxeViolations } from '../test/axe.ts';
+import { LANDING_EXAMPLES } from './landingExamples.ts';
 import { habitsGuidesFixture } from '../test/guideFixtures.ts';
 import { BetterHabits } from './BetterHabits.tsx';
 
@@ -24,7 +25,7 @@ afterEach(() => {
 });
 
 describe('BetterHabits', () => {
-  it('shows the four habit groups in order, with Why it matters', async () => {
+  it('shows the four habit groups in order, with Why?', async () => {
     routeGuides(guidesOk);
     render(<BetterHabits />);
 
@@ -40,7 +41,8 @@ describe('BetterHabits', () => {
       'Cooking',
       'Energy use',
     ]);
-    expect(screen.getAllByText('Why it matters')).toHaveLength(4);
+    expect(screen.getAllByText('Why?')).toHaveLength(4);
+    expect(screen.queryByText('Why it matters')).toBeNull();
     expect(screen.getByText(habitsGuidesFixture.safetyNote)).toBeDefined();
   });
 
@@ -89,6 +91,21 @@ describe('BetterHabits', () => {
     render(<BetterHabits />);
 
     expect(screen.getByText('Loading guides')).toBeDefined();
+  });
+
+  // E4: the one-line purpose is the landing page's line, so they cannot drift.
+  it('says its purpose in the landing page words', () => {
+    routeGuides(() => new Promise<Response>(() => {}));
+    render(<BetterHabits />);
+
+    const landing = LANDING_EXAMPLES.find(
+      (example) => example.heading === 'Sustainable everyday choices',
+    )!;
+    const line = screen.getByText(landing.text);
+    expect(line.previousElementSibling).toBe(
+      screen.getByRole('heading', { level: 1, name: 'Better Habits' }),
+    );
+    expect(line.parentElement!.dataset.part).toBe('title-block');
   });
 
   it('passes axe', async () => {
