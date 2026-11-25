@@ -19,7 +19,7 @@ function Privacy() {
   return (
     <>
       <title>Privacy | AirAware AI</title>
-      <header className="border-b border-rule">
+      <header className="on-dark bg-bg text-text">
         <div className="mx-auto flex min-h-16 max-w-5xl items-center px-4 sm:px-6">
           <a
             href="/"
@@ -31,17 +31,39 @@ function Privacy() {
       </header>
       <main className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex flex-col gap-3">
+          <a
+            href="/app"
+            className="inline-flex min-h-11 items-center self-start underline"
+          >
+            Back to AirAware
+          </a>
           <h1 className="text-3xl font-semibold tracking-tight">Privacy</h1>
           <p className="max-w-prose text-text-dark-muted">
             AirAware AI is built to need as little about you as possible. This
             is what goes where.
           </p>
         </div>
+        <section className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+          <h2 className="text-2xl font-semibold tracking-tight">In short</h2>
+          <ul className="flex list-disc flex-col gap-2 pl-5">
+            <li>
+              Nothing is stored until you press &quot;Save my answers&quot; or
+              &quot;Save plan&quot;, or tick &quot;Remember on this
+              device&quot;.
+            </li>
+            <li>AirAware AI has no analytics, tracking or advertising.</li>
+            <li>
+              &quot;Delete my saved data&quot; removes your account, saved
+              answers and saved plans; Supabase’s own logs may keep your IP
+              address.
+            </li>
+          </ul>
+        </section>
         <Part
           title="What stays in your browser"
           items={[
-            'Your household answers stay on this page until you press "Save my answers".',
-            'No account exists until you press a save button. Then this browser keeps a sign-in session in its local storage.',
+            'Your household answers stay on this page until you press "Save my answers" or tick "Remember on this device".',
+            'No account exists until you press a save button or tick "Remember on this device". Then this browser keeps a sign-in session in its local storage.',
           ]}
         />
         <Part
@@ -70,7 +92,7 @@ function Privacy() {
           ]}
         />
         <Part
-          title="What Supabase stores"
+          title="What Supabase (our database host) stores"
           items={[
             'Only after you press "Save my answers" or "Save plan", or tick "Remember on this device", in Supabase’s South Asia (Mumbai) region.',
             'An anonymous account, with no email, name or password.',
@@ -87,7 +109,7 @@ function Privacy() {
             '"Delete my saved data" removes your account, saved answers and saved plans.',
             '"Forget this place" in My Profile removes a remembered place.',
             'You can delete single plans from the saved plans list.',
-            'Clearing your browser data loses access to your saved data but does not delete it. Unused accounts are not removed automatically yet.',
+            'Clearing your browser data loses access to your saved data but does not delete it. A nightly job deletes anonymous accounts that have not been used for 30 days, together with their saved answers and plans.',
           ]}
         />
         <Part

@@ -11,8 +11,10 @@ import {
   listPlans,
 } from '../../services/api.ts';
 import { formatDateTime } from '../air-quality/forecast.ts';
+import { NOT_SET_UP } from './HouseholdPreferencesForm.tsx';
 
-const EMPTY = 'No saved plans yet.';
+const EMPTY =
+  'No saved plans yet. Use Save plan under See your full day on Today.';
 const LOAD_FAILED = "Your saved plans couldn't be loaded right now.";
 const OPEN_FAILED = "This saved plan couldn't be opened right now.";
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
@@ -22,7 +24,7 @@ const DELETE_LIMITED =
 const DELETED = 'Saved plan deleted.';
 
 type State =
-  | { kind: 'hidden' }
+  | { kind: 'loading' }
   | { kind: 'error' }
   | { kind: 'ready'; plans: SavedPlanSummary[] };
 
@@ -34,10 +36,11 @@ async function token(): Promise<string> {
   return value;
 }
 
-const buttonClass = 'min-h-11 rounded-md border border-text-dark px-4';
+const buttonClass =
+  'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
 
-// This browser's saved plans. Shown only for an existing session: listing
-// never creates an account.
+// This browser's saved plans. Listing needs an existing session and never
+// creates an account: with none, the section says there are none.
 export function SavedPlansList({
   version,
   onOpen,
@@ -48,7 +51,9 @@ export function SavedPlansList({
   onOpen: (saved: SavedPlan) => void;
   onDeleted: (id: string) => void;
 }) {
-  const [state, setState] = useState<State>({ kind: 'hidden' });
+  const [state, setState] = useState<State>(
+    savingAvailable ? { kind: 'loading' } : { kind: 'ready', plans: [] },
+  );
   const [reloads, setReloads] = useState(0);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,18 +67,14 @@ export function SavedPlansList({
     let active = true;
     currentToken()
       .then(async (value) => {
-        const plans = value ? await listPlans(value) : null;
+        const plans = value ? await listPlans(value) : [];
         if (!active) return;
-        setState(
-          plans
-            ? {
-                kind: 'ready',
-                plans: [...plans].sort(
-                  (a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt),
-                ),
-              }
-            : { kind: 'hidden' },
-        );
+        setState({
+          kind: 'ready',
+          plans: [...plans].sort(
+            (a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt),
+          ),
+        });
       })
       .catch(() => {
         if (active) setState({ kind: 'error' });
@@ -129,8 +130,6 @@ export function SavedPlansList({
     }
   }
 
-  if (state.kind === 'hidden') return null;
-
   return (
     <section
       aria-labelledby={headingId}
@@ -144,10 +143,10 @@ export function SavedPlansList({
       >
         Saved plans
       </h2>
-      {state.kind === 'error' ? (
+      {state.kind === 'loading' ? null : state.kind === 'error' ? (
         <p>{LOAD_FAILED}</p>
       ) : state.plans.length === 0 ? (
-        <p>{EMPTY}</p>
+        <p>{savingAvailable ? EMPTY : NOT_SET_UP}</p>
       ) : (
         <ul aria-labelledby={headingId} className="flex flex-col gap-3">
           {state.plans.map((plan) => {

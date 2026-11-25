@@ -75,7 +75,9 @@ async function goTo(page: Page, name: string): Promise<void> {
 
 // The plan builds by itself: once it is shown, open its full day.
 async function buildPlan(page: Page): Promise<void> {
-  await page.getByText('See your full day').click({ timeout: 60_000 });
+  await page
+    .getByText('See your full day', { exact: true })
+    .click({ timeout: 60_000 });
   // The first is the line beside the card, outside the full day.
   await expect(
     page.getByText(/^Made (by our rules|with AI)/).first(),
@@ -91,6 +93,18 @@ async function deleteEverything(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Delete my saved data' }).click();
   await page.getByRole('button', { name: 'Delete everything' }).click();
   await expect(page.getByText(DELETED)).toBeVisible({ timeout: 30_000 });
+}
+
+// The section stays, with its empty line (MP-03).
+async function expectNoSavedPlans(page: Page): Promise<void> {
+  await expect(
+    page.getByRole('heading', { name: 'Saved plans' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      'No saved plans yet. Use Save plan under See your full day on Today.',
+    ),
+  ).toBeVisible();
 }
 
 const savedRows = (page: Page): Locator =>
@@ -238,9 +252,7 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
         await goTo(other, 'My Profile');
         await expect(savedRows(other)).toHaveCount(1, { timeout: 30_000 });
         await deleteEverything(other);
-        await expect(
-          other.getByRole('heading', { name: 'Saved plans' }),
-        ).toHaveCount(0);
+        await expectNoSavedPlans(other);
       } finally {
         await deleteLeftoverAccount(other);
         await context.close();
@@ -249,14 +261,10 @@ test('journey: search, plan, explain, save, reload, isolation, delete', async ({
 
     await test.step('12. delete saved data; gone after a reload', async () => {
       await deleteEverything(page);
-      await expect(
-        page.getByRole('heading', { name: 'Saved plans' }),
-      ).toHaveCount(0);
+      await expectNoSavedPlans(page);
       await page.reload();
       await page.waitForLoadState('networkidle');
-      await expect(
-        page.getByRole('heading', { name: 'Saved plans' }),
-      ).toHaveCount(0);
+      await expectNoSavedPlans(page);
       expect(
         await page.evaluate(() =>
           Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k)),

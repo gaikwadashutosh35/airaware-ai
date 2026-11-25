@@ -1,5 +1,12 @@
 import { Check } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { HouseholdContext } from '../../../shared/contracts.ts';
 import { NOT_SET_UP } from '../features/daily-plan/HouseholdPreferencesForm.tsx';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
@@ -105,6 +112,7 @@ export function Welcome({
   onChoosePlace,
   onLocateStart,
   onLocate,
+  onStep,
   onFinish,
 }: {
   place: Place | null;
@@ -113,6 +121,8 @@ export function Welcome({
   onChoosePlace: (place: Place) => void;
   onLocateStart: () => void;
   onLocate: (place: Place) => void;
+  // The step now showing, so the header can hide the place chip on step 1.
+  onStep: (step: 1 | 2 | 3) => void;
   // Rejects when the save failed.
   onFinish: (result: {
     context: HouseholdContext;
@@ -127,9 +137,14 @@ export function Welcome({
   const [busy, setBusy] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
+  const reportStep = useEffectEvent(onStep);
   // Focus follows the step, from arrival on (a page change in the app).
   useEffect(() => {
     headingRef.current?.focus();
+  }, [step]);
+  // Before paint, so the header chip never shows for one frame on step 2.
+  useLayoutEffect(() => {
+    reportStep(step);
   }, [step]);
 
   const set = (patch: Partial<OnboardingChoices>) =>
@@ -182,6 +197,12 @@ export function Welcome({
         >
           {title}
         </h1>
+        {step === 1 && (
+          <p className="text-text-dark">
+            See today&apos;s air forecast for your place and one thing you could
+            do.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">

@@ -13,7 +13,7 @@ const HOUR = 60 * 60 * 1000;
 
 // The plan builds by itself; "See your full day" opens the rest of it.
 async function openFullDay(page: Page) {
-  await page.getByText('See your full day').click();
+  await page.getByText('See your full day', { exact: true }).click();
 }
 
 test('provider down: the forecast error, and a recommendation from the rules', async ({

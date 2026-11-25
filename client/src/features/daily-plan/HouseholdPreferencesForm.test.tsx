@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { expectNoAxeViolations } from '../../test/axe.ts';
@@ -45,6 +46,9 @@ function routeFetch(respond: Responder) {
 const ok = (data: unknown) => Response.json({ data });
 const saveButton = () =>
   screen.getByRole('button', { name: 'Save my answers' });
+const deleteButton = () =>
+  screen.findByRole('button', { name: 'Delete my saved data' });
+const LINE = 'Saving creates an anonymous account (no email or name).';
 
 beforeEach(() => {
   session.available = true;
@@ -195,6 +199,51 @@ describe('HouseholdPreferencesForm', () => {
     expect(session.tokenForSave).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(screen.getByText(NOTE)).toBeDefined();
+    // Nothing is saved: nothing to delete.
+    expect(
+      screen.queryByRole('button', { name: 'Delete my saved data' }),
+    ).toBeNull();
+  });
+
+  it('shows Delete for an existing session, and never creates one to check', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch(() => ok(null));
+    render(<HouseholdPreferencesForm />);
+    expect(await deleteButton()).toBeDefined();
+    expect(session.tokenForSave).not.toHaveBeenCalled();
+  });
+
+  it('shows Delete again after a save creates a session', async () => {
+    routeFetch((method) =>
+      method === 'PUT'
+        ? ok({ context: {}, updatedAt: '2026-11-18T10:00:00.000Z' })
+        : ok(null),
+    );
+    render(<HouseholdPreferencesForm />);
+    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
+    expect(
+      screen.queryByRole('button', { name: 'Delete my saved data' }),
+    ).toBeNull();
+    fireEvent.click(saveButton());
+    expect(await screen.findByText(SAVED)).toBeDefined();
+    expect(await deleteButton()).toBeDefined();
+  });
+
+  it("puts the note's first sentence by Save and the full note in Your data", () => {
+    routeFetch(() => ok(null));
+    render(<HouseholdPreferencesForm />);
+    const line = screen.getByText(LINE);
+    const note = screen.getByText(NOTE);
+    expect(line).not.toBe(note);
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Your data' }),
+    ).toBeDefined();
+    expect(saveButton().getAttribute('aria-describedby')).toBe(
+      `${line.id} ${note.id}`,
+    );
+    expect(
+      screen.getByRole('region', { name: 'Your data' }).contains(note),
+    ).toBe(true);
   });
 
   // Review Focus 2.
@@ -329,9 +378,7 @@ describe('HouseholdPreferencesForm', () => {
     await waitFor(() => expect(purifier.value).toBe('yes'));
     const before = fetchSpy.mock.calls.length;
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Delete my saved data' }),
-    );
+    fireEvent.click(await deleteButton());
     expect(fetchSpy.mock.calls.length).toBe(before);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
@@ -357,9 +404,7 @@ describe('HouseholdPreferencesForm', () => {
         "Your saved answers couldn't be loaded right now.",
       ),
     ).toBeDefined();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Delete my saved data' }),
-    );
+    fireEvent.click(await deleteButton());
     fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
     expect(
       await screen.findByText('Nothing was deleted. Try again in a moment.'),
@@ -422,9 +467,7 @@ describe('HouseholdPreferencesForm', () => {
     render(<HouseholdPreferencesForm />);
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Delete my saved data' }),
-    );
+    fireEvent.click(await deleteButton());
     fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
     expect(
       await screen.findByText('Deleted. Nothing is saved now.'),
@@ -493,9 +536,7 @@ describe('HouseholdPreferencesForm', () => {
     );
     await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Delete my saved data' }),
-    );
+    fireEvent.click(await deleteButton());
     fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
     expect(
       await screen.findByText('Nothing was deleted. Try again in a moment.'),
@@ -511,17 +552,65 @@ describe('HouseholdPreferencesForm', () => {
     expect(onChange).toHaveBeenLastCalledWith({});
   });
 
-  it('saving not set up disables the buttons', () => {
+  it('saving not set up disables Save and shows no Delete', () => {
     session.available = false;
+    session.currentToken.mockResolvedValue('tok');
     routeFetch(() => ok(null));
     render(<HouseholdPreferencesForm />);
     expect(saveButton()).toHaveProperty('disabled', true);
     expect(
-      screen.getByRole('button', { name: 'Delete my saved data' }),
-    ).toHaveProperty('disabled', true);
-    expect(screen.getByRole('status').textContent).toBe(
-      "Saving isn't set up on this site.",
+      screen.queryByRole('button', { name: 'Delete my saved data' }),
+    ).toBeNull();
+    expect(
+      within(
+        screen.getByRole('region', { name: 'Your household (optional)' }),
+      ).getByRole('status').textContent,
+    ).toBe("Saving isn't set up on this site.");
+  });
+
+  // The delete result's live region is on the page before it has text.
+  it('keeps the Your data status region mounted, empty until a delete', () => {
+    routeFetch(() => ok(null));
+    render(<HouseholdPreferencesForm />);
+    const region = screen.getByRole('region', { name: 'Your data' });
+    expect(within(region).getByRole('status').textContent).toBe('');
+  });
+
+  it('a save after a delete clears "Deleted. Nothing is saved now."', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch((method) =>
+      method === 'DELETE'
+        ? new Response(null, { status: 204 })
+        : ok({ context: {}, updatedAt: '2026-11-18T10:00:00.000Z' }),
     );
+    render(<HouseholdPreferencesForm />);
+    fireEvent.click(await deleteButton());
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    await screen.findByText('Deleted. Nothing is saved now.');
+    session.currentToken.mockResolvedValue(null);
+
+    fireEvent.click(saveButton());
+    expect(await screen.findByText(SAVED)).toBeDefined();
+    expect(screen.queryByText('Deleted. Nothing is saved now.')).toBeNull();
+  });
+
+  it('shows Delete when a first save makes the account but the save fails', async () => {
+    routeFetch((method) =>
+      method === 'PUT'
+        ? Response.json({ error: { code: 'X', message: 'x' } }, { status: 500 })
+        : ok(null),
+    );
+    render(<HouseholdPreferencesForm />);
+    fireEvent.click(saveButton());
+    expect(await screen.findByText(UNAVAILABLE)).toBeDefined();
+    expect(await deleteButton()).toBeDefined();
+  });
+
+  it('the outlined buttons dim when disabled', () => {
+    session.available = false;
+    routeFetch(() => ok(null));
+    render(<HouseholdPreferencesForm />);
+    expect(saveButton().className).toContain('disabled:opacity-60');
   });
 
   it('the form has no axe violations', async () => {

@@ -78,10 +78,10 @@ General guides in four groups: Daily commuting and vehicle idling, Waste, Cookin
 ## 7. Manage saved data
 - **Save plan**, under See your full day, stores the plan in your anonymous account on AirAware's database host; this browser keeps the sign-in. The first save creates that account (no email, name or password).
 - **Saved plans**, in My Profile, lists them, newest first. **Open** shows one below the list, under "Saved plan from …. This is a snapshot, not current air information."; **Close** puts it away. **Delete** removes one plan after a confirmation. You can keep up to 20.
-- **Delete my saved data** (in Your household) removes your account, saved answers and saved plans.
+- **Delete my saved data** (in Your data, in My Profile) removes your account, saved answers and saved plans. It shows only when there is something saved.
 
 ## 8. Privacy
-The **Privacy** link in every footer explains what stays in your browser, what Open-Meteo, Gemini and Supabase receive, and how to delete it.
+The **Privacy** link in every footer explains what stays in your browser, what Open-Meteo, Gemini and Supabase receive, and how to delete it. It opens with a three-line summary, and **Back to AirAware** returns to the app.
 
 ## 9. Important limitation
 AirAware AI provides general information, not medical diagnosis or treatment. It cannot guarantee an activity or place is safe. Follow local public-health advisories and consult qualified healthcare professionals for medical concerns.

@@ -111,6 +111,8 @@ function AppShell() {
   const [remembered, setRemembered] = useState<SavedPlace | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [inviteDismissed, setInviteDismissed] = useState(false);
+  // Welcome's step, so step 1 (one job: choose a place) has no place chip.
+  const [welcomeStep, setWelcomeStep] = useState<1 | 2 | 3>(1);
 
   // An unknown app page becomes Today, keeping the place (Welcome follows
   // below when there is none).
@@ -291,14 +293,16 @@ function AppShell() {
           >
             AirAware AI
           </a>
-          <PlaceChip
-            label={place?.label}
-            open={placeDialogOpen}
-            onOpenChange={setPlaceDialogOpen}
-            onChoose={(next) => choose(next, true)}
-            onLocateStart={locateStart}
-            onLocate={locate}
-          />
+          {!(page === 'welcome' && (loaded ? welcomeStep === 1 : !place)) && (
+            <PlaceChip
+              label={place?.label}
+              open={placeDialogOpen}
+              onOpenChange={setPlaceDialogOpen}
+              onChoose={(next) => choose(next, true)}
+              onLocateStart={locateStart}
+              onLocate={locate}
+            />
+          )}
           <AppNav page={page} />
         </div>
       </header>
@@ -327,7 +331,12 @@ function AppShell() {
           />
         </div>
         {page === 'welcome' && !loaded && (
-          <Loading label="Loading your place" />
+          // As tall as Welcome's first-step panel (rem, so it grows with
+          // enlarged text), measured at 320, 390, 768, 1280 and 1440 wide.
+          <Loading
+            label="Loading your place"
+            className="min-h-[21.9rem] md:min-h-[19.9rem]"
+          />
         )}
         {/* Welcome waits for saved answers, so it starts from them. */}
         {page === 'welcome' && loaded && (
@@ -338,6 +347,7 @@ function AppShell() {
             onChoosePlace={(next) => choose(next, true)}
             onLocateStart={locateStart}
             onLocate={locate}
+            onStep={setWelcomeStep}
             onFinish={finishWelcome}
           />
         )}

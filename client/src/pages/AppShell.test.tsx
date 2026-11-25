@@ -105,7 +105,10 @@ vi.mock('../lib/supabase.ts', () => ({
   },
   currentToken: () => session.currentToken(),
   tokenForSave: () => session.tokenForSave(),
-  forgetSession: () => Promise.resolve(),
+  forgetSession: () => {
+    session.currentToken.mockResolvedValue(null);
+    return Promise.resolve();
+  },
 }));
 
 const RULES_MADE_BY =
@@ -1552,6 +1555,12 @@ describe('AppShell', () => {
   });
 
   it('header order is the logo, the place chip, then the navigation', () => {
+    // With no place the app opens Welcome step 1, which has no chip (F4).
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
     routeFetch(ok());
     render(<AppShell />);
     const header = screen.getByRole('banner');
@@ -1661,6 +1670,29 @@ describe('AppShell', () => {
         name: 'Today in Pune, Maharashtra',
       }),
     ).toBeDefined();
+  });
+
+  // P6 (F4): step 1 has one job, so no place chip; steps 2 and 3 keep it.
+  it('the header has no place chip on Welcome step 1, and has it on steps 2 and 3', async () => {
+    routeFetch(ok(), withSaved(null));
+    render(<AppShell />);
+    await flush();
+    const chip = () =>
+      within(screen.getByRole('banner')).queryByRole('button', {
+        name: /^(Change place: |Choose a place$)/,
+      });
+    expect(
+      screen.getByRole('heading', { level: 1, name: WELCOME_1 }),
+    ).toBeDefined();
+    expect(chip()).toBeNull();
+
+    await choosePlace(0, { skipWelcome: false });
+    expect(chip()).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(chip()).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(chip()).toBeNull();
   });
 
   it('Welcome starts from the saved answers', async () => {
@@ -2263,7 +2295,7 @@ describe('AppShell', () => {
   const SNAPSHOT = `Saved plan from ${formatDateTime('2026-11-17T10:00:00.000Z')}. This is a snapshot, not current air information.`;
 
   // Review Focus 1.
-  it('hides the list and closes the snapshot after "Delete everything"', async () => {
+  it('keeps the list section, now empty, and closes the snapshot after "Delete everything"', async () => {
     routeFetch(ok(), withSavedPlan());
     render(<AppShell />);
     await openSavedPlan();
@@ -2276,7 +2308,12 @@ describe('AppShell', () => {
     await flush();
 
     expect(screen.getByText('Deleted. Nothing is saved now.')).toBeDefined();
-    expect(screen.queryByRole('heading', { name: 'Saved plans' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
+    expect(
+      screen.getByText(
+        'No saved plans yet. Use Save plan under See your full day on Today.',
+      ),
+    ).toBeDefined();
     expect(screen.queryByText('Plan for Delhi')).toBeNull();
     expect(screen.queryByText(SNAPSHOT)).toBeNull();
   });

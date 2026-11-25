@@ -195,6 +195,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P6, My Profile, Welcome and Privacy (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows F1–F5, A9 and A10):
+  - My Profile reads "Your place" (when remembered), the household form, "Saved plans", then a new "Your data"; from 1024 px the form is on the left and the rest on the right;
+  - "Your data" holds the full save note and "Delete my saved data", which now shows only when something is saved; "Save my answers" keeps the note's first sentence beside it;
+  - "Saved plans" always shows: "No saved plans yet. Use Save plan under See your full day on Today." with no session (and no request), "Saving isn't set up on this site." where saving is off;
+  - Welcome's first step has no place chip in the header and adds "See today's air forecast for your place and one thing you could do."; its loading placeholder is as tall as the step (stubbed layout shift under 0.09 at every width);
+  - Privacy gets the app's navy header, "Back to AirAware", an "In short" summary, "Supabase (our database host)" once, and the account and household-answers sentences now name "Remember on this device" too (A9, and the owner on 25 Nov); the retention line now says what `PRIVACY.md` says, that a nightly job deletes anonymous accounts unused for 30 days (the owner confirmed the job is active in production, F6), and a test keeps the two identical;
+  - `e2e/firstscreen.spec.ts` adds the My Profile order, Saved-plans request, Welcome chip and layout-shift checks, the Privacy header, and two privacy checks: no page signs in without Save or Remember, and location is read only after "Use my location".
 - Redesign P5, My Home and Better Habits (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows E1–E5):
   - every card's disclosure says "Why?" (was "Why this recommendation?" on Today and "Why it matters" on My Home and Better Habits); its screen-reader name still adds the card title;
   - My Home and Better Habits get a one-line purpose under the title, the landing page's own lines;

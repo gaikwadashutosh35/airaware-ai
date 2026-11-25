@@ -162,3 +162,13 @@ No real screen reader has been confirmed yet.
 - **Control borders:** help choices and starter pills now have a `text-dark-muted` border, 6.61:1 on `surface-light` (was `rule`, 1.30:1), so their edge is visible (WCAG 1.4.11; ruling E5).
 - **Purpose lines:** in each title block, in `text-dark` like Today's greeting; the backdrop contrast check covers that colour.
 - **Loading:** "Today, for your home" and the guides keep their space while loading; the placeholders say "Finding today's suggestions…" and "Loading guides" to screen readers only, as before.
+
+## Redesign P6, My Profile, Welcome and Privacy (2026-11-25)
+
+- **My Profile order:** "Your place" (when remembered), the household form, "Saved plans", "Your data". The DOM follows that order; from 1024 px the form is the left column and the rest the right, so Tab goes place, form, saved plans, your data.
+- **"Save my answers"** is described by the note's first sentence beside it and by the full note in "Your data" (`aria-describedby` names both).
+- **Delete:** "Delete my saved data" and its confirmation moved into "Your data"; the confirmation still moves focus to Cancel. Its result goes to a status region that is always in the page, so a screen reader announces it.
+- **Welcome step 1:** no place chip in the header, so Tab goes logo, navigation, then the step's own search; the chip returns on step 2.
+- **Privacy:** a "Back to AirAware" link (44 px) and the app's navy header; the logo and the focus ring use the header's dark-theme colours.
+- **Checked by e2e** (both projects, every non-localhost request aborted): no page creates an account or calls Supabase sign-in without Save or Remember (0 requests, no stored session); location is read only after "Use my location" (0 calls on load, 1 after one click).
+- Not checked: the "with saved data" states in a real browser (a session needs Supabase), and a real screen reader.

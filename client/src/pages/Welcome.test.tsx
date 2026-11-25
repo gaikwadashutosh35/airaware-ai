@@ -47,6 +47,7 @@ function setup(
         onChoosePlace={onChoosePlace}
         onLocateStart={() => {}}
         onLocate={() => {}}
+        onStep={() => {}}
         {...props}
         onFinish={onFinish}
       />
@@ -101,6 +102,27 @@ describe('Welcome', () => {
 
     expect(onChoosePlace).toHaveBeenCalledTimes(1);
     expect(heading(STEP2)).toBeDefined();
+  });
+
+  it('says what step 1 gives, on step 1 only, and reports each step', () => {
+    const onStep = vi.fn();
+    setup({ place: null, onStep });
+    const line =
+      "See today's air forecast for your place and one thing you could do.";
+    expect(screen.getByText(line).className).toContain('text-text-dark');
+    expect(onStep).toHaveBeenLastCalledWith(1);
+
+    cleanup();
+    const again = vi.fn();
+    setup({ onStep: again });
+    expect(screen.queryByText(line)).toBeNull();
+    expect(again).toHaveBeenLastCalledWith(2);
+    click('Next');
+    expect(again).toHaveBeenLastCalledWith(3);
+    click('Back');
+    click('Back');
+    expect(again).toHaveBeenLastCalledWith(1);
+    expect(screen.getByText(line)).toBeDefined();
   });
 
   it('starts at step 2 when a place is set; Back returns to step 1', () => {

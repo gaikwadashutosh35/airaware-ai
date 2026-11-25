@@ -14,16 +14,21 @@ import { rulesPlanFixture } from '../../test/planFixtures.ts';
 import { SavedPlansList } from './SavedPlansList.tsx';
 
 const session = vi.hoisted(() => ({
+  available: true,
   currentToken: vi.fn<() => Promise<string | null>>(),
 }));
 
 vi.mock('../../lib/supabase.ts', () => ({
-  savingAvailable: true,
+  get savingAvailable() {
+    return session.available;
+  },
   currentToken: () => session.currentToken(),
   tokenForSave: () => Promise.resolve('tok'),
   forgetSession: () => Promise.resolve(),
 }));
 
+const EMPTY =
+  'No saved plans yet. Use Save plan under See your full day on Today.';
 const older: SavedPlanSummary = {
   id: 'p-old',
   savedAt: '2026-11-17T10:00:00.000Z',
@@ -66,6 +71,7 @@ const rows = () =>
   );
 
 beforeEach(() => {
+  session.available = true;
   session.currentToken.mockResolvedValue('tok');
 });
 afterEach(() => {
@@ -75,15 +81,63 @@ afterEach(() => {
 });
 
 describe('SavedPlansList', () => {
-  it('shows nothing and fetches nothing without a session', async () => {
+  it('says saving is not set up, and fetches nothing, when it is not', () => {
+    session.available = false;
+    const spy = routeFetch(() => ok([]));
+    renderList();
+
+    expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
+    expect(screen.getByText("Saving isn't set up on this site.")).toBeDefined();
+    expect(screen.queryByText(EMPTY)).toBeNull();
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('shows the heading and the empty line, and fetches nothing, without a session', async () => {
     session.currentToken.mockResolvedValue(null);
     const spy = routeFetch(() => ok([]));
-    const { container } = renderList();
+    renderList();
 
-    await waitFor(() => expect(session.currentToken).toHaveBeenCalled());
-
-    expect(container.textContent).toBe('');
+    expect(
+      await screen.findByRole('heading', { name: 'Saved plans' }),
+    ).toBeDefined();
+    expect(await screen.findByText(EMPTY)).toBeDefined();
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the section and the empty line after the last plan goes', async () => {
+    let listed = [newer];
+    routeFetch((method, path) => {
+      if (method === 'DELETE') {
+        listed = [];
+        return new Response(null, { status: 204 });
+      }
+      return ok(path === '/api/v1/plans' ? listed : null);
+    });
+    renderList();
+    await screen.findByRole('heading', { name: 'Saved plans' });
+    fireEvent.click(screen.getByRole('button', { name: /^Delete/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete plan' }));
+    expect(await screen.findByText(EMPTY)).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Saved plans' })).toBeDefined();
+  });
+
+  it('shows the empty line again once the session is gone', async () => {
+    routeFetch(() => ok([newer]));
+    const { rerender } = renderList(0);
+    await screen.findByRole('list', { name: 'Saved plans' });
+    session.currentToken.mockResolvedValue(null);
+    rerender(
+      <SavedPlansList version={1} onOpen={vi.fn()} onDeleted={vi.fn()} />,
+    );
+    expect(await screen.findByText(EMPTY)).toBeDefined();
+  });
+
+  it('dims its outlined buttons when disabled', async () => {
+    routeFetch(() => ok([newer]));
+    renderList();
+    expect(
+      (await screen.findByRole('button', { name: /^Open/ })).className,
+    ).toContain('disabled:opacity-60');
   });
 
   it('lists saved plans newest first with local times', async () => {
@@ -105,7 +159,7 @@ describe('SavedPlansList', () => {
     routeFetch(() => ok([]));
     renderList();
 
-    expect(await screen.findByText('No saved plans yet.')).toBeDefined();
+    expect(await screen.findByText(EMPTY)).toBeDefined();
   });
 
   it('says when the list could not load', async () => {

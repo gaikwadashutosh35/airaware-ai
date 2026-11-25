@@ -77,48 +77,51 @@ export function Profile({
       >
         My Profile
       </h1>
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-2 lg:grid-rows-[auto_auto_1fr] lg:items-start">
+        {(remembered || status) && (
+          <section
+            aria-labelledby={placeHeadingId}
+            className="flex flex-col items-start gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 lg:col-start-2"
+          >
+            <h2
+              id={placeHeadingId}
+              ref={placeHeadingRef}
+              tabIndex={-1}
+              className="text-xl font-semibold"
+            >
+              Your place
+            </h2>
+            {remembered && (
+              <>
+                <p>Remembered place: {remembered.label}</p>
+                <button
+                  type="button"
+                  onClick={() => void forget()}
+                  className="min-h-11 rounded-md border border-text-dark px-4"
+                >
+                  Forget this place
+                </button>
+              </>
+            )}
+            <output className="block min-h-6">{status}</output>
+          </section>
+        )}
         <HouseholdPreferencesForm
           key={formKey}
           initial={context}
           onChange={onContextChange}
           onLoaded={onLoaded}
           skipLoad={formKey > 0}
+          version={listVersion}
           onDeleted={() => {
             setOpened(null);
             onDeleted();
           }}
-        />
-        <div className="flex flex-col gap-6">
-          {(remembered || status) && (
-            <section
-              aria-labelledby={placeHeadingId}
-              className="flex flex-col items-start gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
-            >
-              <h2
-                id={placeHeadingId}
-                ref={placeHeadingRef}
-                tabIndex={-1}
-                className="text-xl font-semibold"
-              >
-                Your place
-              </h2>
-              {remembered && (
-                <>
-                  <p>Remembered place: {remembered.label}</p>
-                  <button
-                    type="button"
-                    onClick={() => void forget()}
-                    className="min-h-11 rounded-md border border-text-dark px-4"
-                  >
-                    Forget this place
-                  </button>
-                </>
-              )}
-              <output className="block min-h-6">{status}</output>
-            </section>
-          )}
-          <div ref={listRef} className="contents">
+        >
+          <div
+            ref={listRef}
+            className="flex min-w-0 flex-col gap-6 lg:col-start-2"
+          >
             <SavedPlansList
               version={listVersion}
               onOpen={setOpened}
@@ -127,30 +130,30 @@ export function Profile({
                 onPlanDeleted(id);
               }}
             />
-          </div>
-          {opened && (
-            <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
-              <div
-                ref={bannerRef}
-                tabIndex={-1}
-                className="flex flex-col items-start gap-3 border-l-4 border-text-dark pl-4"
-              >
-                <p className="font-semibold">
-                  Saved plan from {formatDateTime(opened.savedAt)}. This is a
-                  snapshot, not current air information.
-                </p>
-                <button
-                  type="button"
-                  onClick={close}
-                  className="min-h-11 rounded-md border border-text-dark px-4"
+            {opened && (
+              <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+                <div
+                  ref={bannerRef}
+                  tabIndex={-1}
+                  className="flex flex-col items-start gap-3 border-l-4 border-text-dark pl-4"
                 >
-                  Close
-                </button>
+                  <p className="font-semibold">
+                    Saved plan from {formatDateTime(opened.savedAt)}. This is a
+                    snapshot, not current air information.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={close}
+                    className="min-h-11 rounded-md border border-text-dark px-4"
+                  >
+                    Close
+                  </button>
+                </div>
+                <PlanView plan={opened.plan} snapshot />
               </div>
-              <PlanView plan={opened.plan} snapshot />
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </HouseholdPreferencesForm>
       </div>
     </>
   );

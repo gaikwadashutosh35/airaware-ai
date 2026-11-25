@@ -6,6 +6,7 @@ import { rulesAskFixture } from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { at, stub, type Level } from './layout.ts';
 import { guideSet } from '../server/src/services/recommendations/guides.ts';
+import { searchFixture } from '../client/src/test/fixtures.ts';
 import { planAt, PUNE } from './routes.ts';
 
 const PLACE = 'Pune, Maharashtra';
@@ -1037,3 +1038,295 @@ for (const [width, height] of [
     });
   }
 }
+
+// Redesign P6: My Profile, Welcome and Privacy. Every request is stubbed, and
+// every request to a host other than localhost is aborted and counted, so
+// nothing reaches Supabase (the built client carries its real address).
+const PLANS_EMPTY =
+  'No saved plans yet. Use Save plan under See your full day on Today.';
+const WIDTHS = [
+  [320, 640],
+  [390, 844],
+  [768, 1024],
+  [1280, 720],
+  [1440, 900],
+] as const;
+
+async function blockExternal(page: Page): Promise<string[]> {
+  const blocked: string[] = [];
+  await page.route(
+    (url) => !['localhost', '127.0.0.1'].includes(url.hostname),
+    (route) => {
+      blocked.push(route.request().url());
+      return route.abort();
+    },
+  );
+  return blocked;
+}
+
+const stubSearch = (page: Page) =>
+  page.route('**/api/v1/locations/search**', (route) =>
+    route.fulfill({ json: { data: searchFixture } }),
+  );
+
+// MP-04 (F3): the order of My Profile's sections, and from lg the form on the
+// left with Saved plans and Your data stacked on the right.
+for (const [width, height] of [
+  [390, 844],
+  [1280, 720],
+] as const) {
+  test(`MP-04: My Profile's section order and columns: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await blockExternal(page);
+    await load(page, width, height, '/app/profile');
+    const box = async (name: string) => {
+      const heading = page.getByRole('heading', { level: 2, name });
+      await expect(heading).toBeVisible();
+      return (await heading
+        .locator('xpath=ancestor::section[1]')
+        .boundingBox())!;
+    };
+    const form = await box('Your household (optional)');
+    const saved = await box('Saved plans');
+    const data = await box('Your data');
+    console.log(
+      `MP-04 ${width}x${height} form ${JSON.stringify([form.x, form.y])} saved ${JSON.stringify([saved.x, saved.y])} data ${JSON.stringify([data.x, data.y])}`,
+    );
+    if (width >= 1024) {
+      expect(form.x).toBeLessThan(saved.x);
+      expect(Math.abs(data.x - saved.x)).toBeLessThan(1);
+      expect(saved.y).toBeLessThan(data.y);
+      expect(data.y).toBeGreaterThanOrEqual(saved.y + saved.height);
+    } else {
+      expect(form.y).toBeLessThan(saved.y);
+      expect(saved.y).toBeLessThan(data.y);
+      expect(Math.abs(form.x - saved.x)).toBeLessThan(1);
+    }
+  });
+}
+
+// MP-02 (F-06): with no session the section is there, says so, and asks
+// nothing of the plans endpoint.
+test('MP-02: Saved plans with no session says none, and sends no request', async ({
+  page,
+}) => {
+  await blockExternal(page);
+  const plans: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/plans') {
+      plans.push(request.url());
+    }
+  });
+  await load(page, 1280, 720, '/app/profile');
+  await expect(page.getByText(PLANS_EMPTY)).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  console.log(`MP-02 requests to /api/v1/plans = ${plans.length}`);
+  expect(plans).toHaveLength(0);
+  // F-05: no session, so nothing to delete.
+  await expect(
+    page.getByRole('button', { name: 'Delete my saved data' }),
+  ).toHaveCount(0);
+});
+
+// WE-01 (F4): step 1 has no place chip; step 2 has it again.
+test('WE-01: no place chip on Welcome step 1, back on step 2', async ({
+  page,
+}) => {
+  await blockExternal(page);
+  await stubSearch(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  await page.goto('/app/welcome');
+  const chip = page
+    .locator('header')
+    .getByRole('button', { name: /^(Choose a place|Change place)/ });
+  await expect(
+    page.getByRole('heading', { level: 1, name: /check air quality/ }),
+  ).toBeVisible();
+  await expect(chip).toHaveCount(0);
+  await expect(
+    page.getByText(
+      "See today's air forecast for your place and one thing you could do.",
+    ),
+  ).toBeVisible();
+  console.log(`WE-01 step 1 chips in header = ${await chip.count()}`);
+  const box = page.getByRole('combobox', {
+    name: 'Search for a city or area in India',
+  });
+  await box.fill('Pune');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  await box.press('ArrowDown');
+  await box.press('Enter');
+  await expect(
+    page.getByRole('heading', { level: 1, name: /typical day/ }),
+  ).toBeVisible();
+  await expect(chip).toBeVisible();
+  console.log(`WE-01 step 2 chips in header = ${await chip.count()}`);
+});
+
+// WE-03 / PF-01: Welcome opened directly. The placeholder is read the moment
+// it appears, then compared with the first step's panel.
+for (const [width, height] of WIDTHS) {
+  test(`WE-03: Welcome's layout shift stays under 0.1: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await blockExternal(page);
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await stub(page, 'not_elevated');
+    await page.addInitScript(() => {
+      const w = window as unknown as { cls: number; placeholder: number };
+      w.cls = 0;
+      w.placeholder = -1;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const shift = entry as PerformanceEntry & {
+            value: number;
+            hadRecentInput: boolean;
+          };
+          if (!shift.hadRecentInput) w.cls += shift.value;
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+      // The placeholder is on screen for a moment: take its height then.
+      new MutationObserver(() => {
+        const el = [
+          ...document.querySelectorAll('main [aria-busy="true"]'),
+        ].find((e) => e.textContent?.includes('Loading your place'));
+        if (el && w.placeholder < 0) {
+          w.placeholder = el.getBoundingClientRect().height;
+        }
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await page.goto('/app/welcome');
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Where should we check air quality?',
+      }),
+    ).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    // A frame later, so the last shift is recorded.
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    const cls = await page.evaluate(
+      () => (window as unknown as { cls: number }).cls,
+    );
+    const placeholder = await page.evaluate(
+      () => (window as unknown as { placeholder: number }).placeholder,
+    );
+    const panel = (await page
+      .getByRole('heading', { level: 1 })
+      .locator(
+        'xpath=ancestor::div[@data-part="title-block"]/following-sibling::div[1]',
+      )
+      .boundingBox())!;
+    console.log(
+      `PF-01 Welcome CLS ${width}x${height} = ${cls}; placeholder ${placeholder} px, step-1 panel ${panel.height} px`,
+    );
+    expect(cls).toBeLessThan(0.1);
+  });
+}
+
+// PV-03 (F5): Privacy has the app's navy header and one way back.
+test('PV-03: Privacy has the navy header and a way back to the app', async ({
+  page,
+}) => {
+  await blockExternal(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  const colours = (p: Page) =>
+    p.locator('header').evaluate((el) => {
+      const s = getComputedStyle(el);
+      return [s.backgroundColor, s.color];
+    });
+  await page.goto(at('/app'));
+  const shell = await colours(page);
+  await page.goto('/privacy');
+  await expect(page.locator('header')).toHaveClass(/on-dark/);
+  expect(await colours(page)).toEqual(shell);
+  const back = page.getByRole('link', { name: 'Back to AirAware' });
+  await expect(back).toHaveAttribute('href', '/app');
+  expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expect(page.locator('header').locator('a, button')).toHaveCount(1);
+});
+
+const SEEN = [
+  '/app',
+  '/app/ask',
+  '/app/home',
+  '/app/habits',
+  '/app/profile',
+  '/app/welcome',
+  '/privacy',
+];
+const seenUrl = (path: string) =>
+  path.startsWith('/app') && path !== '/app/welcome' ? at(path) : path;
+
+// PR-01: looking is not saving. No account is made, no session is stored,
+// and Supabase's sign-in service is never called.
+test('PR-01: visiting every page creates no account and calls no auth URL', async ({
+  page,
+}) => {
+  const blocked = await blockExternal(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  for (const path of SEEN) {
+    await page.goto(seenUrl(path));
+    await expect(page.locator('h1:visible').first()).toBeVisible();
+    await page.waitForLoadState('networkidle');
+  }
+  const auth = blocked.filter(
+    (url) => url.includes('supabase.co') && url.includes('/auth/'),
+  );
+  const keys = await page.evaluate(() =>
+    Object.keys(localStorage).filter((key) => /^sb-.*-auth-token$/.test(key)),
+  );
+  console.log(
+    `PR-01 auth requests = ${auth.length}, other blocked = ${blocked.length - auth.length}, sb keys = ${keys.length}`,
+  );
+  expect(auth).toHaveLength(0);
+  expect(keys).toHaveLength(0);
+});
+
+// PR-02: the device location is read once, by the click, never by loading.
+test('PR-02: geolocation is read only after "Use my location"', async ({
+  page,
+}) => {
+  await blockExternal(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await stub(page, 'not_elevated');
+  await page.addInitScript(() => {
+    const w = window as unknown as { geoCalls: number };
+    w.geoCalls = 0;
+    const answer = {
+      coords: { latitude: 18.52, longitude: 73.86, accuracy: 10 },
+      timestamp: Date.now(),
+    };
+    navigator.geolocation.getCurrentPosition = (success) => {
+      w.geoCalls++;
+      setTimeout(() => success(answer as GeolocationPosition), 0);
+    };
+    navigator.geolocation.watchPosition = (success) => {
+      w.geoCalls++;
+      setTimeout(() => success(answer as GeolocationPosition), 0);
+      return 1;
+    };
+  });
+  const calls = () =>
+    page.evaluate(() => (window as unknown as { geoCalls: number }).geoCalls);
+  for (const path of SEEN) {
+    await page.goto(seenUrl(path));
+    await expect(page.locator('h1:visible').first()).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    expect(await calls()).toBe(0);
+  }
+  await page.goto('/app/welcome');
+  await page.getByRole('button', { name: 'Use my location' }).click();
+  await expect(
+    page.getByRole('heading', { level: 1, name: /typical day/ }),
+  ).toBeVisible();
+  const after = await calls();
+  console.log(`PR-02 geolocation calls: loading 0, after one click ${after}`);
+  expect(after).toBe(1);
+});

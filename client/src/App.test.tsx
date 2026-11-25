@@ -34,11 +34,12 @@ describe('App', () => {
     expect(
       screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
     ).toEqual([
+      'In short',
       'What stays in your browser',
       'What Open-Meteo receives',
       'What the AI writers receive',
       'What happens to your questions',
-      'What Supabase stores',
+      'What Supabase (our database host) stores',
       'How to delete',
       'No analytics',
     ]);

@@ -116,6 +116,13 @@ Each recommendation follows the same principles:
 | F5 | "Back to AirAware" on Privacy | **Plain link to `/app`** | Simple; a remembered place comes back |
 | F6 | F-07: idle-account cleanup statement | **You check** in the Supabase dashboard whether the nightly cleanup job (`20261119180000_cleanup_idle_anonymous.sql`) is scheduled. I then make the page and `PRIVACY.md` match | Only you can see the production project |
 
+**Answers and rulings during P6, from the owner on 25 Nov 2026:**
+
+| ID | Decision | Answer |
+|---|---|---|
+| F6 | Is `delete-idle-anonymous-users` scheduled in production? | **Yes, active** (the owner checked `cron.job`). The Privacy page now says what `PRIVACY.md` says: "A nightly job deletes anonymous accounts that have not been used for 30 days, together with their saved answers and plans." |
+| F7 | "Your household answers stay on this page until you press "Save my answers"." is false for Remember (found in the P6 review) | **Fix it:** "…until you press "Save my answers" or tick "Remember on this device"." |
+
 ## G. Landing (P7)
 
 | ID | Decision | Recommended answer | Why |

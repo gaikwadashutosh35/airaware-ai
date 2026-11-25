@@ -115,7 +115,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
   - `AppShell`: the frame for every `/app` page.
   - `AppNav`: one `<nav aria-label="Main">`. It is a bottom bar on phones, inline in the navy top bar from `md`, and marks the current page with `aria-current="page"`, an elevated pill and a teal icon; on desktop the pill also has a `text-muted` outline, and under forced colours the current item is underlined. The bottom bar pads for the bottom, left and right safe areas.
   - `PlaceChip`: the place button and a native modal `<dialog>` holding `LocationSearch` and `UseMyLocation`.
-  - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans. An opened plan shows below the list under its snapshot banner, with "Close", which returns focus to its Open button.
+  - `Profile`: the household answers, the remembered place ("Forget this place") and saved plans. An opened plan shows below the list under its snapshot banner, with "Close", which returns focus to its Open button. Redesign P6 (rulings F2, F3): DOM order "Your place" (only with a remembered place or its status line), the household form, "Saved plans", "Your data"; from `lg` the form is the left column and the rest the right. "Saved plans" always shows; with no session it says "No saved plans yet. Use Save plan under See your full day on Today." and makes no request (with saving not set up: "Saving isn't set up on this site."). "Your data" holds the full save note and "Delete my saved data", which shows only when a session exists, answers were saved, or the session check failed. "Save my answers" keeps the note's first sentence beside it and is described by both.
   - `TodayLead`: the weather strip (the backdrop's words), verdict (`h2`), word tag, provenance line, stale banner (with "Reload forecast", which reloads and keeps focus on the H1) and caveat. While the forecast loads, `TodayLeadLoading` shows "Loading forecast…" in a card as tall as the within-limit card (rem minimum heights measured for Pune), so nothing below moves when it lands.
   - `CitySkyline` (the app backdrop, adaptive cityscape):
     - **Where:** one fixed, full-screen, `aria-hidden` backdrop behind every `/app/*` page. `AppShell` draws it once and keeps it mounted between pages; it takes no clicks or focus.
@@ -148,6 +148,8 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
     - One `h1` per step, with "Step N of 3"; focus moves to the heading.
     - Choices are native checkboxes and radios styled as 44 px chips (`has-checked:`, plus a tick, so never colour alone), in `fieldset`s.
     - "Remember on this device" is off by default.
+    - Step 1 (redesign P6, F4): the line "See today's air forecast for your place and one thing you could do." under the heading, and no place chip in the header (the step has its own search); steps 2 and 3 keep the chip. While saved answers load, a placeholder as tall as the step-1 panel holds the space.
+  - `Privacy` (redesign P6, F5): the app's navy header with only the logo (to `/`), "Back to AirAware" (to `/app`), an "In short" panel with three lines restating the page, and "Supabase (our database host)" explained once.
 
 ## 9. Interaction and motion
 
