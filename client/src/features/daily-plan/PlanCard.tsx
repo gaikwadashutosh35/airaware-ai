@@ -12,6 +12,7 @@ export function PlanCard({
   notice = false,
   openWhy = false,
   snapshot = false,
+  flat = false,
 }: {
   item: PlanItem;
   sources: DailyPlan['sources'];
@@ -21,6 +22,8 @@ export function PlanCard({
   openWhy?: boolean;
   // A saved plan: "that day", never "today".
   snapshot?: boolean;
+  // No box: a top rule only, for a card inside a surface that is already one.
+  flat?: boolean;
 }) {
   const { candidate, forYou, period, compact } = item;
   const Heading = (['h3', 'h4', 'h5'] as const)[level - 3];
@@ -29,7 +32,13 @@ export function PlanCard({
   );
 
   return (
-    <article className="flex flex-col gap-2 rounded-lg border border-rule p-4">
+    <article
+      className={
+        flat
+          ? 'flex flex-col gap-2 border-t border-rule pt-3'
+          : 'flex flex-col gap-2 rounded-lg border border-rule p-4'
+      }
+    >
       <Heading className="font-semibold">{candidate.title}</Heading>
       {compact ? (
         <p className="text-sm text-text-dark-muted">

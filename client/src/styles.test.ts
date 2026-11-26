@@ -92,6 +92,24 @@ describe('design system base', () => {
     );
   });
 
+  it('focus clears the pinned Ask box when it is pinned', () => {
+    expect(css).toMatch(
+      /@media \(min-height: 30\.2rem\) and \(width >= 48rem\)\s*{\s*html:has\(\[data-part='ask-composer'\]\[data-pinned\]\):not\(\s*:has\(\[data-part='ask-composer'\]:focus-within\)\s*\)\s*{\s*scroll-padding-bottom: calc\(14\.5rem \+ env\(safe-area-inset-bottom, 0px\)\);/,
+    );
+    expect(css).toMatch(
+      /@media \(min-height: 30\.2rem\) and \(width < 48rem\)\s*{\s*html:has\(\[data-part='ask-composer'\]\):not\(\s*:has\(\[data-part='ask-composer'\]:focus-within\)\s*\)\s*{\s*scroll-padding-bottom: calc\(18\.5rem \+ env\(safe-area-inset-bottom, 0px\)\);/,
+    );
+  });
+
+  it('the Ask box shows its flat bottom only while stuck (scroll-state)', () => {
+    expect(css).toMatch(
+      /\[data-part='ask-composer'\]\s*{\s*container: ask-composer \/ scroll-state;\s*}/,
+    );
+    expect(css).toMatch(
+      /@container ask-composer scroll-state\(stuck: bottom\)\s*{\s*\[data-part='ask-composer-panel'\]\s*{\s*border-bottom-left-radius: 0;\s*border-bottom-right-radius: 0;\s*border-bottom-color: transparent;/,
+    );
+  });
+
   it('the 404 page uses only the design tokens and no script', () => {
     const page = readFileSync('public/404.html', 'utf8');
     expect(page).not.toMatch(/<script/i);
@@ -113,7 +131,7 @@ describe('design system base', () => {
     // The tap highlight itself is Tailwind preflight's, not ours.
     expect(css).not.toContain('-webkit-tap-highlight-color');
     expect(css).toMatch(
-      /a,\s*button,\s*summary,\s*input,\s*select,\s*label\s*{[^}]*touch-action: manipulation;/,
+      /a,\s*button,\s*summary,\s*input,\s*textarea,\s*select,\s*label\s*{[^}]*touch-action: manipulation;/,
     );
   });
 

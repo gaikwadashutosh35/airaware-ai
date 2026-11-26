@@ -88,11 +88,13 @@ const VEIL: Record<SceneAir, string> = {
 const paths = (ds: string[]) => ds.map((d, i) => <path key={i} d={d} />);
 
 // The fixed full-screen backdrop and its layers (backdrop design §5.1). The
-// city band never takes over a fifth of the screen, and sits above the phone
-// bar (56 px plus the safe area) below md. Under 30.2rem tall (a phone held
-// sideways, or text enlarged: rem follows the browser's own font size, so
-// 24 px text hides it on a 640 px phone, and 28 px text on an 844 px one,
-// the binding case: 844 / 28 = 30.14rem) a
+// city band is up to a third of the screen on phones and up to 40 % from sm
+// up, and from md up the city is drawn 1.74x wider than the screen, centred
+// and clipped by the root, so the buildings are bigger. It sits above the
+// phone bar (56 px plus the safe area) below md. Under 33.3rem tall (a phone
+// held sideways, or text enlarged: rem follows the browser's own font size, so
+// 28 px text hides it on a 932 px phone, the binding case: 932 / 28 =
+// 33.29rem, where the Welcome title still reached the taller band) a
 // wrapped title could reach the band, so the city hides and the sky alone
 // carries the look. In Windows High Contrast (forced colours) the
 // whole backdrop steps aside, so the words sit on the system background.
@@ -100,7 +102,7 @@ const ROOT =
   'pointer-events-none fixed inset-0 -z-10 overflow-hidden forced-colors:hidden';
 const FILL = 'absolute inset-0 size-full';
 const CITY =
-  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] h-[min(8rem,20vh)] w-full sm:h-[min(11rem,20vh)] md:bottom-0 [@media(max-height:30.2rem)]:hidden';
+  'absolute inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] h-[min(16rem,32vh)] w-full sm:h-[min(24rem,40vh)] md:inset-x-auto md:bottom-0 md:left-1/2 md:w-[174%] md:-translate-x-1/2 [@media(max-height:33.3rem)]:hidden';
 
 // The city's rows share one drawing box, stacked as layers so the veils
 // can sit between them as HTML. They fade in from the top of the

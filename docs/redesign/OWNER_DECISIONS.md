@@ -149,6 +149,7 @@ Each recommendation follows the same principles:
 | H2 | Panel radius 12 px | **Keep 8 px** as shipped | A visual preference with test churn; not a finding |
 | H3 | Arbitrary type sizes | **Use Tailwind steps only** (verdict `text-3xl` on all widths) | No new scale |
 | H4 | The backgrounds in `AirAware_Cityscape_Background_Assets/` (decided 24 Nov 2026) | **Decided: art direction only.** No PNG is shipped. The existing SVG backdrop's three air looks are tuned toward the three named images, with existing tokens only (`color-mix`): a crisper, slightly cyan "within" sky (more `secondary`, a little `primary`); a warmer, hazier "above" (`rule` with a touch of `warning`, the haze veil kept); a cool neutral "unknown" (`rule` with a little `secondary`). The city moves from dark silhouettes toward a lighter, tonal city in the sky's hue, with the near row darkest for depth; this replaces H1's opacity tweak. The final mix values are set in P8 against before/after screenshots and the existing title-contrast test (4.5:1 on every sky stop). | Keeps the weather and day/night logic (sun only on a known day, clouds and rain from data), the tiny SVG and the approved stale rule (last look plus "Not current"). The images' painted sun and clouds, 16:9 crop and cyan outside the tokens are why they aren't shipped. The three ID-named concept boards stay reference only: they contain invented classes ("Moderate", "Poor") and claims ("Better conditions today", "Clearer air"). Before anything from the folder is committed, the owner confirms where the original image came from and that it may be published |
+| H5 | Big city (owner, 26 Nov) | **Decided:** band `min(16rem,32vh)` on phones and `min(24rem,40vh)` from sm up; from md up the city is drawn 1.74x wider, centred, so each building is bigger. The city's hide threshold rises from 30.2rem to 33.3rem tall (the taller band reached Welcome titles at 28 px text on 932 px phones: 932 / 28 = 33.29rem). The question box's own 30.2rem pin is unchanged. | Supersedes the backdrop design's "never takes over a fifth of the screen" (`docs/superpowers/specs/2026-11-20-cityscape-backdrop-design.md` §5.1) and H1's "height unchanged". The owner found the buildings hard to see on phones and small on desktop |
 
 ## I. Process and environment
 
@@ -159,6 +160,35 @@ Each recommendation follows the same principles:
 | I3 | F-42: live tests and the shared Supabase project | **One approved live `journey.spec.ts` run in P11**; no new Supabase project | No new service |
 | I4 | P10: removing the html/body `overflow-x: clip` | **Defer** (optional cleanup, risk of sideways-scroll regressions) | Not needed for the findings |
 | I5 | Push | **Unchanged rule**: one push at the end, on your word | About 15 Netlify credits per push |
+
+## J. Ask chat (26 Nov 2026)
+
+Approved by the owner on 26 Nov 2026 ("Approve as recommended"): D-1 to D-8 of `docs/redesign/ASK_CHAT_PHASE1.md` section 4, here as J1 to J8. Built, not committed.
+
+| ID | Decision | Answer | What it replaces |
+|---|---|---|---|
+| J1 | Where the question box sits | **Pinned** at the bottom of the screen, after the thread. It is pinned only on screens at least 30.2rem tall (the question box's own threshold; it was also the city's until H5 raised the city's to 33.3rem); below that it sits in the page after the thread | AK-02 (the box before the chips and thread) and the AK-04 limit (now the box's top, not the bar) |
+| J2 | Starter prompts | **Keep** the approved set: 6 topic chips, 3 starters, 2 behind "More questions"; no new copy | Nothing (D1 stands) |
+| J3 | Welcome heading and supporting line | **Keep** "Ask AirAware" and the approved intro (A12) | Nothing (A12 and D3 stand) |
+| J4 | Placeholder "Ask anything about your air…" | **None** | Nothing |
+| J5 | Disclosure under the box | **None**: every answer already carries the safety note | Nothing |
+| J6 | Answer look | **One solid surface** for the whole thread, a rule line between exchanges, no panel per answer; cards flat on Ask only (Today, My Home and Landing unchanged). "Open-Meteo" links to the answer's real `sourceUrl`; a closed "Sources and limitations" (Today's label) lists the forecast's limitations. "Model forecast", the time and "Not current" stay visible | DESIGN.md "each answer is a solid panel" (P4) |
+| J7 | New chat, copy, feedback, history | **None** in this pass | Nothing |
+| J8 | Question box behaviour | **Yes:** a textarea that grows to about 4 lines, then scrolls; Enter sends and Shift+Enter adds a line; Send disabled when empty or thinking; a failed question comes back to the box. Label and 200 characters kept | The Ask.test.tsx check that Send is enabled on an empty box |
+
+**Rulings during the build (controller, 26 Nov 2026):**
+
+| ID | Decision | Answer |
+|---|---|---|
+| J9 | Where the pinned box sits | **Flush:** on phones on the 3.5rem bottom bar, from md up at the window's bottom edge; no rounded bottom corners or bottom border **while it is stuck** (26 Nov: a scroll-state query on `data-part="ask-composer-panel"`; at the page end, or in a browser without scroll-state, it is a rounded card), so it reads as a tray. This replaces the plan's 4rem and `bottom-4` values: with a gap, thread text showed beneath the box (seen at 1280x720). Cost if wrong: a flatter look; one CSS rule and the panel div |
+| J10 | Scroll padding under the pinned box | **18.5rem** on phones and **14.5rem** from md up (26 Nov, after the credit line: form 230 px, plus the 56 px bar = 286; desktop 222) (desktop was 12rem, raised after the form measured 200.98 px against 192) |
+| J11 | "Sources and limitations" | **Closed** at first, on topic answers that have a forecast. It holds only the limitations; "Model forecast" and "Not current" are never inside it |
+| J12 | Enter on phones | **Enter sends** on phones too (as before); Shift+Enter adds a line. Enter during IME composition does nothing |
+| J13 | AK-18 | Two cases: 390x500 (pinned) and 390x480 (not pinned, as 480 px is under the question box's own 30.2rem = 483.2 px; the city's threshold is 33.3rem since H5); viewport emulation only, not a real keyboard |
+| J14 | Footer as a card (owner, 26 Nov) | The app footer is a rounded card aligned with the content; the sky shows around it; text stays on an opaque surface. |
+| J15 | Ask column (owner, 26 Nov) | The whole Ask column (title block, topics, conversation, box) is centred inside main with `mx-auto`; text stays left-aligned. Replaces the left-aligned column. |
+| J16 | Credit on Ask (owner, 26 Nov) | On Ask with a place, a one-line credit inside the question box (Open-Meteo, CC BY 4.0, CAMS, Privacy) replaces the footer card; the sky note is dropped on Ask. Other pages keep the footer card, and Ask with no place keeps it too. Replaces J14 for Ask with a place. |
+| J17 | Pin after the first question; phones from the start (owner, 26 Nov) | Phones (below 48rem) pin the box from the start; from md up the box pins after the first question; the Ask column's gap is 16 px from md up so the empty-state box fits at 1280x720 (owner, 26 Nov). Replaces J1 pinned from the start on md and up. Before the trim the unpinned box measured below the first screen at all three sizes (bottom 862.6 against 787, 914.6 against 583, 726.6 against 720). |
 
 ## Not needed with Direction A
 

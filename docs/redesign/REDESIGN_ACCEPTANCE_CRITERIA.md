@@ -89,16 +89,36 @@ Order (brief §3): header → greeting + H1 → verdict card (weather row, verdi
 
 | ID | Check | How measured | Before | Pass threshold |
 |---|---|---|---|---|
-| AK-01 | The free-text box is on the first screen | E2E: input `boundingBox()` against the bar (phones) or the viewport (desktop) | y 878 at 390x844; y 733 at 1280x720 (F-20, `prod-ask-default-390x844-first.jpg`) | Gate: input bottom ≤ bar top at 390x844 and 320x640; ≤ 720 at 1280x720. |
-| AK-02 | Order: H1, one intro line, text box, topic chips, starters, thread | UNIT (`Ask.test.tsx`; replaces `:219` "the thread reads oldest first, then the question box") | Box after the thread (`Ask.tsx:140-173`) | Gate: DOM order as listed, plus the greeting after the box if the owner keeps it (INFORMATION_ARCHITECTURE.md §6.3). |
+| AK-01 | Where the free-text box sits on the first screen (pinned from the start on phones; in the page from md up) | E2E: input `boundingBox()` against the bar (phones) or the viewport (desktop) | y 878 at 390x844; y 733 at 1280x720 (F-20, `prod-ask-default-390x844-first.jpg`) | Asserted again at 390x844, 320x640 and 1280x720 (J17, 26 Nov): phones pass because the box is pinned; 1280x720 passes because the Ask column's gap is 16 px from md up. |
+| AK-02 | Order: H1, intro, Using line, topic chips, starters, thread, question box (changed 26 Nov, ruling J1) | UNIT (`Ask.test.tsx`; replaces `:219` "the thread reads oldest first, then the question box") | Box after the thread (`Ask.tsx:140-173`) | Gate: DOM order as listed; there is no greeting. |
 | AK-03 | Starters: 3 visible, the rest behind "More questions" | UNIT | 5 starters, all visible (`client/src/features/ask/ask.ts:26-37`) | Gate if the owner confirms the reading in the open question (topic chips keep answering at once). |
-| AK-04 | After a starter tap, the answer is visible without scrolling | E2E at 320x640, 390x844, 1280x720 with `rulesAskFixture`: once the answer is ready, the new `article.ask-answer` top is ≥ 0 (inside the viewport) and the first answer paragraph's top < bar top (phones) or < viewport height (desktop) | Only the question bubble shows at 320 and 1280 (F-04, `local-ask-answer-320x640-first.jpg`) | Gate at all three sizes. |
+| AK-04 | After a starter tap, the answer's first line starts above the pinned question box | E2E at 320x640, 390x844, 1280x720 with `rulesAskFixture`: the new `article.ask-answer` top is ≥ 0 and the first answer paragraph's top is above the limit (a smaller y), the smaller of the old limit (bar top on phones, viewport height on desktop) and the box's top when it is sticky (changed 26 Nov, ruling J1) | Only the question bubble shows at 320 and 1280 (F-04, `local-ask-answer-320x640-first.jpg`) | Gate at all three sizes. Measured 26 Nov: paragraph top 122 against limit 463.4 (320x640), 177 against 667.4 (390x844), 105 against 591.4 (1280x720). |
 | AK-05 | That scroll is instant under reduced motion, and focus does not cause a second jump | E2E with `reducedMotion: 'reduce'`: `scrollY` reaches its final value in the same frame; the heading is focused with `preventScroll` | Focus without `preventScroll` (`AskEntry.tsx:192-194`) | Gate. |
 | AK-06 | Topic chips still answer at once | E2E (`ask.spec.ts:49-59`), UNIT (`Ask.test.tsx:187`) | Answer at once | Gate: unchanged, unless the owner rules otherwise. |
 | AK-07 | Header line wording | UNIT (`Ask.test.tsx:144,162`) | "… · 0 of 10 answers · Edit" (`Ask.tsx:86`) | **If F-15 approved:** "… · 0 of 10 household questions answered · Edit". |
 | AK-08 | The header time is marked when over 60 minutes old | UNIT with `updatedAt` 61 minutes before `now` | No mark (F-33) | **Proposal, not in brief §3 (F-33 is a register finding); if approved:** "· Not current" appended. |
 | AK-09 | The answer's "Based on" line claims a forecast only when one was used | UNIT (`AskEntry.test.tsx:81,119-122,133`) | Always "· Model forecast", even with `forecast: null` (F-34, `AskEntry.tsx:82-88`) | Gate: with `forecast: null`, no "Model forecast"; with a forecast, "· Model forecast" plus the provider wording the owner approves (F-34) and the time word per F-32. |
 | AK-10 | At 200 % text, the Ask input keeps a usable width | E2E at 390x844 and 1280x720 with `html { font-size: 200% }` | About 3–4 characters visible (F-12, `local-today-text-200-390x844-full.jpg`) | **Proposal, not in brief §3 (F-12 is a register finding); if approved:** input width ≥ 60 % of its form's content width (Send may wrap below). Applies to the Ask page form and the Today Ask box. |
+
+### 2.2a Ask chat checks (26 Nov 2026)
+
+Named as in `e2e/firstscreen.spec.ts`. All stub every `/api` route.
+
+| ID | Check |
+|---|---|
+| AK-11 | The question box is `sticky` before the first question at 320x640 and 390x844 and `static` at 768x1024 and 1280x720; after it, `position: sticky` and inside the screen (above the bar on phones, inside the viewport on desktop) at 320x640, 390x844, 768x1024 and 1280x720 |
+| AK-12 | Every Tab stop inside the thread sits above the box's top |
+| AK-13 | The box grows to its limit (about 123 px of text) and then scrolls inside itself; the form plus the bar fits the scroll padding (18.5rem on phones, 14.5rem from md up) |
+| AK-14 | Enter sends one question; Shift+Enter adds a line and sends nothing |
+| AK-15 | A double click on Send makes one request |
+| AK-16 | With the browser's default text at 32 px (390x844 and 1280x720) the box is not pinned (`position: static`) and nothing passes the screen edge; at 768x1024 it stays pinned (30.2rem at 32 px is 966 px), nothing passes the edge, and the box plus the bar take at most half the screen |
+| AK-17 | 200 unbroken characters stay inside the screen at 320x640 |
+| AK-18 | With the viewport shrunk as a keyboard would (emulation only, not a real keyboard), the focused box is fully inside the screen: 390x500 pinned after one question (sticky), 390x480 not pinned (static) |
+| AK-19 | With the box stuck over an older answer, Tab into it and typing 10 characters leave `scrollY` unchanged (within 1 px), at 390x844 and 1280x720 |
+| AK-20 | In a stale answer the "Not current" banner's top is above the box's top, at 320x640 and 390x844 |
+| AK-21 | The box's flat bottom shows only while it is stuck (scroll-state supported), and at the page end its bottom corners are rounded with a visible border, at 390x844 and 1280x720 |
+| AK-22 | The Ask column is centred: the topics panel's centre is within 2 px of main's content centre at 1280x720 and 1896x828 (J15) |
+| AK-23 | On Ask with a place, the `ask-credit` line is visible with both links at 320x640 and 1280x720, and no visible element holds "Air-quality forecasts from" (J16) |
 
 ### 2.3 My Home (`/app/home?place=…`)
 

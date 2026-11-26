@@ -2,9 +2,12 @@
 // logo, the Tab order, enlarged text and the unknown-page redirect. Every page
 // uses the stub, so no request reaches the AI and nothing is saved.
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { rulesAskFixture } from '../client/src/test/askFixtures.ts';
+import {
+  aiAskFixture,
+  rulesAskFixture,
+} from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
-import { at, stub, type Level } from './layout.ts';
+import { at, pastTheEdge, stub, type Level } from './layout.ts';
 import { guideSet } from '../server/src/services/recommendations/guides.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
 import { planAt, PUNE } from './routes.ts';
@@ -615,13 +618,14 @@ async function ask(page: Page, width: number, height: number) {
 const questionInput = (page: Page) =>
   page.getByRole('textbox', { name: 'Ask about your air, home or day' });
 
-// AK-01: the question box is on the first screen.
+// AK-01: the question box is on the first screen. Phones pin it from the
+// start; from md up the Ask column's smaller gap makes it fit (J17, 26 Nov).
 for (const [width, height] of [
   [390, 844],
   [320, 640],
   [1280, 720],
 ] as const) {
-  test(`AK-01: the question box is above the fold at ${width}x${height}`, async ({
+  test(`AK-01: the question box position on the first screen at ${width}x${height}`, async ({
     page,
   }) => {
     await ask(page, width, height);
@@ -630,7 +634,7 @@ for (const [width, height] of [
     console.log(
       `AK-01 ${width}x${height}: input bottom ${bottom}, limit ${limit}, margin ${limit - bottom}`,
     );
-    expect(bottom).toBeLessThanOrEqual(limit);
+    expect(bottom).toBeLessThanOrEqual(limit + 0.5);
   });
 }
 
@@ -661,9 +665,15 @@ for (const [width, height] of [
     );
     const top = (await article.boundingBox())!.y;
     const paragraph = (await article.locator('p').first().boundingBox())!.y;
-    const limit = width < 768 ? await barTop(page) : height;
+    const form = page.locator('[data-part="ask-composer"]');
+    const pinned = await form.evaluate(
+      (el) => getComputedStyle(el).position === 'sticky',
+    );
+    const composerTop = (await form.boundingBox())!.y;
+    const old = width < 768 ? await barTop(page) : height;
+    const limit = pinned ? Math.min(old, composerTop) : old;
     console.log(
-      `AK-04 ${width}x${height}: article top ${top}, first paragraph top ${paragraph}, limit ${limit}, scrollY ${scrolls.join(',')}`,
+      `AK-04 ${width}x${height}: article top ${top}, first paragraph top ${paragraph}, limit ${limit} (old ${old}, composer top ${composerTop}, pinned ${pinned}), scrollY ${scrolls.join(',')}`,
     );
     // scrollIntoView rounds to a whole pixel: allow a subpixel.
     expect(top).toBeGreaterThanOrEqual(-0.5);
@@ -676,6 +686,414 @@ for (const [width, height] of [
           document.querySelector('article.ask-answer:last-of-type h2'),
       ),
     ).toBe(true);
+  });
+}
+
+// AK-11 to AK-18: the pinned, auto-growing question box.
+const AC_SIZES = [
+  [320, 640],
+  [390, 844],
+  [768, 1024],
+  [1280, 720],
+] as const;
+const composer = (page: Page) => page.locator('[data-part="ask-composer"]');
+// Phones pin the box from the start; from md up it pins after the first
+// question (owner ruling J17).
+async function askFirst(page: Page) {
+  await page
+    .getByRole('button', { name: 'Can I go for a morning walk today?' })
+    .click();
+  await expect(
+    page.locator('article.ask-answer').last().getByText('Made by our rules'),
+  ).toBeVisible();
+}
+const answerPosts = (page: Page) => {
+  const posts: string[] = [];
+  page.on('request', (r) => {
+    if (r.method() === 'POST' && r.url().includes('/api/v1/assistant/answer'))
+      posts.push(r.url());
+  });
+  return posts;
+};
+
+for (const [width, height] of AC_SIZES) {
+  test(`AK-11: the box is pinned and inside the screen: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    expect(
+      await composer(page).evaluate((el) => getComputedStyle(el).position),
+    ).toBe(width < 768 ? 'sticky' : 'static');
+    await askFirst(page);
+    const box = (await questionInput(page).boundingBox())!;
+    const limit = width < 768 ? await barTop(page) : height;
+    const position = await composer(page).evaluate(
+      (el) => getComputedStyle(el).position,
+    );
+    console.log(
+      `AK-11 ${width}x${height}: box top ${box.y}, bottom ${box.y + box.height}, limit ${limit}, position ${position}`,
+    );
+    expect(position).toBe('sticky');
+    expect(box.y).toBeGreaterThan(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(limit + 0.5);
+  });
+
+  test(`AK-12: a focused answer element is not hidden by the box: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    await page
+      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .click();
+    const article = page.locator('article.ask-answer').last();
+    await expect(article.getByText('Made by our rules')).toBeVisible();
+    await article
+      .locator('h2')
+      .evaluate((el) => (el as HTMLElement).focus({ preventScroll: true }));
+    let checked = 0;
+    for (let i = 0; i < 15; i++) {
+      await page.keyboard.press('Tab');
+      const m = await page.evaluate(() => {
+        const el = document.activeElement!;
+        const inThread = !!el.closest('[data-part="ask-thread"]');
+        const form = document.querySelector('[data-part="ask-composer"]')!;
+        return {
+          inThread,
+          top: el.getBoundingClientRect().top,
+          composerTop: form.getBoundingClientRect().top,
+          name: (el.textContent ?? '').trim().slice(0, 20),
+        };
+      });
+      if (!m.inThread) continue;
+      checked++;
+      console.log(
+        `AK-12 ${width}x${height} tab ${i + 1} "${m.name}": top ${m.top}, composer top ${m.composerTop}`,
+      );
+      expect(m.top).toBeLessThan(m.composerTop);
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  test(`AK-13: the box grows to a limit and then scrolls: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    // 100 short lines are 200 characters (the box's limit) and reach the cap
+    // at every width; 200 words of text would not on a wide screen.
+    await questionInput(page).fill('w\n'.repeat(100));
+    const m = await questionInput(page).evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        height: el.getBoundingClientRect().height,
+        max: parseFloat(s.maxHeight),
+        scroll: el.scrollHeight,
+        client: el.clientHeight,
+        overflowY: s.overflowY,
+      };
+    });
+    const formHeight = (await composer(page).boundingBox())!.height;
+    console.log(
+      `AK-13 ${width}x${height}: tallest box ${m.height}, max ${m.max}, scrollHeight ${m.scroll}/${m.client}, form height ${formHeight}, form + bar ${formHeight + 56}`,
+    );
+    expect(m.height).toBeGreaterThan(48);
+    expect(m.height).toBeLessThanOrEqual(m.max + 0.5);
+    expect(m.scroll).toBeGreaterThan(m.client);
+    expect(m.overflowY).toBe('auto');
+    // The scroll padding in index.css: 18.5rem on phones (the bar is 3.5rem), 14.5rem on desktop.
+    expect(width < 768 ? formHeight + 56 : formHeight).toBeLessThanOrEqual(
+      width < 768 ? 296 : 232,
+    );
+  });
+
+  test(`AK-14: Enter sends, Shift+Enter adds a line: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const posts = answerPosts(page);
+    const input = questionInput(page);
+    await input.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    const empty = posts.length;
+    await page.keyboard.type('first');
+    await page.keyboard.press('Shift+Enter');
+    await page.keyboard.type('second');
+    await page.waitForTimeout(300);
+    const afterShift = posts.length;
+    const value = await input.inputValue();
+    await page.keyboard.press('Enter');
+    await expect.poll(() => posts.length).toBe(1);
+    console.log(
+      `AK-14 ${width}x${height}: posts after empty Enter ${empty}, after Shift+Enter ${afterShift}, after Enter ${posts.length}`,
+    );
+    expect(empty).toBe(0);
+    expect(afterShift).toBe(0);
+    expect(value).toContain('\n');
+  });
+
+  test(`AK-15: a double click on Send posts once: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const posts = answerPosts(page);
+    await questionInput(page).fill('Is it a good day to dry clothes outside?');
+    await page.getByRole('button', { name: 'Send' }).dblclick();
+    await page.waitForTimeout(500);
+    console.log(`AK-15 ${width}x${height}: ${posts.length} POST(s)`);
+    expect(posts).toHaveLength(1);
+  });
+}
+
+// Media queries in rem follow the browser's default font size, so the large
+// text is set through CDP, not a style tag.
+for (const [width, height] of [
+  [390, 844],
+  [1280, 720],
+] as const) {
+  test(`AK-16: at 32 px browser text the box is not pinned: ${width}x${height}`, async ({
+    page,
+  }) => {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Page.setFontSizes', {
+      fontSizes: { standard: 32, fixed: 26 },
+    });
+    await ask(page, width, height);
+    const position = await composer(page).evaluate(
+      (el) => getComputedStyle(el).position,
+    );
+    const edge = await pastTheEdge(page);
+    console.log(
+      `AK-16 ${width}x${height}: position ${position}, past the edge ${edge.length}`,
+    );
+    expect(position).toBe('static');
+    expect(edge).toEqual([]);
+  });
+}
+
+test('AK-17: 200 unbroken characters stay inside the screen at 320x640', async ({
+  page,
+}) => {
+  await ask(page, 320, 640);
+  await questionInput(page).fill('a'.repeat(200));
+  const edge = await pastTheEdge(page);
+  console.log(`AK-17 320x640: past the edge ${edge.join('; ') || 'none'}`);
+  expect(edge).toEqual([]);
+});
+
+// AK-16 at the tablet size: 30.2rem at 32 px is 966 px, so the box stays
+// pinned. It must still not overflow, and with the phone bar it may take at
+// most half the screen.
+test('AK-16: at 32 px browser text on a tablet the box and bar take at most half the screen: 768x1024', async ({
+  page,
+}) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Page.setFontSizes', {
+    fontSizes: { standard: 32, fixed: 26 },
+  });
+  await ask(page, 768, 1024);
+  await askFirst(page);
+  const edge = await pastTheEdge(page);
+  const composerTop = (await composer(page).boundingBox())!.y;
+  const position = await composer(page).evaluate(
+    (el) => getComputedStyle(el).position,
+  );
+  const bar = page.locator('nav[aria-label="Main"]');
+  const limit = (await bar.isVisible()) ? await barTop(page) : 1024;
+  console.log(
+    `AK-16 768x1024: position ${position}, composer top ${composerTop}, limit ${limit}, taken ${limit - composerTop} of 1024 (half is 512), past the edge ${edge.length}`,
+  );
+  expect(edge).toEqual([]);
+  expect(limit - composerTop).toBeLessThanOrEqual(0.5 * 1024);
+});
+
+// AK-19: focusing or typing in the pinned box never moves a page that is being
+// read (the owner's spec, section 8).
+for (const [width, height] of [
+  [390, 844],
+  [1280, 720],
+] as const) {
+  test(`AK-19: focusing and typing in the box leave the scroll alone: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    for (const label of [
+      'Outdoor activities',
+      'Windows and ventilation',
+      'Indoor air',
+    ]) {
+      const before = await page.locator('article.ask-answer').count();
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await expect(page.locator('article.ask-answer')).toHaveCount(before + 1);
+      await expect(
+        page
+          .locator('article.ask-answer')
+          .last()
+          .getByText('Made by our rules'),
+      ).toBeVisible();
+    }
+    await page
+      .locator('article.ask-answer')
+      .first()
+      .evaluate((el) =>
+        window.scrollTo(0, el.getBoundingClientRect().top + scrollY),
+      );
+    const position = await composer(page).evaluate(
+      (el) => getComputedStyle(el).position,
+    );
+    expect(position).toBe('sticky');
+    const y = () => page.evaluate(() => window.scrollY);
+    const start = await y();
+    // The control just before the box in the page, then Tab into the box.
+    await page.evaluate(() => {
+      const thread = document.querySelector('[data-part="ask-thread"]')!;
+      const last = [
+        ...thread.querySelectorAll<HTMLElement>('a, button, summary'),
+      ].at(-1)!;
+      last.focus({ preventScroll: true });
+    });
+    await page.keyboard.press('Tab');
+    expect(
+      await page.evaluate(
+        () => document.activeElement === document.querySelector('textarea'),
+      ),
+    ).toBe(true);
+    const afterTab = await y();
+    await questionInput(page).click();
+    await page.keyboard.type('0123456789');
+    const afterTyping = await y();
+    console.log(
+      `AK-19 ${width}x${height}: scrollY start ${start}, after Tab ${afterTab}, after typing ${afterTyping}`,
+    );
+    expect(Math.abs(afterTab - start)).toBeLessThanOrEqual(1);
+    expect(Math.abs(afterTyping - start)).toBeLessThanOrEqual(1);
+  });
+}
+
+// AK-21: the flat "tray" bottom shows only while the box is stuck; at the
+// page end it is a normal rounded card.
+for (const [width, height] of [
+  [390, 844],
+  [1280, 720],
+] as const) {
+  test(`AK-21: the box is flat only while stuck: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    for (const label of [
+      'Outdoor activities',
+      'Windows and ventilation',
+      'Indoor air',
+    ]) {
+      const before = await page.locator('article.ask-answer').count();
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await expect(page.locator('article.ask-answer')).toHaveCount(before + 1);
+      await expect(
+        page
+          .locator('article.ask-answer')
+          .last()
+          .getByText('Made by our rules'),
+      ).toBeVisible();
+    }
+    await page
+      .locator('article.ask-answer')
+      .first()
+      .evaluate((el) =>
+        window.scrollTo(0, el.getBoundingClientRect().top + scrollY),
+      );
+    const panel = page.locator('[data-part="ask-composer-panel"]');
+    // Scroll-state is updated while rendering: wait two frames before reading.
+    const read = () =>
+      panel.evaluate(
+        (el) =>
+          new Promise<{ radius: string; color: string }>((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                const s = getComputedStyle(el);
+                resolve({
+                  radius: s.borderBottomLeftRadius,
+                  color: s.borderBottomColor,
+                });
+              }),
+            ),
+          ),
+      );
+    const supported = await page.evaluate(() =>
+      CSS.supports('container-type', 'scroll-state'),
+    );
+    expect(
+      await composer(page).evaluate((el) => getComputedStyle(el).position),
+    ).toBe('sticky');
+    const stuck = await read();
+    await page.evaluate(() =>
+      window.scrollTo(0, document.documentElement.scrollHeight),
+    );
+    const end = await read();
+    console.log(
+      `AK-21 ${width}x${height}: scroll-state supported ${supported}; stuck radius ${stuck.radius} color ${stuck.color}; at the end radius ${end.radius} color ${end.color}`,
+    );
+    if (supported) expect(stuck.radius).toBe('0px');
+    else console.log('AK-21: scroll-state unsupported, stuck check skipped');
+    expect(parseFloat(end.radius)).toBeGreaterThan(0);
+    expect(end.color).not.toBe('rgba(0, 0, 0, 0)');
+  });
+}
+
+// AK-20: "Not current" stays next to the time and above the pinned box.
+for (const [width, height] of [
+  [320, 640],
+  [390, 844],
+] as const) {
+  test(`AK-20: a stale answer's "Not current" is above the box: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const stale = planAt(
+      aiAskFixture,
+      new Date(Date.now() - 2 * 60 * 60 * 1000),
+    );
+    await page.route('**/api/v1/assistant/answer', (route) =>
+      route.fulfill({ json: { data: stale } }),
+    );
+    await page
+      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .click();
+    const banner = page.locator(
+      'article.ask-answer [data-part="stale-banner"]',
+    );
+    await expect(banner).toBeVisible();
+    const bannerTop = (await banner.boundingBox())!.y;
+    const composerTop = (await composer(page).boundingBox())!.y;
+    console.log(
+      `AK-20 ${width}x${height}: banner top ${bannerTop}, composer top ${composerTop}`,
+    );
+    expect(bannerTop).toBeLessThan(composerTop);
+  });
+}
+
+// Emulation only: a viewport cut to 480 high stands in for a phone with its
+// keyboard open. It is not a real on-screen keyboard.
+// 500 is above the 30.2rem (483.2 px) pin threshold, 480 is below it.
+for (const [height, position] of [
+  [500, 'sticky'],
+  [480, 'static'],
+] as const) {
+  test(`AK-18: the focused box is fully inside a 390x${height} viewport, ${position} (emulation, not a real keyboard)`, async ({
+    page,
+  }) => {
+    await ask(page, 390, height);
+    await askFirst(page);
+    await questionInput(page).focus();
+    const box = (await questionInput(page).boundingBox())!;
+    const actual = await composer(page).evaluate(
+      (el) => getComputedStyle(el).position,
+    );
+    const limit = position === 'sticky' ? await barTop(page) : height;
+    console.log(
+      `AK-18 390x${height} (viewport emulation, not a real keyboard), ${position === 'sticky' ? 'pinned' : 'not pinned'}: position ${actual}, box top ${box.y}, bottom ${box.y + box.height}, limit ${limit}`,
+    );
+    expect(actual).toBe(position);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(limit + 0.5);
   });
 }
 
@@ -723,14 +1141,20 @@ for (const [width, height] of [
     page,
   }) => {
     await ask(page, width, height);
-    const tops = [
-      (await questionInput(page).boundingBox())!.y,
-      (await page.getByRole('button', { name: 'Send' }).boundingBox())!.y,
-    ];
+    // The auto-growing box is taller than Send, so "one row" now means Send
+    // lies inside the box's vertical span, to its right.
+    const input = (await questionInput(page).boundingBox())!;
+    const send = (await page
+      .getByRole('button', { name: 'Send' })
+      .boundingBox())!;
     console.log(
-      `AK-10 ${width}x${height}: input and Send tops ${tops.join(',')}`,
+      `AK-10 ${width}x${height}: input top ${input.y} bottom ${input.y + input.height} right ${input.x + input.width}, Send top ${send.y} bottom ${send.y + send.height} left ${send.x}`,
     );
-    expect(tops[0]).toBe(tops[1]);
+    expect(send.y).toBeGreaterThanOrEqual(input.y - 0.5);
+    expect(send.y + send.height).toBeLessThanOrEqual(
+      input.y + input.height + 0.5,
+    );
+    expect(send.x).toBeGreaterThanOrEqual(input.x + input.width - 0.5);
   });
 }
 
@@ -1428,5 +1852,61 @@ for (const [width, height] of [
         'main',
       );
     }
+  });
+}
+
+// AK-22: the Ask column is centred in main (owner ruling J15).
+for (const [width, height] of [
+  [1280, 720],
+  [1896, 828],
+] as const) {
+  test(`AK-22: the Ask column is centred: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const panel = page
+      .getByRole('button', { name: 'Outdoor activities', exact: true })
+      .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
+    const panelBox = (await panel.boundingBox())!;
+    const main = await page.locator('main').evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      return {
+        left: r.left + parseFloat(s.paddingLeft),
+        right: r.right - parseFloat(s.paddingRight),
+      };
+    });
+    const panelCentre = panelBox.x + panelBox.width / 2;
+    const mainCentre = (main.left + main.right) / 2;
+    console.log(
+      `AK-22 ${width}x${height}: panel centre ${panelCentre}, main content centre ${mainCentre}, difference ${Math.abs(panelCentre - mainCentre)}`,
+    );
+    expect(Math.abs(panelCentre - mainCentre)).toBeLessThanOrEqual(2);
+  });
+}
+
+// AK-23: on Ask with a place, the credit line is in the box and the footer
+// card is gone (owner ruling J16).
+for (const [width, height] of [
+  [320, 640],
+  [1280, 720],
+] as const) {
+  test(`AK-23: the credit line shows and the footer card does not: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await ask(page, width, height);
+    const credit = page.locator('[data-part="ask-credit"]');
+    await credit.scrollIntoViewIfNeeded();
+    await expect(credit).toBeVisible();
+    await expect(
+      credit.getByRole('link', { name: 'Open-Meteo.com' }),
+    ).toBeVisible();
+    await expect(credit.getByRole('link', { name: 'Privacy' })).toBeVisible();
+    await expect(
+      page.getByText('Air-quality forecasts from').locator('visible=true'),
+    ).toHaveCount(0);
+    console.log(
+      `AK-23 ${width}x${height}: credit text "${await credit.innerText()}"`,
+    );
   });
 }

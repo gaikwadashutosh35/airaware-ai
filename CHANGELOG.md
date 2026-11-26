@@ -195,6 +195,17 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Ask chat redesign (26 Nov; `docs/redesign/ASK_CHAT_PHASE1.md`, `docs/redesign/OWNER_DECISIONS.md` rows J1–J14; built, not committed):
+  - the question box moved below the conversation and is pinned at the bottom on screens at least 30.2rem tall, flush on the phone bar (at the window's bottom edge from md up); on shorter screens or very large text it sits in the page;
+  - the box is a textarea that grows to about 4 lines and then scrolls; Enter sends, Shift+Enter adds a line, and Enter while composing a word sends nothing; Send is disabled when the box is empty or a reply is pending; a failed question comes back to the box;
+  - the conversation is one solid surface with a rule line between exchanges; answers have no panel of their own and Ask's cards are flat (Today, My Home and Landing unchanged);
+  - "Open-Meteo" links to the answer's real source, and a closed "Sources and limitations" lists the same limitations as Today and sits after "Not current"; "Model forecast", the time and "Not current" stay visible;
+  - scroll padding under the pinned box is 18.5rem on phones and 14.5rem on desktop (dropped while the box has focus, so Tab or typing there never moves the page), so a focused element is never hidden; the Edit link, Skip and Try again focus without scrolling;
+  - the footer on app pages is a rounded card on the sky (J14), and the question box shows its flat bottom only while stuck (scroll-state query, AK-21); other browsers keep a rounded card;
+  - 26 Nov, owner-approved: the Ask column is centred (J15); a one-line credit in the question box replaces the footer card on Ask with a place (J16); phones pin the box from the start and from md up it pins after the first question, with a 16 px column gap from md up so it fits at 1280x720 (J17); scroll padding is now 18.5rem on phones and 14.5rem on desktop;
+  - the e2e checks are AK-11 to AK-23 in `e2e/firstscreen.spec.ts`;
+  - big city (owner, 26 Nov, H5): the backdrop city band is `min(16rem,32vh)` on phones and `min(24rem,40vh)` from sm up, drawn 1.74x wider from md up, with a matching page-end space; it hides under 33.3rem tall (was 30.2rem); new e2e check BD-H5.
+  - no new wording, and no server, contract or dependency change. Stubbed e2e on 26 Nov: firstscreen 260 passed (re-run 26 Nov after phones were pinned from the start and the md gap cut to 16 px; AK-01 asserted again); nine stubbed specs 599 passed, 83 skipped, 0 failed (re-run 26 Nov after the big city, H5); the software keyboard still needs a real phone.
 - Redesign P11 polish (26 Nov; six items from the P11 checklist, approved by the owner):
   - the app, Landing and Privacy pad the left and right safe areas on the header row, the page and the footer (ruling C7), so nothing sits under a notch on a phone held sideways; with no notch the padding is unchanged;
   - enabled buttons show the pointer cursor again (Tailwind v4 had dropped it);

@@ -509,31 +509,35 @@ function AppShell() {
           )}
         </div>
       </main>
-      <footer className="border-t border-rule bg-surface-light">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 text-sm text-text-dark-muted sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
-          {shown && place && (
-            <p>
-              {backdropNote(
-                place.label,
-                shown.airCheck.level,
-                isOlderThan(shown.retrievedAt, now, 60),
+      {!(page === 'ask' && place !== null) && (
+        <footer>
+          <div className="mx-auto max-w-6xl pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
+            <div className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 text-sm text-text-dark-muted">
+              {shown && place && (
+                <p>
+                  {backdropNote(
+                    place.label,
+                    shown.airCheck.level,
+                    isOlderThan(shown.retrievedAt, now, 60),
+                  )}
+                </p>
               )}
-            </p>
-          )}
-          <Attribution />
-          <a
-            href="/privacy"
-            className="inline-flex min-h-11 items-center self-start underline"
-          >
-            Privacy
-          </a>
-        </div>
-      </footer>
+              <Attribution />
+              <a
+                href="/privacy"
+                className="inline-flex min-h-11 items-center self-start underline"
+              >
+                Privacy
+              </a>
+            </div>
+          </div>
+        </footer>
+      )}
       {/* Space as tall as the city band (plus the phone bar below md), so
           every page ends on the whole city with no text resting on it. */}
       <div
         aria-hidden="true"
-        className="h-[calc(min(8rem,20vh)+3.5rem+env(safe-area-inset-bottom,0px))] sm:h-[calc(min(11rem,20vh)+3.5rem+env(safe-area-inset-bottom,0px))] md:h-[min(11rem,20vh)]"
+        className="h-[calc(min(16rem,32vh)+3.5rem+env(safe-area-inset-bottom,0px))] sm:h-[calc(min(24rem,40vh)+3.5rem+env(safe-area-inset-bottom,0px))] md:h-[min(24rem,40vh)]"
       />
     </>
   );

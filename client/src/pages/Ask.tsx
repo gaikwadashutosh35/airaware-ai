@@ -20,8 +20,10 @@ import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
 import { isOlderThan } from '../lib/clock.ts';
 import { follow } from '../lib/navigation.ts';
 
-// Ask AirAware as a guided chat (spec 2026-11-21; order from redesign P4): the
-// question box, the topics and starters, then the conversation oldest first.
+// Ask AirAware as a guided chat (spec 2026-11-21): the topics and starters,
+// the conversation oldest first in one surface, then the question box, pinned
+// to the bottom on screens tall enough: on phones from the start, from md up
+// after the first question.
 // Answers come from the server's rules and guide cards. A typed question goes
 // only into the POST body: no form name, address or storage.
 export function Ask({
@@ -49,6 +51,9 @@ export function Ask({
   onLocate: (place: Place) => void;
 }) {
   const [question, setQuestion] = useState('');
+  // The last text sent from the box, and the text put back after a failure.
+  const [sent, setSent] = useState<string | null>(null);
+  const [refilled, setRefilled] = useState<string | null>(null);
   const inputId = useId();
   const latest = ask.entries.at(-1);
   // Answers already here when the page opens keep focus where it is; a
@@ -57,6 +62,20 @@ export function Ask({
   const [openedWith] = useState(
     latest?.status === 'thinking' ? undefined : latest?.id,
   );
+  // A failed send hands its text back (only to an empty box); the retry that
+  // works empties it again. Adjusted while rendering, not in an effect.
+  const asked = latest?.request && 'question' in latest.request;
+  const askedText = asked
+    ? (latest.request as { question: string }).question
+    : null;
+  if (sent !== null && latest?.status === 'error' && askedText === sent) {
+    if (!question) setQuestion(sent);
+    setSent(null);
+    setRefilled(sent);
+  } else if (refilled !== null && latest?.status === 'ready') {
+    if (askedText === refilled && question === refilled) setQuestion('');
+    setRefilled(null);
+  }
   const pending = pendingFollowUp(ask.entries, context, ask.skipped);
 
   const status = !latest
@@ -79,7 +98,7 @@ export function Ask({
     ask.send({ question: starter }, starter);
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 md:gap-4">
       <div data-part="title-block" className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">
           {ASK_COPY.heading}
@@ -104,7 +123,9 @@ export function Ask({
               onClick={(event) => {
                 // The link leaves with the page: focus the page it opened.
                 if (follow(event, '/app/profile')) {
-                  document.getElementById('main')?.focus();
+                  document
+                    .getElementById('main')
+                    ?.focus({ preventScroll: true });
                 }
               }}
               aria-label="Edit your answers in My Profile"
@@ -124,40 +145,6 @@ export function Ask({
         </div>
       ) : (
         <>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              const typed = question.trim();
-              if (!typed) return;
-              ask.send({ question: typed }, typed);
-              setQuestion('');
-            }}
-            className="flex flex-col gap-1 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
-          >
-            <label htmlFor={inputId} className="font-medium">
-              {ASK_COPY.inputLabel}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <input
-                id={inputId}
-                type="text"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                required
-                maxLength={200}
-                enterKeyHint="send"
-                autoComplete="off"
-                className="min-h-12 min-w-0 flex-[1_1_10rem] rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
-              />
-              <button
-                type="submit"
-                disabled={ask.thinking}
-                className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
-              >
-                {ASK_COPY.send}
-              </button>
-            </div>
-          </form>
           <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
             <TopicChips busy={ask.thinking} onTopic={askTopic} />
             <StarterButtons
@@ -176,24 +163,99 @@ export function Ask({
               />
             </details>
           </div>
-          {ask.entries.map((entry) => (
-            <AskEntry
-              key={entry.id}
-              entry={entry}
-              now={now}
-              focus={entry === latest && entry.id !== openedWith}
-              busy={ask.thinking}
-              newest={entry === latest}
-              pending={pending?.entryId === entry.id ? pending : null}
-              onRetry={ask.retry}
-              onTopic={askTopic}
-              onStarter={askStarter}
-              onAnswerFollowUp={(field, value, label) =>
-                ask.answerFollowUp(entry.id, field, value, label)
-              }
-              onSkipFollowUp={(field) => ask.skipFollowUp(entry.id, field)}
-            />
-          ))}
+          {ask.entries.length > 0 && (
+            <div
+              data-part="ask-thread"
+              className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 [&>article+article]:border-t [&>article+article]:border-rule [&>article+article]:pt-6"
+            >
+              {ask.entries.map((entry) => (
+                <AskEntry
+                  key={entry.id}
+                  entry={entry}
+                  now={now}
+                  focus={entry === latest && entry.id !== openedWith}
+                  busy={ask.thinking}
+                  newest={entry === latest}
+                  pending={pending?.entryId === entry.id ? pending : null}
+                  onRetry={ask.retry}
+                  onTopic={askTopic}
+                  onStarter={askStarter}
+                  onAnswerFollowUp={(field, value, label) =>
+                    ask.answerFollowUp(entry.id, field, value, label)
+                  }
+                  onSkipFollowUp={(field) => ask.skipFollowUp(entry.id, field)}
+                />
+              ))}
+            </div>
+          )}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const typed = question.trim();
+              if (!typed) return;
+              ask.send({ question: typed }, typed);
+              setQuestion('');
+              setSent(typed);
+              setRefilled(null);
+            }}
+            data-part="ask-composer"
+            data-pinned={ask.entries.length > 0 ? '' : undefined}
+            className={
+              ask.entries.length > 0
+                ? 'z-[1] [@media(min-height:30.2rem)]:sticky [@media(min-height:30.2rem)]:bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:[@media(min-height:30.2rem)]:bottom-0'
+                : 'max-md:z-[1] max-md:[@media(min-height:30.2rem)]:sticky max-md:[@media(min-height:30.2rem)]:bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]'
+            }
+          >
+            <div
+              data-part="ask-composer-panel"
+              className="flex flex-col gap-1 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+            >
+              <label htmlFor={inputId} className="font-medium">
+                {ASK_COPY.inputLabel}
+              </label>
+              <div className="flex flex-wrap items-end gap-2">
+                <textarea
+                  id={inputId}
+                  rows={1}
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' || event.shiftKey) return;
+                    event.preventDefault();
+                    if (event.nativeEvent.isComposing || event.keyCode === 229)
+                      return;
+                    if (!ask.thinking && question.trim())
+                      event.currentTarget.form?.requestSubmit();
+                  }}
+                  required
+                  maxLength={200}
+                  enterKeyHint="send"
+                  autoComplete="off"
+                  className="field-sizing-content max-h-[calc(4lh+1.5rem)] min-h-12 min-w-0 flex-[1_1_10rem] resize-none overflow-y-auto rounded-md border border-text-dark bg-surface-light px-3 py-3 text-text-dark"
+                />
+                <button
+                  type="submit"
+                  disabled={ask.thinking || !question.trim()}
+                  className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
+                >
+                  {ASK_COPY.send}
+                </button>
+              </div>
+              <p
+                data-part="ask-credit"
+                className="text-xs text-text-dark-muted"
+              >
+                Forecasts:{' '}
+                <a href="https://open-meteo.com/" className="underline">
+                  Open-Meteo.com
+                </a>{' '}
+                (CC BY 4.0), based on CAMS ·{' '}
+                <a href="/privacy" className="underline">
+                  Privacy
+                </a>
+              </p>
+            </div>
+          </form>
         </>
       )}
     </div>

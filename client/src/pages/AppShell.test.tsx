@@ -1328,6 +1328,18 @@ describe('AppShell', () => {
     }
   });
 
+  it('the footer is a rounded card on the sky, not a full-width band', () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    const footer = screen.getByRole('contentinfo');
+    expect(footer.className).not.toContain('bg-surface-light');
+    expect(footer.className).not.toContain('border-t');
+    const card = footer.firstElementChild!.firstElementChild!;
+    for (const cls of ['rounded-lg', 'border', 'bg-surface-light'])
+      expect(card.className).toContain(cls);
+    expect(card.textContent).toContain('Open-Meteo.com');
+  });
+
   it('links to the privacy page from the footer', () => {
     routeFetch(ok());
     render(<AppShell />);
@@ -1555,6 +1567,24 @@ describe('AppShell', () => {
 
     expect(window.location.pathname).toBe('/app');
     expect(window.location.search).toBe(second);
+  });
+
+  it('the footer card is gone on Ask with a place, and stays elsewhere', () => {
+    const credit = () => screen.queryByText(/Air-quality forecasts from/);
+    const at = (path: string) => {
+      window.history.replaceState(null, '', path);
+      routeFetch(ok());
+      render(<AppShell />);
+    };
+    const place = '?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86';
+    at('/app/ask' + place);
+    expect(credit()).toBeNull();
+    cleanup();
+    at('/app/ask');
+    expect(credit()).not.toBeNull();
+    cleanup();
+    at('/app' + place);
+    expect(credit()).not.toBeNull();
   });
 
   it('the logo goes to /app and keeps the place', () => {

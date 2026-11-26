@@ -98,6 +98,7 @@
   button,
   summary,
   input,
+  textarea,
   select,
   label {
     touch-action: manipulation;
@@ -126,6 +127,24 @@
   @media (width < 48rem) {
     html {
       scroll-padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  /* Ask pins its question box to the bottom (only on screens tall enough):
+     scrolling to a focused item clears the box, and on phones the bar too. */
+  @media (min-height: 30.2rem) and (width >= 48rem) {
+    html:has([data-part='ask-composer'][data-pinned]):not(
+        :has([data-part='ask-composer']:focus-within)
+      ) {
+      scroll-padding-bottom: calc(14.5rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  @media (min-height: 30.2rem) and (width < 48rem) {
+    html:has([data-part='ask-composer']):not(
+        :has([data-part='ask-composer']:focus-within)
+      ) {
+      scroll-padding-bottom: calc(18.5rem + env(safe-area-inset-bottom, 0px));
     }
   }
 
@@ -237,5 +256,21 @@
     .press:active {
       opacity: 0.8;
     }
+  }
+}
+
+/* The box's flat "tray" bottom shows only while it is stuck to the bottom.
+   A scroll-state query styles descendants, so the panel inside changes
+   (colour and radius only); browsers without it keep a rounded card. Outside @layer, so it beats
+   the utility classes' radius and border colour. */
+[data-part='ask-composer'] {
+  container: ask-composer / scroll-state;
+}
+
+@container ask-composer scroll-state(stuck: bottom) {
+  [data-part='ask-composer-panel'] {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
   }
 }

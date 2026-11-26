@@ -10,6 +10,8 @@ import {
   unknownAirAskFixture,
 } from '../../test/askFixtures.ts';
 import { expectNoAxeViolations } from '../../test/axe.ts';
+import { FIELDS, fieldId } from '../daily-plan/householdFields.ts';
+import { mergedLimitations } from '../today/today.ts';
 import { ASK_COPY } from './ask.ts';
 import { AskEntry, StarterButtons } from './AskEntry.tsx';
 import type { AskEntry as Entry } from './useAsk.ts';
@@ -97,11 +99,9 @@ describe('AskEntry', () => {
     expect(heading()).toBeTruthy();
     expect(screen.getByText(aiAskFixture.summary!)).toBeTruthy();
     expect(screen.getByText('Made with AI')).toBeTruthy();
-    expect(
-      screen.getByText(
-        `Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
-      ),
-    ).toBeTruthy();
+    expect(screen.getByText(/^Based on: /).textContent).toBe(
+      `Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
+    );
     const cards = screen.getAllByRole('heading', { level: 3 });
     expect(cards.map((h) => h.textContent)).toEqual(
       aiAskFixture.cards.map((c) => c.title),
@@ -110,6 +110,68 @@ describe('AskEntry', () => {
     expect(screen.getByText(SAFETY)).toBeTruthy();
     expect(container.textContent).not.toMatch(/not current/i);
     await expectNoAxeViolations(container);
+  });
+
+  it("Open-Meteo links to the answer's source, and the line reads as before", () => {
+    show(ready(aiAskFixture));
+
+    const link = screen.getByRole('link', { name: 'Open-Meteo' });
+    expect(link.getAttribute('href')).toBe(aiAskFixture.forecast!.sourceUrl);
+    expect(screen.getByText(/^Based on: /).textContent).toBe(
+      `Based on: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
+    );
+  });
+
+  it("'Sources and limitations' starts closed and lists the forecast's limitations", async () => {
+    const { container } = show(ready(aiAskFixture));
+
+    const summary = screen.getByText('Sources and limitations');
+    expect(summary.tagName).toBe('SUMMARY');
+    expect(summary.closest('details')!.open).toBe(false);
+    // The same list as Today's "Sources and limitations".
+    const lines = mergedLimitations(aiAskFixture.forecast!.limitations);
+    expect(lines.length).toBeGreaterThan(
+      aiAskFixture.forecast!.limitations.length,
+    );
+    for (const line of lines) expect(screen.getByText(line)).toBeTruthy();
+    await expectNoAxeViolations(container);
+  });
+
+  it('with no forecast: the verdict alone, no link, no sources section', () => {
+    show(ready({ ...aiAskFixture, forecast: null }));
+
+    expect(screen.queryByRole('link', { name: 'Open-Meteo' })).toBeNull();
+    expect(screen.queryByText('Sources and limitations')).toBeNull();
+  });
+
+  it('"Not current" stays outside "Sources and limitations"', () => {
+    show(ready(aiAskFixture), { now: minutesLater(61) });
+
+    expect(screen.getByText(/not current/i).closest('details')).toBeNull();
+  });
+
+  // I2: "Not current" sits next to the time, before the shut section.
+  it('in a stale answer the banner comes before "Sources and limitations"', () => {
+    show(ready(aiAskFixture), { now: minutesLater(61) });
+
+    const banner = screen.getByText(/not current/i);
+    const details = screen
+      .getByText('Sources and limitations')
+      .closest('details')!;
+    expect(
+      banner.compareDocumentPosition(details) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('the question bubble keeps line breaks', () => {
+    show(ready(aiAskFixture, 'a\nb'));
+
+    expect(
+      screen
+        .getByRole('heading', { level: 2 })
+        .classList.contains('whitespace-pre-line'),
+    ).toBe(true);
   });
 
   it("a rules answer: the verdict's explanation, made by our rules", () => {
@@ -167,11 +229,13 @@ describe('AskEntry', () => {
     );
 
     expect(screen.getByText(ASK_COPY.medical)).toBeTruthy();
+    expect(screen.getByText(/^Today: /).textContent).toBe(
+      `Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
+    );
     expect(
-      screen.getByText(
-        `Today: Forecast above India's 24-hour limit · Model forecast · Open-Meteo · retrieved ${UPDATED}`,
-      ),
-    ).toBeTruthy();
+      screen.getByRole('link', { name: 'Open-Meteo' }).getAttribute('href'),
+    ).toBe(medicalAskFixture.forecast!.sourceUrl);
+    expect(screen.queryByText('Sources and limitations')).toBeNull();
     expect(screen.queryByText('Why?')).toBeNull();
     expect(screen.queryByText('Made with AI')).toBeNull();
     expect(screen.getByText(SAFETY)).toBeTruthy();
@@ -254,6 +318,74 @@ describe('AskEntry', () => {
     expect(scroll.mock.contexts[0]).toBe(heading().closest('article'));
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(calls).toEqual(['scroll', 'focus']);
+    focus.mockRestore();
+  });
+
+  it('an answer has no panel of its own', () => {
+    show(ready(aiAskFixture));
+    const reply = screen.getByText('Made with AI').parentElement!;
+    for (const cls of ['rounded-lg', 'border', 'p-5'])
+      expect(reply.classList.contains(cls)).toBe(false);
+  });
+
+  it('its cards are flat', () => {
+    const { container } = show(ready(aiAskFixture));
+    const cards = container.querySelectorAll('article article');
+    expect(cards).toHaveLength(3);
+    for (const card of cards) {
+      expect(card.classList.contains('border-t')).toBe(true);
+      expect(card.classList.contains('rounded-lg')).toBe(false);
+    }
+  });
+
+  it('Skip and Try again move focus without scrolling', () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    const field = FIELDS[0]!;
+    const props = {
+      now: minutesLater(5),
+      focus: false,
+      busy: false,
+      newest: true,
+      onRetry: () => {},
+      onTopic: () => {},
+      onStarter: () => {},
+      onAnswerFollowUp: () => {},
+      onSkipFollowUp: () => {},
+    };
+    const open = ready(aiAskFixture);
+    const view = render(
+      <AskEntry
+        {...props}
+        entry={open}
+        pending={{ entryId: 1, field, changes: [] }}
+      />,
+    );
+    fireEvent.click(button(ASK_COPY.skip));
+    view.rerender(
+      <AskEntry
+        {...props}
+        entry={{
+          ...open,
+          followUp: { field: fieldId(field), outcome: 'skipped' },
+        }}
+        pending={null}
+      />,
+    );
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    expect((focus.mock.contexts.at(-1) as HTMLElement).textContent).toBe(
+      ASK_COPY.skipped,
+    );
+    cleanup();
+
+    focus.mockClear();
+    show(
+      entry({
+        status: 'error',
+        error: new ApiError(500, 'INTERNAL_ERROR', 'Unexpected server error.'),
+      }),
+    );
+    fireEvent.click(button('Try again'));
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
     focus.mockRestore();
   });
 

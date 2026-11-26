@@ -518,3 +518,30 @@ test('large text keeps every title off the city', async ({ page }) => {
   expect(overlaps).toEqual([]);
   expect(hiddenAt16).toEqual([]);
 });
+
+// Big city (H5): the band is tall on phones, and from md up the city box is
+// drawn about 1.74x wider than the screen and centred, so buildings are bigger.
+test('BD-H5: the city is big on phones and wide on desktop', async ({
+  page,
+}) => {
+  await abortOutside(page);
+  await stub(page, 'not_elevated');
+  const box = async (width: number, height: number) => {
+    await page.setViewportSize({ width, height });
+    await page.goto(PUNE);
+    await expect(visibleH1(page)).toBeVisible();
+    return page.evaluate(() => {
+      const r = document
+        .querySelector('[data-layer="city"]')!
+        .getBoundingClientRect();
+      return { width: r.width, height: r.height, centre: r.left + r.width / 2 };
+    });
+  };
+  const phone = await box(390, 844);
+  const wide = await box(1896, 828);
+  console.log('BD-H5', JSON.stringify({ phone, wide }));
+  expect(phone.height).toBeGreaterThanOrEqual(240);
+  expect(wide.height).toBeGreaterThanOrEqual(300);
+  expect(wide.width).toBeGreaterThanOrEqual(1896 * 1.7);
+  expect(Math.abs(wide.centre - 1896 / 2)).toBeLessThanOrEqual(2);
+});

@@ -5,7 +5,7 @@ import { isOlderThan } from '../../lib/clock.ts';
 import { StaleBanner } from '../air-quality/AirReadout.tsx';
 import { PlanCard } from '../daily-plan/PlanCard.tsx';
 import { fieldId } from '../daily-plan/householdFields.ts';
-import { verdictFrom } from '../today/today.ts';
+import { mergedLimitations, verdictFrom } from '../today/today.ts';
 import {
   ASK_COPY,
   TOPICS,
@@ -79,13 +79,22 @@ export function StarterButtons({
   );
 }
 
-// "{verdict} · Model forecast · Open-Meteo · retrieved {time}"; with no
-// forecast, the verdict alone: no kind, provider or time to show.
-function airLine(answer: AskAnswer): string {
+// "{verdict} · Model forecast · Open-Meteo · retrieved {time}", Open-Meteo
+// linking to the answer's source; with no forecast, the verdict alone: no
+// kind, provider or time to show.
+function AirLine({ answer }: { answer: AskAnswer }) {
   const { title } = verdictFrom(answer.air);
-  return answer.forecast
-    ? `${title} · Model forecast · Open-Meteo · retrieved ${clockTime(answer.forecast.retrievedAt)}`
-    : title;
+  const { forecast } = answer;
+  if (!forecast) return <>{title}</>;
+  return (
+    <>
+      {`${title} · Model forecast · `}
+      <a href={forecast.sourceUrl} className="underline">
+        Open-Meteo
+      </a>
+      {` · retrieved ${clockTime(forecast.retrievedAt)}`}
+    </>
+  );
 }
 
 function Answer({
@@ -115,7 +124,9 @@ function Answer({
     return (
       <>
         <p>{ASK_COPY.medical}</p>
-        <p className={MUTED}>{`Today: ${airLine(answer)}`}</p>
+        <p className={MUTED}>
+          Today: <AirLine answer={answer} />
+        </p>
         {stale && <StaleBanner />}
         <p className={MUTED}>{answer.safetyNote}</p>
       </>
@@ -128,16 +139,33 @@ function Answer({
       <p className={MUTED}>
         {answer.generatedBy === 'ai' ? 'Made with AI' : 'Made by our rules'}
       </p>
-      <p className={MUTED}>{`Based on: ${airLine(answer)}`}</p>
+      <p className={MUTED}>
+        Based on: <AirLine answer={answer} />
+      </p>
       {caveat && <p className={MUTED}>{caveat}</p>}
       {stale && <StaleBanner />}
-      <div className="grid gap-4 md:grid-cols-2">
+      {answer.forecast && (
+        <details className={MUTED}>
+          <summary className="min-h-11 cursor-pointer py-2 text-sm font-medium">
+            Sources and limitations
+          </summary>
+          <ul className="list-disc pl-5">
+            {mergedLimitations(answer.forecast.limitations).map(
+              (limitation) => (
+                <li key={limitation}>{limitation}</li>
+              ),
+            )}
+          </ul>
+        </details>
+      )}
+      <div className="flex flex-col gap-3">
         {answer.cards.slice(0, 3).map((candidate) => (
           <PlanCard
             key={candidate.id}
             item={{ candidate, period: null, forYou: null, compact: false }}
             sources={answer.sources}
             level={3}
+            flat
           />
         ))}
       </div>
@@ -199,7 +227,7 @@ export function AskEntry({
   useEffect(() => {
     if (entry.followUp && focusOutcome.current) {
       focusOutcome.current = false;
-      outcomeRef.current?.focus();
+      outcomeRef.current?.focus({ preventScroll: true });
     }
   }, [entry.followUp]);
 
@@ -214,7 +242,7 @@ export function AskEntry({
         id={headingId}
         ref={headingRef}
         tabIndex={-1}
-        className="max-w-[85%] self-end rounded-2xl rounded-br-sm border border-transparent bg-text-dark px-4 py-3 text-lg font-semibold text-surface-light"
+        className="max-w-[85%] self-end whitespace-pre-line rounded-2xl rounded-br-sm border border-transparent bg-text-dark px-4 py-3 text-lg font-semibold text-surface-light"
       >
         <span className="sr-only">
           {entry.said === 'asked'
@@ -225,7 +253,7 @@ export function AskEntry({
         </span>{' '}
         {entry.echo}
       </h2>
-      <div className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+      <div className="flex flex-col gap-3">
         {entry.note && <p>{entry.note}</p>}
         {entry.status === 'thinking' && (
           <>
@@ -244,7 +272,7 @@ export function AskEntry({
             onRetry={() => {
               onRetry(entry.id);
               // The card goes away: keep focus on this exchange.
-              headingRef.current?.focus();
+              headingRef.current?.focus({ preventScroll: true });
             }}
           />
         )}

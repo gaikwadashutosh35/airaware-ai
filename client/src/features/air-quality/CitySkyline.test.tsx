@@ -100,19 +100,23 @@ describe('CitySkyline', () => {
     }
   });
 
-  it('the city sits above the phone bar and never over a fifth of the screen', () => {
+  it('the city sits above the phone bar and is up to a third of the screen, and wider from md up', () => {
     for (const fields of [{}, null]) {
       const city = draw(fields).querySelector('[data-layer="city"]');
       const classes = (city?.getAttribute('class') ?? '').split(/\s+/);
       for (const name of [
-        'h-[min(8rem,20vh)]',
-        'sm:h-[min(11rem,20vh)]',
+        'h-[min(16rem,32vh)]',
+        'sm:h-[min(24rem,40vh)]',
+        // Big city (H5): from md up the box is drawn 1.74x wider, centred.
+        'md:left-1/2',
+        'md:w-[174%]',
+        'md:-translate-x-1/2',
         'bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]',
         'md:bottom-0',
-        // Final review, P8 D7: on a screen under 30.2rem tall (a phone held
+        // Final review, P8 D7: on a screen under 33.3rem tall (a phone held
         // sideways, or text enlarged) a wrapped title can reach the band, so
         // the city hides and the sky alone carries the look.
-        '[@media(max-height:30.2rem)]:hidden',
+        '[@media(max-height:33.3rem)]:hidden',
       ]) {
         expect(classes).toContain(name);
       }

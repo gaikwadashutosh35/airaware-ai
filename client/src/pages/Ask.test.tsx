@@ -112,7 +112,7 @@ const status = () => document.querySelector('output')!.textContent;
 const input = () =>
   screen.getByRole('textbox', {
     name: ASK_COPY.inputLabel,
-  }) as HTMLInputElement;
+  }) as HTMLTextAreaElement;
 const button = (name: string) =>
   screen.getByRole('button', { name }) as HTMLButtonElement;
 const heading = (name: string, said = 'You asked: ') =>
@@ -205,12 +205,77 @@ describe('Ask page', () => {
   it('the question box', () => {
     show();
 
+    expect(input().tagName).toBe('TEXTAREA');
+    expect(input().rows).toBe(1);
     expect(input().maxLength).toBe(200);
     expect(input().getAttribute('enterkeyhint')).toBe('send');
     expect(input().getAttribute('autocomplete')).toBe('off');
     expect(input().required).toBe(true);
     expect(input().hasAttribute('name')).toBe(false);
     expect(button('Send')).toBeTruthy();
+  });
+  it('Send waits for words: disabled when empty or only spaces', () => {
+    show();
+    expect(button('Send').disabled).toBe(true);
+    fireEvent.change(input(), { target: { value: '   ' } });
+    expect(button('Send').disabled).toBe(true);
+    fireEvent.change(input(), { target: { value: 'Hi' } });
+    expect(button('Send').disabled).toBe(false);
+  });
+  it('Enter sends; Shift+Enter does not', () => {
+    show();
+    fireEvent.change(input(), { target: { value: QUESTION } });
+    fireEvent.keyDown(input(), { key: 'Enter', shiftKey: true });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fireEvent.keyDown(input(), { key: 'Enter' });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(sentBody(0)).toMatchObject({ question: QUESTION });
+  });
+  it('Enter while composing sends nothing', () => {
+    show();
+    fireEvent.change(input(), { target: { value: QUESTION } });
+    fireEvent.keyDown(input(), { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(input(), { key: 'Enter', keyCode: 229 });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+  it('Enter while thinking sends nothing and keeps the text', () => {
+    show();
+    typeAndSend(QUESTION);
+    fireEvent.change(input(), { target: { value: 'Second' } });
+    fireEvent.keyDown(input(), { key: 'Enter' });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(input().value).toBe('Second');
+  });
+  it('a failed question comes back to the box', async () => {
+    show();
+    typeAndSend(QUESTION);
+    expect(input().value).toBe('');
+    await fail();
+    expect(input().value).toBe(QUESTION);
+  });
+  it('new typing after a failure is never overwritten', async () => {
+    show();
+    typeAndSend(QUESTION);
+    fireEvent.change(input(), { target: { value: 'Other' } });
+    await fail();
+    expect(input().value).toBe('Other');
+  });
+  it('a Try again that works empties the box it refilled', async () => {
+    show();
+    typeAndSend(QUESTION);
+    await fail();
+    fireEvent.click(button('Try again'));
+    await answer(aiAskFixture);
+    expect(input().value).toBe('');
+  });
+  it('Edit focuses the page without scrolling', () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    render(<div id="main" tabIndex={-1} />);
+    show();
+    fireEvent.click(
+      screen.getByRole('link', { name: 'Edit your answers in My Profile' }),
+    );
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 
   it('a topic chip asks that topic at once', async () => {
@@ -226,7 +291,7 @@ describe('Ask page', () => {
   });
 
   // Guided chat (Task 4), reordered by redesign P4 (AK-02, AK-03).
-  it('with a place: title, intro, Using line, question box, topics, 3 starters, More questions, thread', async () => {
+  it('with a place: title, intro, Using line, topics, 3 starters, More questions, thread, then the question box', async () => {
     const { container } = show();
     typeAndSend('First question');
     await answer(aiAskFixture);
@@ -238,12 +303,12 @@ describe('Ask page', () => {
       h1,
       intro,
       using,
-      input(),
       button('Outdoor activities'),
       button('Can I go for a morning walk today?'),
       button('How can I improve my indoor air?'),
       screen.getByText(ASK_COPY.moreQuestions),
       heading('First question'),
+      input(),
     ];
     order.slice(1).forEach((el, i) => {
       expect(before(order[i]!, el)).toBe(true);
@@ -279,7 +344,7 @@ describe('Ask page', () => {
     expect(screen.getByText(ASK_COPY.intro)).toBeTruthy();
   });
 
-  it('the thread reads oldest first, after the question box', async () => {
+  it('the thread reads oldest first, before the question box', async () => {
     show();
 
     typeAndSend('First question');
@@ -287,10 +352,111 @@ describe('Ask page', () => {
     typeAndSend('Second question');
     await answer(aiAskFixture);
 
-    expect(before(input(), heading('First question'))).toBe(true);
+    expect(before(heading('Second question'), input())).toBe(true);
     expect(before(heading('First question'), heading('Second question'))).toBe(
       true,
     );
+  });
+
+  it('one surface holds the whole thread, and none shows before the first question', async () => {
+    const { container } = show();
+    expect(container.querySelector('[data-part="ask-thread"]')).toBeNull();
+    typeAndSend('First question');
+    await answer(aiAskFixture);
+    typeAndSend('Second question');
+    await answer(aiAskFixture);
+    const thread = container.querySelector('[data-part="ask-thread"]')!;
+    expect(thread.className).toContain('bg-surface-light');
+    expect(thread.querySelectorAll('article.ask-answer')).toHaveLength(2);
+  });
+
+  it('the column is centred', () => {
+    const { container } = show();
+    expect((container.firstElementChild as HTMLElement).className).toContain(
+      'mx-auto',
+    );
+  });
+
+  it('a one-line credit sits in the box, with both links', async () => {
+    const { container } = show();
+    const panel = container.querySelector('[data-part="ask-composer-panel"]')!;
+    const credit = panel.querySelector('[data-part="ask-credit"]')!;
+    expect(credit.textContent).toBe(
+      'Forecasts: Open-Meteo.com (CC BY 4.0), based on CAMS · Privacy',
+    );
+    expect(credit.className).toContain('text-xs');
+    expect(credit.className).toContain('text-text-dark-muted');
+    expect(
+      within(credit as HTMLElement)
+        .getByRole('link', { name: 'Open-Meteo.com' })
+        .getAttribute('href'),
+    ).toBe('https://open-meteo.com/');
+    expect(
+      within(credit as HTMLElement)
+        .getByRole('link', { name: 'Privacy' })
+        .getAttribute('href'),
+    ).toBe('/privacy');
+    await expectNoAxeViolations(container);
+  });
+
+  it('phones pin the box from the start; md and up pin after the first question', async () => {
+    const { container } = show();
+    const form = input().closest('form')!;
+    for (const cls of [
+      'max-md:z-[1]',
+      'max-md:[@media(min-height:30.2rem)]:sticky',
+      'max-md:[@media(min-height:30.2rem)]:bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]',
+    ])
+      expect(form.className).toContain(cls);
+    expect(form.className).not.toMatch(
+      /(^|\s)\[@media\(min-height:30\.2rem\)\]:sticky/,
+    );
+    expect(form.className).not.toMatch(/(^|\s)z-\[1\]/);
+    expect(form.hasAttribute('data-pinned')).toBe(false);
+    typeAndSend(QUESTION);
+    await answer(aiAskFixture);
+    expect(form.className).toMatch(
+      /(^|\s)\[@media\(min-height:30\.2rem\)\]:sticky/,
+    );
+    expect(form.hasAttribute('data-pinned')).toBe(true);
+    expect((container.firstElementChild as HTMLElement).className).toContain(
+      'md:gap-4',
+    );
+  });
+
+  it('the question box pins to the bottom only on screens 30.2rem tall or more', async () => {
+    show();
+    typeAndSend(QUESTION);
+    await answer(aiAskFixture);
+    const form = input().closest('form')!;
+    expect(form.dataset.part).toBe('ask-composer');
+    expect(form.className).toContain('[@media(min-height:30.2rem)]:sticky');
+    // Not a token: no shadow utility.
+    expect(form.className).not.toContain('shadow');
+    for (const cls of [
+      '[@media(min-height:30.2rem)]:bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]',
+      'md:[@media(min-height:30.2rem)]:bottom-0',
+    ])
+      expect(form.className).toContain(cls);
+    // The tray look moves to the panel and is applied by a scroll-state query.
+    for (const cls of ['rounded-b-none', 'border-b-0', 'bg-surface-light'])
+      expect(form.className).not.toContain(cls);
+    const panel = form.querySelector('[data-part="ask-composer-panel"]')!;
+    for (const cls of ['rounded-lg', 'border', 'bg-surface-light'])
+      expect(panel.className).toContain(cls);
+    expect(panel.className).not.toContain('shadow');
+    expect(panel.contains(input())).toBe(true);
+  });
+
+  it('a reply that arrives later does not scroll again', async () => {
+    show();
+    typeAndSend(QUESTION);
+    const scrolls = () =>
+      (Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+    const calls = scrolls();
+    await answer(aiAskFixture);
+    expect(scrolls()).toBe(calls);
   });
 
   it('"Not current" joins the Using line once the forecast is over an hour old', () => {
@@ -454,6 +620,8 @@ describe('Ask page', () => {
     await answer(aiAskFixture);
 
     expect(status()).toBe(`Answer ready. ${aiAskFixture.summary}`);
+    expect(button('Send').disabled).toBe(true);
+    fireEvent.change(input(), { target: { value: 'Next' } });
     expect(button('Send').disabled).toBe(false);
     await expectNoAxeViolations(container);
   });
