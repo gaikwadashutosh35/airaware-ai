@@ -32,6 +32,7 @@ import { Welcome } from './Welcome.tsx';
 import { AirDetails } from '../features/today/AirDetails.tsx';
 import { AskBox } from '../features/today/AskBox.tsx';
 import { HelpChoices } from '../features/today/HelpChoices.tsx';
+import { WeatherCompare } from '../features/today/WeatherCompare.tsx';
 import { TodayLead, TodayLeadLoading } from '../features/today/TodayLead.tsx';
 import { CitySkyline } from '../features/air-quality/CitySkyline.tsx';
 import { backdropNote, backdropScene } from '../features/air-quality/scene.ts';
@@ -309,7 +310,7 @@ function AppShell() {
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto flex max-w-6xl flex-col gap-8 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:py-12"
+        className="mx-auto flex max-w-6xl flex-col gap-8 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:pt-12"
       >
         {/* Today and My Profile stay mounted, hidden when not shown, so a built
             plan, a build in flight and unsaved answers survive moving pages. */}
@@ -453,6 +454,14 @@ function AppShell() {
                 onPlan={setTodayPlan}
                 deletedPlanId={deletedPlanId}
               />
+              {/* After the recommendation, so the first screen keeps its
+                  place. Not shown once the forecast is "Not current". */}
+              {forecast.state.status === 'ready' && !forecastOld && (
+                <WeatherCompare
+                  weather={forecast.state.data.series.weather}
+                  now={now}
+                />
+              )}
             </div>
           </div>
           {place && (
@@ -487,7 +496,11 @@ function AppShell() {
                     </button>
                   </div>
                 )}
-              <AskBox onAsk={(question) => ask.send({ question }, question)} />
+              <AskBox
+                onAsk={(question) => ask.send({ question }, question)}
+                active={page === 'today'}
+                started={ask.entries.length > 0}
+              />
               <AirDetails
                 data={
                   forecast.state.status === 'ready'
@@ -511,7 +524,7 @@ function AppShell() {
       </main>
       {!(page === 'ask' && place !== null) && (
         <footer>
-          <div className="mx-auto max-w-6xl pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
+          <div className="mx-auto max-w-6xl pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
             <div className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 text-sm text-text-dark-muted">
               {shown && place && (
                 <p>

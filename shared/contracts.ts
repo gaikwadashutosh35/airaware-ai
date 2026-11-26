@@ -108,6 +108,23 @@ export interface AirAssessment {
   checks: PollutantCheck[];
 }
 
+// One local day of Open-Meteo model weather. `atHour` is the same local hour
+// as the request time on that day. Each number is null when the provider
+// leaves it out; nothing is filled in.
+export interface WeatherDay {
+  day: 'yesterday' | 'today' | 'tomorrow';
+  // The place's local date, YYYY-MM-DD.
+  date: string;
+  minC: number | null;
+  maxC: number | null;
+  precipitationMm: number | null;
+  atHour: {
+    time: string;
+    temperatureC: number | null;
+    cloudCoverPct: number | null;
+  };
+}
+
 // Open-Meteo's weather forecast for the hour containing the request time.
 // Each field is null when the provider leaves it out.
 export interface WeatherNow {
@@ -120,6 +137,10 @@ export interface WeatherNow {
   // Open-Meteo's is_day for this hour: true by day, false at night.
   isDay: boolean | null;
   retrievedAt: string;
+  // The place's offset from UTC, to show hours in its own time.
+  utcOffsetSeconds: number;
+  // Yesterday, today, tomorrow, in that order.
+  days: WeatherDay[];
 }
 
 // The forecast endpoint's `data`: the series, the server's 24-hour air check

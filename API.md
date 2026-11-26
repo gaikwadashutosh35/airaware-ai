@@ -110,6 +110,7 @@ Returns an hourly model forecast (48 hours from the current hour) and the provid
   - Its `level` is `unknown` when the forecast has no complete 24-hour window.
   - Clients show it as given and never derive limits themselves.
 - `weather` is this hour's Open-Meteo weather forecast (`https://api.open-meteo.com/v1/forecast`, the same rounded coordinates, cached for 10 minutes). The server fetches it alongside the air forecast. It is `null` when that call fails or returns no hour containing the request time, and the air forecast never fails because of it.
+  - It also asks for `past_days=1`, `forecast_days=2` and daily values, so `weather.days` holds yesterday, today and tomorrow (the place's own local dates, from `utc_offset_seconds`). Each `atHour` is the same local hour as the request time on that day. Yesterday is past model data, not a station measurement. A value the provider leaves out is `null`; nothing is filled in.
 
 ```ts
 type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
@@ -126,6 +127,17 @@ interface ForecastSeries {
   limitations: string[];
 }
 
+// One local day of Open-Meteo model weather. `atHour` is the same local hour
+// as the request time on that day.
+interface WeatherDay {
+  day: 'yesterday' | 'today' | 'tomorrow';
+  date: string; // the place's local date, YYYY-MM-DD
+  minC: number | null;
+  maxC: number | null;
+  precipitationMm: number | null;
+  atHour: { time: string; temperatureC: number | null; cloudCoverPct: number | null };
+}
+
 // Open-Meteo weather forecast for the hour containing the request time.
 interface WeatherNow {
   time: string;
@@ -136,6 +148,8 @@ interface WeatherNow {
   visibilityM: number | null;
   isDay: boolean | null; // Open-Meteo is_day for this hour
   retrievedAt: string;
+  utcOffsetSeconds: number; // the place's offset from UTC, to show hours in its own time
+  days: WeatherDay[]; // yesterday, today, tomorrow, in that order
 }
 
 // What `data` holds.

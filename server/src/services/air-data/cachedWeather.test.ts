@@ -19,6 +19,8 @@ function hourOf(now: Date): WeatherNow {
     visibilityM: 20000,
     isDay: true,
     retrievedAt: now.toISOString(),
+    utcOffsetSeconds: 0,
+    days: [],
   };
 }
 

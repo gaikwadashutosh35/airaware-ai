@@ -214,6 +214,31 @@ describe('Ask page', () => {
     expect(input().hasAttribute('name')).toBe(false);
     expect(button('Send')).toBeTruthy();
   });
+  it('an aria-hidden cycling hint covers the empty box, not a placeholder', async () => {
+    const { container } = show();
+    const hint = () =>
+      input().parentElement!.querySelector('[aria-hidden="true"]');
+
+    expect(input().hasAttribute('placeholder')).toBe(false);
+    expect(hint()).not.toBeNull();
+    fireEvent.focus(input());
+    expect(hint()).toBeNull();
+    fireEvent.blur(input());
+    expect(hint()).not.toBeNull();
+    fireEvent.change(input(), { target: { value: '  ' } });
+    expect(hint()).toBeNull();
+    fireEvent.change(input(), { target: { value: '' } });
+    expect(hint()).not.toBeNull();
+    await expectNoAxeViolations(container);
+  });
+  it('after the first question the hint stays on the first example, still', async () => {
+    show();
+    const hint = () =>
+      input().parentElement!.querySelector('[aria-hidden="true"]');
+    typeAndSend(QUESTION);
+    await answer(rulesAskFixture);
+    expect(hint()?.textContent).toBe('Can I go for a morning walk today?');
+  });
   it('Send waits for words: disabled when empty or only spaces', () => {
     show();
     expect(button('Send').disabled).toBe(true);

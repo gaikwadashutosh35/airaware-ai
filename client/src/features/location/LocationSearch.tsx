@@ -154,6 +154,7 @@ export function LocationSearch({
             aria-activedescendant={
               open && active >= 0 ? `${listId}-${active}` : undefined
             }
+            placeholder="e.g. Pune, India"
             value={query}
             onChange={(event) => {
               selectedLabel.current = null;
@@ -164,7 +165,7 @@ export function LocationSearch({
             onBlur={(event) => {
               if (event.relatedTarget !== buttonEl.current) setOpen(false);
             }}
-            className="min-h-12 w-full rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
+            className="min-h-12 w-full rounded-md border border-text-dark bg-surface-light px-3 text-text-dark placeholder:text-text-dark-muted"
           />
           <ul
             id={listId}

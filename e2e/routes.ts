@@ -25,6 +25,21 @@ export function forecastAt(retrievedAt: Date): ForecastData {
       ...forecastFixture.weather,
       time: new Date(start).toISOString(),
       retrievedAt: retrievedAt.toISOString(),
+      // The same local hour a day apart, whatever the clock says.
+      days: forecastFixture.weather.days.map((day, d) => ({
+        ...day,
+        date: new Date(
+          start +
+            (d - 1) * 24 * HOUR +
+            forecastFixture.weather!.utcOffsetSeconds * 1000,
+        )
+          .toISOString()
+          .slice(0, 10),
+        atHour: {
+          ...day.atHour,
+          time: new Date(start + (d - 1) * 24 * HOUR).toISOString(),
+        },
+      })),
     },
   };
 }

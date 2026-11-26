@@ -51,6 +51,17 @@ describe('LocationSearch', () => {
     vi.restoreAllMocks();
   });
 
+  it('hints at an example, keeping the label as the name', () => {
+    render(<LocationSearch onSelect={() => {}} />);
+    const box = screen.getByRole('combobox', {
+      name: 'Search for a city or area in India',
+    });
+    expect(box.getAttribute('placeholder')).toBe('e.g. Pune, India');
+    // Tailwind's default placeholder is the text colour at half strength,
+    // about 3.1:1; the muted text colour is about 6.6:1.
+    expect(box.className).toContain('placeholder:text-text-dark-muted');
+  });
+
   it('does not search for fewer than 2 characters', async () => {
     const fetchSpy = respondWith({ data: searchFixture });
     render(<LocationSearch onSelect={() => {}} />);

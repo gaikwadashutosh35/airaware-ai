@@ -41,6 +41,8 @@ const weather = (fields: Partial<WeatherNow> = {}): WeatherNow => ({
   visibilityM: 20000,
   isDay: true,
   retrievedAt: '2026-11-18T10:05:00.000Z',
+  utcOffsetSeconds: 0,
+  days: [],
   ...fields,
 });
 

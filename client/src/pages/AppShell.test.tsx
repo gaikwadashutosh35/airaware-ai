@@ -1328,6 +1328,79 @@ describe('AppShell', () => {
     }
   });
 
+  // The gap above the footer card is 32 px, like the gap between panels: main
+  // keeps its 32 px bottom padding at every width and the footer row adds none
+  // above its card.
+  it('leaves a 32 px gap above the footer card', () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    const main = screen.getByRole('main').className.split(' ');
+    expect(main).toContain('py-8');
+    expect(main).toContain('sm:pt-12');
+    expect(main).not.toContain('sm:py-12');
+    const row = screen.getByRole('contentinfo').firstElementChild!.className;
+    expect(row.split(' ')).toContain('pb-8');
+    expect(row.split(' ')).not.toContain('py-8');
+  });
+
+  // Placement: after the recommendation section, so the first screen keeps
+  // the verdict and plan where they were (layout shift and TD-03 gates).
+  it('shows the weather comparison after the recommendation section', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    const table = screen.getByRole('table', {
+      name: 'Weather · Open-Meteo model data',
+    });
+    const verdict = screen.getByRole('heading', {
+      name: verdictFrom(forecastFixture.airCheck).title,
+    });
+    expect(
+      verdict.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const plan = screen
+      .getAllByRole('heading', { level: 2 })
+      .find(
+        (h) =>
+          h.closest('section')?.nextElementSibling === table.closest('section'),
+      );
+    expect(plan).toBeDefined();
+  });
+
+  // Today stays mounted, hidden, on the other pages: its example-question
+  // hint must not keep typing there.
+  it("Today's example-question hint does not run while another page shows", async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/app/ask?place=Pune%2C%20Maharashtra&lat=18.52&lon=73.86',
+    );
+    routeFetch(ok());
+    render(<AppShell />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    const todayBox = screen
+      .getAllByRole('textbox', {
+        name: 'Ask about your air, home or day',
+        hidden: true,
+      })
+      .find((box) => box.tagName === 'INPUT')!;
+    expect(todayBox.parentElement!.querySelector('[aria-hidden]')).toBeNull();
+  });
+
+  it('hides the weather comparison once the forecast is not current', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    expect(screen.getByRole('table', { name: /^Weather/ })).toBeDefined();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(36 * 60_000);
+    });
+    expect(screen.getByText(FORECAST_STALE)).toBeDefined();
+    expect(screen.queryByRole('table', { name: /^Weather/ })).toBeNull();
+  });
+
   it('the footer is a rounded card on the sky, not a full-width band', () => {
     routeFetch(ok());
     render(<AppShell />);

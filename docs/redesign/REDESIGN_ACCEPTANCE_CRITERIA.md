@@ -119,6 +119,7 @@ Named as in `e2e/firstscreen.spec.ts`. All stub every `/api` route.
 | AK-21 | The box's flat bottom shows only while it is stuck (scroll-state supported), and at the page end its bottom corners are rounded with a visible border, at 390x844 and 1280x720 |
 | AK-22 | The Ask column is centred: the topics panel's centre is within 2 px of main's content centre at 1280x720 and 1896x828 (J15) |
 | AK-23 | On Ask with a place, the `ask-credit` line is visible with both links at 320x640 and 1280x720, and no visible element holds "Air-quality forecasts from" (J16) |
+| AK-24 | The weather comparison fits 320x640 with every column whole (`e2e/firstscreen.spec.ts`, "the weather comparison fits 320x640 with every column whole"): the table is inside the screen, its Yesterday, Today and Tomorrow headers are visible, and nothing passes the edge (J20) |
 
 ### 2.3 My Home (`/app/home?place=…`)
 

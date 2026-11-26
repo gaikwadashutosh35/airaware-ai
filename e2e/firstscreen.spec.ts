@@ -1158,6 +1158,39 @@ for (const [width, height] of [
   });
 }
 
+// The weather comparison fits the narrowest phone: nothing reaches past the
+// screen edge, and the whole table is on screen.
+test('the weather comparison fits 320x640 with every column whole', async ({
+  page,
+}) => {
+  await load(page, 320, 640);
+  const table = page.getByRole('table', {
+    name: 'Weather · Open-Meteo model data',
+  });
+  await table.scrollIntoViewIfNeeded();
+  const box = (await table.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(320);
+  // Inside its panel's content box (the panel's padding and border), not
+  // just inside the screen.
+  const content = await table.evaluate((el) => {
+    const panel = el.parentElement!;
+    const rect = panel.getBoundingClientRect();
+    const style = getComputedStyle(panel);
+    const left =
+      parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
+    const right =
+      parseFloat(style.borderRightWidth) + parseFloat(style.paddingRight);
+    return { left: rect.left + left, right: rect.right - right };
+  });
+  expect(box.x).toBeGreaterThanOrEqual(content.left - 0.5);
+  expect(box.x + box.width).toBeLessThanOrEqual(content.right + 0.5);
+  for (const name of ['Yesterday', 'Today', 'Tomorrow']) {
+    await expect(table.getByRole('columnheader', { name })).toBeVisible();
+  }
+  expect(await pastTheEdge(page)).toEqual([]);
+});
+
 // PF-01 Ask: the forecast lands at about 0.8 s.
 for (const [width, height] of [
   [320, 640],

@@ -45,7 +45,7 @@ Rules:
 ### Open-Meteo Weather Forecast API (Phase A2)
 
 - **Endpoint:** `https://api.open-meteo.com/v1/forecast`, a fixed constant. It is called by the server only, never the browser.
-- **Request:** the same 2-decimal coordinates as the air call, with `hourly=temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day`, `timeformat=unixtime` and `forecast_hours=3`.
+- **Request:** the same 2-decimal coordinates as the air call, with `hourly=temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day`, `timeformat=unixtime`, `timezone=auto`, `past_days=1`, `forecast_days=2` and `daily=temperature_2m_max,temperature_2m_min,precipitation_sum` (yesterday, today and tomorrow in the place's own time).
 - **Use:** only the hour containing the request time. Precipitation and its probability are sums over the hour before each row, so that hour's values come from the next row; `is_day` comes from the row itself. It drives the app backdrop (`CitySkyline`, behind every app page: clouds, rain, heat, and the daylight glow when `is_day` is 1, until an hour after the weather's own hour) and one line of words. Visibility is in the words only: there is no fog band (owner, 22 Nov).
 - **Failure:** any failure gives `weather: null`, and the air forecast is unaffected. Logs name the host only, never the coordinates.
 - **Terms:** free tier, no key, CC BY 4.0 attribution ("Weather forecasts from Open-Meteo.com."), the same as the other Open-Meteo APIs.

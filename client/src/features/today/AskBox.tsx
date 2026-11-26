@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react';
+import { CyclingHint } from '../ask/CyclingHint.tsx';
 import { navigate } from '../../lib/navigation.ts';
 
 const STARTERS = [
@@ -9,8 +10,19 @@ const STARTERS = [
 
 // "Ask AirAware anything": the question goes to Ask in memory, never into
 // the address, so it cannot reach browser history or server logs (§7.4).
-export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
+export function AskBox({
+  onAsk,
+  active,
+  started,
+}: {
+  onAsk: (question: string) => void;
+  // Today is the page on screen (the box stays mounted, hidden, on others).
+  active: boolean;
+  // A question has been asked: the hint stops looping.
+  started: boolean;
+}) {
   const [question, setQuestion] = useState('');
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const headingId = useId();
   const inputId = useId();
@@ -39,18 +51,26 @@ export function AskBox({ onAsk }: { onAsk: (question: string) => void }) {
           Ask about your air, home or day
         </label>
         <div className="flex flex-wrap gap-2">
-          <input
-            id={inputId}
-            ref={inputRef}
-            type="text"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            required
-            maxLength={200}
-            enterKeyHint="send"
-            autoComplete="off"
-            className="min-h-12 min-w-0 flex-[1_1_10rem] rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
-          />
+          <div className="relative min-w-0 flex-[1_1_10rem]">
+            <CyclingHint
+              show={active && !focused && question === ''}
+              still={started}
+            />
+            <input
+              id={inputId}
+              ref={inputRef}
+              type="text"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              required
+              maxLength={200}
+              enterKeyHint="send"
+              autoComplete="off"
+              className="block min-h-12 w-full rounded-md border border-text-dark bg-surface-light px-3 text-text-dark"
+            />
+          </div>
           <button
             type="submit"
             className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark"

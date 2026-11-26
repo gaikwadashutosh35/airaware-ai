@@ -118,6 +118,7 @@ describe('air-quality routes', () => {
           urlOf(input).includes('air-quality-api')
             ? Response.json(pune)
             : Response.json({
+                utc_offset_seconds: 19800,
                 hourly_units: { time: 'unixtime', temperature_2m: '°C' },
                 hourly: { time: [t, t + 3600], temperature_2m: [27.5, 26.9] },
               }),
@@ -132,6 +133,12 @@ describe('air-quality routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.weather.temperatureC).toBe(27.5);
       expect(res.body.data.weather.time).toBe('2026-11-17T17:00:00.000Z');
+      expect(res.body.data.weather.utcOffsetSeconds).toBe(19800);
+      // 17:00 UTC is 22:30 in Pune: the local dates, in order.
+      expect(
+        res.body.data.weather.days.map((d: { date: string }) => d.date),
+      ).toEqual(['2026-11-16', '2026-11-17', '2026-11-18']);
+      expect(res.body.data.weather.days[1].atHour.temperatureC).toBe(27.5);
     });
 
     it('a failed weather call leaves the air forecast intact', async () => {

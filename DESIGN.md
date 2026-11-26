@@ -63,6 +63,7 @@ Do not use these colors as the only indicators. Every AQI/status signal also nee
 - Establish a readable content max-width.
 - Use grid for dashboard composition and flexible stacking on mobile.
 - Maintain a clear spacing rhythm between chapters.
+- App pages: the gap above the footer card is 32 px on every tab, the same as between panels (main `py-8 sm:pt-12`, footer row `pb-8`, J21).
 - Avoid repetitive card grids; use cards when they represent real independent objects/actions.
 - Keep charts large enough to read and pair with textual interpretation.
 
@@ -85,10 +86,11 @@ Today answers "How is my air?" first, then "What should I do?" (assistant redesi
 1. A greeting by device time, then the H1 "Today in {place}" (24 px below 640 px, 30 px from 640 px; redesign P3).
 2. The weather strip (this hour's weather in words; the city scene is the page backdrop), then the verdict (the largest text), its word tag, "Model forecast · Open-Meteo · retrieved {time}", the "Not current" banner when stale (never hidden; a solid warning fill with "Reload forecast"), the meaning sentence when the forecast is above the limit or unknown, and the caveat. Within the limit the meaning sentence moves into "Air quality details" (owner ruling B1).
 3. "Your recommendation for today": one plan card with "Why?" (every card's disclosure says "Why?", with the card title in its screen-reader name; owner ruling E1). Its "For you" line shows only once the household has answers (B2). "See your full day" folds the rest of the plan and "Save plan".
-4. "What would you like help with?": four choices.
-5. With no household answers, "Make it personal: 2 quick questions" (outlined, so the page keeps one teal action) and "Not now" (B8).
-6. "Ask AirAware anything".
-7. "Air quality details", closed: the PM2.5 figure, the forecast panel, the forecast location, the CPCB line, the 24-hour method, and sources with limitations.
+4. "Weather · Open-Meteo model data": a table of Yesterday, Today and Tomorrow (rows "At {local hour}", "Min–max", "Rain") with the note "Yesterday is past model data, not station measurements." It is hidden while loading, on error and when "Not current" (J20).
+5. "What would you like help with?": four choices.
+6. With no household answers, "Make it personal: 2 quick questions" (outlined, so the page keeps one teal action) and "Not now" (B8).
+7. "Ask AirAware anything".
+8. "Air quality details", closed: the PM2.5 figure, the forecast panel, the forecast location, the CPCB line, the 24-hour method, and sources with limitations.
 
 From `lg`, the verdict sits on the left and the recommendation on the right; the rest runs full width below. Official observations, once connected, stay visibly separate from the model forecast. A saved plan opens in My Profile, never on Today.
 
@@ -96,7 +98,7 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
 
 ## 8. Components
 
-- `LocationSearch`
+- `LocationSearch` (the field shows the hint "e.g. Pune, India", J19)
 - `LocationPermissionDialog`
 - `DataProvenanceBadge`
 - `FreshnessIndicator`
@@ -131,11 +133,11 @@ Never show a large AQI number if its index type is ambiguous. If only PM2.5 is a
     - **Forced colours** (Windows High Contrast): the whole backdrop hides, so the words sit on the system background.
   - `DailyPlanSection`: builds by itself while Today or My Home is shown (no plan, changed answers, or a plan over an hour old by the device clock), never twice at once. After an error it waits for "Try again". It shows the top card, with the full day in a `<details>`, and reports its state (nothing, building, an error with a retry, a stale plan, or the current one) for My Home, which shows the same states and never a stale plan as today's. Redesign P3: it names the air the plan used when no verdict is on screen or the verdict's level differs (B5); while building, a placeholder as tall as the ready plan holds the space; "Your plan is ready." is for screen readers only, while the building, error and save lines stay visible; after a failed build, with the forecast ready and under an hour old, it adds "Your forecast on this page is still up to date." (A11).
   - `HelpChoices`: four links in a list, each with an icon and one line. Outdoor and Family ask their topic through `useAsk` and open Ask.
-  - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`), "Send", and three starter questions that fill it. Send asks through `useAsk` and opens Ask; the question never goes into the address. The input row wraps, so at large text Send drops below the input (redesign P4, C9).
+  - `AskBox`: a labelled input (200 characters, `enterkeyhint="send"`; while empty and not focused, an `aria-hidden` hint types, holds, fades and cycles through the example questions, still under reduced motion, J18), "Send", and three starter questions that fill it. Send asks through `useAsk` and opens Ask; the question never goes into the address. The input row wraps, so at large text Send drops below the input (redesign P4, C9).
   - `Ask` (Phase 7; order from redesign P4, rulings D1–D5 and A12): one `h1`, the intro "Answers come from AirAware's rules and today's forecast.", the context line with "Edit" to My Profile, the place search when there is no place, then the guided chat (21 Nov, `docs/superpowers/specs/2026-11-21-ask-guided-chat-design.md`):
     - one panel with `TopicChips` (plain buttons), the first three starter buttons and a `<details>` "More questions" holding the other two; there is no greeting;
     - the conversation (`data-part="ask-thread"`): one solid `bg-surface-light` surface, a rule line between exchanges, the exchanges oldest first, each with your message as an `h2` bubble (a hidden "You asked:" or 'Your answer to "…":' prefix) and AirAware's reply;
-    - the question box last (`data-part="ask-composer"`, Ask chat redesign, 26 Nov, rulings J1 to J17): the whole column is centred (J15); the box has a small credit line under its row (`data-part="ask-credit"`: Open-Meteo.com, CC BY 4.0, CAMS, Privacy), and Ask with a place has no footer card (J16); a labelled textarea (no `name`, `autocomplete="off"`, 200 characters, `field-sizing: content`, up to about 4 lines, then it scrolls) and "Send" on one row, wrapping at large text. Enter sends, Shift+Enter adds a line (also on phones), and Enter during IME composition does nothing. Send is disabled when the box is empty or a reply is pending. A failed question comes back to the box unless something new was typed. On phones (below 48rem) it is pinned from the start; from md up it sits in the page under the topics until the first question (J17), and the column's gap is 16 px from md up so it fits at 1280x720. Pinned, and only on screens at least 30.2rem tall (the city's own threshold is 33.3rem, H5), it is `position: sticky`, flush on the 3.5rem phone bar or, from md up, at the window's bottom edge, with no rounded bottom corners only while stuck (scroll-state query on the panel inside it; elsewhere a rounded card); below that it sits in the page after the thread;
+    - the question box last (`data-part="ask-composer"`, Ask chat redesign, 26 Nov, rulings J1 to J17): the whole column is centred (J15); the box has a small credit line under its row (`data-part="ask-credit"`: Open-Meteo.com, CC BY 4.0, CAMS, Privacy), and Ask with a place has no footer card (J16); a labelled textarea (an `aria-hidden` cycling hint while it is empty and not focused, J18; no `name`, `autocomplete="off"`, 200 characters, `field-sizing: content`, up to about 4 lines, then it scrolls) and "Send" on one row, wrapping at large text. Enter sends, Shift+Enter adds a line (also on phones), and Enter during IME composition does nothing. Send is disabled when the box is empty or a reply is pending. A failed question comes back to the box unless something new was typed. On phones (below 48rem) it is pinned from the start; from md up it sits in the page under the topics until the first question (J17), and the column's gap is 16 px from md up so it fits at 1280x720. Pinned, and only on screens at least 30.2rem tall (the city's own threshold is 33.3rem, H5), it is `position: sticky`, flush on the 3.5rem phone bar or, from md up, at the window's bottom edge, with no rounded bottom corners only while stuck (scroll-state query on the panel inside it; elsewhere a rounded card); below that it sits in the page after the thread;
     - on the newest reply only, a question back (a `fieldset` whose `legend` is the My Profile question) and "You could also ask:".
     - The context line reads "…, retrieved HH:MM", adding "· Not current" once the forecast is over an hour old. While the forecast loads, an invisible, `aria-hidden` stand-in of the same locale format holds the line's length, so nothing below moves when the time lands.
     - One `sr-only` `<output>` says "AirAware is thinking…", then "Answer ready. …", "Noted. …", or the medical or out-of-scope sentence; an error is ErrorState's own alert. Send, chips, starters and answers are disabled while an answer is coming.

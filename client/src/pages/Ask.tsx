@@ -13,6 +13,7 @@ import {
   StarterButtons,
   TopicChips,
 } from '../features/ask/AskEntry.tsx';
+import { CyclingHint } from '../features/ask/CyclingHint.tsx';
 import type { useAsk } from '../features/ask/useAsk.ts';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import { NEAR_YOU, type Place } from '../features/location/place.ts';
@@ -51,6 +52,7 @@ export function Ask({
   onLocate: (place: Place) => void;
 }) {
   const [question, setQuestion] = useState('');
+  const [focused, setFocused] = useState(false);
   // The last text sent from the box, and the text put back after a failure.
   const [sent, setSent] = useState<string | null>(null);
   const [refilled, setRefilled] = useState<string | null>(null);
@@ -214,25 +216,36 @@ export function Ask({
                 {ASK_COPY.inputLabel}
               </label>
               <div className="flex flex-wrap items-end gap-2">
-                <textarea
-                  id={inputId}
-                  rows={1}
-                  value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key !== 'Enter' || event.shiftKey) return;
-                    event.preventDefault();
-                    if (event.nativeEvent.isComposing || event.keyCode === 229)
-                      return;
-                    if (!ask.thinking && question.trim())
-                      event.currentTarget.form?.requestSubmit();
-                  }}
-                  required
-                  maxLength={200}
-                  enterKeyHint="send"
-                  autoComplete="off"
-                  className="field-sizing-content max-h-[calc(4lh+1.5rem)] min-h-12 min-w-0 flex-[1_1_10rem] resize-none overflow-y-auto rounded-md border border-text-dark bg-surface-light px-3 py-3 text-text-dark"
-                />
+                <div className="relative min-w-0 flex-[1_1_10rem]">
+                  <CyclingHint
+                    show={!focused && question === ''}
+                    still={ask.entries.length > 0}
+                  />
+                  <textarea
+                    id={inputId}
+                    rows={1}
+                    value={question}
+                    onChange={(event) => setQuestion(event.target.value)}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' || event.shiftKey) return;
+                      event.preventDefault();
+                      if (
+                        event.nativeEvent.isComposing ||
+                        event.keyCode === 229
+                      )
+                        return;
+                      if (!ask.thinking && question.trim())
+                        event.currentTarget.form?.requestSubmit();
+                    }}
+                    required
+                    maxLength={200}
+                    enterKeyHint="send"
+                    autoComplete="off"
+                    className="field-sizing-content max-h-[calc(4lh+1.5rem)] block min-h-12 w-full resize-none overflow-y-auto rounded-md border border-text-dark bg-surface-light px-3 py-3 text-text-dark"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={ask.thinking || !question.trim()}

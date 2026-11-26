@@ -76,6 +76,46 @@ export const forecastFixture: ForecastData = {
     // 17:00 UTC is 22:30 in Pune.
     isDay: false,
     retrievedAt: '2026-11-17T17:05:00.000Z',
+    // Pune is +05:30: 17:00 UTC is 22:30 on 17 Nov there.
+    utcOffsetSeconds: 19800,
+    days: [
+      {
+        day: 'yesterday',
+        date: '2026-11-16',
+        minC: 19.4,
+        maxC: 31.6,
+        precipitationMm: 0,
+        atHour: {
+          time: '2026-11-16T17:00:00.000Z',
+          temperatureC: 26.8,
+          cloudCoverPct: 10,
+        },
+      },
+      {
+        day: 'today',
+        date: '2026-11-17',
+        minC: 19.9,
+        maxC: 32.2,
+        precipitationMm: 0.04,
+        atHour: {
+          time: '2026-11-17T17:00:00.000Z',
+          temperatureC: 27.5,
+          cloudCoverPct: 30,
+        },
+      },
+      {
+        day: 'tomorrow',
+        date: '2026-11-18',
+        minC: 20.5,
+        maxC: 30.4,
+        precipitationMm: 2.26,
+        atHour: {
+          time: '2026-11-18T17:00:00.000Z',
+          temperatureC: 25.2,
+          cloudCoverPct: 80,
+        },
+      },
+    ],
   },
 };
 

@@ -206,6 +206,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - the e2e checks are AK-11 to AK-23 in `e2e/firstscreen.spec.ts`;
   - big city (owner, 26 Nov, H5): the backdrop city band is `min(16rem,32vh)` on phones and `min(24rem,40vh)` from sm up, drawn 1.74x wider from md up, with a matching page-end space; it hides under 33.3rem tall (was 30.2rem); new e2e check BD-H5.
   - no new wording, and no server, contract or dependency change. Stubbed e2e on 26 Nov: firstscreen 260 passed (re-run 26 Nov after phones were pinned from the start and the md gap cut to 16 px; AK-01 asserted again); nine stubbed specs 599 passed, 83 skipped, 0 failed (re-run 26 Nov after the big city, H5); the software keyboard still needs a real phone.
+- Four owner-approved site changes (26 Nov; `docs/redesign/OWNER_DECISIONS.md` rows J18 to J21; built, not committed):
+  - the shared place search shows the hint "e.g. Pune, India" (J19);
+  - the empty Ask box, and Today's small Ask box, show an `aria-hidden` hint that types, holds, fades and cycles through the example questions; it hides on focus or text and stays still under reduced motion (J18; replaces ruling D-4);
+  - Today has a "Weather · Open-Meteo model data" table comparing Yesterday, Today and Tomorrow ("At {local hour}", "Min–max", "Rain"), after the recommendation, hidden while loading, on error and when "Not current". The server now asks Open-Meteo for `past_days=1`, `forecast_days=2` and daily values, and `WeatherNow` gains `utcOffsetSeconds` and `days` (J20);
+  - the gap above the footer card is 32 px on every tab (J21);
+  - fix wave (26 Nov): the hint loops only before the first question and pauses on hidden tabs and other pages; the weather table fits its panel at 200 % text and shows only while its middle day is the place's date now; the place-search hint has readable contrast; the weather call is bounded against a bad offset or date;
+  - stubbed e2e on 26 Nov (nine specs): 601 passed, 83 skipped, 0 failed (16.5m).
 - Redesign P11 polish (26 Nov; six items from the P11 checklist, approved by the owner):
   - the app, Landing and Privacy pad the left and right safe areas on the header row, the page and the footer (ruling C7), so nothing sits under a notch on a phone held sideways; with no notch the padding is unchanged;
   - enabled buttons show the pointer cursor again (Tailwind v4 had dropped it);

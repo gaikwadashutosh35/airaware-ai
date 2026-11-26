@@ -6,6 +6,7 @@ const T10 = Date.UTC(2026, 10, 18, 10) / 1000;
 
 function body(start = T10, extra: Record<string, unknown> = {}) {
   return {
+    utc_offset_seconds: 0,
     hourly_units: {
       time: 'unixtime',
       temperature_2m: '°C',
@@ -54,7 +55,13 @@ describe('fetchWeather', () => {
       'temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day',
     );
     expect(url.searchParams.get('timeformat')).toBe('unixtime');
-    expect(url.searchParams.get('forecast_hours')).toBe('3');
+    // Yesterday, today and tomorrow in the place's own time.
+    expect(url.searchParams.get('timezone')).toBe('auto');
+    expect(url.searchParams.get('past_days')).toBe('1');
+    expect(url.searchParams.get('forecast_days')).toBe('2');
+    expect(url.searchParams.get('daily')).toBe(
+      'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    );
   });
 
   it('returns the hour containing now', async () => {
@@ -68,6 +75,47 @@ describe('fetchWeather', () => {
       visibilityM: 24140,
       isDay: null,
       retrievedAt: NOW.toISOString(),
+      utcOffsetSeconds: 0,
+      // Three hourly rows only: the other days have no same-hour row, no
+      // daily values, and stay null (never filled in).
+      days: [
+        {
+          day: 'yesterday',
+          date: '2026-11-17',
+          minC: null,
+          maxC: null,
+          precipitationMm: null,
+          atHour: {
+            time: '2026-11-17T10:00:00.000Z',
+            temperatureC: null,
+            cloudCoverPct: null,
+          },
+        },
+        {
+          day: 'today',
+          date: '2026-11-18',
+          minC: null,
+          maxC: null,
+          precipitationMm: null,
+          atHour: {
+            time: '2026-11-18T10:00:00.000Z',
+            temperatureC: 31.2,
+            cloudCoverPct: 85,
+          },
+        },
+        {
+          day: 'tomorrow',
+          date: '2026-11-19',
+          minC: null,
+          maxC: null,
+          precipitationMm: null,
+          atHour: {
+            time: '2026-11-19T10:00:00.000Z',
+            temperatureC: null,
+            cloudCoverPct: null,
+          },
+        },
+      ],
     });
   });
 
@@ -120,5 +168,140 @@ describe('fetchWeather', () => {
   it('returns null on a provider failure', async () => {
     respond({ error: true }, 500);
     expect(await fetchWeather(18.52, 73.86, NOW)).toBeNull();
+  });
+
+  it('returns null when the offset is missing (fails closed)', async () => {
+    const json = body();
+    delete (json as Record<string, unknown>).utc_offset_seconds;
+    respond(json);
+    expect(await fetchWeather(18.52, 73.86, NOW)).toBeNull();
+  });
+});
+
+// Asia/Kolkata (+05:30): 72 hourly rows from local midnight 17 Nov to the end
+// of 19 Nov, so rows sit at :30 UTC. Row n has temperature n and cloud n.
+const IST = 19800;
+const START = Date.UTC(2026, 10, 16, 18, 30) / 1000;
+function kolkata(daily: Record<string, unknown> | null = {}) {
+  const rows = Array.from({ length: 72 }, (_, n) => n);
+  return {
+    utc_offset_seconds: IST,
+    hourly: {
+      time: rows.map((n) => START + n * 3600),
+      temperature_2m: rows,
+      cloud_cover: rows.map((n) => n + 100),
+    },
+    ...(daily && {
+      daily: {
+        time: [START, START + 86400, START + 2 * 86400],
+        temperature_2m_max: [30, 32, 34],
+        temperature_2m_min: [20, 21, null],
+        precipitation_sum: [0, 1.5, 0.2],
+        ...daily,
+      },
+    }),
+  };
+}
+// 10:30 UTC on 18 Nov is 16:00 in Kolkata.
+const KOLKATA_NOW = new Date('2026-11-18T10:30:00.000Z');
+
+describe('fetchWeather days', () => {
+  it('gives yesterday, today and tomorrow by the place’s local date', async () => {
+    respond(kolkata());
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    expect(weather?.utcOffsetSeconds).toBe(IST);
+    expect(weather?.days.map(({ day, date }) => [day, date])).toEqual([
+      ['yesterday', '2026-11-17'],
+      ['today', '2026-11-18'],
+      ['tomorrow', '2026-11-19'],
+    ]);
+  });
+
+  it('takes the same local hour on each day', async () => {
+    respond(kolkata());
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    // Now is row 40 (16:00 local); yesterday is row 16, tomorrow row 64.
+    expect(weather?.temperatureC).toBe(40);
+    expect(weather?.days.map((d) => d.atHour)).toEqual([
+      {
+        time: '2026-11-17T10:30:00.000Z',
+        temperatureC: 16,
+        cloudCoverPct: 116,
+      },
+      {
+        time: '2026-11-18T10:30:00.000Z',
+        temperatureC: 40,
+        cloudCoverPct: 140,
+      },
+      {
+        time: '2026-11-19T10:30:00.000Z',
+        temperatureC: 64,
+        cloudCoverPct: 164,
+      },
+    ]);
+  });
+
+  it('reads the daily range and rain, with null for what is missing', async () => {
+    respond(kolkata());
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    expect(
+      weather?.days.map(({ minC, maxC, precipitationMm }) => [
+        minC,
+        maxC,
+        precipitationMm,
+      ]),
+    ).toEqual([
+      [20, 30, 0],
+      [21, 32, 1.5],
+      [null, 34, 0.2],
+    ]);
+  });
+
+  it('leaves the daily values null when the provider sends none', async () => {
+    respond(kolkata(null));
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    expect(weather?.days.every((d) => d.minC === null && d.maxC === null)).toBe(
+      true,
+    );
+    expect(weather?.days[1]?.atHour.temperatureC).toBe(40);
+  });
+
+  it('fails closed when a daily column is the wrong length', async () => {
+    respond(kolkata({ precipitation_sum: [0] }));
+    expect(await fetchWeather(18.52, 73.86, KOLKATA_NOW)).toBeNull();
+  });
+
+  // The local date differs from the UTC date: 20:00 UTC on 17 Nov is 01:30 on
+  // 18 Nov in Kolkata.
+  it('names the local dates when the UTC date is still the day before', async () => {
+    respond(kolkata());
+    const weather = await fetchWeather(
+      18.52,
+      73.86,
+      new Date('2026-11-17T20:00:00.000Z'),
+    );
+    expect(weather?.days.map((d) => d.date)).toEqual([
+      '2026-11-17',
+      '2026-11-18',
+      '2026-11-19',
+    ]);
+    // Now is row 25 (01:30 local); yesterday is row 1, tomorrow row 49.
+    expect(weather?.days.map((d) => d.atHour.temperatureC)).toEqual([
+      1, 25, 49,
+    ]);
+    expect(weather?.days.map((d) => d.maxC)).toEqual([30, 32, 34]);
+  });
+
+  it('fails closed on an offset beyond a real time zone', async () => {
+    respond({ ...kolkata(), utc_offset_seconds: 64801 });
+    expect(await fetchWeather(18.52, 73.86, KOLKATA_NOW)).toBeNull();
+    respond({ ...kolkata(), utc_offset_seconds: -64801 });
+    expect(await fetchWeather(18.52, 73.86, KOLKATA_NOW)).toBeNull();
+  });
+
+  it('never throws on a daily time no date can hold', async () => {
+    respond(kolkata({ time: [9e15, START + 86400, START + 2 * 86400] }));
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    expect(weather?.days.map((d) => d.maxC)).toEqual([null, 32, 34]);
   });
 });

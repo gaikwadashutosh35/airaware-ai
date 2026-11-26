@@ -20,9 +20,61 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('AskBox', () => {
+  it('lays an aria-hidden cycling hint over the empty box, hidden on focus or text', () => {
+    const { container } = render(
+      <AskBox onAsk={vi.fn()} active started={false} />,
+    );
+    expect(input().getAttribute('placeholder')).toBeNull();
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    fireEvent.focus(input());
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+    fireEvent.blur(input());
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    fireEvent.change(input(), { target: { value: ' ' } });
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+  });
+
+  it('runs no hint timer while Today is hidden, and resumes when shown', () => {
+    vi.useFakeTimers();
+    try {
+      const { container, rerender } = render(
+        <AskBox onAsk={vi.fn()} active={false} started={false} />,
+      );
+      expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+      expect(vi.getTimerCount()).toBe(0);
+      vi.advanceTimersByTime(60000);
+      expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+      rerender(<AskBox onAsk={vi.fn()} active started={false} />);
+      expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('once a question has been asked the hint is the first example, still', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<AskBox onAsk={vi.fn()} active started />);
+      expect(container.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+        'Can I go for a morning walk today?',
+      );
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = render(
+      <AskBox onAsk={vi.fn()} active started={false} />,
+    );
+    await expectNoAxeViolations(container);
+  });
+
   it('the ask box sends its question in memory, not the address', () => {
     const onAsk = vi.fn();
-    render(<AskBox onAsk={onAsk} />);
+    render(<AskBox onAsk={onAsk} active started={false} />);
 
     fireEvent.change(input(), {
       target: { value: '  Is smoke from the next street a problem?  ' },
@@ -40,7 +92,7 @@ describe('AskBox', () => {
   it('moves focus to the page it opens', () => {
     render(
       <main id="main" tabIndex={-1}>
-        <AskBox onAsk={vi.fn()} />
+        <AskBox onAsk={vi.fn()} active started={false} />
       </main>,
     );
 
@@ -52,14 +104,14 @@ describe('AskBox', () => {
 
   // The browser asks for a question instead of doing nothing.
   it('needs a question', () => {
-    render(<AskBox onAsk={vi.fn()} />);
+    render(<AskBox onAsk={vi.fn()} active started={false} />);
 
     expect(input().required).toBe(true);
   });
 
   it('sends nothing when the box is empty', () => {
     const onAsk = vi.fn();
-    render(<AskBox onAsk={onAsk} />);
+    render(<AskBox onAsk={onAsk} active started={false} />);
 
     fireEvent.change(input(), { target: { value: '   ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
@@ -70,7 +122,7 @@ describe('AskBox', () => {
 
   it('starter questions fill the ask box', () => {
     const onAsk = vi.fn();
-    render(<AskBox onAsk={onAsk} />);
+    render(<AskBox onAsk={onAsk} active started={false} />);
 
     for (const question of STARTERS) {
       fireEvent.click(screen.getByRole('button', { name: question }));
@@ -81,7 +133,7 @@ describe('AskBox', () => {
   });
 
   it('starter buttons use the control border', () => {
-    render(<AskBox onAsk={vi.fn()} />);
+    render(<AskBox onAsk={vi.fn()} active started={false} />);
 
     const button = screen.getByRole('button', { name: STARTERS[0]! });
     expect(button.classList.contains('border-text-dark-muted')).toBe(true);
@@ -89,13 +141,17 @@ describe('AskBox', () => {
   });
 
   it('the input row wraps, so Send can drop below at large text', () => {
-    render(<AskBox onAsk={vi.fn()} />);
+    render(<AskBox onAsk={vi.fn()} active started={false} />);
 
-    expect(input().parentElement!.classList.contains('flex-wrap')).toBe(true);
+    expect(
+      input().parentElement!.parentElement!.classList.contains('flex-wrap'),
+    ).toBe(true);
   });
 
   it('keeps questions short and says send on the keyboard', async () => {
-    const { container } = render(<AskBox onAsk={vi.fn()} />);
+    const { container } = render(
+      <AskBox onAsk={vi.fn()} active started={false} />,
+    );
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'Ask AirAware anything' }),
