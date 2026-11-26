@@ -6,7 +6,7 @@ function Part({ title, items }: { title: string; items: ReactNode[] }) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
-      <ul className="flex list-disc flex-col gap-2 pl-5">
+      <ul className="max-w-prose flex list-disc flex-col gap-2 pl-5">
         {items.map((item, i) => (
           <li key={i}>{item}</li>
         ))}
@@ -20,7 +20,7 @@ function Privacy() {
     <>
       <title>Privacy | AirAware AI</title>
       <header className="on-dark bg-bg text-text">
-        <div className="mx-auto flex min-h-16 max-w-5xl items-center px-4 sm:px-6">
+        <div className="mx-auto flex min-h-16 max-w-5xl items-center pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
           <a
             href="/"
             className="inline-flex min-h-11 items-center text-lg font-semibold"
@@ -29,7 +29,7 @@ function Privacy() {
           </a>
         </div>
       </header>
-      <main className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto flex max-w-3xl flex-col gap-8 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:py-12">
         <div className="flex flex-col gap-3">
           <a
             href="/app"
@@ -45,7 +45,7 @@ function Privacy() {
         </div>
         <section className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
           <h2 className="text-2xl font-semibold tracking-tight">In short</h2>
-          <ul className="flex list-disc flex-col gap-2 pl-5">
+          <ul className="max-w-prose flex list-disc flex-col gap-2 pl-5">
             <li>
               Nothing is stored until you press &quot;Save my answers&quot; or
               &quot;Save plan&quot;, or tick &quot;Remember on this
@@ -124,7 +124,7 @@ function Privacy() {
         </p>
       </main>
       <footer className="border-t border-rule">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 text-sm text-text-dark-muted sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
           <Attribution />
           <a
             href="/privacy"

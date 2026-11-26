@@ -64,7 +64,7 @@ for (const [width, height] of [
     await expect(
       page.getByRole('button', { name: `Change place: ${PLACE}` }),
     ).toBeVisible();
-    const label = page.locator('header .truncate:visible');
+    const label = page.locator('header button .truncate:visible');
     await expect(label).toHaveText(width < 1024 ? 'Pune' : PLACE);
     const [scroll, client] = await label.evaluate((el) => [
       el.scrollWidth,
@@ -1330,3 +1330,103 @@ test('PR-02: geolocation is read only after "Use my location"', async ({
   console.log(`PR-02 geolocation calls: loading 0, after one click ${after}`);
   expect(after).toBe(1);
 });
+
+// P11: the bottom bar at 200 % text (Chromium's default font at 32 px, set
+// through the real setting) and at normal text.
+const BAR_SIZES = [
+  [320, 640],
+  [390, 844],
+] as const;
+
+async function openBar(page: Page, width: number, height: number, px?: number) {
+  if (px) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Page.setFontSizes', {
+      fontSizes: { standard: px, fixed: 26 },
+    });
+  }
+  await page.route(
+    (url) => !['localhost', '127.0.0.1'].includes(url.hostname),
+    (route) => route.abort(),
+  );
+  await load(page, width, height);
+  // Only the phone bar is under test; the top bar starts at md.
+  return page.locator('nav[aria-label="Main"]');
+}
+
+for (const [width, height] of BAR_SIZES) {
+  test(`at 200 % text the bar stays on screen, each item a 44 px target: ${width}x${height}`, async ({
+    page,
+  }) => {
+    const bar = await openBar(page, width, height, 32);
+    expect(
+      await page.evaluate(
+        () => getComputedStyle(document.documentElement).fontSize,
+      ),
+    ).toBe('32px');
+    const out = await bar.evaluate((nav) => {
+      const width = document.documentElement.clientWidth;
+      return [nav, ...nav.querySelectorAll('*')]
+        .map((el) => [el.tagName, el.getBoundingClientRect()] as const)
+        .filter(([, r]) => r.left < -0.5 || r.right > width + 0.5)
+        .map(
+          ([tag, r]) => `${tag} ${Math.round(r.left)}..${Math.round(r.right)}`,
+        );
+    });
+    expect(out).toEqual([]);
+    const links = bar.getByRole('link');
+    expect(await links.count()).toBe(5);
+    for (const link of await links.all()) {
+      const box = (await link.boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.x).toBeGreaterThanOrEqual(-0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(width + 0.5);
+      expect(await link.getAttribute('aria-label')).toBeTruthy();
+    }
+  });
+}
+
+for (const [width, height] of [...BAR_SIZES, [768, 1024]] as const) {
+  test(`at normal text the bar labels show whole: ${width}x${height}`, async ({
+    page,
+  }) => {
+    const bar = await openBar(page, width, height);
+    const labels = bar.locator('a > span:not(:first-child)');
+    for (const label of await labels.all()) {
+      if (!(await label.isVisible())) continue;
+      expect(
+        await label.evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true);
+    }
+  });
+}
+
+// P11 review: a nav click focuses #main without scrolling, so the new page
+// (or the same page, tapped again) starts at its top with the header in view.
+for (const [width, height] of [
+  [390, 844],
+  [1280, 800],
+] as const) {
+  test(`a nav click opens the page at its top: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await load(page, width, height);
+    const link = page
+      .locator('nav[aria-label="Main"]')
+      .getByRole('link', { name: 'Better Habits' });
+    // From Today, then Better Habits tapped again.
+    for (let tap = 1; tap <= 2; tap += 1) {
+      await page.evaluate(() => window.scrollTo(0, 400));
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      await link.click();
+      await expect(
+        page.getByRole('heading', { level: 1, name: 'Better Habits' }),
+      ).toBeVisible();
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      expect(await page.evaluate(() => document.activeElement?.id)).toBe(
+        'main',
+      );
+    }
+  });
+}

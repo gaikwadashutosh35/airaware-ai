@@ -186,8 +186,8 @@ RLS is enabled on both tables, `to authenticated`, with `(select auth.uid()) = u
 `public.delete_my_account()` (`security definer`, `search_path = ''`) deletes only the calling user from `auth.users`, and their rows go with them. Only `authenticated` may execute it.
 
 Changes from §3:
-1. One `context` column mirrors `HouseholdContext` instead of three jsonb columns.
-2. No `location_label` in preferences: saved locations are P1, and coordinates are not stored.
+1. One `context` column mirrors `HouseholdContext`, plus an optional remembered `place`, instead of three jsonb columns.
+2. No `location_label` column. A remembered place (Phase 5, D2) is stored inside `context` as `place`: the searched label and its coordinates at 2 decimals (about 1 km), only when the person ticks "Remember on this device". A device location is never stored. A `saved_locations` table is P1.
 3. `user_id` is the primary key of `household_preferences` (one row per user).
 4. `daily_plans` has no `data_context` or `updated_at`. The stored `DailyPlan` carries its own forecast provenance, air check, sources and safety note, and it is never edited.
 

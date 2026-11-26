@@ -73,7 +73,7 @@ export function MyHome({
     <>
       <div data-part="title-block" className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">My Home</h1>
-        <p className="text-sm text-text-dark">
+        <p className="max-w-prose text-sm text-text-dark">
           Indoor suggestions look at what you cook with and what burns inside,
           as well as the air outside.
         </p>

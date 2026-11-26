@@ -69,7 +69,7 @@ Focus order follows the visual order on every page.
 
 **Covered by component tests, not walked by hand:**
 - the saved-plans list and the delete confirmation (focus moves to Cancel);
-- the snapshot banner (focus moves to it on Open, and back to the plan heading on "Back to today").
+- the snapshot banner (focus moves to it on Open). *Superseded (assistant redesign, Phase 6): a saved plan opens in My Profile, and "Close" returns focus to its Open button.*
 
 A screen-reader pass with a real reader has not been done yet.
 
@@ -188,3 +188,11 @@ No real screen reader has been confirmed yet.
 - **Title contrast:** `text-dark` title-block text against every colour that can pass behind it, now including the far and middle city rows as drawn: at least 4.58:1 (within), 4.95:1 (above) and 5.04:1 (unknown).
 - **The city no longer competes with the answer (CS-10):** the near row against the sky's bottom stop fell from 10.93:1 to 2.39:1 (within), 9.91:1 to 1.76:1 (above) and 10.93:1 to 1.92:1 (unknown), and stays above 1.5:1 so it is still a shape.
 - Unchanged: the backdrop is `aria-hidden`, hides under forced colours, and is still under reduced motion.
+
+## Redesign P11 polish (2026-11-26)
+
+- **Main navigation focus:** a click that navigates moves focus to the new page's `main` (`tabIndex={-1}`), with `preventScroll`, so the page still starts at its top. A modified click (new tab) leaves focus alone (`AppNav.test.tsx`). After a nav click, also on the current tab, the page is at scroll 0 with focus on `main`, at 390×844 and 1280×800 (`e2e/firstscreen.spec.ts`).
+- **Saved plans "Try again":** after a failed load, the button reloads the list and moves focus to the Saved plans heading first, so focus never falls to the page when the button goes (`SavedPlansList.test.tsx`).
+- **Bottom bar at 200 % text:** with Chromium's own default font at 32 px, at 320×640 and 390×844, no part of the bar passes the screen edge (before: the icon pills reached 16 px past each side at 320 and 9 px at 390, and at 320 the labels ran into each other), each of the five links is at least 44 px wide and tall, and each keeps its full `aria-label`. At 390 every label shows whole; at 320 "Today", "Home", "Habits" and "Profile" end in an ellipsis (each needs 67 to 73 px in a 64 px cell), and "Ask" shows whole. At normal text, at 320, 390 and 768, every label shows whole (`e2e/firstscreen.spec.ts`).
+- **Side safe areas:** the header row, page and footer clear the left and right insets (ruling C7). Headless Chromium reports 0 for these insets, so a notched phone is still a manual check.
+- **Readable lines:** the Privacy lists and the purpose lines on My Home and Better Habits are `max-w-prose` (about 65 characters).

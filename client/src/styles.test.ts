@@ -46,6 +46,12 @@ describe('design system base', () => {
     );
   });
 
+  // Tailwind v4's preflight dropped the pointer cursor on buttons.
+  it('an enabled button shows the pointer cursor', () => {
+    const flat = css.replace(/\s+/g, ' ');
+    expect(flat).toContain('button:not(:disabled) { cursor: pointer; }');
+  });
+
   it('the elevated surface token exists', () => {
     expect(css).toContain('--color-elevated: #172638;');
   });

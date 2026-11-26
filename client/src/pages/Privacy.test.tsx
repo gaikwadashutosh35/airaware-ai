@@ -83,6 +83,28 @@ describe('Privacy', () => {
     ).toBeTruthy();
   });
 
+  // P11 polish: side safe areas (C7) and a readable line length.
+  it('clears the side safe areas and keeps lists to a readable line', () => {
+    const { container } = render(<Privacy />);
+    for (const el of [
+      container.querySelector('header')?.firstElementChild,
+      container.querySelector('main'),
+      container.querySelector('footer')?.firstElementChild,
+    ]) {
+      for (const r of ['1rem', '1.5rem']) {
+        expect(el?.className).toContain(
+          `pl-[max(${r},env(safe-area-inset-left,0px))]`,
+        );
+        expect(el?.className).toContain(
+          `pr-[max(${r},env(safe-area-inset-right,0px))]`,
+        );
+      }
+    }
+    const lists = container.querySelectorAll('main ul');
+    expect(lists.length).toBeGreaterThan(3);
+    for (const list of lists) expect(list.className).toContain('max-w-prose');
+  });
+
   // P6 (PV-01, A10).
   it('has an "In short" panel with exactly three lines', () => {
     const { getByRole } = render(<Privacy />);

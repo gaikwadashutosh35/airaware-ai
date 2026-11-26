@@ -144,7 +144,21 @@ export function SavedPlansList({
         Saved plans
       </h2>
       {state.kind === 'loading' ? null : state.kind === 'error' ? (
-        <p>{LOAD_FAILED}</p>
+        <>
+          <p>{LOAD_FAILED}</p>
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                headingRef.current?.focus();
+                setReloads((n) => n + 1);
+              }}
+              className={buttonClass}
+            >
+              Try again
+            </button>
+          </div>
+        </>
       ) : state.plans.length === 0 ? (
         <p>{savingAvailable ? EMPTY : NOT_SET_UP}</p>
       ) : (

@@ -27,7 +27,7 @@ Open https://airaware-ai.netlify.app. There is no sign-in. Nothing is saved unle
 1. Press **Check My Air**.
 2. Search a city in India, for example `Pune`, `Delhi` or `Tezpur`, and pick it from the list. Or press **Use my location**: your browser asks first, and the location is rounded to about 1 km.
 3. Answer the two optional steps as **Household A** (table below), then press **See my air**.
-4. On **Today**, read the one-sentence verdict and its **Model forecast** label with the update time. Open **Air quality details** for the PM2.5 and PM10 figures, the 48-hour chart, units and sources.
+4. On **Today**, read the one-sentence verdict and its **Model forecast** label with the time it was retrieved. Open **Air quality details** for the PM2.5 and PM10 figures, the 48-hour chart, units and sources.
 5. Press **See your full day**. It says who made the plan:
    - **Made with AI**: Gemini (or the Claude backup) picked and timed our rules' suggestions;
    - **Made by our rules**: AI is unavailable right now, and everything else still works.

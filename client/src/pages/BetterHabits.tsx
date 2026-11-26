@@ -22,7 +22,7 @@ export function BetterHabits() {
         >
           Better Habits
         </h1>
-        <p className="text-sm text-text-dark">
+        <p className="max-w-prose text-sm text-text-dark">
           Practical habits that cut pollution for you and your neighbours. We
           never show an emissions saving we can&apos;t calculate.
         </p>

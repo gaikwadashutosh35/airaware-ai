@@ -61,7 +61,7 @@ Public liveness endpoint.
 
 Response:
 ```json
-{ "status": "ok", "version": "1.0.0" }
+{ "status": "ok", "version": "0.1.0" }
 ```
 
 Do not return secrets, connection strings, or detailed infrastructure topology.
@@ -207,7 +207,7 @@ Response (shortened):
 
 ### `POST /api/v1/recommendations/daily-plan`
 
-Public, rate-limited endpoint (no sign-in until Phase 6). Returns a daily plan for one place and optional household details. Gemini picks, orders and times the rules' recommendation candidates and adds a summary and one "for you" line per featured action; every advice text, reason, caveat and source stays the rules' own wording. Without Gemini, or when Gemini fails or its answer fails a check, the same request returns a complete rules-only plan.
+Public, rate-limited endpoint (no sign-in until Phase 6). Returns a daily plan for one place and optional household details. Gemini picks, orders and times the rules' recommendation candidates and adds a summary and one "for you" line per featured action; every advice text, reason, caveat and source stays the rules' own wording. Without an AI writer, or when Gemini and then the Claude backup (when its key is set) both give no accepted answer, the same request returns a complete rules-only plan.
 
 Request (illustrative):
 ```json
@@ -228,7 +228,7 @@ Request (illustrative):
 **Behaviour:**
 - Returns 200 for every valid request, whatever happens to Gemini or Open-Meteo.
 - An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Air information unavailable" notice. It never falls back to demo or stale data.
-- AI plans and full rules-only plans (Gemini not configured) are cached for 10 minutes by coordinates, label, household details and the forecast window. Fallback plans (Gemini or the forecast failed) are not cached, so the next request tries again.
+- AI plans and full rules-only plans (no AI writer configured) are cached for 10 minutes by coordinates, label, household details and the forecast window. Fallback plans (every AI writer or the forecast failed) are not cached, so the next request tries again.
 
 Response (illustrative, shortened):
 ```json
@@ -236,7 +236,7 @@ Response (illustrative, shortened):
   "data": {
     "generatedBy": "ai",
     "model": "gemini-3.8-flash",
-    "promptVersion": "daily-plan-v1",
+    "promptVersion": "daily-plan-v3",
     "summary": "Particle levels are forecast above the national limit, so plan indoor exercise and a quieter commute.",
     "place": { "label": "Pune, Maharashtra" },
     "air": { "level": "elevated", "windowStart": "2026-11-18T10:00:00.000Z", "checks": [] },
@@ -350,7 +350,7 @@ interface RecommendationCandidate {
   text: string;
   reason: string;
   evidenceType: 'data_driven_rule' | 'general_suggestion';
-  sourceIds: Array<'open-meteo' | 'cpcb-naaqs-2009'>;
+  sourceIds: SourceReferenceId[]; // 'open-meteo', 'cpcb-naaqs-2009' or a guide-library source (shared/contracts.ts)
   inputsUsed: string[];
   caveat?: string;
 }
@@ -382,7 +382,7 @@ interface DailyPlan {
   notices: RecommendationCandidate[];
   featured: Array<{ candidate: RecommendationCandidate; period: PlanPeriod | null; forYou: string | null }>;
   more: RecommendationCandidate[];
-  sources: Array<{ id: 'open-meteo' | 'cpcb-naaqs-2009'; name: string; url: string }>;
+  sources: Array<{ id: SourceReferenceId; name: string; url: string }>;
   safetyNote: string;
 }
 ```
@@ -393,7 +393,6 @@ interface DailyPlan {
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | Invalid request |
 | 401 | `UNAUTHENTICATED` | Missing/invalid token |
-| 403 | `FORBIDDEN` | Authenticated but not authorized |
 | 404 | `NOT_FOUND` | Resource not found or not accessible |
 | 409 | `LIMIT_REACHED` | 20 saved plans already; delete one first |
 | 413 | `PAYLOAD_TOO_LARGE` | Request limit exceeded |

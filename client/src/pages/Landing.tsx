@@ -42,7 +42,8 @@ const STEPS = [
   },
 ];
 
-const SECTION = 'reveal mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10 lg:py-12';
+const SECTION =
+  'reveal mx-auto max-w-6xl pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-6 sm:pl-[max(2rem,env(safe-area-inset-left,0px))] sm:pr-[max(2rem,env(safe-area-inset-right,0px))] sm:py-10 lg:py-12';
 const H2 = 'text-3xl font-semibold tracking-tight sm:text-5xl';
 
 function ActionLink() {
@@ -194,7 +195,7 @@ function Landing() {
     <div className="on-dark min-h-dvh bg-bg text-text">
       <title>AirAware AI: hourly air-quality forecasts for Indian cities</title>
       <header>
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center px-4 sm:px-8">
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:pl-[max(2rem,env(safe-area-inset-left,0px))] sm:pr-[max(2rem,env(safe-area-inset-right,0px))]">
           <a
             href="/"
             className="inline-flex min-h-11 items-center text-lg font-semibold"
@@ -207,7 +208,7 @@ function Landing() {
       <main>
         <section className="relative overflow-hidden">
           <HeroSkyline />
-          <div className="relative mx-auto grid max-w-6xl items-start gap-6 px-4 pt-4 pb-16 sm:px-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 lg:pt-6 lg:pb-20">
+          <div className="relative mx-auto grid max-w-6xl items-start gap-6 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-4 pb-16 sm:pl-[max(2rem,env(safe-area-inset-left,0px))] sm:pr-[max(2rem,env(safe-area-inset-right,0px))] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16 lg:pt-6 lg:pb-20">
             <div className="flex flex-col gap-5">
               <h1 className="text-5xl leading-[1.05] font-semibold tracking-tight sm:text-6xl lg:text-7xl">
                 The air around you matters.
@@ -390,7 +391,7 @@ function Landing() {
       </main>
 
       <footer className="border-t border-rule-dark">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-12 text-sm text-text-muted sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-12 text-sm text-text-muted sm:pl-[max(2rem,env(safe-area-inset-left,0px))] sm:pr-[max(2rem,env(safe-area-inset-right,0px))]">
           <p className="text-base font-semibold text-text">AirAware AI</p>
           <Attribution />
           <a

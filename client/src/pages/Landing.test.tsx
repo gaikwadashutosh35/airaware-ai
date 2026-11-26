@@ -48,6 +48,25 @@ describe('Landing', () => {
     cleanup();
   });
 
+  it('clears the side safe areas on the header, hero, sections and footer', () => {
+    const { container } = render(<Landing />);
+    for (const el of [
+      container.querySelector('header')?.firstElementChild,
+      container.querySelector('main section > div'),
+      container.querySelector('main section:nth-of-type(2)'),
+      container.querySelector('footer')?.firstElementChild,
+    ]) {
+      for (const r of ['1rem', '2rem']) {
+        expect(el?.className).toContain(
+          `pl-[max(${r},env(safe-area-inset-left,0px))]`,
+        );
+        expect(el?.className).toContain(
+          `pr-[max(${r},env(safe-area-inset-right,0px))]`,
+        );
+      }
+    }
+  });
+
   it('has one main heading and both hero actions', () => {
     render(<Landing />);
 

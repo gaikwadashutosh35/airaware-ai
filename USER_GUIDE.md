@@ -37,7 +37,6 @@ In **My Profile**, choose only the context you want to share. The answers stay w
 - Outdoor exercise habit.
 - Cooking/ventilation context.
 - Optional household preferences.
-- Preferred language.
 
 You can skip optional fields. Do not enter diagnoses or medical records.
 
@@ -70,7 +69,7 @@ Open **Why?** on any card for its reason and sources. The guides cite public sou
 - **Each answer:** a short answer, who made it (our rules or AI), what it is based on (today's forecast check, "Model forecast · Open-Meteo" and its time, with "Not current" when it is over an hour old; when no forecast could be fetched, only "Air information unavailable"), up to three suggestions with **Why?**, and the safety note. It never says yes or no to whether something is safe.
 - **Health questions:** "I can't give medical advice. For health concerns, please talk to a doctor.", with today's forecast. Questions outside air, home and day list what Ask can help with.
 - **Your questions** go only to our server, which uses them to pick a topic. They are not saved, logged or sent to an AI. Answers stay on the page for this visit (the latest 10) and are cleared when you choose another place.
-- The line under the heading says which forecast is used (with "Not current" once it is over an hour old) and how many of your 10 household questions you have answered; **Edit** opens My Profile.
+- Under the heading, after "Answers come from AirAware's rules and today's forecast.", a line says which forecast is used (with "Not current" once it is over an hour old) and how many of your 10 household questions you have answered; **Edit** opens My Profile.
 
 ## 6. Better Habits
 General guides in four groups: Daily commuting and vehicle idling, Waste, Cooking, and Energy use. Each has **Why?** and its sources. Choose the changes that suit your life. The app never states how much pollution a change saves, because it has no documented way to calculate it.

@@ -285,7 +285,7 @@ function AppShell() {
             enlarged text the row wraps onto a second line, so every control
             stays reachable. At normal text the chip (zero flex basis, grows to its
             content) gives way before the row wraps. */}
-        <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:gap-x-4 sm:px-6">
+        <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-2.5 sm:gap-x-4 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
           <a
             href={`/app${placeQuery}`}
             onClick={(event) => follow(event, '/app')}
@@ -309,7 +309,7 @@ function AppShell() {
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12"
+        className="mx-auto flex max-w-6xl flex-col gap-8 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] sm:py-12"
       >
         {/* Today and My Profile stay mounted, hidden when not shown, so a built
             plan, a build in flight and unsaved answers survive moving pages. */}
@@ -510,7 +510,7 @@ function AppShell() {
         </div>
       </main>
       <footer className="border-t border-rule bg-surface-light">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-text-dark-muted sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] py-8 text-sm text-text-dark-muted sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
           {shown && place && (
             <p>
               {backdropNote(

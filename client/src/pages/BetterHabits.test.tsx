@@ -46,6 +46,14 @@ describe('BetterHabits', () => {
     expect(screen.getByText(habitsGuidesFixture.safetyNote)).toBeDefined();
   });
 
+  it('keeps the purpose line to a readable length', () => {
+    routeGuides(guidesOk);
+    render(<BetterHabits />);
+    expect(
+      screen.getByText(/^Practical habits that cut pollution/).className,
+    ).toContain('max-w-prose');
+  });
+
   it('no card states a savings figure', async () => {
     routeGuides(guidesOk);
     const { container } = render(<BetterHabits />);

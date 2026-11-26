@@ -67,6 +67,35 @@ describe('AppNav', () => {
     expect(bar).not.toContain('max(');
   });
 
+  it('moves focus to #main after a click that navigates, not after a modified one', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    render(
+      <>
+        <AppNav page="today" />
+        <main id="main" tabIndex={-1} />
+      </>,
+    );
+    const link = screen.getByRole('link', { name: 'My Home' });
+
+    fireEvent.click(link, { ctrlKey: true });
+    expect(document.activeElement).not.toBe(document.getElementById('main'));
+
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    fireEvent.click(link);
+    expect(document.activeElement).toBe(document.getElementById('main'));
+    // Without preventScroll the browser undoes the scroll to the top.
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
+  // 200 % text on a phone: the pill and the label shrink to the cell.
+  it('the pill and the label can shrink to their cell', () => {
+    render(<AppNav page="today" />);
+    const link = screen.getByRole('link', { name: 'My Home' });
+    const [pill, short] = [...link.querySelectorAll('span')];
+    expect(pill!.className).toContain('w-12 max-w-full');
+    expect(short!.className).toContain('max-w-full truncate');
+  });
+
   it('navigates in place, keeping the place in the address', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     window.history.pushState({}, '', '/app?place=Pune&lat=18.52&lon=73.86');

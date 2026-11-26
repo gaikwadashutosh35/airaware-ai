@@ -1309,6 +1309,25 @@ describe('AppShell', () => {
     expect(footer.textContent).toContain('CC BY 4.0');
   });
 
+  it('header row, main and footer row clear the side safe areas', () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    for (const el of [
+      screen.getByRole('banner').firstElementChild,
+      screen.getByRole('main'),
+      screen.getByRole('contentinfo').firstElementChild,
+    ]) {
+      for (const r of ['1rem', '1.5rem']) {
+        expect(el?.className).toContain(
+          `pl-[max(${r},env(safe-area-inset-left,0px))]`,
+        );
+        expect(el?.className).toContain(
+          `pr-[max(${r},env(safe-area-inset-right,0px))]`,
+        );
+      }
+    }
+  });
+
   it('links to the privacy page from the footer', () => {
     routeFetch(ok());
     render(<AppShell />);

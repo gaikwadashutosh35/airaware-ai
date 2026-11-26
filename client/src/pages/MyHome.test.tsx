@@ -56,6 +56,14 @@ afterEach(() => {
 });
 
 describe('MyHome', () => {
+  it('keeps the purpose line to a readable length', () => {
+    routeGuides(guidesOk);
+    show();
+    expect(
+      screen.getByText(/^Indoor suggestions look at what you cook/).className,
+    ).toContain('max-w-prose');
+  });
+
   // Phase 10 final review: My Home never shows the verdict, so today's cards
   // say which air they rest on, with its kind, provider and time.
   it("today's cards name the air the plan used", async () => {

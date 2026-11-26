@@ -16,6 +16,7 @@ import { SavedPlansList } from './SavedPlansList.tsx';
 const session = vi.hoisted(() => ({
   available: true,
   currentToken: vi.fn<() => Promise<string | null>>(),
+  tokenForSave: vi.fn<() => Promise<string>>(),
 }));
 
 vi.mock('../../lib/supabase.ts', () => ({
@@ -23,7 +24,7 @@ vi.mock('../../lib/supabase.ts', () => ({
     return session.available;
   },
   currentToken: () => session.currentToken(),
-  tokenForSave: () => Promise.resolve('tok'),
+  tokenForSave: () => session.tokenForSave(),
   forgetSession: () => Promise.resolve(),
 }));
 
@@ -175,6 +176,36 @@ describe('SavedPlansList', () => {
     expect(
       await screen.findByText("Your saved plans couldn't be loaded right now."),
     ).toBeDefined();
+  });
+
+  it('Try again after a failed load reloads the list once', async () => {
+    let calls = 0;
+    const spy = routeFetch(() => {
+      calls += 1;
+      return calls === 1 ? failure(503, 'SAVE_UNAVAILABLE') : ok([newer]);
+    });
+    renderList();
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText('Pune, Maharashtra')).toBeDefined();
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Saved plans' }),
+    );
+  });
+
+  it('Try again with no session makes no request and creates none', async () => {
+    session.currentToken
+      .mockRejectedValueOnce(new Error('refresh failed'))
+      .mockResolvedValue(null);
+    const spy = routeFetch(() => ok([]));
+    renderList();
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByText(EMPTY)).toBeDefined();
+    expect(spy).not.toHaveBeenCalled();
+    expect(session.tokenForSave).not.toHaveBeenCalled();
   });
 
   it('opens a saved plan', async () => {

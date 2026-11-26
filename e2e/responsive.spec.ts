@@ -207,7 +207,7 @@ test.describe('a long place in the header', () => {
       );
       // The long name really is in the chip (the text before the first comma
       // below lg, the whole name from lg) and the title.
-      await expect(page.locator('header .truncate:visible')).toHaveText(
+      await expect(page.locator('header button .truncate:visible')).toHaveText(
         width < 1024 ? LONG_PLACE.split(',')[0]! : LONG_PLACE,
       );
       await expect(page.locator('main h1:visible').first()).toContainText(
@@ -346,7 +346,7 @@ test.describe('the header at normal text with a scrollbar', () => {
         encodeURIComponent('Mumbai, Maharashtra'),
       ),
     );
-    const label = page.locator('header .truncate:visible');
+    const label = page.locator('header button .truncate:visible');
     await expect(label).toHaveText('Mumbai, Maharashtra');
     const [scroll, client] = await label.evaluate((el) => [
       el.scrollWidth,

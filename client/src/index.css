@@ -107,6 +107,10 @@
     user-select: none;
   }
 
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
   /* A modal dialog never scrolls the page behind it. */
   dialog:modal {
     overscroll-behavior: contain;

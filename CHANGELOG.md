@@ -195,6 +195,13 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
   - **Welcome**: "Too many requests. Try again in a minute, or untick Remember to continue without saving.";
   - opening a saved plan: "Too many requests. Try again in a minute.";
   - deleting a saved plan: "Too many requests, so nothing was deleted. Try again in a minute."
+- Redesign P11 polish (26 Nov; six items from the P11 checklist, approved by the owner):
+  - the app, Landing and Privacy pad the left and right safe areas on the header row, the page and the footer (ruling C7), so nothing sits under a notch on a phone held sideways; with no notch the padding is unchanged;
+  - enabled buttons show the pointer cursor again (Tailwind v4 had dropped it);
+  - a click in the main navigation moves focus to the new page's main area without scrolling, so the new page still starts at its top;
+  - after "Your saved plans couldn't be loaded right now.", a "Try again" button reloads the list and keeps focus on the Saved plans heading; with no session it makes no request;
+  - the Privacy lists and the purpose lines on My Home and Better Habits keep to a readable line length;
+  - at 200 % text on a 320 or 390 phone, the bottom bar's items stay on screen (before, the icon pills reached up to 16 px past the edges, and at 320 the labels ran into each other); each is still a 44 px target with its full accessible name. At 390 every label shows whole; at 320 four of the five short labels end in an ellipsis ("To…"), since the five words need about 355 px. At normal text the bar is unchanged.
 - Redesign P8, backdrop art direction and large text (25 Nov; `docs/redesign/OWNER_DECISIONS.md`, rows H1–H4 and D7):
   - the backdrop's three air looks are retuned toward the art-direction images, with existing tokens only: a crisp, slightly cyan sky within the limits, a warmer, hazier sky above them (never orange), a cool neutral sky for unknown; nothing from the image folder is shipped;
   - the city is now light and tonal in the sky's own hue instead of dark silhouettes, so the answer reads first: the near row against the sky fell from about 10:1 to about 2:1 in every look;
