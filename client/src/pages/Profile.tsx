@@ -77,11 +77,11 @@ export function Profile({
       >
         My Profile
       </h1>
-      <div className="grid gap-6 lg:grid-cols-2 lg:grid-rows-[auto_auto_1fr] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         {(remembered || status) && (
           <section
             aria-labelledby={placeHeadingId}
-            className="flex flex-col items-start gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 lg:col-start-2"
+            className="flex flex-col items-start gap-3 rounded-lg border border-rule card-surface p-5 sm:p-6 lg:col-span-2"
           >
             <h2
               id={placeHeadingId}
@@ -120,7 +120,7 @@ export function Profile({
         >
           <div
             ref={listRef}
-            className="flex min-w-0 flex-col gap-6 lg:col-start-2"
+            className="flex min-w-0 flex-col gap-6 lg:col-start-1"
           >
             <SavedPlansList
               version={listVersion}
@@ -131,7 +131,7 @@ export function Profile({
               }}
             />
             {opened && (
-              <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+              <div className="flex flex-col gap-4 rounded-lg border border-rule card-surface p-5 sm:p-6">
                 <div
                   ref={bannerRef}
                   tabIndex={-1}

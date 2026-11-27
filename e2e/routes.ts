@@ -80,6 +80,16 @@ export async function routeApi(
   page: Page,
   replies: { forecast: Reply; plan?: Reply; answer?: Reply },
 ): Promise<void> {
+  // A machine with transparency effects off reports "reduce" and would show
+  // solid cards; every stubbed spec tests the see-through ones. Chromium only.
+  if (page.context().browser()?.browserType().name() === 'chromium') {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setEmulatedMedia', {
+      features: [
+        { name: 'prefers-reduced-transparency', value: 'no-preference' },
+      ],
+    });
+  }
   await page.route('**/api/v1/air-quality/forecast**', (route) =>
     fulfil(route, replies.forecast),
   );

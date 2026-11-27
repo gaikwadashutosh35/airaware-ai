@@ -25,6 +25,21 @@ describe('design system base', () => {
     expect(css).not.toContain('font-size-adjust');
   });
 
+  // J22: page cards are 85 % surface-light over an 8 px blur, and solid with
+  // no filter when the visitor asks for reduced transparency.
+  it('card-surface is see-through with a blur, solid under reduced transparency', () => {
+    const flat = css.replace(/\s+/g, ' ');
+    const rule = flat.match(/@utility card-surface \{(.*?)\} \}/)?.[1] ?? '';
+    expect(rule).toContain(
+      'background-color: color-mix( in oklab, var(--color-surface-light) 85%, transparent );',
+    );
+    expect(rule).toContain('-webkit-backdrop-filter: blur(8px);');
+    expect(rule).toContain(' backdrop-filter: blur(8px);');
+    expect(rule).toContain(
+      '@media (prefers-reduced-transparency: reduce) { background-color: var(--color-surface-light); -webkit-backdrop-filter: none; backdrop-filter: none;',
+    );
+  });
+
   it('the favicon is a real icon', () => {
     expect(html).toContain(
       '<link rel="icon" href="/favicon.svg" type="image/svg+xml" />',

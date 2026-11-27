@@ -227,14 +227,11 @@ export function HouseholdPreferencesForm({
   const buttonClass =
     'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
   const panel =
-    'flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6';
+    'flex flex-col gap-4 rounded-lg border border-rule card-surface p-5 sm:p-6';
 
   return (
     <>
-      <section
-        aria-labelledby={headingId}
-        className={`${panel} lg:col-start-1 lg:row-span-3 lg:row-start-1`}
-      >
+      <section aria-labelledby={headingId} className={`${panel} lg:col-span-2`}>
         <h2 id={headingId} className="text-2xl font-semibold tracking-tight">
           Your household (optional)
         </h2>
@@ -247,7 +244,10 @@ export function HouseholdPreferencesForm({
           className="flex flex-col gap-6"
         >
           {GROUPS.map(([group, legend]) => (
-            <fieldset key={group} className="flex flex-col gap-3">
+            <fieldset
+              key={group}
+              className="flex flex-col gap-3 md:grid md:grid-cols-2 md:items-end md:gap-x-6 lg:grid-cols-3"
+            >
               <legend className="mb-1 font-semibold">{legend}</legend>
               {FIELDS.filter((field) => field.group === group).map((field) => {
                 const id = `${idPrefix}-${fieldId(field)}`;

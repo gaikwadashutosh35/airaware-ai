@@ -74,6 +74,31 @@
     sans-serif;
 }
 
+/* Page cards (owner, 27 Nov: "the card little transparent, can see
+   background"): 85 % surface-light over an 8 px blur, so the city shows
+   faintly behind them. Measured over the darkest rendered city pixel,
+   rgb(90,153,194) (near row, "within" look), an 85 % card gives text-dark-muted
+   5.75:1, text-dark 12.75:1 and the focus colour 3.98:1. Floor: over pure
+   black it still gives 4.68:1, 10.38:1 and 3.24:1; over the dark question
+   bubble passing under the Ask box, 4.93:1. Do not go below 85 %: at 84 %
+   text-dark-muted drops to 4.57:1, at 83 % to 4.45:1. Under reduced
+   transparency the card is solid, with no filter. Inputs, the dialog, the
+   dropdown, the chart label and the skip link stay solid bg-surface-light. */
+@utility card-surface {
+  background-color: color-mix(
+    in oklab,
+    var(--color-surface-light) 85%,
+    transparent
+  );
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--color-surface-light);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 @layer base {
   html,
   body {

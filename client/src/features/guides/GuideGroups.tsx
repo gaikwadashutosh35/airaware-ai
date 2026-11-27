@@ -57,7 +57,7 @@ function Group({
   return (
     <section
       aria-labelledby={id}
-      className={`grid grid-cols-subgrid grid-rows-[auto_1fr] gap-y-3 ${
+      className={`grid grid-cols-subgrid grid-rows-[auto_1fr] items-start gap-y-3 ${
         group.cards.length > 1 ? '@min-[41rem]:col-span-2' : ''
       } ${group.cards.length > 2 ? '@min-[62rem]:col-span-3' : ''}`}
     >

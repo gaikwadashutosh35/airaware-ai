@@ -28,7 +28,7 @@ export function BetterHabits() {
         </p>
       </div>
       {guides.state.status === 'ready' ? (
-        <div className="rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+        <div className="rounded-lg border border-rule card-surface p-5 sm:p-6">
           <GuideGroups set={guides.state.data} level={2} />
         </div>
       ) : guides.state.status === 'error' ? (

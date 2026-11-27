@@ -40,7 +40,7 @@ export function AirDetails({
       <h2 id={headingId} className="sr-only">
         Air quality details
       </h2>
-      <details className="rounded-lg border border-rule bg-surface-light">
+      <details className="rounded-lg border border-rule card-surface">
         <summary className="min-h-11 cursor-pointer px-5 py-3 text-lg font-semibold sm:px-6">
           Air quality details
         </summary>

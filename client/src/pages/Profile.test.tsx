@@ -62,6 +62,16 @@ describe('Profile', () => {
     expect(order).toEqual(NAMES);
   });
 
+  it('its cards are see-through', async () => {
+    setup(place);
+    await screen.findByText(/^No saved plans yet/);
+    for (const name of ['Your place', 'Your data']) {
+      const card = h2(name).closest('section, div[class*="rounded-lg"]')!;
+      expect(card.className).toContain('card-surface');
+      expect(card.className).not.toContain('bg-surface-light');
+    }
+  });
+
   it('has no "Your place" section until a place is remembered', async () => {
     setup(null);
     await screen.findByText(/^No saved plans yet/);
@@ -70,30 +80,47 @@ describe('Profile', () => {
     ).toEqual(NAMES.slice(1));
   });
 
-  // MP-04 / F3: from lg the form is on the left, everything else on the right.
-  it('puts the form left and the rest right from lg', async () => {
+  // From lg the form spans the full width; "Saved plans" and "Your data"
+  // sit side by side beneath it (Your place, when shown, spans the width).
+  it('puts the form across the top and the two cards side by side from lg', async () => {
     setup(place);
     await screen.findByText(/^No saved plans yet/);
     const cell = (name: string) => {
       let el: HTMLElement | null = h2(name);
-      while (el && !/\blg:col-start-\d\b/.test(el.className)) {
+      while (el && !/\blg:col-(start|span)-\d\b/.test(el.className)) {
         el = el.parentElement;
       }
-      return el?.className.match(/\blg:col-start-(\d)\b/)?.[1];
+      return el?.className.match(/\blg:col-(?:start|span)-\d\b/)?.[0];
     };
-    expect(cell('Your household (optional)')).toBe('1');
-    expect(cell('Your place')).toBe('2');
-    expect(cell('Saved plans')).toBe('2');
-    expect(cell('Your data')).toBe('2');
+    expect(cell('Your place')).toBe('lg:col-span-2');
+    expect(cell('Your household (optional)')).toBe('lg:col-span-2');
+    expect(cell('Saved plans')).toBe('lg:col-start-1');
+    expect(cell('Your data')).toBe('lg:col-start-2');
+    const grid = h2('Your data').closest('[class*="lg:grid-cols-2"]');
+    expect(grid?.className).not.toContain('lg:grid-rows');
   });
 
-  // With a place the right column has three rows beside the tall form; the
-  // last row takes the spare height, so the panels do not spread apart.
-  it('gives the spare height to the last right-column row', async () => {
+  // Each question group: one column, two from md, three from lg.
+  it('lays each question group in columns from md', async () => {
     setup(place);
     await screen.findByText(/^No saved plans yet/);
-    const grid = h2('Your place').closest('.lg\\:grid-cols-2');
-    expect(grid?.className).toContain('lg:grid-rows-[auto_auto_1fr]');
+    const groups = document.querySelectorAll('form fieldset');
+    expect(groups).toHaveLength(3);
+    for (const group of groups) {
+      expect(group.className).toContain('md:grid-cols-2');
+      expect(group.className).toContain('lg:grid-cols-3');
+    }
+  });
+
+  // Selects in a row line up even when one label wraps to two lines.
+  it('aligns the fields of each question group to the row bottom from md', async () => {
+    setup(place);
+    await screen.findByText(/^No saved plans yet/);
+    const groups = document.querySelectorAll('form fieldset');
+    expect(groups).toHaveLength(3);
+    for (const group of groups) {
+      expect(group.className).toContain('md:items-end');
+    }
   });
 
   it('opening the page creates no account', async () => {

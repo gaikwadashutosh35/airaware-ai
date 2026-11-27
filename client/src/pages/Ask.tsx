@@ -141,13 +141,13 @@ export function Ask({
       <output className="sr-only">{status}</output>
 
       {!place ? (
-        <div className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+        <div className="flex flex-col gap-6 rounded-lg border border-rule card-surface relative z-[1] p-5 sm:p-6">
           <LocationSearch onSelect={onChoosePlace} />
           <UseMyLocation onLocateStart={onLocateStart} onLocate={onLocate} />
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-4 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+          <div className="flex flex-col gap-4 rounded-lg border border-rule card-surface p-5 sm:p-6">
             <TopicChips busy={ask.thinking} onTopic={askTopic} />
             <StarterButtons
               questions={STARTERS.slice(0, 3)}
@@ -168,7 +168,7 @@ export function Ask({
           {ask.entries.length > 0 && (
             <div
               data-part="ask-thread"
-              className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 [&>article+article]:border-t [&>article+article]:border-rule [&>article+article]:pt-6"
+              className="flex flex-col gap-6 rounded-lg border border-rule card-surface p-5 sm:p-6 [&>article+article]:border-t [&>article+article]:border-rule [&>article+article]:pt-6"
             >
               {ask.entries.map((entry) => (
                 <AskEntry
@@ -210,7 +210,7 @@ export function Ask({
           >
             <div
               data-part="ask-composer-panel"
-              className="flex flex-col gap-1 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+              className="flex flex-col gap-1 rounded-lg border border-rule card-surface p-5 sm:p-6"
             >
               <label htmlFor={inputId} className="font-medium">
                 {ASK_COPY.inputLabel}

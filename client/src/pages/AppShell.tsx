@@ -397,8 +397,8 @@ function AppShell() {
 
           {/* Air on the left, the plan on the right from lg; one column (air
             first) below it. */}
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-            <div className="flex min-w-0 flex-col gap-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:grid-rows-[auto_1fr] lg:items-start">
+            <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
               {place ? (
                 <>
                   {forecast.state.status === 'ready' ? (
@@ -432,7 +432,7 @@ function AppShell() {
               ) : null}
             </div>
 
-            <div className="flex min-w-0 flex-col gap-6">
+            <div className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
               <DailyPlanSection
                 // A new place, or deleting saved data, starts the plan area afresh.
                 key={`${place?.label}|${forecastKey}#${resets}`}
@@ -454,15 +454,18 @@ function AppShell() {
                 onPlan={setTodayPlan}
                 deletedPlanId={deletedPlanId}
               />
-              {/* After the recommendation, so the first screen keeps its
-                  place. Not shown once the forecast is "Not current". */}
-              {forecast.state.status === 'ready' && !forecastOld && (
+            </div>
+            {/* After the recommendation in the DOM, so one column keeps its
+                order; from lg, under the verdict. Not shown once the forecast
+                is "Not current". */}
+            {forecast.state.status === 'ready' && !forecastOld && (
+              <div className="min-w-0 lg:col-start-1 lg:row-start-2">
                 <WeatherCompare
                   weather={forecast.state.data.series.weather}
                   now={now}
                 />
-              )}
-            </div>
+              </div>
+            )}
           </div>
           {place && (
             <>
@@ -476,7 +479,7 @@ function AppShell() {
               {place &&
                 Object.keys(context).length === 0 &&
                 !inviteDismissed && (
-                  <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule bg-surface-light p-4">
+                  <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rule card-surface p-4">
                     <a
                       href="/app/welcome"
                       onClick={(event) => {
@@ -525,7 +528,7 @@ function AppShell() {
       {!(page === 'ask' && place !== null) && (
         <footer>
           <div className="mx-auto max-w-6xl pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-8 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))]">
-            <div className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6 text-sm text-text-dark-muted">
+            <div className="flex flex-col gap-3 rounded-lg border border-rule card-surface p-5 sm:p-6 text-sm text-text-dark-muted">
               {shown && place && (
                 <p>
                   {backdropNote(
@@ -546,11 +549,12 @@ function AppShell() {
           </div>
         </footer>
       )}
-      {/* Space as tall as the city band (plus the phone bar below md), so
-          every page ends on the whole city with no text resting on it. */}
+      {/* The city sits behind the cards (owner, 27 Nov: the buildings may hide
+          behind them), so the page ends at the footer's own gap. Only the
+          phone keeps room for its fixed bar. */}
       <div
         aria-hidden="true"
-        className="h-[calc(min(16rem,32vh)+3.5rem+env(safe-area-inset-bottom,0px))] sm:h-[calc(min(24rem,40vh)+3.5rem+env(safe-area-inset-bottom,0px))] md:h-[min(24rem,40vh)]"
+        className="h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:hidden"
       />
     </>
   );

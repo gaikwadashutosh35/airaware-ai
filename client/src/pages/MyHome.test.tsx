@@ -56,6 +56,36 @@ afterEach(() => {
 });
 
 describe('MyHome', () => {
+  // Cards end where their content ends: no stretched, half-empty cards.
+  it('lets the card grids size each card to its content', async () => {
+    routeGuides(guidesOk);
+    show();
+    const card = screen
+      .getByRole('heading', { name: PLAN_INDOOR[2]! })
+      .closest('article');
+    // A grid, not CSS columns: opening "Why?" must not move cards between
+    // columns, so each card sits in its grid cell and ends at its content.
+    const grid = card?.parentElement?.className;
+    expect(grid).toContain('grid');
+    expect(grid).toContain('items-start');
+    expect(grid).not.toContain('columns-');
+    await screen.findAllByRole('heading', { level: 4 });
+    const guide = screen
+      .getAllByRole('heading', { level: 4 })[0]!
+      .closest('section');
+    expect(guide?.className).toContain('items-start');
+  });
+
+  it('its panels are see-through cards', () => {
+    routeGuides(guidesOk);
+    show();
+    const panel = screen
+      .getByRole('heading', { name: 'Today, for your home' })
+      .closest('section')!;
+    expect(panel.className).toContain('card-surface');
+    expect(panel.className).not.toContain('bg-surface-light');
+  });
+
   it('keeps the purpose line to a readable length', () => {
     routeGuides(guidesOk);
     show();

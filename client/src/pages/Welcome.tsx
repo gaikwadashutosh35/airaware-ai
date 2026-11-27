@@ -205,7 +205,7 @@ export function Welcome({
         )}
       </div>
 
-      <div className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6">
+      <div className="flex flex-col gap-6 rounded-lg border border-rule card-surface relative z-[1] p-5 sm:p-6">
         {step === 1 && (
           <div className="flex flex-col gap-6">
             <LocationSearch

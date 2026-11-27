@@ -321,6 +321,78 @@ describe('AskEntry', () => {
     focus.mockRestore();
   });
 
+  // AK-20: the answer grows below the short placeholder, so the exchange
+  // scrolls to the top once more when it lands, if focus is still on it.
+  describe('when the reply lands', () => {
+    const props = {
+      now: minutesLater(5),
+      focus: true,
+      busy: false,
+      newest: true,
+      pending: null,
+      onRetry: () => {},
+      onTopic: () => {},
+      onStarter: () => {},
+      onAnswerFollowUp: () => {},
+      onSkipFollowUp: () => {},
+    };
+    const landed = (
+      moveFocus: boolean,
+      reply = ready(aiAskFixture),
+      scrollAway = false,
+    ) => {
+      const scroll = vi.fn();
+      Element.prototype.scrollIntoView = scroll;
+      const view = render(
+        <AskEntry entry={entry({ status: 'thinking' })} {...props} />,
+      );
+      expect(scroll).toHaveBeenCalledTimes(1);
+      const box = document.createElement('textarea');
+      if (moveFocus) {
+        document.body.append(box);
+        box.focus();
+      }
+      // A reader scrolls up to an older answer while the reply is coming.
+      if (scrollAway) window.scrollY = 400;
+      view.rerender(<AskEntry entry={reply} {...props} />);
+      box.remove();
+      return scroll;
+    };
+    afterEach(() => {
+      window.scrollY = 0;
+    });
+
+    it('scrolls again, once, while focus is on the heading', () => {
+      const scroll = landed(false);
+      expect(scroll).toHaveBeenCalledTimes(2);
+      expect(scroll).toHaveBeenLastCalledWith({ block: 'start' });
+      expect(scroll.mock.contexts[1]).toBe(heading().closest('article'));
+    });
+
+    it('scrolls again when an error lands too', () => {
+      const scroll = landed(
+        false,
+        entry({
+          status: 'error',
+          error: new ApiError(
+            500,
+            'INTERNAL_ERROR',
+            'Unexpected server error.',
+          ),
+        }),
+      );
+      expect(scroll).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not scroll again when focus has moved', () => {
+      expect(landed(true)).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not scroll again when the reader scrolled away', () => {
+      expect(landed(false, ready(aiAskFixture), true)).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('an answer has no panel of its own', () => {
     show(ready(aiAskFixture));
     const reply = screen.getByText('Made with AI').parentElement!;

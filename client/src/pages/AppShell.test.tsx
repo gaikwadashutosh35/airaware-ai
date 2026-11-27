@@ -1358,13 +1358,39 @@ describe('AppShell', () => {
     expect(
       verdict.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    const plan = screen
-      .getAllByRole('heading', { level: 2 })
-      .find(
-        (h) =>
-          h.closest('section')?.nextElementSibling === table.closest('section'),
-      );
-    expect(plan).toBeDefined();
+    // The plan's section comes first in the DOM; from lg the grid places the
+    // table on the left, so only the DOM order is checked here.
+    const plan = screen.getByRole('heading', {
+      level: 2,
+      name: 'Your recommendation for today',
+    });
+    expect(
+      plan.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  // From lg the weather table sits in the left column under the verdict, the
+  // plan spans both rows; the DOM order (one column below lg) is unchanged.
+  it('places the weather table under the verdict from lg', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    const table = screen.getByRole('table', {
+      name: 'Weather · Open-Meteo model data',
+    });
+    const weather = table.closest('[class*="lg:col-start-1"]');
+    expect(weather?.className).toContain('lg:row-start-2');
+    const grid = weather?.parentElement;
+    expect(grid?.className).toContain('lg:grid-rows-[auto_1fr]');
+    const plan = [...grid!.children].find((c) =>
+      c.className.includes('lg:row-span-2'),
+    );
+    expect(plan?.className).toContain('lg:col-start-2');
+    expect(plan?.className).toContain('lg:row-start-1');
+    expect(
+      plan!.compareDocumentPosition(weather!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   // Today stays mounted, hidden, on the other pages: its example-question
@@ -1408,9 +1434,42 @@ describe('AppShell', () => {
     expect(footer.className).not.toContain('bg-surface-light');
     expect(footer.className).not.toContain('border-t');
     const card = footer.firstElementChild!.firstElementChild!;
-    for (const cls of ['rounded-lg', 'border', 'bg-surface-light'])
+    for (const cls of ['rounded-lg', 'border', 'card-surface'])
       expect(card.className).toContain(cls);
+    expect(card.className).not.toContain('bg-surface-light');
     expect(card.textContent).toContain('Open-Meteo.com');
+  });
+
+  // Owner, 27 Nov: the city sits behind the cards, so the page ends at the
+  // footer; only the phone keeps room for its fixed bar.
+  it('the end spacer is bar-high below md and hidden from md', () => {
+    routeFetch(ok());
+    const { container } = render(<AppShell />);
+    const spacer = container.querySelector(
+      'div[aria-hidden="true"].h-\\[calc\\(3\\.5rem\\+env\\(safe-area-inset-bottom\\,0px\\)\\)\\]',
+    );
+    expect(spacer).not.toBeNull();
+    expect(spacer!.className).toContain('md:hidden');
+    expect(spacer!.className).not.toContain('min(16rem');
+    expect(spacer!.className).not.toContain('min(24rem');
+  });
+
+  it('page cards are see-through; inputs stay solid', async () => {
+    routeFetch(ok());
+    render(<AppShell />);
+    await choosePlace();
+    const box = screen.getByRole('textbox', {
+      name: 'Ask about your air, home or day',
+    });
+    expect(box.className).toContain('bg-surface-light');
+    const askCard = box.closest('section')!;
+    expect(askCard.className).toContain('card-surface');
+    expect(askCard.className).not.toContain('bg-surface-light');
+    const lead = screen
+      .getAllByText(/Model forecast · Open-Meteo/)[0]!
+      .closest('section')!;
+    expect(lead.className).toContain('card-surface');
+    expect(lead.className).not.toContain('bg-surface-light');
   });
 
   it('links to the privacy page from the footer', () => {

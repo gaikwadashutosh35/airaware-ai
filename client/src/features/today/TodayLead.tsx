@@ -32,7 +32,7 @@ export function TodayLead({
   return (
     <section
       aria-labelledby={headingId}
-      className="overflow-hidden rounded-lg border border-rule bg-surface-light"
+      className="overflow-hidden rounded-lg border border-rule card-surface"
     >
       <p className="border-b border-rule px-4 py-2 text-sm text-text-dark-muted sm:px-8">
         {weatherLine(data.weather)}
@@ -70,7 +70,7 @@ export function TodayLeadLoading() {
   return (
     <section
       aria-busy="true"
-      className="min-h-[22.8rem] overflow-hidden rounded-lg border border-rule bg-surface-light min-[360px]:min-h-[19.3rem] min-[390px]:min-h-[18.1rem] sm:min-h-[14.3rem] md:min-h-[13.1rem] lg:min-h-[16.6rem] xl:min-h-[14.3rem]"
+      className="min-h-[22.8rem] overflow-hidden rounded-lg border border-rule card-surface min-[360px]:min-h-[19.3rem] min-[390px]:min-h-[18.1rem] sm:min-h-[14.3rem] md:min-h-[13.1rem] lg:min-h-[16.6rem] xl:min-h-[14.3rem]"
     >
       <p className="border-b border-rule px-4 py-2 text-sm text-text-dark-muted sm:px-8">
         Loading forecast…

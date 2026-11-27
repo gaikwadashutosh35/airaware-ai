@@ -63,7 +63,7 @@ export function WeatherCompare({
   ];
 
   return (
-    <section className="rounded-lg border border-rule bg-surface-light p-4 sm:p-6">
+    <section className="rounded-lg border border-rule card-surface p-4 sm:p-6">
       <table className="w-full table-fixed text-sm">
         <colgroup>
           <col className="w-[17%]" />

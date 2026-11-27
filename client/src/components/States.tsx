@@ -16,7 +16,7 @@ export function Loading({
   return (
     <div
       aria-busy="true"
-      className={`overflow-hidden rounded-lg border border-rule bg-surface-light ${className}`}
+      className={`overflow-hidden rounded-lg border border-rule card-surface ${className}`}
     >
       <span className="sr-only">{label}</span>
       <div aria-hidden="true" className="flex flex-col">
@@ -64,7 +64,7 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className="flex flex-col items-start gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+      className="flex flex-col items-start gap-3 rounded-lg border border-rule card-surface p-5 sm:p-6"
     >
       {title && <Heading className="text-xl font-semibold">{title}</Heading>}
       <p>{errorMessage(error, fallback)}</p>

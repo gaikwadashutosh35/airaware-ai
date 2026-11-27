@@ -104,6 +104,17 @@ describe('Welcome', () => {
     expect(heading(STEP2)).toBeDefined();
   });
 
+  // The panel holds the place search, so it is see-through and lifted above
+  // the footer card that follows it (a dropdown must not paint under it).
+  it('step 1 panel is a see-through card above the footer', () => {
+    setup({ place: null });
+    const panel = screen
+      .getByRole('combobox', { name: 'Search for a city or area in India' })
+      .closest('.card-surface')!;
+    expect(panel.className).not.toContain('bg-surface-light');
+    expect(panel.className).toContain('z-[1]');
+  });
+
   it('says what step 1 gives, on step 1 only, and reports each step', () => {
     const onStep = vi.fn();
     setup({ place: null, onStep });

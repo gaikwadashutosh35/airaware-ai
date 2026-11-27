@@ -25,6 +25,15 @@ afterEach(() => {
 });
 
 describe('BetterHabits', () => {
+  it('lets each group size its cards to their content', async () => {
+    routeGuides(guidesOk);
+    render(<BetterHabits />);
+    const group = (
+      await screen.findByRole('heading', { level: 2, name: 'Waste' })
+    ).closest('section');
+    expect(group?.className).toContain('items-start');
+  });
+
   it('shows the four habit groups in order, with Why?', async () => {
     routeGuides(guidesOk);
     render(<BetterHabits />);

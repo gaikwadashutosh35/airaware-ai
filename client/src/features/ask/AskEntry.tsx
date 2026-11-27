@@ -218,12 +218,35 @@ export function AskEntry({
       ? answer.topic
       : (entry.topic ?? null);
 
+  // Where the page stood when this exchange was scrolled to (or retried).
+  const scrolledTo = useRef<number | null>(null);
   useEffect(() => {
     if (!focus) return;
     // Instant: no smooth scroll to wait for, so focus never races it.
     articleRef.current?.scrollIntoView({ block: 'start' });
     headingRef.current?.focus({ preventScroll: true });
+    scrolledTo.current = window.scrollY;
   }, [focus]);
+  // AK-20: the reply grows below the short placeholder, past the pinned Ask
+  // box. When it lands, scroll to the top once more (no new focus), but only
+  // if focus is still on it and the page has not moved: a reply never yanks
+  // someone who scrolled away to read an older answer.
+  const thinking = entry.status === 'thinking';
+  const wasThinking = useRef(thinking);
+  useEffect(() => {
+    if (thinking && !wasThinking.current) scrolledTo.current = window.scrollY;
+    if (
+      wasThinking.current &&
+      !thinking &&
+      focus &&
+      document.activeElement === headingRef.current &&
+      scrolledTo.current !== null &&
+      Math.abs(window.scrollY - scrolledTo.current) <= 2
+    ) {
+      articleRef.current?.scrollIntoView({ block: 'start' });
+    }
+    wasThinking.current = thinking;
+  }, [thinking, focus]);
   useEffect(() => {
     if (entry.followUp && focusOutcome.current) {
       focusOutcome.current = false;

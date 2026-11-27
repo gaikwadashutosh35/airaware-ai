@@ -1042,6 +1042,7 @@ for (const [width, height] of [
 for (const [width, height] of [
   [320, 640],
   [390, 844],
+  [1280, 720],
 ] as const) {
   test(`AK-20: a stale answer's "Not current" is above the box: ${width}x${height}`, async ({
     page,
@@ -1526,8 +1527,8 @@ const stubSearch = (page: Page) =>
     route.fulfill({ json: { data: searchFixture } }),
   );
 
-// MP-04 (F3): the order of My Profile's sections, and from lg the form on the
-// left with Saved plans and Your data stacked on the right.
+// MP-04 (F3): the order of My Profile's sections, and from lg the form across
+// the top with Saved plans and Your data side by side beneath it.
 for (const [width, height] of [
   [390, 844],
   [1280, 720],
@@ -1551,10 +1552,15 @@ for (const [width, height] of [
       `MP-04 ${width}x${height} form ${JSON.stringify([form.x, form.y])} saved ${JSON.stringify([saved.x, saved.y])} data ${JSON.stringify([data.x, data.y])}`,
     );
     if (width >= 1024) {
-      expect(form.x).toBeLessThan(saved.x);
-      expect(Math.abs(data.x - saved.x)).toBeLessThan(1);
-      expect(saved.y).toBeLessThan(data.y);
-      expect(data.y).toBeGreaterThanOrEqual(saved.y + saved.height);
+      // The form spans the width; Saved plans and Your data sit side by side
+      // beneath it.
+      expect(Math.abs(form.x - saved.x)).toBeLessThan(1);
+      expect(saved.y).toBeGreaterThanOrEqual(form.y + form.height);
+      expect(saved.x).toBeLessThan(data.x);
+      expect(Math.abs(data.y - saved.y)).toBeLessThan(1);
+      expect(form.x + form.width).toBeGreaterThanOrEqual(
+        data.x + data.width - 1,
+      );
     } else {
       expect(form.y).toBeLessThan(saved.y);
       expect(saved.y).toBeLessThan(data.y);

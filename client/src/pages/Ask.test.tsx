@@ -391,7 +391,8 @@ describe('Ask page', () => {
     typeAndSend('Second question');
     await answer(aiAskFixture);
     const thread = container.querySelector('[data-part="ask-thread"]')!;
-    expect(thread.className).toContain('bg-surface-light');
+    expect(thread.className).toContain('card-surface');
+    expect(thread.className).not.toContain('bg-surface-light');
     expect(thread.querySelectorAll('article.ask-answer')).toHaveLength(2);
   });
 
@@ -464,16 +465,25 @@ describe('Ask page', () => {
     ])
       expect(form.className).toContain(cls);
     // The tray look moves to the panel and is applied by a scroll-state query.
-    for (const cls of ['rounded-b-none', 'border-b-0', 'bg-surface-light'])
+    for (const cls of [
+      'rounded-b-none',
+      'border-b-0',
+      'bg-surface-light',
+      'card-surface',
+    ])
       expect(form.className).not.toContain(cls);
     const panel = form.querySelector('[data-part="ask-composer-panel"]')!;
-    for (const cls of ['rounded-lg', 'border', 'bg-surface-light'])
+    for (const cls of ['rounded-lg', 'border', 'card-surface'])
       expect(panel.className).toContain(cls);
+    expect(panel.className).not.toContain('bg-surface-light');
+    expect(input().className).toContain('bg-surface-light');
     expect(panel.className).not.toContain('shadow');
     expect(panel.contains(input())).toBe(true);
   });
 
-  it('a reply that arrives later does not scroll again', async () => {
+  // F1 (AK-20): once, when it lands with focus still on the heading, so the
+  // grown answer is not left under the pinned box. Never more than once.
+  it('a reply that arrives later scrolls once more, no more', async () => {
     show();
     typeAndSend(QUESTION);
     const scrolls = () =>
@@ -481,7 +491,7 @@ describe('Ask page', () => {
         .length;
     const calls = scrolls();
     await answer(aiAskFixture);
-    expect(scrolls()).toBe(calls);
+    expect(scrolls()).toBe(calls + 1);
   });
 
   it('"Not current" joins the Using line once the forecast is over an hour old', () => {

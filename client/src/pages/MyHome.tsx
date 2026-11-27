@@ -82,7 +82,7 @@ export function MyHome({
       {hasPlace && (
         <section
           aria-labelledby={todayId}
-          className="flex flex-col gap-3 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+          className="flex flex-col gap-3 rounded-lg border border-rule card-surface p-5 sm:p-6"
         >
           <h2
             id={todayId}
@@ -119,7 +119,7 @@ export function MyHome({
               <p className="text-sm text-text-dark-muted">
                 {plan.forecast ? planAirLine(plan.air, plan.forecast) : NO_AIR}
               </p>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),1fr))] gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),1fr))] items-start gap-4">
                 {cards.map((item) => (
                   <PlanCard
                     key={item.candidate.id}
@@ -140,7 +140,7 @@ export function MyHome({
       )}
       <section
         aria-labelledby={waysId}
-        className="flex flex-col gap-6 rounded-lg border border-rule bg-surface-light p-5 sm:p-6"
+        className="flex flex-col gap-6 rounded-lg border border-rule card-surface p-5 sm:p-6"
       >
         <h2
           id={waysId}
