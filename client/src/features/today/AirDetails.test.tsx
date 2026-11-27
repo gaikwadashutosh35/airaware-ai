@@ -72,7 +72,12 @@ describe('AirDetails', () => {
     expect(
       within(details).getByText('How the 24-hour check works'),
     ).toBeDefined();
-    expect(within(details).getByText('Sources and limitations')).toBeDefined();
+    // Its own arrow (owner, 27 Nov); the sr-only heading repeats the words.
+    expect(
+      within(details).getByText('Sources and limitations', {
+        selector: 'summary',
+      }),
+    ).toBeDefined();
   });
 
   // A heading inside <summary> is dropped by some screen readers, so the

@@ -15,7 +15,7 @@ import {
   rulesAskFixture,
 } from '../client/src/test/askFixtures.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
-import { PUNE } from './routes.ts';
+import { PUNE, topicChip } from './routes.ts';
 
 const PATHS = [
   '/',
@@ -121,9 +121,7 @@ test.describe('zoom and text spacing', () => {
         },
       }),
     );
-    await page
-      .getByRole('button', { name: 'Outdoor activities', exact: true })
-      .click();
+    await (await topicChip(page, 'Outdoor activities')).click();
     await expect(
       page.getByRole('group', {
         name: 'How do you usually travel to work or college?',
@@ -411,9 +409,7 @@ test.describe('forced colours: chosen chips show', () => {
   // and its edge must survive forced colours.
   test('your Ask message keeps its edge', async ({ page }) => {
     await page.goto(PUNE.replace('/app?', '/app/ask?'));
-    await page
-      .getByRole('button', { name: 'Outdoor activities', exact: true })
-      .click();
+    await (await topicChip(page, 'Outdoor activities')).click();
     const mine = page.locator('article.ask-answer h2').first();
     await expect(mine).toBeVisible();
     const edge = await mine.evaluate((el) => {
@@ -492,9 +488,7 @@ test.describe('other states on a 320 px phone', () => {
   test('an Ask answer', async ({ page }) => {
     await stub(page, 'not_elevated');
     await page.goto(PUNE.replace('/app?', '/app/ask?'));
-    await page
-      .getByRole('button', { name: 'Outdoor activities', exact: true })
-      .click();
+    await (await topicChip(page, 'Outdoor activities')).click();
     await expect(page.locator('article.ask-answer')).toBeVisible();
     await fits(page);
   });
@@ -513,9 +507,7 @@ test.describe('other states on a 320 px phone', () => {
       }),
     );
     await page.goto(PUNE.replace('/app?', '/app/ask?'));
-    await page
-      .getByRole('button', { name: 'Outdoor activities', exact: true })
-      .click();
+    await (await topicChip(page, 'Outdoor activities')).click();
     await expect(
       page.getByRole('group', {
         name: 'How do you usually travel to work or college?',

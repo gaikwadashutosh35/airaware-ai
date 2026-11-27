@@ -14,12 +14,16 @@ export function AskBox({
   onAsk,
   active,
   started,
+  busy = false,
 }: {
   onAsk: (question: string) => void;
   // Today is the page on screen (the box stays mounted, hidden, on others).
   active: boolean;
   // A question has been asked: the hint stops looping.
   started: boolean;
+  // An Ask answer is on its way: Ask would ignore a new question, so the box
+  // rests rather than leave Today with it (Ask UX audit, 27 Nov).
+  busy?: boolean;
 }) {
   const [question, setQuestion] = useState('');
   const [focused, setFocused] = useState(false);
@@ -39,8 +43,9 @@ export function AskBox({
         onSubmit={(event) => {
           event.preventDefault();
           const asked = question.trim();
-          if (!asked) return;
+          if (!asked || busy) return;
           onAsk(asked);
+          setQuestion('');
           navigate('/app/ask');
           // The box hides with Today: focus the page it opened.
           document.getElementById('main')?.focus();
@@ -73,7 +78,8 @@ export function AskBox({
           </div>
           <button
             type="submit"
-            className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark"
+            disabled={busy}
+            className="min-h-12 rounded-md bg-primary px-4 font-semibold text-text-dark disabled:opacity-60"
           >
             Send
           </button>

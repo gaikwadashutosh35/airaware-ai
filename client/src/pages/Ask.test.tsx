@@ -214,30 +214,15 @@ describe('Ask page', () => {
     expect(input().hasAttribute('name')).toBe(false);
     expect(button('Send')).toBeTruthy();
   });
-  it('an aria-hidden cycling hint covers the empty box, not a placeholder', async () => {
+  // Owner (27 Nov, Ask UX spec §11): a fixed placeholder replaces the
+  // cycling hint on Ask.
+  it('the empty box shows a fixed placeholder, no cycling hint', async () => {
     const { container } = show();
-    const hint = () =>
-      input().parentElement!.querySelector('[aria-hidden="true"]');
-
-    expect(input().hasAttribute('placeholder')).toBe(false);
-    expect(hint()).not.toBeNull();
-    fireEvent.focus(input());
-    expect(hint()).toBeNull();
-    fireEvent.blur(input());
-    expect(hint()).not.toBeNull();
-    fireEvent.change(input(), { target: { value: '  ' } });
-    expect(hint()).toBeNull();
-    fireEvent.change(input(), { target: { value: '' } });
-    expect(hint()).not.toBeNull();
+    expect(input().getAttribute('placeholder')).toBe(ASK_COPY.placeholder);
+    expect(
+      input().parentElement!.querySelector('[aria-hidden="true"]'),
+    ).toBeNull();
     await expectNoAxeViolations(container);
-  });
-  it('after the first question the hint stays on the first example, still', async () => {
-    show();
-    const hint = () =>
-      input().parentElement!.querySelector('[aria-hidden="true"]');
-    typeAndSend(QUESTION);
-    await answer(rulesAskFixture);
-    expect(hint()?.textContent).toBe('Can I go for a morning walk today?');
   });
   it('Send waits for words: disabled when empty or only spaces', () => {
     show();
@@ -316,51 +301,91 @@ describe('Ask page', () => {
   });
 
   // Guided chat (Task 4), reordered by redesign P4 (AK-02, AK-03).
-  it('with a place: title, intro, Using line, topics, 3 starters, More questions, thread, then the question box', async () => {
+  // Ask UX spec (owner, 27 Nov): welcome, 4 starters, More topics, a narrow
+  // column, then the conversation and the box.
+  it('with a place: title, intro, Using line, welcome, 4 starters, More topics, thread, then the box', async () => {
     const { container } = show();
-    typeAndSend('First question');
-    await answer(aiAskFixture);
-
-    const h1 = screen.getByRole('heading', { level: 1 });
-    const intro = screen.getByText(ASK_COPY.intro);
-    const using = screen.getByText(/^Using:/);
     const order = [
-      h1,
-      intro,
-      using,
-      button('Outdoor activities'),
+      screen.getByRole('heading', { level: 1 }),
+      screen.getByText(ASK_COPY.intro),
+      screen.getByText(/^Using:/),
+      screen.getByText(ASK_COPY.welcome),
       button('Can I go for a morning walk today?'),
-      button('How can I improve my indoor air?'),
-      screen.getByText(ASK_COPY.moreQuestions),
-      heading('First question'),
+      button('How can I reduce pollution while commuting?'),
+      screen.getByText(ASK_COPY.moreTopics),
       input(),
     ];
     order.slice(1).forEach((el, i) => {
       expect(before(order[i]!, el)).toBe(true);
     });
+    typeAndSend('First question');
+    await answer(aiAskFixture);
+    expect(
+      before(screen.getByText(ASK_COPY.moreTopics), heading('First question')),
+    ).toBe(true);
+    expect(before(heading('First question'), input())).toBe(true);
     expect(container.textContent).not.toContain(greeting(NOW));
-    expect(container.textContent).not.toContain("I'm AirAware");
     await expectNoAxeViolations(container);
   });
 
-  it('three starters show, two wait under "More questions" and rest while thinking', () => {
+  it('the welcome line shows until the first question', async () => {
     show();
-    const summary = screen.getByText(ASK_COPY.moreQuestions);
+    expect(screen.getByText(ASK_COPY.welcome)).toBeTruthy();
+    typeAndSend(QUESTION);
+    await answer(aiAskFixture);
+    expect(screen.queryByText(ASK_COPY.welcome)).toBeNull();
+  });
+
+  it('four starters show; the topics and the last starter wait under "More topics"', () => {
+    show();
+    const summary = screen.getByText(ASK_COPY.moreTopics);
     const details = summary.closest('details')!;
     expect(summary.tagName).toBe('SUMMARY');
+    expect(details.open).toBe(false);
     const outside = within(document.body)
       .getAllByRole('button')
       .filter((b) => b.textContent?.endsWith('?') && !details.contains(b));
-    expect(outside).toHaveLength(3);
+    expect(outside.map((b) => b.textContent)).toEqual([
+      'Can I go for a morning walk today?',
+      'Is it a good idea to open my windows?',
+      'How can I improve my indoor air?',
+      'How can I reduce pollution while commuting?',
+    ]);
     const hidden = within(details).getAllByRole('button');
     expect(hidden.map((b) => b.textContent)).toEqual([
+      'Outdoor activities',
+      'Windows and ventilation',
+      'Indoor air',
+      'My family',
+      'Commuting',
+      'Better habits',
       "What should I consider for my children's outdoor activities?",
-      'How can I reduce pollution while commuting?',
     ]);
 
     typeAndSend(QUESTION);
     for (const b of hidden)
       expect((b as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('the conversation is a narrow, centred, labelled region', async () => {
+    const { container } = show();
+    // A centred 56rem (896 px) column, narrower than the other tabs (owner,
+    // 27 Nov: "shorter is good for UI").
+    const column = (container.firstElementChild as HTMLElement).className;
+    expect(column).toContain('mx-auto');
+    expect(column).toContain('max-w-4xl');
+    typeAndSend(QUESTION);
+    await answer(aiAskFixture);
+    expect(
+      screen.getByRole('region', { name: ASK_COPY.conversation }),
+    ).toBeTruthy();
+  });
+
+  it('says when the forecast is unavailable on the Using line', () => {
+    show({ updatedAt: null, forecastLoading: false });
+    expect(screen.getByText(/^Using:/).textContent).toContain(
+      `, ${ASK_COPY.forecastUnavailable}`,
+    );
   });
 
   it('the intro shows without a place too', () => {
@@ -394,6 +419,34 @@ describe('Ask page', () => {
     expect(thread.className).toContain('card-surface');
     expect(thread.className).not.toContain('bg-surface-light');
     expect(thread.querySelectorAll('article.ask-answer')).toHaveLength(2);
+  });
+
+  // Owner (27 Nov): who made it, what it used and the notes show once, not
+  // under every answer; they come back whenever any of them changes.
+  it('shows the answer context once, and again only when it changes', async () => {
+    show();
+    const count = (text: string) => screen.queryAllByText(text).length;
+    const basedOn = () => screen.queryAllByText(/^Based on:/).length;
+
+    typeAndSend('First question');
+    await answer(aiAskFixture);
+    typeAndSend('Second question');
+    await answer(aiAskFixture);
+    // The same context twice: shown under the first answer only.
+    expect(count('Made with AI')).toBe(1);
+    expect(basedOn()).toBe(1);
+    expect(count(aiAskFixture.safetyNote)).toBe(1);
+    expect(count('Sources and limitations')).toBe(1);
+    // Both answers keep their own advice.
+    expect(
+      document.querySelectorAll('article.ask-answer h3').length,
+    ).toBeGreaterThan(1);
+
+    typeAndSend('Third question');
+    await answer(rulesAskFixture);
+    // A rules answer after AI ones: its own label and context show again.
+    expect(count('Made by our rules')).toBe(1);
+    expect(basedOn()).toBe(2);
   });
 
   it('the column is centred', () => {
@@ -525,29 +578,53 @@ describe('Ask page', () => {
     await expectNoAxeViolations(container);
   });
 
-  it('answering shows "You answered: Yes." and a new reply at the end', async () => {
+  // Owner (27 Nov): question, response, question, response. An answer to a
+  // question back is your own message (with its question), the updated
+  // reply follows it, and the reply it updates folds.
+  const replies_ = () => document.querySelectorAll('article.ask-answer');
+  const answered = (text: string) => heading(text, 'You answered: ');
+
+  it('answering is your message, and the new reply repeats no card', async () => {
     const { container } = show({ context: {} });
     fireEvent.click(button('Outdoor activities'));
     await answer(offering);
 
     fireEvent.click(within(question()).getByRole('button', { name: 'Yes' }));
 
-    expect(screen.getByText('You answered: Yes.')).toBeTruthy();
     expect(
       screen.queryByRole('group', { name: 'Do you exercise outdoors?' }),
     ).toBeNull();
-    expect(sentBody(1)).toMatchObject({ topic: 'outdoors' });
-    const reply = heading(
-      'Yes',
-      'Your answer to "Do you exercise outdoors?": ',
-    );
-    expect(document.activeElement).toBe(reply);
-    expect(before(heading('Outdoor activities'), reply)).toBe(true);
+    expect(sentBody(1)).toMatchObject({
+      topic: 'outdoors',
+      householdContext: { routine: { outdoorExercise: true } },
+    });
+    const mine = answered('Do you exercise outdoors? Yes');
+    expect(document.activeElement).toBe(mine);
+    expect(before(heading('Outdoor activities'), mine)).toBe(true);
     await answer(rulesAskFixture);
+    expect(replies_()).toHaveLength(2);
+    // The new reply repeats no card shown above; it names them instead, and
+    // the earlier reply stays open (owner, 27 Nov).
+    const titles = (a: Element) =>
+      [...a.querySelectorAll('h3')].map((h) => h.textContent);
+    const earlier = heading('Outdoor activities').closest('article')!;
+    const latest = mine.closest('article')!;
+    const above = titles(earlier);
+    expect(above.length).toBeGreaterThan(0);
+    expect(titles(latest).filter((t) => above.includes(t))).toEqual([]);
+    expect(
+      within(latest).getByText(
+        new RegExp(`^${ASK_COPY.stillApplies.replace(/[()]/g, '\\$&')} `),
+      ),
+    ).toBeTruthy();
+    expect(earlier.querySelector('details[open]')).toBeNull();
+    expect(screen.queryByText(/Earlier answer/)).toBeNull();
+    // No "You answered" line repeats the message.
+    expect(screen.queryByText('You answered: Yes.')).toBeNull();
     await expectNoAxeViolations(container);
   });
 
-  it('an answer that changes nothing is noted in the status line', async () => {
+  it('an answer that changes nothing is noted in a reply of its own', async () => {
     show({ context: {} });
     fireEvent.click(button('Outdoor activities'));
     await answer(offering);
@@ -556,11 +633,14 @@ describe('Ask page', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(status()).toBe(ASK_COPY.noted);
-    const reply = heading(
-      'No',
-      'Your answer to "Do you exercise outdoors?": ',
-    ).closest('article')!;
+    const reply = answered('Do you exercise outdoors? No').closest('article')!;
     expect(within(reply).getByText(ASK_COPY.noted)).toBeTruthy();
+    // Nothing changed, so no card is named as still applying.
+    expect(
+      screen.queryByText(
+        new RegExp(ASK_COPY.stillApplies.replace(/[()]/g, '\\$&')),
+      ),
+    ).toBeNull();
   });
 
   // Deferred minor: the thread never ends with nothing to tap.
@@ -571,10 +651,7 @@ describe('Ask page', () => {
 
     fireEvent.click(within(question()).getByRole('button', { name: 'No' }));
 
-    const note = heading(
-      'No',
-      'Your answer to "Do you exercise outdoors?": ',
-    ).closest('article')!;
+    const note = answered('Do you exercise outdoors? No').closest('article')!;
     expect(within(note).getByText(ASK_COPY.alsoAsk)).toBeTruthy();
     expect(
       within(note).getByRole('button', {
@@ -585,7 +662,6 @@ describe('Ask page', () => {
     expect(within(earlier).queryByText(ASK_COPY.alsoAsk)).toBeNull();
     await expectNoAxeViolations(container);
   });
-
   it('Skip shows the skipped line and takes focus', async () => {
     const { container } = show({ context: {} });
     fireEvent.click(button('Outdoor activities'));

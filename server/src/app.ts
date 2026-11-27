@@ -7,6 +7,9 @@ import { accountRouter } from './routes/account.ts';
 import { airQualityRouter } from './routes/airQuality.ts';
 import { assistantRouter } from './routes/assistant.ts';
 import { locationsRouter } from './routes/locations.ts';
+import type { ReverseGeocode } from './services/location/reverseGeocode.ts';
+import { firesRouter } from './routes/fires.ts';
+import type { Fires } from './services/fires/firms.ts';
 import { plansRouter } from './routes/plans.ts';
 import { preferencesRouter } from './routes/preferences.ts';
 import { guidesRouter } from './routes/guides.ts';
@@ -39,6 +42,12 @@ export interface AppOptions {
   // x-nf-client-connection-ip). When set, rate limits key on it and ignore
   // X-Forwarded-For, which the client controls there.
   clientIpHeader?: string;
+  // Google Maps reverse geocoding for a device place's name; without it the
+  // name is always null.
+  reverseGeocode?: ReverseGeocode;
+  // NASA FIRMS fire hotspots; without it the nearby route says
+  // not_configured.
+  fires?: Fires;
 }
 
 export function createApp(options: AppOptions = {}): express.Express {
@@ -116,9 +125,14 @@ export function createApp(options: AppOptions = {}): express.Express {
   });
   app.use(
     '/api/v1/air-quality',
-    airQualityRouter(forecast, createCachedWeather()),
+    airQualityRouter(
+      forecast,
+      createCachedWeather(),
+      options.fires !== undefined,
+    ),
   );
-  app.use('/api/v1/locations', locationsRouter());
+  app.use('/api/v1/locations', locationsRouter(options.reverseGeocode));
+  app.use('/api/v1/fires', firesRouter(options.fires));
   // Before the recommendations router, so guides skip its plan limiter.
   app.use('/api/v1/recommendations/guides', guidesRouter());
   app.use(

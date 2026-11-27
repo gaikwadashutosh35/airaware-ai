@@ -1,7 +1,34 @@
 // API contracts shared by server and client (API.md §3).
 // Types only: import with `import type` so nothing ships at runtime.
 
-export type DataKind = 'official_observation' | 'model_forecast' | 'demo';
+// satellite_detection: NASA FIRMS fire hotspots (owner, 27 Nov). Never an
+// air-quality reading of any kind.
+export type DataKind =
+  'official_observation' | 'model_forecast' | 'demo' | 'satellite_detection';
+
+// Fire hotspots near a place from NASA FIRMS. A hotspot is a satellite pixel
+// flagged as holding a fire or other heat source, not proof of smoke at the
+// place. not_configured: no key, the card stays hidden; unavailable: FIRMS
+// failed, never shown as zero.
+export type FireSummary =
+  | { status: 'not_configured' }
+  | { status: 'unavailable' }
+  | {
+      status: 'available';
+      dataKind: 'satellite_detection';
+      // Detections within radiusKm in the last windowHours (low confidence
+      // left out).
+      count: number;
+      nearestKm: number | null;
+      // The newest detection's satellite pass, ISO UTC.
+      latestAt: string | null;
+      radiusKm: number;
+      windowHours: number;
+      retrievedAt: string;
+      provider: 'NASA FIRMS';
+      sourceUrl: string;
+      limitations: string[];
+    };
 
 export type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
 
@@ -118,10 +145,21 @@ export interface WeatherDay {
   minC: number | null;
   maxC: number | null;
   precipitationMm: number | null;
+  // The day's highest chance of rain, %. Always null for yesterday: a chance
+  // is a forecast. The four optional fields below and this one are absent
+  // from an older server's reply.
+  rainChancePct?: number | null;
   atHour: {
     time: string;
     temperatureC: number | null;
     cloudCoverPct: number | null;
+    // Apparent temperature, °C.
+    feelsLikeC?: number | null;
+    // Relative humidity, %.
+    humidityPct?: number | null;
+    // Wind speed at 10 m, km/h, and the direction it comes from, degrees.
+    windKmh?: number | null;
+    windFromDeg?: number | null;
   };
 }
 

@@ -4,6 +4,7 @@ import type {
   AskRequest,
   DailyPlan,
   ErrorCode,
+  FireSummary,
   ForecastData,
   GuideSet,
   GuideTopic,
@@ -119,6 +120,33 @@ export function searchLocations(
 }
 
 // The guide library for My Home or Better Habits (Phase 8).
+// A device place's town or city name from Google Maps (null when none).
+// Display only: never saved or sent on with a plan or question.
+export function getPlaceName(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal,
+): Promise<{ name: string | null }> {
+  const query = new URLSearchParams({
+    latitude: latitude.toFixed(2),
+    longitude: longitude.toFixed(2),
+  });
+  return request(`/api/v1/locations/reverse?${query}`, signal);
+}
+
+// NASA FIRMS fire hotspots near a place (owner, 27 Nov).
+export function getFires(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal,
+): Promise<FireSummary> {
+  const query = new URLSearchParams({
+    latitude: latitude.toFixed(2),
+    longitude: longitude.toFixed(2),
+  });
+  return request(`/api/v1/fires/nearby?${query}`, signal);
+}
+
 export function getGuides(
   topic: GuideTopic,
   signal?: AbortSignal,

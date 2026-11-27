@@ -54,8 +54,11 @@ export function StaleBanner({ onReload }: { onReload?: () => void }) {
         >
           <path d="M10 1a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM9 5h2v4.6l3 1.8-1 1.7-4-2.4z" />
         </svg>
-        Not current: retrieved more than an hour ago. Reload for the latest
-        forecast.
+        {/* Only where a Reload button exists does it say to reload (Ask UX
+            audit, 27 Nov: Ask has none). */}
+        {onReload
+          ? 'Not current: retrieved more than an hour ago. Reload for the latest forecast.'
+          : 'Not current: retrieved more than an hour ago.'}
       </p>
       {onReload && (
         <button

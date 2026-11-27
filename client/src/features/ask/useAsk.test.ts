@@ -200,6 +200,11 @@ describe('useAsk', () => {
         status: 'thinking',
       },
     ]);
+    // Owner (27 Nov): the new reply knows the cards already on screen (the
+    // first reply shows at most 3), so it does not repeat them.
+    expect(result.current.entries[1]!.shown).toEqual(
+      first.answer!.cards.slice(0, 3).map((c) => c.id),
+    );
   });
 
   it('an answer that changes nothing sets the field and sends nothing', async () => {

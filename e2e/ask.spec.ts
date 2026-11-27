@@ -7,7 +7,7 @@ import {
 } from '../client/src/test/askFixtures.ts';
 import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { expectNoAxeViolations } from './axe.ts';
-import { forecastAt, planAt, PUNE, routeApi } from './routes.ts';
+import { forecastAt, planAt, PUNE, routeApi, topicChip } from './routes.ts';
 
 const QUESTION = 'Should I run the purifier tonight?';
 
@@ -47,7 +47,7 @@ test('an Ask answer, with the API stubbed', async ({ page }) => {
   await expectNoAxeViolations(page);
 
   // A topic chip answers at once.
-  await page.getByRole('button', { name: 'Indoor air', exact: true }).click();
+  await (await topicChip(page, 'Indoor air')).click();
   await expect(
     page.getByRole('heading', {
       level: 2,
@@ -82,9 +82,7 @@ async function offeringExercise(page: Page): Promise<Request[]> {
     }
   });
   await page.goto(PUNE.replace('/app?', '/app/ask?'));
-  await page
-    .getByRole('button', { name: 'Outdoor activities', exact: true })
-    .click();
+  await (await topicChip(page, 'Outdoor activities')).click();
   await expect(
     page.getByRole('group', { name: 'Do you exercise outdoors?' }),
   ).toBeVisible();
@@ -110,13 +108,20 @@ test('a question back, answered, asks again with the answer', async ({
     .getByRole('button', { name: 'Yes' })
     .click();
 
-  await expect(page.getByText('You answered: Yes.')).toBeVisible();
+  // Owner (27 Nov): question, response, question, response. Your answer is
+  // your own message with its question, and the reply it updates folds.
   await expect(
     page.getByRole('heading', {
       level: 2,
-      name: 'Your answer to "Do you exercise outdoors?": Yes',
+      name: 'You answered: Do you exercise outdoors? Yes',
     }),
   ).toBeVisible();
+  await expect(page.locator('article.ask-answer')).toHaveCount(2);
+  // The new reply repeats no card from the one above (owner, 27 Nov).
+  const titles = async (i: number) =>
+    page.locator('article.ask-answer').nth(i).locator('h3').allTextContents();
+  const above = await titles(0);
+  expect((await titles(1)).filter((t) => above.includes(t))).toEqual([]);
   await expect(
     page.getByRole('heading', {
       level: 3,
@@ -147,6 +152,12 @@ test('an answer that changes nothing sends no request', async ({ page }) => {
       .locator('article.ask-answer')
       .last()
       .getByText("Noted. That doesn't change this answer."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      level: 2,
+      name: 'You answered: Do you exercise outdoors? No',
+    }),
   ).toBeVisible();
   expect(asked).toHaveLength(1);
 });

@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef } from 'react';
+import { Check, Copy } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { AskAnswer, AskTopic } from '../../../../shared/contracts.ts';
 import { ErrorState } from '../../components/States.tsx';
 import { isOlderThan } from '../../lib/clock.ts';
@@ -9,14 +10,12 @@ import { mergedLimitations, verdictFrom } from '../today/today.ts';
 import {
   ASK_COPY,
   TOPICS,
-  answeredLine,
-  answerPrefix,
   clockTime,
   shortAnswer,
   suggestionsFor,
   type PendingFollowUp,
 } from './ask.ts';
-import type { AskEntry as Entry } from './useAsk.ts';
+import { SHOWN_CARDS, type AskEntry as Entry } from './useAsk.ts';
 
 const MUTED = 'text-sm text-text-dark-muted';
 
@@ -97,15 +96,64 @@ function AirLine({ answer }: { answer: AskAnswer }) {
   );
 }
 
+// The text "Copy answer" puts on the clipboard: what the reply says, its
+// cards, what it was based on and the note (Ask UX spec §11, owner 27 Nov).
+function answerText(answer: AskAnswer, shown: string[]): string {
+  const { title } = verdictFrom(answer.air);
+  const based = answer.forecast
+    ? `Based on: ${title} · Model forecast · ${answer.forecast.provider} · retrieved ${clockTime(answer.forecast.retrievedAt)}`
+    : `Based on: ${title}`;
+  const cards = answer.cards
+    .filter((c) => !shown.includes(c.id))
+    .slice(0, SHOWN_CARDS)
+    .map((c) => `- ${c.title}: ${c.text}`);
+  return [shortAnswer(answer), ...cards, based, answer.safetyNote].join('\n');
+}
+
+// A real Copy control, an icon (owner, 27 Nov) named "Copy answer" for
+// screen readers and as a tooltip; its result is said in a live region, and
+// the icon turns to a tick once copied.
+function CopyAnswer({ text }: { text: string }) {
+  const [result, setResult] = useState('');
+  const Icon = result === ASK_COPY.copied ? Check : Copy;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        aria-label={ASK_COPY.copy}
+        title={ASK_COPY.copy}
+        onClick={() => {
+          navigator.clipboard
+            .writeText(text)
+            .then(() => setResult(ASK_COPY.copied))
+            .catch(() => setResult(ASK_COPY.copyFailed));
+        }}
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-text-dark-muted hover:bg-text-dark/5 hover:text-text-dark"
+      >
+        <Icon aria-hidden="true" className="size-5" />
+      </button>
+      <output className={MUTED}>{result}</output>
+    </div>
+  );
+}
+
 function Answer({
   answer,
   now,
   busy,
+  repeat,
+  shown = [],
   onTopic,
 }: {
   answer: AskAnswer;
   now: Date;
   busy: boolean;
+  // The previous answer said the same context lines: leave them out
+  // (owner, 27 Nov). "Not current" still shows.
+  repeat: boolean;
+  // Cards already shown above (an answer to a question back): left out and
+  // named as still applying (owner, 27 Nov).
+  shown?: string[];
   onTopic: (topic: AskTopic, label: string) => void;
 }) {
   const stale =
@@ -135,16 +183,21 @@ function Answer({
   const { caveat } = verdictFrom(answer.air);
   return (
     <>
-      <p>{shortAnswer(answer)}</p>
-      <p className={MUTED}>
-        {answer.generatedBy === 'ai' ? 'Made with AI' : 'Made by our rules'}
-      </p>
-      <p className={MUTED}>
-        Based on: <AirLine answer={answer} />
-      </p>
-      {caveat && <p className={MUTED}>{caveat}</p>}
+      {/* The answer first and biggest (Ask UX spec §14). */}
+      <p className="text-lg">{shortAnswer(answer)}</p>
+      {!repeat && (
+        <>
+          <p className={MUTED}>
+            {answer.generatedBy === 'ai' ? 'Made with AI' : 'Made by our rules'}
+          </p>
+          <p className={MUTED}>
+            Based on: <AirLine answer={answer} />
+          </p>
+          {caveat && <p className={MUTED}>{caveat}</p>}
+        </>
+      )}
       {stale && <StaleBanner />}
-      {answer.forecast && (
+      {answer.forecast && !repeat && (
         <details className={MUTED}>
           <summary className="min-h-11 cursor-pointer py-2 text-sm font-medium">
             Sources and limitations
@@ -159,17 +212,29 @@ function Answer({
         </details>
       )}
       <div className="flex flex-col gap-3">
-        {answer.cards.slice(0, 3).map((candidate) => (
-          <PlanCard
-            key={candidate.id}
-            item={{ candidate, period: null, forYou: null, compact: false }}
-            sources={answer.sources}
-            level={3}
-            flat
-          />
-        ))}
+        {answer.cards
+          .filter((c) => !shown.includes(c.id))
+          .slice(0, SHOWN_CARDS)
+          .map((candidate) => (
+            <PlanCard
+              key={candidate.id}
+              item={{ candidate, period: null, forYou: null, compact: false }}
+              sources={answer.sources}
+              level={3}
+              flat
+            />
+          ))}
       </div>
-      <p className={MUTED}>{answer.safetyNote}</p>
+      {answer.cards.some((c) => shown.includes(c.id)) && (
+        <p className={MUTED}>
+          {`${ASK_COPY.stillApplies} ${answer.cards
+            .filter((c) => shown.includes(c.id))
+            .map((c) => c.title)
+            .join('; ')}.`}
+        </p>
+      )}
+      {!repeat && <p className={MUTED}>{answer.safetyNote}</p>}
+      <CopyAnswer text={answerText(answer, shown)} />
     </>
   );
 }
@@ -184,6 +249,8 @@ export function AskEntry({
   focus,
   busy,
   newest,
+  repeat = false,
+  shown,
   pending,
   onRetry,
   onTopic,
@@ -197,6 +264,11 @@ export function AskEntry({
   // Another answer is on its way.
   busy: boolean;
   newest: boolean;
+  // The answer before said the same context lines (see contextKey).
+  repeat?: boolean;
+  // Cards it may name as still applying: only those still shown above
+  // (shownAbove); defaults to the entry's own list.
+  shown?: string[];
   // The question back, when it belongs to this reply.
   pending: PendingFollowUp | null;
   onRetry: (id: number) => void;
@@ -265,18 +337,24 @@ export function AskEntry({
         id={headingId}
         ref={headingRef}
         tabIndex={-1}
-        className="max-w-[85%] self-end whitespace-pre-line rounded-2xl rounded-br-sm border border-transparent bg-text-dark px-4 py-3 text-lg font-semibold text-surface-light"
+        className="max-w-[85%] self-end whitespace-pre-line rounded-2xl rounded-br-sm border border-transparent bg-text-dark px-4 py-3 text-base font-semibold text-surface-light"
       >
         <span className="sr-only">
           {entry.said === 'asked'
             ? ASK_COPY.askedPrefix
-            : entry.about
-              ? answerPrefix(entry.about)
-              : ASK_COPY.answeredPrefix}
+            : ASK_COPY.answeredPrefix}
         </span>{' '}
-        {entry.echo}
+        {/* An answer to a question back shows the question with it (owner,
+            27 Nov): "Is your home near a busy road? Yes". */}
+        {entry.said === 'answered' && entry.about
+          ? `${entry.about} ${entry.echo}`
+          : entry.echo}
       </h2>
       <div className="flex flex-col gap-3">
+        {/* Who answers (Ask UX spec §14), small and once per reply. */}
+        <p className="text-xs font-semibold tracking-wide text-text-dark-muted uppercase">
+          {ASK_COPY.assistant}
+        </p>
         {entry.note && <p>{entry.note}</p>}
         {entry.status === 'thinking' && (
           <>
@@ -300,7 +378,14 @@ export function AskEntry({
           />
         )}
         {answer && (
-          <Answer answer={answer} now={now} busy={busy} onTopic={onTopic} />
+          <Answer
+            answer={answer}
+            now={now}
+            busy={busy}
+            repeat={repeat}
+            shown={shown ?? entry.shown}
+            onTopic={onTopic}
+          />
         )}
         {pending && (
           <div className="flex flex-col gap-2 border-t border-rule pt-3">
@@ -345,11 +430,11 @@ export function AskEntry({
             <p className={MUTED}>{ASK_COPY.followUpNote}</p>
           </div>
         )}
-        {entry.followUp && (
+        {/* An answer shows as your own message below (owner, 27 Nov), so
+            only Skip leaves a line here. */}
+        {entry.followUp?.outcome === 'skipped' && (
           <p ref={outcomeRef} tabIndex={-1} className={MUTED}>
-            {entry.followUp.outcome === 'answered'
-              ? answeredLine(entry.followUp.label ?? '')
-              : ASK_COPY.skipped}
+            {ASK_COPY.skipped}
           </p>
         )}
         {newest && topic && (

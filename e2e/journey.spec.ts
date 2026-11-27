@@ -73,11 +73,11 @@ async function goTo(page: Page, name: string): Promise<void> {
     .click();
 }
 
-// The plan builds by itself: once it is shown, open its full day.
+// The plan builds by itself, its full day already open (owner, 27 Nov).
 async function buildPlan(page: Page): Promise<void> {
-  await page
-    .getByText('See your full day', { exact: true })
-    .click({ timeout: 60_000 });
+  await expect(
+    page.locator('details[open] > summary', { hasText: 'See your full day' }),
+  ).toBeVisible({ timeout: 60_000 });
   // The first is the line beside the card, outside the full day.
   await expect(
     page.getByText(/^Made (by our rules|with AI)/).first(),

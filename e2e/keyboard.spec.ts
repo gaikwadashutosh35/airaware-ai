@@ -4,6 +4,7 @@
 // keyboard. It measures that a ring is drawn, not how clear it looks:
 // that is still a person's call (ACCESSIBILITY.md).
 import { expect, test, type Page } from '@playwright/test';
+import { topicChip } from './routes.ts';
 import { rulesAskFixture } from '../client/src/test/askFixtures.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
 import { at, stub } from './layout.ts';
@@ -111,9 +112,7 @@ test('Ask by keyboard: a question back, then Skip', async ({ page }) => {
       },
     }),
   );
-  await page
-    .getByRole('button', { name: 'Outdoor activities', exact: true })
-    .focus();
+  await (await topicChip(page, 'Outdoor activities')).focus();
   await page.keyboard.press('Enter');
   await expect(
     page.getByRole('group', { name: 'Do you exercise outdoors?' }),

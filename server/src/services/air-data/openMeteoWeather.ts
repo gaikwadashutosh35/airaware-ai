@@ -13,6 +13,7 @@ const DAILY = [
   'temperature_2m_max',
   'temperature_2m_min',
   'precipitation_sum',
+  'precipitation_probability_max',
 ] as const;
 
 const VARIABLES = [
@@ -22,6 +23,11 @@ const VARIABLES = [
   'cloud_cover',
   'visibility',
   'is_day',
+  'apparent_temperature',
+  'relative_humidity_2m',
+  // km/h, and the direction the wind comes from in degrees (Open-Meteo's defaults).
+  'wind_speed_10m',
+  'wind_direction_10m',
 ] as const;
 
 const column = z.array(z.number().nullable()).optional();
@@ -36,6 +42,7 @@ const rawWeather = z
         temperature_2m_max: column,
         temperature_2m_min: column,
         precipitation_sum: column,
+        precipitation_probability_max: column,
       })
       .optional(),
     hourly: z.object({
@@ -46,6 +53,10 @@ const rawWeather = z
       cloud_cover: column,
       visibility: column,
       is_day: column,
+      apparent_temperature: column,
+      relative_humidity_2m: column,
+      wind_speed_10m: column,
+      wind_direction_10m: column,
     }),
   })
   .refine(
@@ -114,10 +125,17 @@ export async function fetchWeather(
       minC: daily('temperature_2m_min'),
       maxC: daily('temperature_2m_max'),
       precipitationMm: daily('precipitation_sum'),
+      // A chance is a forecast: a past day has none to show.
+      rainChancePct:
+        day === 'yesterday' ? null : daily('precipitation_probability_max'),
       atHour: {
         time: new Date(seconds * 1000).toISOString(),
         temperatureC: hourly('temperature_2m'),
         cloudCoverPct: hourly('cloud_cover'),
+        feelsLikeC: hourly('apparent_temperature'),
+        humidityPct: hourly('relative_humidity_2m'),
+        windKmh: hourly('wind_speed_10m'),
+        windFromDeg: hourly('wind_direction_10m'),
       },
     };
   });

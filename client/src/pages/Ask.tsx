@@ -2,19 +2,21 @@ import { useId, useState } from 'react';
 import type { AskTopic, HouseholdContext } from '../../../shared/contracts.ts';
 import {
   ASK_COPY,
+  SHOWN_STARTERS,
   STARTERS,
   answeredCount,
   clockTime,
+  contextKey,
   pendingFollowUp,
   shortAnswer,
+  shownAbove,
 } from '../features/ask/ask.ts';
 import {
   AskEntry,
   StarterButtons,
   TopicChips,
 } from '../features/ask/AskEntry.tsx';
-import { CyclingHint } from '../features/ask/CyclingHint.tsx';
-import type { useAsk } from '../features/ask/useAsk.ts';
+import { SHOWN_CARDS, type useAsk } from '../features/ask/useAsk.ts';
 import { LocationSearch } from '../features/location/LocationSearch.tsx';
 import { NEAR_YOU, type Place } from '../features/location/place.ts';
 import { UseMyLocation } from '../features/location/UseMyLocation.tsx';
@@ -52,7 +54,6 @@ export function Ask({
   onLocate: (place: Place) => void;
 }) {
   const [question, setQuestion] = useState('');
-  const [focused, setFocused] = useState(false);
   // The last text sent from the box, and the text put back after a failure.
   const [sent, setSent] = useState<string | null>(null);
   const [refilled, setRefilled] = useState<string | null>(null);
@@ -98,9 +99,27 @@ export function Ask({
     ask.send({ topic: id }, label);
   const askStarter = (starter: string) =>
     ask.send({ question: starter }, starter);
+  // Answers whose context lines match the last answer that showed them
+  // (owner, 27 Nov: "seen first, not every chat").
+  const repeats = new Set<number>();
+  let shownKey: string | null = null;
+  for (const entry of ask.entries) {
+    const key =
+      entry.status === 'ready' && entry.answer
+        ? contextKey(entry.answer)
+        : null;
+    if (key === null) continue;
+    if (key === shownKey) repeats.add(entry.id);
+    shownKey = key;
+  }
+
+  // "Also still applies (see above)": only cards still shown above.
+  const named = shownAbove(ask.entries, SHOWN_CARDS);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 md:gap-4">
+    // A centred reading column, 56rem (896 px), narrower than the other tabs
+    // (owner, 27 Nov: Ask UX spec §5.1, "shorter is good for UI").
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 md:gap-4">
       <div data-part="title-block" className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">
           {ASK_COPY.heading}
@@ -119,6 +138,10 @@ export function Ask({
                     {`, retrieved ${clockTime(new Date(2000, 0, 1, 22, 22).toISOString())}`}
                   </span>
                 )}
+            {/* Loaded nothing and not loading: say so (Ask UX spec §13). */}
+            {!updatedAt &&
+              !forecastLoading &&
+              `, ${ASK_COPY.forecastUnavailable}`}
             {` · ${answeredCount(context)} of 10 household questions answered · `}
             <a
               href="/app/profile"
@@ -147,26 +170,34 @@ export function Ask({
         </div>
       ) : (
         <>
+          {/* Ask UX spec §7 (owner, 27 Nov): a welcome until the first
+              question, 4 starters, the topics under "More topics". */}
           <div className="flex flex-col gap-4 rounded-lg border border-rule card-surface p-5 sm:p-6">
-            <TopicChips busy={ask.thinking} onTopic={askTopic} />
+            {ask.entries.length === 0 && (
+              <p className="text-lg font-semibold">{ASK_COPY.welcome}</p>
+            )}
             <StarterButtons
-              questions={STARTERS.slice(0, 3)}
+              questions={STARTERS.slice(0, SHOWN_STARTERS)}
               busy={ask.thinking}
               onStarter={askStarter}
             />
             <details>
               <summary className="min-h-11 cursor-pointer py-2 font-medium">
-                {ASK_COPY.moreQuestions}
+                {ASK_COPY.moreTopics}
               </summary>
-              <StarterButtons
-                questions={STARTERS.slice(3)}
-                busy={ask.thinking}
-                onStarter={askStarter}
-              />
+              <div className="flex flex-col gap-3 pt-2">
+                <TopicChips busy={ask.thinking} onTopic={askTopic} />
+                <StarterButtons
+                  questions={STARTERS.slice(SHOWN_STARTERS)}
+                  busy={ask.thinking}
+                  onStarter={askStarter}
+                />
+              </div>
             </details>
           </div>
           {ask.entries.length > 0 && (
-            <div
+            <section
+              aria-label={ASK_COPY.conversation}
               data-part="ask-thread"
               className="flex flex-col gap-6 rounded-lg border border-rule card-surface p-5 sm:p-6 [&>article+article]:border-t [&>article+article]:border-rule [&>article+article]:pt-6"
             >
@@ -178,6 +209,8 @@ export function Ask({
                   focus={entry === latest && entry.id !== openedWith}
                   busy={ask.thinking}
                   newest={entry === latest}
+                  repeat={repeats.has(entry.id)}
+                  shown={named.get(entry.id) ?? []}
                   pending={pending?.entryId === entry.id ? pending : null}
                   onRetry={ask.retry}
                   onTopic={askTopic}
@@ -188,7 +221,7 @@ export function Ask({
                   onSkipFollowUp={(field) => ask.skipFollowUp(entry.id, field)}
                 />
               ))}
-            </div>
+            </section>
           )}
           <form
             onSubmit={(event) => {
@@ -217,17 +250,13 @@ export function Ask({
               </label>
               <div className="flex flex-wrap items-end gap-2">
                 <div className="relative min-w-0 flex-[1_1_10rem]">
-                  <CyclingHint
-                    show={!focused && question === ''}
-                    still={ask.entries.length > 0}
-                  />
+                  {/* A fixed placeholder (owner, 27 Nov: Ask UX spec §11). */}
                   <textarea
                     id={inputId}
                     rows={1}
                     value={question}
+                    placeholder={ASK_COPY.placeholder}
                     onChange={(event) => setQuestion(event.target.value)}
-                    onFocus={() => setFocused(true)}
-                    onBlur={() => setFocused(false)}
                     onKeyDown={(event) => {
                       if (event.key !== 'Enter' || event.shiftKey) return;
                       event.preventDefault();
@@ -243,7 +272,7 @@ export function Ask({
                     maxLength={200}
                     enterKeyHint="send"
                     autoComplete="off"
-                    className="field-sizing-content max-h-[calc(4lh+1.5rem)] block min-h-12 w-full resize-none overflow-y-auto rounded-md border border-text-dark bg-surface-light px-3 py-3 text-text-dark"
+                    className="field-sizing-content max-h-[calc(4lh+1.5rem)] block min-h-12 w-full resize-none overflow-y-auto rounded-md border border-text-dark bg-surface-light px-3 py-3 text-text-dark placeholder:text-text-dark-muted"
                   />
                 </div>
                 <button

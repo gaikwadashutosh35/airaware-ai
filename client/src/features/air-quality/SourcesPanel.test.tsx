@@ -63,6 +63,23 @@ describe('SourcesPanel', () => {
     ).toBeDefined();
   });
 
+  // Owner (27 Nov): the sources fold away under an arrow, closed at first.
+  it('starts folded under a "Sources and limitations" arrow', () => {
+    render(<SourcesPanel sources={sourcesFixture} forecastLimitations={[]} />);
+
+    const summary = screen.getByText('Sources and limitations', {
+      selector: 'summary',
+    });
+    const details = summary.closest('details')!;
+    expect(details.open).toBe(false);
+    expect(
+      within(details).getByRole('heading', { name: 'Sources', hidden: true }),
+    ).toBeDefined();
+    expect(
+      within(details).getAllByRole('listitem', { hidden: true }).length,
+    ).toBeGreaterThan(0);
+  });
+
   it('leaves out the sources list when sources failed', () => {
     render(<SourcesPanel sources={null} forecastLimitations={[]} />);
 

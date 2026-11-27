@@ -83,8 +83,10 @@ describe('TodayLead', () => {
   it('the stale banner sits under the verdict', () => {
     const { container } = show({ ...forecastFixture, airCheck: within }, true);
     const stale = container.querySelector('[data-part="stale-banner"]');
+    // No Reload button here, so no "Reload…" instruction (Ask UX audit,
+    // 27 Nov); with one, the sentence says it (the test below).
     expect(stale?.textContent).toBe(
-      'Not current: retrieved more than an hour ago. Reload for the latest forecast.',
+      'Not current: retrieved more than an hour ago.',
     );
     expect(
       screen

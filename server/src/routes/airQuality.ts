@@ -7,6 +7,7 @@ import type { CachedWeather } from '../services/air-data/cachedWeather.ts';
 import { LIMITATIONS, SOURCE_URL } from '../services/air-data/openMeteo.ts';
 import { WEATHER_SOURCE_URL } from '../services/air-data/openMeteoWeather.ts';
 import { assessAir } from '../services/recommendations/airCheck.ts';
+import { FIRE_LIMITATIONS, FIRMS_SOURCE_URL } from '../services/fires/firms.ts';
 
 // Plain decimals with at most 2 places (~1.1 km; the model grid is ~45 km).
 // Clients round before sending, so a precise location never reaches request
@@ -18,7 +19,7 @@ function coordinate(min: number, max: number) {
     .transform(Number)
     .pipe(z.number().min(min).max(max));
 }
-const coordinatesQuery = z.object({
+export const coordinatesQuery = z.object({
   latitude: coordinate(-90, 90),
   longitude: coordinate(-180, 180),
 });
@@ -59,9 +60,24 @@ const SOURCES: SourceInfo[] = [
   },
 ];
 
+// NASA FIRMS (owner, 27 Nov): connected only when its key is set.
+function firmsSource(configured: boolean): SourceInfo {
+  return {
+    id: 'nasa-firms',
+    name: 'NASA FIRMS active fire detections (VIIRS NOAA-20, NOAA-21)',
+    dataKind: 'satellite_detection',
+    status: configured ? 'available' : 'unavailable',
+    url: FIRMS_SOURCE_URL,
+    attribution:
+      'Fire hotspots from NASA FIRMS (Fire Information for Resource Management System).',
+    limitations: FIRE_LIMITATIONS,
+  };
+}
+
 export function airQualityRouter(
   forecast: CachedForecast,
   weather: CachedWeather,
+  firesConfigured = false,
 ): Router {
   const router = Router();
 
@@ -97,7 +113,7 @@ export function airQualityRouter(
   });
 
   router.get('/sources', (_req, res) => {
-    res.json({ data: SOURCES });
+    res.json({ data: [...SOURCES, firmsSource(firesConfigured)] });
   });
 
   return router;

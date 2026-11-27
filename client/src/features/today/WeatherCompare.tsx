@@ -7,6 +7,12 @@ const CELL = 'px-0.5 py-2 text-left align-top break-words';
 const NB = ' ';
 
 const whole = (n: number) => String(Math.round(n));
+// The compass point a wind comes from, to the nearest of eight.
+const POINTS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+const point = (deg: number) => POINTS[((Math.round(deg / 45) % 8) + 8) % 8]!;
+// An older server leaves the newer fields out: shown as missing.
+const shown = (n: number | null | undefined, unit: string) =>
+  n == null ? MISSING : `${whole(n)}${NB}${unit}`;
 
 // Yesterday, today and tomorrow from Open-Meteo's model: the same local hour
 // each day, then the day's range and rain. A value the provider left out
@@ -46,6 +52,23 @@ export function WeatherCompare({
             ].join(', '),
       ),
     ],
+    // The same hour as the row above.
+    [
+      'Feels like',
+      weather.days.map(({ atHour }) => shown(atHour.feelsLikeC, '°C')),
+    ],
+    [
+      'Humidity',
+      weather.days.map(({ atHour }) => shown(atHour.humidityPct, '%')),
+    ],
+    [
+      'Wind',
+      weather.days.map(({ atHour: { windKmh: v, windFromDeg: d } }) =>
+        v == null
+          ? MISSING
+          : `${shown(v, 'km/h')}${d == null ? '' : ` ${point(d)}`}`,
+      ),
+    ],
     [
       'Min–max',
       weather.days.map(({ minC, maxC }) =>
@@ -60,13 +83,20 @@ export function WeatherCompare({
         mm === null ? MISSING : `${mm.toFixed(1)}${NB}mm`,
       ),
     ],
+    // The server sends none for yesterday: a chance is a forecast.
+    [
+      'Chance of rain',
+      weather.days.map(({ rainChancePct }) => shown(rainChancePct, '%')),
+    ],
   ];
 
   return (
     <section className="rounded-lg border border-rule card-surface p-4 sm:p-6">
       <table className="w-full table-fixed text-sm">
         <colgroup>
-          <col className="w-[17%]" />
+          {/* Wider on phones, with the row labels at the column headings'
+              size there, so no label or heading breaks inside a word. */}
+          <col className="w-[24%] sm:w-[17%]" />
         </colgroup>
         <caption className="pb-2 text-left font-semibold">
           Weather · Open-Meteo model data
@@ -90,7 +120,10 @@ export function WeatherCompare({
         <tbody>
           {rows.map(([label, cells]) => (
             <tr key={label} className="border-b border-rule last:border-b-0">
-              <th scope="row" className={`${CELL} font-semibold`}>
+              <th
+                scope="row"
+                className={`${CELL} text-xs font-semibold sm:text-sm`}
+              >
                 {label}
               </th>
               {cells.map((cell, i) => (

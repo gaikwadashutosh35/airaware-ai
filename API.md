@@ -111,6 +111,7 @@ Returns an hourly model forecast (48 hours from the current hour) and the provid
   - Clients show it as given and never derive limits themselves.
 - `weather` is this hour's Open-Meteo weather forecast (`https://api.open-meteo.com/v1/forecast`, the same rounded coordinates, cached for 10 minutes). The server fetches it alongside the air forecast. It is `null` when that call fails or returns no hour containing the request time, and the air forecast never fails because of it.
   - It also asks for `past_days=1`, `forecast_days=2` and daily values, so `weather.days` holds yesterday, today and tomorrow (the place's own local dates, from `utc_offset_seconds`). Each `atHour` is the same local hour as the request time on that day. Yesterday is past model data, not a station measurement. A value the provider leaves out is `null`; nothing is filled in.
+  - `atHour` also carries feels like, humidity and wind (`apparent_temperature`, `relative_humidity_2m`, `wind_speed_10m` in km/h, `wind_direction_10m`), and each day its highest chance of rain (`precipitation_probability_max`). A chance is a forecast, so yesterday's `rainChancePct` is always `null`. These five fields are optional: an older server leaves them out, and clients show them as missing.
 
 ```ts
 type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
@@ -135,7 +136,16 @@ interface WeatherDay {
   minC: number | null;
   maxC: number | null;
   precipitationMm: number | null;
-  atHour: { time: string; temperatureC: number | null; cloudCoverPct: number | null };
+  rainChancePct?: number | null; // the day's highest chance of rain, %; always null for yesterday
+  atHour: {
+    time: string;
+    temperatureC: number | null;
+    cloudCoverPct: number | null;
+    feelsLikeC?: number | null; // apparent temperature
+    humidityPct?: number | null; // relative humidity
+    windKmh?: number | null; // wind speed at 10 m
+    windFromDeg?: number | null; // direction the wind comes from
+  };
 }
 
 // Open-Meteo weather forecast for the hour containing the request time.
@@ -205,6 +215,23 @@ Response (illustrative):
 ```json
 { "data": [{ "id": 1259229, "name": "Pune", "admin1": "Maharashtra", "country": "India", "latitude": 18.51957, "longitude": 73.85535, "timezone": "Asia/Kolkata" }] }
 ```
+
+### `GET /api/v1/locations/reverse?latitude=...&longitude=...`
+
+The town or city name for a device location (owner, 27 Nov), from Google Maps Geocoding (`result_type=locality`, English). Coordinates follow the forecast's rules: at most 2 decimals, so nothing more precise than about 1 km reaches Google. The response is `Cache-Control: no-store` and nothing is cached or stored on the server.
+
+Response: `{ "data": { "name": "Pune" } }`. `name` is `null` when `GOOGLE_MAPS_API_KEY` is unset, Google finds no locality, or Google fails; the call itself never fails for those. Clients show the name only beside a "Google Maps" credit, and never save it or send it on with a plan or question.
+
+### `GET /api/v1/fires/nearby?latitude=...&longitude=...`
+
+Fire hotspots near a place from NASA FIRMS (owner, 27 Nov): VIIRS near-real-time detections from NOAA-20 and NOAA-21, within 50 km and the last 24 hours, low-confidence detections left out. Coordinates follow the forecast's rules (at most 2 decimals). The server asks FIRMS for a box around the place and caches the answer for 30 minutes per place. Data kind `satellite_detection`: never an air-quality reading.
+
+Response `data` is a `FireSummary`:
+- `{ "status": "not_configured" }` when `FIRMS_MAP_KEY` is unset (clients hide the card);
+- `{ "status": "unavailable" }` when either satellite's request fails or FIRMS answers with something other than its CSV (never a partial count; not cached);
+- `{ "status": "available", "dataKind": "satellite_detection", "count": 3, "nearestKm": 12.4, "latestAt": "2026-11-27T09:04:00.000Z", "radiusKm": 50, "windowHours": 24, "retrievedAt": "…", "provider": "NASA FIRMS", "sourceUrl": "https://firms.modaps.eosdis.nasa.gov/", "limitations": […] }`. `nearestKm` and `latestAt` are `null` when `count` is 0.
+
+`GET /api/v1/air-quality/sources` lists NASA FIRMS (`nasa-firms`, `satellite_detection`), `available` only when the key is set.
 
 All `/api/v1` routes share a rate limit of 60 requests per minute per IP. Requests over the limit get `429 RATE_LIMITED`.
 

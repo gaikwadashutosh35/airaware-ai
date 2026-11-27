@@ -116,4 +116,17 @@ describe('ForecastPanel', () => {
     expect(container.querySelector('[data-part="limit-line"]')).toBeNull();
     expect(container.textContent).not.toMatch(/60 μg\/m³ standard/i);
   });
+
+  // Owner (27 Nov): the hourly table shows about the next 6 hours and
+  // scrolls for the rest, its column headings staying in view.
+  it('the hourly table scrolls in a box with sticky headings', () => {
+    render(<ForecastPanel data={forecastFixture} now={NOW} />);
+    const box = screen.getByRole('region', { name: 'Hourly forecast table' });
+    expect(box.className).toMatch(/\bmax-h-/);
+    expect(box.className).toContain('overflow-auto');
+    // Still reachable by keyboard, so it can be scrolled without a mouse.
+    expect(box.tabIndex).toBe(0);
+    for (const heading of within(box).getAllByRole('columnheader'))
+      expect(heading.className).toContain('sticky');
+  });
 });

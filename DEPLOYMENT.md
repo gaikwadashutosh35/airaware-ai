@@ -30,6 +30,8 @@ Live site: **https://airaware-ai.netlify.app** (Netlify project `airaware-ai`, o
 | `GEMINI_API_KEY` | the function | **Secret**, Functions only, production context. |
 | `ANTHROPIC_API_KEY` | the function | **Secret**, Functions only, production context. Optional: the Claude backup. |
 | `GEMINI_MODEL`, `CLAUDE_MODEL` | the function | Optional model ids (defaults `gemini-3.8-flash`, `claude-haiku-5-5`). |
+| `FIRMS_MAP_KEY` | the function | **Secret**, Functions only, production context. Optional: NASA FIRMS fire hotspots on Today. Free from firms.modaps.eosdis.nasa.gov/api/map_key (5,000 requests per 10 minutes; each place lookup uses 2, then 30 minutes of cache). |
+| `GOOGLE_MAPS_API_KEY` | the function | **Secret**, Functions only, production context. Optional: the city name for "Use my location". The key ("Maps Platform API Key", Gemini Project) is restricted to the Geocoding API; it has no application restriction, as Netlify's function IPs change. |
 
 - **Don't mark the four Supabase values "secret".** Netlify scans build output for secret values and fails the build, and the bundle contains them by design.
 - **Never add `NODE_ENV`.** `npm` would skip the client's build tools.

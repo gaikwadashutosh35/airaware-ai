@@ -52,7 +52,7 @@ describe('fetchWeather', () => {
     expect(url.searchParams.get('latitude')).toBe('18.52');
     expect(url.searchParams.get('longitude')).toBe('73.86');
     expect(url.searchParams.get('hourly')).toBe(
-      'temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day',
+      'temperature_2m,precipitation,precipitation_probability,cloud_cover,visibility,is_day,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m',
     );
     expect(url.searchParams.get('timeformat')).toBe('unixtime');
     // Yesterday, today and tomorrow in the place's own time.
@@ -60,7 +60,7 @@ describe('fetchWeather', () => {
     expect(url.searchParams.get('past_days')).toBe('1');
     expect(url.searchParams.get('forecast_days')).toBe('2');
     expect(url.searchParams.get('daily')).toBe(
-      'temperature_2m_max,temperature_2m_min,precipitation_sum',
+      'temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max',
     );
   });
 
@@ -85,10 +85,15 @@ describe('fetchWeather', () => {
           minC: null,
           maxC: null,
           precipitationMm: null,
+          rainChancePct: null,
           atHour: {
             time: '2026-11-17T10:00:00.000Z',
             temperatureC: null,
             cloudCoverPct: null,
+            feelsLikeC: null,
+            humidityPct: null,
+            windKmh: null,
+            windFromDeg: null,
           },
         },
         {
@@ -97,10 +102,15 @@ describe('fetchWeather', () => {
           minC: null,
           maxC: null,
           precipitationMm: null,
+          rainChancePct: null,
           atHour: {
             time: '2026-11-18T10:00:00.000Z',
             temperatureC: 31.2,
             cloudCoverPct: 85,
+            feelsLikeC: null,
+            humidityPct: null,
+            windKmh: null,
+            windFromDeg: null,
           },
         },
         {
@@ -109,10 +119,15 @@ describe('fetchWeather', () => {
           minC: null,
           maxC: null,
           precipitationMm: null,
+          rainChancePct: null,
           atHour: {
             time: '2026-11-19T10:00:00.000Z',
             temperatureC: null,
             cloudCoverPct: null,
+            feelsLikeC: null,
+            humidityPct: null,
+            windKmh: null,
+            windFromDeg: null,
           },
         },
       ],
@@ -227,16 +242,28 @@ describe('fetchWeather days', () => {
         time: '2026-11-17T10:30:00.000Z',
         temperatureC: 16,
         cloudCoverPct: 116,
+        feelsLikeC: null,
+        humidityPct: null,
+        windKmh: null,
+        windFromDeg: null,
       },
       {
         time: '2026-11-18T10:30:00.000Z',
         temperatureC: 40,
         cloudCoverPct: 140,
+        feelsLikeC: null,
+        humidityPct: null,
+        windKmh: null,
+        windFromDeg: null,
       },
       {
         time: '2026-11-19T10:30:00.000Z',
         temperatureC: 64,
         cloudCoverPct: 164,
+        feelsLikeC: null,
+        humidityPct: null,
+        windKmh: null,
+        windFromDeg: null,
       },
     ]);
   });
@@ -290,6 +317,54 @@ describe('fetchWeather days', () => {
       1, 25, 49,
     ]);
     expect(weather?.days.map((d) => d.maxC)).toEqual([30, 32, 34]);
+  });
+
+  // Owner (27 Nov): more rows in the table. Feels like, humidity and wind are
+  // point values for the same local hour; the chance of rain is the day's
+  // highest, and only for today and tomorrow (a past day has no chance).
+  it('reads feels like, humidity and wind at the same hour', async () => {
+    const json = kolkata({ precipitation_probability_max: [55, 40, 70] });
+    const rows = json.hourly.time.map((_, n) => n);
+    Object.assign(json.hourly, {
+      apparent_temperature: rows.map((n) => n + 0.5),
+      relative_humidity_2m: rows.map((n) => n + 1),
+      wind_speed_10m: rows.map((n) => n + 2),
+      wind_direction_10m: rows.map((n) => n * 5),
+    });
+    respond(json);
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    // Rows 16, 40 and 64, as in the test above.
+    expect(
+      weather?.days.map(({ atHour: a }) => [
+        a.feelsLikeC,
+        a.humidityPct,
+        a.windKmh,
+        a.windFromDeg,
+      ]),
+    ).toEqual([
+      [16.5, 17, 18, 80],
+      [40.5, 41, 42, 200],
+      [64.5, 65, 66, 320],
+    ]);
+    expect(weather?.days.map((d) => d.rainChancePct)).toEqual([null, 40, 70]);
+  });
+
+  it('leaves the new values null when the provider sends none', async () => {
+    respond(kolkata());
+    const weather = await fetchWeather(18.52, 73.86, KOLKATA_NOW);
+    expect(weather?.days.map((d) => d.rainChancePct)).toEqual([
+      null,
+      null,
+      null,
+    ]);
+    expect(weather?.days[1]?.atHour.windKmh).toBeNull();
+  });
+
+  it('fails closed when a new column is the wrong length', async () => {
+    const json = kolkata();
+    Object.assign(json.hourly, { wind_speed_10m: [1] });
+    respond(json);
+    expect(await fetchWeather(18.52, 73.86, KOLKATA_NOW)).toBeNull();
   });
 
   it('fails closed on an offset beyond a real time zone', async () => {

@@ -510,19 +510,48 @@ describe('DailyPlanSection', () => {
     expect(screen.queryByText('Why this recommendation?')).toBeNull();
   });
 
-  it('the full day is folded and keeps Save plan', async () => {
+  // Owner (27 Nov): the full day starts open (in its scroll box); its
+  // summary can still fold it.
+  it('the full day starts open and keeps Save plan', async () => {
     routeFetch(() => planReply());
     renderSection();
     await build();
 
     const fullDay = screen.getByText('See your full day').closest('details')!;
-    expect(fullDay.open).toBe(false);
+    expect(fullDay.open).toBe(true);
     expect(
       within(fullDay).getByText('Plan for Pune, Maharashtra'),
     ).toBeDefined();
     expect(within(fullDay).getByText('Save plan')).toBeDefined();
     expect(within(fullDay).queryByText('Air notice')).toBeNull();
     expect(within(fullDay).queryByText('Air check')).toBeNull();
+  });
+
+  // Owner (27 Nov): with the full day open, Save plan is outlined, so Today
+  // keeps one teal-filled control (G-05).
+  it('Save plan is outlined, not filled', async () => {
+    routeFetch(() => planReply());
+    renderSection();
+    await build();
+
+    const save = screen.getByRole('button', { name: 'Save plan' });
+    expect(save.className).not.toContain('bg-primary');
+    expect(save.className).toContain('border');
+    expect(save.className).toContain('min-h-11');
+  });
+
+  // Owner (27 Nov): opened, the full day stretched the card down the page;
+  // it now scrolls in a box of limited height.
+  it('the full day scrolls inside a box of limited height', async () => {
+    routeFetch(() => planReply());
+    renderSection();
+    await build();
+
+    const fullDay = screen.getByText('See your full day').closest('details')!;
+    const body = fullDay.querySelector(':scope > div')!;
+    expect(body.className).toMatch(/\bmax-h-/);
+    expect(body.className).toContain('overflow-y-auto');
+    expect(within(body as HTMLElement).getByText('Save plan')).toBeDefined();
   });
 
   // The full day hides the air check, so a plan without air data says so

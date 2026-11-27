@@ -11,9 +11,12 @@ import { forecastAt, planAt, PUNE, routeApi } from './routes.ts';
 
 const HOUR = 60 * 60 * 1000;
 
-// The plan builds by itself; "See your full day" opens the rest of it.
+// The plan builds by itself, and "See your full day" starts open (owner,
+// 27 Nov): wait for it, without a click that would fold it.
 async function openFullDay(page: Page) {
-  await page.getByText('See your full day', { exact: true }).click();
+  await expect(
+    page.locator('details[open] > summary', { hasText: 'See your full day' }),
+  ).toBeVisible();
 }
 
 test('provider down: the forecast error, and a recommendation from the rules', async ({

@@ -260,8 +260,9 @@ describe('air-quality routes', () => {
       const res = await request(createApp()).get('/api/v1/air-quality/sources');
 
       expect(res.status).toBe(200);
-      // Phase A2 adds the weather source (a deliberate contract change).
-      expect(res.body.data).toHaveLength(3);
+      // Phase A2 adds the weather source, and 27 Nov NASA FIRMS (both
+      // deliberate contract changes; FIRMS is checked in fires.test.ts).
+      expect(res.body.data).toHaveLength(4);
       const [openMeteo, cpcb, weather] = res.body.data;
       expect(weather).toMatchObject({
         id: 'open-meteo-weather',

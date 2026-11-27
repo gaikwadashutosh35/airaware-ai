@@ -27,15 +27,18 @@ export const STARTERS: Array<{ question: string; topic: AskTopic }> = [
   { question: 'Can I go for a morning walk today?', topic: 'outdoors' },
   { question: 'Is it a good idea to open my windows?', topic: 'windows' },
   { question: 'How can I improve my indoor air?', topic: 'indoor' },
-  {
-    question: "What should I consider for my children's outdoor activities?",
-    topic: 'family',
-  },
+  // Ask shows the first 4 (owner, 27 Nov: Ask UX spec §7); the 5th waits
+  // under "More topics".
   {
     question: 'How can I reduce pollution while commuting?',
     topic: 'commuting',
   },
+  {
+    question: "What should I consider for my children's outdoor activities?",
+    topic: 'family',
+  },
 ];
+export const SHOWN_STARTERS = 4;
 
 export const ASK_COPY = {
   heading: 'Ask AirAware',
@@ -45,19 +48,31 @@ export const ASK_COPY = {
   medical:
     "I can't give medical advice. For health concerns, please talk to a doctor.",
   outOfScope:
-    'I can help with outdoor plans, windows and ventilation, indoor air, family and better habits',
+    'I can help with outdoor plans, windows and ventilation, indoor air, family, commuting and better habits.',
   errorTitle: "We couldn't answer that",
   errorFallback: 'Something went wrong answering your question.',
   tryAgain: 'Try again',
   // Guided chat (spec 2026-11-21).
   intro: "Answers come from AirAware's rules and today's forecast.",
-  moreQuestions: 'More questions',
+  // Ask UX spec (owner, 27 Nov).
+  welcome: 'How can I help you today?',
+  moreTopics: 'More topics',
+  placeholder: 'Ask about your air, home or daily routine…',
+  conversation: 'Conversation',
+  forecastUnavailable: 'forecast unavailable right now',
+  assistant: 'AirAware',
+  copy: 'Copy answer',
+  copied: 'Copied',
+  copyFailed: "Couldn't copy. Select the text to copy it instead.",
   followUpIntro: 'One question so I can be more specific:',
   followUpNote:
     'This changes your answers for this visit. To keep them, save in My Profile.',
   skip: 'Skip',
   skipped: 'Skipped. You can answer it in My Profile any time.',
   noted: "Noted. That doesn't change this answer.",
+  // A reply to an answer to a question back names the cards shown above
+  // that still apply, instead of repeating them (owner, 27 Nov).
+  stillApplies: 'Also still applies (see above):',
   alsoAsk: 'You could also ask:',
   askedPrefix: 'You asked:',
   answeredPrefix: 'You answered:',
@@ -145,4 +160,41 @@ export function clockTime(iso: string): string {
 // The AI summary, else the verdict's approved explanation (no new copy).
 export function shortAnswer(answer: AskAnswer): string {
   return answer.summary ?? verdictFrom(answer.air).explanation;
+}
+
+// For each reply that updates an earlier one, the cards it may name as
+// "still applies (see above)": only those a reply still in the thread shows
+// above it (the thread keeps the newest 10). Each reply shows at most
+// `perReply` cards, leaving out those named.
+export function shownAbove(
+  entries: AskEntry[],
+  perReply = 3,
+): Map<number, string[]> {
+  const seen = new Set<string>();
+  const result = new Map<number, string[]>();
+  for (const entry of entries) {
+    const named = (entry.shown ?? []).filter((id) => seen.has(id));
+    result.set(entry.id, named);
+    if (entry.status !== 'ready' || !entry.answer) continue;
+    for (const card of entry.answer.cards
+      .filter((c) => !named.includes(c.id))
+      .slice(0, perReply))
+      seen.add(card.id);
+  }
+  return result;
+}
+
+// What an answer's context lines say: who made it, the forecast and its time,
+// the air level and the note. Two answers with the same key repeat them, so
+// the later one leaves them out (owner, 27 Nov). Medical and out-of-scope
+// replies have none.
+export function contextKey(answer: AskAnswer): string | null {
+  if (answer.topic === 'medical' || answer.topic === 'out_of_scope')
+    return null;
+  return [
+    answer.generatedBy,
+    answer.forecast?.retrievedAt ?? '',
+    answer.air.level,
+    answer.safetyNote,
+  ].join('|');
 }

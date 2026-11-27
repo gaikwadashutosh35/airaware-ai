@@ -66,9 +66,10 @@ interface Built {
 type Status =
   { kind: 'idle' } | { kind: 'building' } | { kind: 'error'; error: ApiError };
 
-// The main action in each state: teal fill, dark text (contrast about 9:1).
-const primaryClass =
-  'min-h-11 rounded-md bg-primary px-4 font-medium text-text-dark disabled:opacity-60';
+// Outlined, like "Not now": with the full day open, Send stays Today's one
+// teal-filled control (G-05; owner, 27 Nov).
+const saveClass =
+  'min-h-11 rounded-md border border-text-dark px-4 font-medium text-text-dark disabled:opacity-60';
 
 // "Your recommendation for today": the plan's top card, with the full day
 // folded below. It builds by itself while Today or My Home is shown, from the chosen
@@ -258,8 +259,9 @@ export function DailyPlanSection({
         <Loading
           label="Finding your recommendation…"
           // As tall as the ready plan (the rules plan, measured at 320, 360,
-          // 390, 640, 1024 and 1280 wide), so nothing below moves.
-          className="min-h-[24.6rem] min-[360px]:min-h-[23.3rem] min-[390px]:min-h-[21.7rem] sm:min-h-[17rem] lg:min-h-[21.9rem] xl:min-h-[18.6rem]"
+          // 390, 640, 1024 and 1280 wide), so nothing below moves. The full
+          // day starts open (owner, 27 Nov): + its 60svh scroll box.
+          className="min-h-[calc(24.6rem+60svh)] min-[360px]:min-h-[calc(23.3rem+60svh)] min-[390px]:min-h-[calc(21.7rem+60svh)] sm:min-h-[calc(17rem+60svh)] lg:min-h-[calc(21.9rem+60svh)] xl:min-h-[calc(18.6rem+60svh)]"
         />
       )}
       {status.kind === 'error' && (
@@ -302,12 +304,20 @@ export function DailyPlanSection({
           <p className="text-sm text-text-dark-muted">
             {`${built.plan.generatedBy === 'ai' ? 'Made with AI' : 'Made by our rules'}. ${built.plan.safetyNote}`}
           </p>
-          {/* Instant open: it is opened often, so no animation. */}
-          <details>
+          {/* Instant open: it is opened often, so no animation. Opened, it
+              scrolls in its own box, so the card does not stretch down the
+              page (owner, 27 Nov). Its Why? and Save plan controls take
+              keyboard focus, so no tabindex is needed to reach it. It starts
+              open (owner, 27 Nov); the summary can still fold it. */}
+          <details open>
             <summary className="min-h-11 cursor-pointer py-2 font-semibold">
               See your full day
             </summary>
-            <div className="flex flex-col gap-6 pt-2">
+            {/* pl-1 pb-1: room for the 2px focus ring (offset 2px) of
+                controls at the box's edge, which overflow would clip.
+                relative: the sr-only labels inside are absolute, and would
+                otherwise escape the clip and lengthen the page. */}
+            <div className="relative flex max-h-[60svh] flex-col gap-6 overflow-y-auto pt-2 pr-2 pb-1 pl-1">
               <PlanView plan={built.plan} hideAir />
               {!isSaved && (
                 <div className="flex flex-col items-start gap-2">
@@ -316,7 +326,7 @@ export function DailyPlanSection({
                     disabled={!savingAvailable || saving}
                     aria-describedby={noteId}
                     onClick={() => void save()}
-                    className={primaryClass}
+                    className={saveClass}
                   >
                     Save plan
                   </button>

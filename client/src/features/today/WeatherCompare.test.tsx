@@ -38,8 +38,12 @@ describe('WeatherCompare', () => {
     const rows = within(table).getAllByRole('rowheader');
     expect(rows.map((r) => r.textContent)).toEqual([
       `At ${clock(2026, 10, 17, 22, 30)}`,
+      'Feels like',
+      'Humidity',
+      'Wind',
       'Min–max',
       'Rain',
+      'Chance of rain',
     ]);
     for (const row of rows) expect(row.getAttribute('scope')).toBe('row');
   });
@@ -57,6 +61,12 @@ describe('WeatherCompare', () => {
     ]);
     expect(cells('Min–max')).toEqual(['19–32 °C', '20–32 °C', '21–30 °C']);
     expect(cells('Rain')).toEqual(['0.0 mm', '0.0 mm', '2.3 mm']);
+    expect(cells('Feels like')).toEqual(['28 °C', '29 °C', '26 °C']);
+    expect(cells('Humidity')).toEqual(['62 %', '58 %', '81 %']);
+    // The compass point the wind comes from (8 points).
+    expect(cells('Wind')).toEqual(['8 km/h NW', '11 km/h W', '16 km/h SW']);
+    // A chance is a forecast: yesterday has none.
+    expect(cells('Chance of rain')).toEqual(['—', '20 %', '75 %']);
   });
 
   it('shows the note about yesterday', () => {
@@ -76,12 +86,21 @@ describe('WeatherCompare', () => {
         minC: null,
         maxC: null,
         precipitationMm: null,
-        atHour: { ...d.atHour, temperatureC: null, cloudCoverPct: null },
+        rainChancePct: null,
+        atHour: {
+          ...d.atHour,
+          temperatureC: null,
+          cloudCoverPct: null,
+          feelsLikeC: null,
+          humidityPct: null,
+          windKmh: null,
+          windFromDeg: null,
+        },
       })) as WeatherNow['days'],
     };
     render(<WeatherCompare weather={empty} now={NOW} />);
     const cells = screen.getAllByRole('cell').map((c) => c.textContent);
-    expect(cells).toEqual(Array(9).fill('—'));
+    expect(cells).toEqual(Array(21).fill('—'));
   });
 
   it('shows a lone missing value as —', () => {
@@ -106,6 +125,44 @@ describe('WeatherCompare', () => {
       />,
     );
     expect(screen.getByText(`At ${clock(2026, 10, 17, 12, 0)}`)).toBeTruthy();
+  });
+
+  // An older server sends the days without the new fields: dashes, not zeros.
+  it('shows — for the new rows when an older server leaves them out', () => {
+    const old: WeatherNow = {
+      ...weather,
+      days: weather.days.map(({ rainChancePct: _r, atHour, ...d }) => ({
+        ...d,
+        atHour: {
+          time: atHour.time,
+          temperatureC: atHour.temperatureC,
+          cloudCoverPct: atHour.cloudCoverPct,
+        },
+      })) as WeatherNow['days'],
+    };
+    render(<WeatherCompare weather={old} now={NOW} />);
+    for (const name of ['Feels like', 'Humidity', 'Wind', 'Chance of rain'])
+      expect(
+        within(screen.getByRole('row', { name: new RegExp(`^${name}`) }))
+          .getAllByRole('cell')
+          .map((c) => c.textContent),
+      ).toEqual(['—', '—', '—']);
+  });
+
+  it('gives wind speed without a direction when the direction is missing', () => {
+    const one: WeatherNow = {
+      ...weather,
+      days: weather.days.map((d) => ({
+        ...d,
+        atHour: { ...d.atHour, windFromDeg: null },
+      })) as WeatherNow['days'],
+    };
+    render(<WeatherCompare weather={one} now={NOW} />);
+    expect(
+      within(screen.getByRole('row', { name: /^Wind/ }))
+        .getAllByRole('cell')
+        .map((c) => c.textContent),
+    ).toEqual(['8 km/h', '11 km/h', '16 km/h']);
   });
 
   it('renders nothing when an older server sends no days', () => {

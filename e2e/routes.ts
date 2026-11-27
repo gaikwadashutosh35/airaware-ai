@@ -93,6 +93,15 @@ export async function routeApi(
   await page.route('**/api/v1/air-quality/forecast**', (route) =>
     fulfil(route, replies.forecast),
   );
+  // The test server may hold a Google Maps key: a device place stays
+  // unnamed here, so no stubbed spec makes a billed Google request.
+  await page.route('**/api/v1/locations/reverse**', (route) =>
+    fulfil(route, { data: { name: null } }),
+  );
+  // Likewise a FIRMS key: stubbed specs never call NASA (the card hides).
+  await page.route('**/api/v1/fires/nearby**', (route) =>
+    fulfil(route, { data: { status: 'not_configured' } }),
+  );
   const { plan, answer } = replies;
   if (plan) {
     await page.route('**/api/v1/recommendations/daily-plan', (route) =>
@@ -104,4 +113,21 @@ export async function routeApi(
       fulfil(route, answer),
     );
   }
+}
+
+// Ask's topic chips sit under "More topics" (owner, 27 Nov: Ask UX spec §7):
+// open it the way a person would, then hand back the chip.
+export async function topicChip(page: Page, name: string) {
+  const more = page
+    .locator('details', {
+      has: page.locator(':scope > summary', { hasText: 'More topics' }),
+    })
+    .first();
+  if (
+    (await more.count()) > 0 &&
+    !(await more.evaluate((d) => (d as HTMLDetailsElement).open))
+  ) {
+    await more.locator(':scope > summary').click();
+  }
+  return page.getByRole('button', { name, exact: true }).first();
 }

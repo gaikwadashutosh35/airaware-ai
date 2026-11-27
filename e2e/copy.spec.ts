@@ -11,7 +11,7 @@ import {
   unknownAirAskFixture,
 } from '../client/src/test/askFixtures.ts';
 import { open, stub } from './layout.ts';
-import { PUNE } from './routes.ts';
+import { PUNE, topicChip } from './routes.ts';
 
 const BANNED = /\b(safe|healthy|clean air|good air|bad air)\b/i;
 // The one allowed sentence, and the official index's proper name: it is a
@@ -89,9 +89,7 @@ for (const [name, answer] of Object.entries({
       route.fulfill({ json: { data: answer } }),
     );
     await page.goto(PUNE.replace('/app?', '/app/ask?'));
-    await page
-      .getByRole('button', { name: 'Outdoor activities', exact: true })
-      .click();
+    await (await topicChip(page, 'Outdoor activities')).click();
     await expect(page.locator('article.ask-answer')).toBeVisible();
     expectCopyRules(await pageText(page));
   });
@@ -115,10 +113,7 @@ test('no banned words: the guided chat', async ({ page }) => {
   await page.goto(PUNE.replace('/app?', '/app/ask?'));
   expectCopyRules(await pageText(page));
 
-  const chip = page.getByRole('button', {
-    name: 'Outdoor activities',
-    exact: true,
-  });
+  const chip = await topicChip(page, 'Outdoor activities');
   await chip.click();
   const exercise = page.getByRole('group', {
     name: 'Do you exercise outdoors?',
@@ -136,7 +131,13 @@ test('no banned words: the guided chat', async ({ page }) => {
   });
   await expect(commute).toBeVisible();
   await commute.getByRole('button', { name: 'Car' }).click();
-  await expect(page.getByText('You answered: Car.')).toBeVisible();
+  // Your answer is your own message, with its question (owner, 27 Nov).
+  await expect(
+    page.getByRole('heading', {
+      level: 2,
+      name: 'You answered: How do you usually travel to work or college? Car',
+    }),
+  ).toBeVisible();
   await expect(
     page
       .locator('article.ask-answer')

@@ -1,6 +1,8 @@
 import type { AppOptions } from '../app.ts';
 import { createClaudeGenerator } from '../services/ai/claude.ts';
 import { createGeminiGenerator } from '../services/ai/gemini.ts';
+import { createFirmsFires } from '../services/fires/firms.ts';
+import { createGoogleReverseGeocoder } from '../services/location/reverseGeocode.ts';
 import { createSupabaseStore } from '../services/saved/supabaseStore.ts';
 import type { Env } from './env.ts';
 
@@ -43,8 +45,26 @@ export function appOptionsFromEnv(env: Env): AppOptions {
   console.log(
     saved ? 'Supabase: configured' : 'Supabase not configured; saving is off.',
   );
+  const reverseGeocode = env.GOOGLE_MAPS_API_KEY
+    ? createGoogleReverseGeocoder(env.GOOGLE_MAPS_API_KEY)
+    : undefined;
+  console.log(
+    reverseGeocode
+      ? 'Google Maps geocoding: configured'
+      : 'Google Maps geocoding not configured; device places have no name.',
+  );
+  const fires = env.FIRMS_MAP_KEY
+    ? createFirmsFires(env.FIRMS_MAP_KEY)
+    : undefined;
+  console.log(
+    fires
+      ? 'NASA FIRMS: configured'
+      : 'NASA FIRMS not configured; no fire hotspots.',
+  );
   return {
     trustProxy: env.NODE_ENV === 'production',
+    reverseGeocode,
+    fires,
     generatePlan,
     aiModel: env.GEMINI_MODEL,
     backupPlan,

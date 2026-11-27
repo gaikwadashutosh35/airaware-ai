@@ -18,6 +18,7 @@ import {
   answerPrefix,
   pendingFollowUp,
   shortAnswer,
+  shownAbove,
   suggestionsFor,
 } from './ask.ts';
 import type { AskEntry } from './useAsk.ts';
@@ -39,14 +40,16 @@ describe('Ask wording', () => {
       { question: 'Can I go for a morning walk today?', topic: 'outdoors' },
       { question: 'Is it a good idea to open my windows?', topic: 'windows' },
       { question: 'How can I improve my indoor air?', topic: 'indoor' },
+      // The first 4 show on Ask (owner, 27 Nov); the 5th waits under More
+      // topics.
+      {
+        question: 'How can I reduce pollution while commuting?',
+        topic: 'commuting',
+      },
       {
         question:
           "What should I consider for my children's outdoor activities?",
         topic: 'family',
-      },
-      {
-        question: 'How can I reduce pollution while commuting?',
-        topic: 'commuting',
       },
     ]);
   });
@@ -60,18 +63,28 @@ describe('Ask wording', () => {
       medical:
         "I can't give medical advice. For health concerns, please talk to a doctor.",
       outOfScope:
-        'I can help with outdoor plans, windows and ventilation, indoor air, family and better habits',
+        'I can help with outdoor plans, windows and ventilation, indoor air, family, commuting and better habits.',
       errorTitle: "We couldn't answer that",
       errorFallback: 'Something went wrong answering your question.',
       tryAgain: 'Try again',
       intro: "Answers come from AirAware's rules and today's forecast.",
-      moreQuestions: 'More questions',
+      // Ask UX spec (owner, 27 Nov).
+      welcome: 'How can I help you today?',
+      moreTopics: 'More topics',
+      placeholder: 'Ask about your air, home or daily routine…',
+      conversation: 'Conversation',
+      forecastUnavailable: 'forecast unavailable right now',
+      assistant: 'AirAware',
+      copy: 'Copy answer',
+      copied: 'Copied',
+      copyFailed: "Couldn't copy. Select the text to copy it instead.",
       followUpIntro: 'One question so I can be more specific:',
       followUpNote:
         'This changes your answers for this visit. To keep them, save in My Profile.',
       skip: 'Skip',
       skipped: 'Skipped. You can answer it in My Profile any time.',
       noted: "Noted. That doesn't change this answer.",
+      stillApplies: 'Also still applies (see above):',
       alsoAsk: 'You could also ask:',
       askedPrefix: 'You asked:',
       answeredPrefix: 'You answered:',
@@ -96,6 +109,49 @@ describe('Ask wording', () => {
 });
 
 // Guided chat (Task 3).
+// Review of the audit: "Also still applies (see above)" may only name cards
+// still on screen above; the thread keeps the newest 10 replies.
+describe('shownAbove', () => {
+  const reply = (id: number, cards: string[], shown?: string[]): AskEntry => ({
+    id,
+    echo: 'q',
+    said: 'asked',
+    request: null,
+    status: 'ready',
+    answer: {
+      ...rulesAskFixture,
+      cards: cards.map((cardId) => ({
+        ...rulesAskFixture.cards[0]!,
+        id: cardId,
+      })),
+    },
+    ...(shown && { shown }),
+  });
+
+  it('keeps only cards a reply above still shows', () => {
+    const map = shownAbove([
+      reply(1, ['a', 'b']),
+      reply(2, ['a', 'b', 'c'], ['a', 'b']),
+    ]);
+    expect(map.get(2)).toEqual(['a', 'b']);
+  });
+
+  it('drops cards whose reply is no longer in the thread', () => {
+    // Reply 1 (cards a, b) has gone: nothing above shows them.
+    const map = shownAbove([reply(2, ['a', 'b', 'c'], ['a', 'b'])]);
+    expect(map.get(2)).toEqual([]);
+  });
+
+  it('follows a chain: the second update knows the first update’s cards', () => {
+    const map = shownAbove([
+      reply(1, ['a']),
+      reply(2, ['a', 'b'], ['a']),
+      reply(3, ['a', 'b', 'c'], ['a', 'b']),
+    ]);
+    expect(map.get(3)).toEqual(['a', 'b']);
+  });
+});
+
 describe('suggestionsFor', () => {
   it('suggestions follow the topic map and never repeat the topic', () => {
     expect(suggestionsFor('outdoors').map((s) => s.question)).toEqual([

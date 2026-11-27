@@ -32,6 +32,20 @@ const envSchema = z.object({
     .regex(/^[a-z0-9.-]*$/)
     .optional()
     .transform((model) => model || 'claude-haiku-5-5'),
+  // Optional: Google Maps Geocoding for a device place's city name. Without
+  // it the place stays "Near you (approximate)". An empty line counts as unset.
+  GOOGLE_MAPS_API_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((key) => key || undefined),
+  // Optional: NASA FIRMS MAP_KEY for fire hotspots near a place. Without it
+  // the card stays hidden. An empty line counts as unset.
+  FIRMS_MAP_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((key) => key || undefined),
   // Optional: without both, saving is off. Empty lines count as unset.
   SUPABASE_URL: z
     .string()

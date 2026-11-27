@@ -23,7 +23,12 @@ import {
 import { isOlderThan, useNow } from '../lib/clock.ts';
 import { appPage, follow, navigate, usePath } from '../lib/navigation.ts';
 import { currentToken, tokenForSave } from '../lib/supabase.ts';
-import { getForecast, getSources, savePreferences } from '../services/api.ts';
+import {
+  getForecast,
+  getPlaceName,
+  getSources,
+  savePreferences,
+} from '../services/api.ts';
 import { Ask } from './Ask.tsx';
 import { BetterHabits } from './BetterHabits.tsx';
 import { MyHome } from './MyHome.tsx';
@@ -33,6 +38,7 @@ import { AirDetails } from '../features/today/AirDetails.tsx';
 import { AskBox } from '../features/today/AskBox.tsx';
 import { HelpChoices } from '../features/today/HelpChoices.tsx';
 import { WeatherCompare } from '../features/today/WeatherCompare.tsx';
+import { FireHotspots } from '../features/today/FireHotspots.tsx';
 import { TodayLead, TodayLeadLoading } from '../features/today/TodayLead.tsx';
 import { CitySkyline } from '../features/air-quality/CitySkyline.tsx';
 import { backdropNote, backdropScene } from '../features/air-quality/scene.ts';
@@ -65,6 +71,25 @@ function AppShell() {
   const [place, setPlace] = useState<Place | null>(() =>
     placeFromSearch(window.location.search),
   );
+  // A device place's town or city name from Google Maps (owner, 27 Nov), for
+  // the heading only: the place keeps its generic label, so the name is never
+  // saved or sent on with a plan or question (Google Maps terms).
+  const [nearName, setNearName] = useState<{ for: Place; name: string } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (place?.label !== NEAR_YOU) return;
+    const controller = new AbortController();
+    getPlaceName(place.latitude, place.longitude, controller.signal)
+      .then(({ name }) => {
+        if (name) setNearName({ for: place, name });
+      })
+      // No name is fine: the heading stays "near you".
+      .catch(() => {});
+    return () => controller.abort();
+  }, [place]);
+  // Only for the place it was looked up for.
+  const placeName = nearName?.for === place ? nearName.name : null;
   // The address query for the place shown ('' for none or a device
   // location). Back and Forward land on older entries, so it is put back.
   const [placeQuery, setPlaceQuery] = useState(() =>
@@ -387,10 +412,17 @@ function AppShell() {
             >
               {place
                 ? place.label === NEAR_YOU
-                  ? 'Today near you (approximate)'
+                  ? `Today near ${placeName ?? 'you'} (approximate)`
                   : `Today in ${place.label}`
                 : 'Today'}
             </h1>
+            {/* Google Maps attribution, beside the name it credits: the
+                text unchanged and never translated (Google Maps policies). */}
+            {placeName && (
+              <p className="text-xs text-[#5E5E5E]">
+                Place name: <span translate="no">Google Maps</span>
+              </p>
+            )}
           </div>
           {/* No place yet: saved answers are checked, then Welcome opens. */}
           {!place && <Loading label="Loading your place" />}
@@ -432,7 +464,9 @@ function AppShell() {
               ) : null}
             </div>
 
-            <div className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            {/* From lg both columns stretch, so the weather card and the
+                recommendation end level (owner, 27 Nov). */}
+            <div className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-stretch lg:[&>section]:flex-1">
               <DailyPlanSection
                 // A new place, or deleting saved data, starts the plan area afresh.
                 key={`${place?.label}|${forecastKey}#${resets}`}
@@ -456,14 +490,19 @@ function AppShell() {
               />
             </div>
             {/* After the recommendation in the DOM, so one column keeps its
-                order; from lg, under the verdict. Not shown once the forecast
-                is "Not current". */}
-            {forecast.state.status === 'ready' && !forecastOld && (
-              <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-                <WeatherCompare
-                  weather={forecast.state.data.series.weather}
-                  now={now}
-                />
+                order; from lg, under the verdict. The weather is not shown
+                once the forecast is "Not current". Then NASA FIRMS fire
+                hotspots (owner, 27 Nov). The last card stretches, so the
+                columns end level. */}
+            {place && (
+              <div className="flex min-w-0 flex-col gap-6 max-lg:contents lg:col-start-1 lg:row-start-2 lg:self-stretch lg:[&>section:last-child]:flex-1">
+                {forecast.state.status === 'ready' && !forecastOld && (
+                  <WeatherCompare
+                    weather={forecast.state.data.series.weather}
+                    now={now}
+                  />
+                )}
+                <FireHotspots place={place} now={now} />
               </div>
             )}
           </div>
@@ -503,6 +542,7 @@ function AppShell() {
                 onAsk={(question) => ask.send({ question }, question)}
                 active={page === 'today'}
                 started={ask.entries.length > 0}
+                busy={ask.thinking}
               />
               <AirDetails
                 data={

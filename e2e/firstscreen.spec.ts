@@ -10,7 +10,7 @@ import { rulesPlanFixture } from '../client/src/test/planFixtures.ts';
 import { at, pastTheEdge, stub, type Level } from './layout.ts';
 import { guideSet } from '../server/src/services/recommendations/guides.ts';
 import { searchFixture } from '../client/src/test/fixtures.ts';
-import { planAt, PUNE } from './routes.ts';
+import { forecastAt, planAt, PUNE, topicChip } from './routes.ts';
 
 const PLACE = 'Pune, Maharashtra';
 
@@ -273,10 +273,13 @@ for (const [width, height] of [
     });
     await page.goto(at('/app'));
     await expect(page.getByText('Your plan is ready.')).toBeAttached();
+    // The top card; the open full day repeats its heading (owner, 27 Nov).
     await expect(
-      page.getByRole('heading', {
-        name: 'Consider an indoor alternative for exercise',
-      }),
+      page
+        .getByRole('heading', {
+          name: 'Consider an indoor alternative for exercise',
+        })
+        .first(),
     ).toBeVisible();
     await page.waitForLoadState('networkidle');
     // A frame later, so the last shift is recorded.
@@ -469,6 +472,8 @@ test('TD-09: no word of the long place name breaks at 320x640', async ({
 
 // TD-11 and G-05: the invite is quiet, after the help choices, and at most
 // one control is filled with the primary colour while the details are shut.
+// The full day starts open (owner, 27 Nov), so it is left out of the details
+// check; its Save plan is outlined, so the filled count stays strict.
 test('TD-11 and G-05: the invite follows the help choices, outlined', async ({
   page,
 }) => {
@@ -491,7 +496,19 @@ test('TD-11 and G-05: the invite follows the help choices, outlined', async ({
   expect(
     await invite.evaluate((el) => getComputedStyle(el).backgroundColor),
   ).not.toBe('rgb(57, 213, 194)');
-  expect(await page.locator('details[open]').count()).toBe(0);
+  expect(
+    await page
+      .locator('details[open]')
+      .evaluateAll(
+        (all) =>
+          all.filter(
+            (d) =>
+              !d
+                .querySelector(':scope > summary')
+                ?.textContent?.includes('See your full day'),
+          ).length,
+      ),
+  ).toBe(0);
   const filled = await page.evaluate(
     () =>
       [...document.querySelectorAll('a, button')].filter(
@@ -922,13 +939,11 @@ for (const [width, height] of [
       'Indoor air',
     ]) {
       const before = await page.locator('article.ask-answer').count();
-      await page.getByRole('button', { name: label, exact: true }).click();
+      await (await topicChip(page, label)).click();
       await expect(page.locator('article.ask-answer')).toHaveCount(before + 1);
+      // Its first advice card: the context lines show only once (owner, 27 Nov).
       await expect(
-        page
-          .locator('article.ask-answer')
-          .last()
-          .getByText('Made by our rules'),
+        page.locator('article.ask-answer').last().locator('h3').first(),
       ).toBeVisible();
     }
     await page
@@ -985,13 +1000,11 @@ for (const [width, height] of [
       'Indoor air',
     ]) {
       const before = await page.locator('article.ask-answer').count();
-      await page.getByRole('button', { name: label, exact: true }).click();
+      await (await topicChip(page, label)).click();
       await expect(page.locator('article.ask-answer')).toHaveCount(before + 1);
+      // Its first advice card: the context lines show only once (owner, 27 Nov).
       await expect(
-        page
-          .locator('article.ask-answer')
-          .last()
-          .getByText('Made by our rules'),
+        page.locator('article.ask-answer').last().locator('h3').first(),
       ).toBeVisible();
     }
     await page
@@ -1903,8 +1916,9 @@ for (const [width, height] of [
     page,
   }) => {
     await ask(page, width, height);
+    // The starters' panel (the topic chips sit under "More topics" now).
     const panel = page
-      .getByRole('button', { name: 'Outdoor activities', exact: true })
+      .getByRole('button', { name: 'Can I go for a morning walk today?' })
       .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
     const panelBox = (await panel.boundingBox())!;
     const main = await page.locator('main').evaluate((el) => {
@@ -1947,5 +1961,244 @@ for (const [width, height] of [
     console.log(
       `AK-23 ${width}x${height}: credit text "${await credit.innerText()}"`,
     );
+  });
+}
+
+// Owner (27 Nov): opened, "See your full day" stretched the plan card down
+// the page (2,598 px at 1280, 3,317 px at 320). It now scrolls in its own box,
+// so the card stays within about one screen.
+for (const [width, height] of [
+  [320, 640],
+  [1280, 800],
+] as const) {
+  test(`the full day scrolls in its own box: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await load(page, width, height);
+    // It starts open (owner, 27 Nov): no click, which would fold it.
+    const body = page.locator(
+      'details:has(> summary:text("See your full day")) > div',
+    );
+    await expect(body).toBeVisible();
+    const { scrollHeight, clientHeight } = await body.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
+    expect(scrollHeight).toBeGreaterThan(clientHeight);
+    expect(clientHeight).toBeLessThanOrEqual(height * 0.65);
+    // Save plan stays reachable inside the box.
+    await page
+      .getByRole('button', { name: 'Save plan' })
+      .scrollIntoViewIfNeeded();
+    await expect(
+      page.getByRole('button', { name: 'Save plan' }),
+    ).toBeInViewport();
+  });
+}
+
+// Owner (27 Nov): from lg the weather card and the recommendation card end
+// at the same level, with the full day open.
+for (const [width, height] of [
+  [1280, 800],
+  [1896, 915],
+] as const) {
+  test(`Today's two columns end level: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await load(page, width, height);
+    await expect(
+      page.locator('details[open] > summary', { hasText: 'See your full day' }),
+    ).toBeVisible({ timeout: 60_000 });
+    const weather = page.getByRole('table', {
+      name: 'Weather · Open-Meteo model data',
+    });
+    const plan = page.locator('section', {
+      has: page.getByRole('heading', { name: 'Your recommendation for today' }),
+    });
+    const bottom = async (l: Locator) => {
+      const b = (await l.boundingBox())!;
+      return b.y + b.height;
+    };
+    const weatherCard = weather.locator('xpath=ancestor::section[1]');
+    const [w, p] = [await bottom(weatherCard), await bottom(plan)];
+    console.log(
+      `columns ${width}x${height}: weather ends ${w}, plan ends ${p}`,
+    );
+    expect(Math.abs(w - p)).toBeLessThanOrEqual(2);
+  });
+}
+
+// Owner (27 Nov, Ask UX spec §5.1): Ask reads in a centred column of at most
+// 56rem (896 px), narrower than Today on wide screens.
+for (const [width, height] of [
+  [1280, 720],
+  [1896, 828],
+] as const) {
+  test(`Ask is a narrower reading column: ${width}x${height}`, async ({
+    page,
+  }) => {
+    // Each page's title block spans its column.
+    const titleWidth = async () =>
+      (await page
+        .locator('[data-part="title-block"]:visible')
+        .first()
+        .boundingBox())!.width;
+    await load(page, width, height);
+    const todayWidth = await titleWidth();
+    await load(page, width, height, '/app/ask');
+    const askWidth = await titleWidth();
+    console.log(
+      `widths ${width}x${height}: Today ${todayWidth}, Ask ${askWidth}`,
+    );
+    expect(askWidth).toBeLessThanOrEqual(896);
+    expect(askWidth).toBeLessThan(todayWidth);
+  });
+}
+// Owner (27 Nov): the hourly table shows the next 6 hours, then scrolls,
+// with its column headings staying in view.
+for (const [width, height] of [
+  [320, 640],
+  [1280, 800],
+] as const) {
+  test(`the hourly table shows 6 hours, then scrolls: ${width}x${height}`, async ({
+    page,
+  }) => {
+    await load(page, width, height);
+    // The real server sends 48 hours; the stub's recorded forecast has 3.
+    const base = forecastAt(new Date());
+    const start = Date.parse(base.hours[0]!.time);
+    const hours = Array.from({ length: 48 }, (_, i) => ({
+      ...base.hours[i % base.hours.length]!,
+      time: new Date(start + i * 3_600_000).toISOString(),
+    }));
+    await page.route('**/api/v1/air-quality/forecast**', (route) =>
+      route.fulfill({ json: { data: { ...base, hours } } }),
+    );
+    await page.reload();
+    await page.locator('summary', { hasText: 'Air quality details' }).click();
+    await page.locator('summary', { hasText: /^Hourly forecast/ }).click();
+    const box = page.getByRole('region', { name: 'Hourly forecast table' });
+    await expect(box).toBeVisible();
+    const fit = await box.evaluate((el) => {
+      const b = el.getBoundingClientRect();
+      const rows = [...el.querySelectorAll('tbody tr')].map((r) =>
+        r.getBoundingClientRect(),
+      );
+      return {
+        whole: rows.filter((r) => r.top >= b.top && r.bottom <= b.bottom + 0.5)
+          .length,
+        scrolls: el.scrollHeight > el.clientHeight,
+      };
+    });
+    console.log(`hourly ${width}x${height}: ${fit.whole} whole rows in view`);
+    expect(fit.whole).toBe(6);
+    expect(fit.scrolls).toBe(true);
+    // Scrolled down, the column headings stay at the box's top.
+    await box.evaluate((el) => el.scrollBy(0, 200));
+    const gap = await box.evaluate(
+      (el) =>
+        el.querySelector('thead th')!.getBoundingClientRect().top -
+        el.getBoundingClientRect().top,
+    );
+    expect(Math.abs(gap)).toBeLessThanOrEqual(1);
+  });
+}
+
+// Owner (27 Nov): "Sources and limitations" folds under its own arrow.
+test('Sources and limitations start folded', async ({ page }) => {
+  await load(page, 1280, 800);
+  await page.locator('summary', { hasText: 'Air quality details' }).click();
+  const sources = page
+    .locator('summary', { hasText: 'Sources and limitations' })
+    .locator('xpath=..');
+  await expect(sources.locator('summary')).toBeVisible();
+  expect(await sources.evaluate((el) => (el as HTMLDetailsElement).open)).toBe(
+    false,
+  );
+  await expect(
+    sources.getByRole('heading', { name: 'Limitations' }),
+  ).toBeHidden();
+  await sources.locator('summary').click();
+  await expect(
+    sources.getByRole('heading', { name: 'Limitations' }),
+  ).toBeVisible();
+});
+
+// Owner (27 Nov): NASA FIRMS fire hotspots under the weather; from lg the
+// columns still end level, phones do not overflow, and the page stays still.
+for (const [width, height] of [
+  [320, 640],
+  [1280, 800],
+] as const) {
+  test(`fire hotspots card on Today: ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await stub(page, 'not_elevated');
+    // Registered after the stub, so it wins over its not_configured reply.
+    await page.route('**/api/v1/fires/nearby**', async (route) => {
+      await new Promise((r) => setTimeout(r, 600));
+      await route.fulfill({
+        json: {
+          data: {
+            status: 'available',
+            dataKind: 'satellite_detection',
+            count: 3,
+            nearestKm: 12.4,
+            latestAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+            radiusKm: 50,
+            windowHours: 24,
+            retrievedAt: new Date().toISOString(),
+            provider: 'NASA FIRMS',
+            sourceUrl: 'https://firms.modaps.eosdis.nasa.gov/',
+            limitations: ['A hotspot is a satellite pixel.'],
+          },
+        },
+      });
+    });
+    await page.addInitScript(() => {
+      const w = window as unknown as { cls: number };
+      w.cls = 0;
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as Array<
+          PerformanceEntry & { value: number; hadRecentInput: boolean }
+        >)
+          if (!e.hadRecentInput) w.cls += e.value;
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(at('/app'));
+    const card = page.locator('section', {
+      has: page.getByRole('heading', { name: 'Fire hotspots nearby' }),
+    });
+    await expect(
+      card.getByText(/^NASA satellites detected 3 fire/),
+    ).toBeVisible();
+    await expect(
+      page.locator('details[open] > summary', { hasText: 'See your full day' }),
+    ).toBeVisible({ timeout: 60_000 });
+    await page.waitForLoadState('networkidle');
+    // Nothing wider than the screen.
+    const wide = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    expect(wide).toBe(false);
+    if (width >= 1024) {
+      const plan = page.locator('section', {
+        has: page.getByRole('heading', {
+          name: 'Your recommendation for today',
+        }),
+      });
+      const bottom = async (l: Locator) => {
+        const b = (await l.boundingBox())!;
+        return b.y + b.height;
+      };
+      expect(
+        Math.abs((await bottom(card)) - (await bottom(plan))),
+      ).toBeLessThanOrEqual(2);
+    }
+    const cls = await page.evaluate(
+      () => (window as unknown as { cls: number }).cls,
+    );
+    console.log(`fires ${width}x${height}: CLS ${cls.toFixed(3)}`);
+    expect(cls).toBeLessThan(0.1);
   });
 }

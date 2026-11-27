@@ -146,7 +146,9 @@ export function ForecastPanel({
           aria-label="Hourly forecast table"
           // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable table region must be keyboard-focusable (WCAG 2.1.1; axe scrollable-region-focusable).
           tabIndex={0} // NOSONAR: the same WCAG 2.1.1 reason as the oxlint line above.
-          className="mt-2 overflow-x-auto"
+          // About the next 6 hours in view; the rest scroll, under headings
+          // that stay put (owner, 27 Nov).
+          className="mt-2 max-h-[19.5rem] overflow-auto"
         >
           <table className="w-full border-collapse text-sm tabular-nums">
             <caption className="pb-2 text-left text-text-dark-muted">
@@ -156,7 +158,7 @@ export function ForecastPanel({
               <tr className="border-b border-text-dark">
                 <th
                   scope="col"
-                  className="py-2 pr-4 text-left font-medium whitespace-nowrap"
+                  className="sticky top-0 bg-surface-light py-2 pr-4 text-left font-medium whitespace-nowrap"
                 >
                   Time
                 </th>
@@ -164,7 +166,7 @@ export function ForecastPanel({
                   <th
                     key={pollutant.key}
                     scope="col"
-                    className="py-2 pl-4 text-right font-medium whitespace-nowrap"
+                    className="sticky top-0 bg-surface-light py-2 pl-4 text-right font-medium whitespace-nowrap"
                   >
                     {pollutant.short} ({data.units[pollutant.key]})
                   </th>

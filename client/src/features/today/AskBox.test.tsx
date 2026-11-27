@@ -89,6 +89,26 @@ describe('AskBox', () => {
     expect(window.location.href).not.toMatch(/smoke/i);
   });
 
+  // Ask UX audit (27 Nov): while an answer is on its way, Ask ignores a new
+  // question, so Today's box must not send one and leave the page.
+  it('rests while an answer is on its way, and sends nothing', () => {
+    const onAsk = vi.fn();
+    render(<AskBox onAsk={onAsk} active started busy />);
+    fireEvent.change(input(), { target: { value: 'Is today windy?' } });
+    const send = screen.getByRole('button', { name: 'Send' });
+    expect((send as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.submit(input().closest('form')!);
+    expect(onAsk).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe('/app');
+  });
+
+  it('clears the box after sending', () => {
+    render(<AskBox onAsk={vi.fn()} active started={false} />);
+    fireEvent.change(input(), { target: { value: 'Is today windy?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(input().value).toBe('');
+  });
+
   it('moves focus to the page it opens', () => {
     render(
       <main id="main" tabIndex={-1}>

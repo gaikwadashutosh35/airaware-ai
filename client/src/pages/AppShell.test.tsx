@@ -70,6 +70,16 @@ function routeFetch(forecast: ForecastResponder, other?: OtherResponder) {
     }
     const answer = other?.(url, init);
     if (answer) return answer;
+    // No Google Maps key in tests unless one says otherwise: no name.
+    if (url.pathname === '/api/v1/locations/reverse') {
+      return Promise.resolve(Response.json({ data: { name: null } }));
+    }
+    // No FIRMS key either: the fire card stays hidden.
+    if (url.pathname === '/api/v1/fires/nearby') {
+      return Promise.resolve(
+        Response.json({ data: { status: 'not_configured' } }),
+      );
+    }
     if (url.pathname === '/api/v1/recommendations/guides') {
       return Promise.resolve(
         Response.json({
@@ -790,7 +800,13 @@ describe('AppShell', () => {
       within(exerciseQuestion()!).getByRole('button', { name: 'Yes' }),
     );
     await flush();
-    expect(screen.getByText('You answered: Yes.')).toBeDefined();
+    // Your answer is your own message, with its question (owner, 27 Nov).
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'You answered: Do you exercise outdoors? Yes',
+      }),
+    ).toBeDefined();
 
     await goTo('My Profile');
     expect(
@@ -1380,6 +1396,9 @@ describe('AppShell', () => {
     });
     const weather = table.closest('[class*="lg:col-start-1"]');
     expect(weather?.className).toContain('lg:row-start-2');
+    // Review: below lg the wrapper is no box of its own, so with no weather
+    // and no fire card it adds no empty grid row (24 px gap) on phones.
+    expect(weather?.className.split(' ')).toContain('max-lg:contents');
     const grid = weather?.parentElement;
     expect(grid?.className).toContain('lg:grid-rows-[auto_1fr]');
     const plan = [...grid!.children].find((c) =>
@@ -2602,5 +2621,61 @@ describe('AppShell', () => {
         name: 'Today near you (approximate)',
       }),
     ).toBeDefined();
+    // No name from the server: no Google Maps credit either.
+    expect(screen.queryByText('Google Maps')).toBeNull();
+  });
+
+  // Owner (27 Nov): a device place shows its city name from Google Maps,
+  // credited beside it, and the name is display-only.
+  it('names a device place with Google Maps, never sending the name on', async () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: (
+          success: (p: {
+            coords: { latitude: number; longitude: number };
+          }) => void,
+        ) => success({ coords: { latitude: 18.519571, longitude: 73.855347 } }),
+      },
+      configurable: true,
+    });
+    window.history.replaceState(
+      null,
+      '',
+      '/app?place=Pune%2C+Maharashtra&lat=18.52&lon=73.86',
+    );
+    const fetchSpy = routeFetch(ok(), (url) =>
+      url.pathname === '/api/v1/locations/reverse'
+        ? Promise.resolve(Response.json({ data: { name: 'Pune' } }))
+        : undefined,
+    );
+    render(<AppShell />);
+    fireEvent.click(screen.getByRole('button', { name: /^Change place: / }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use my location' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Today near Pune (approximate)',
+      }),
+    ).toBeDefined();
+    expect(screen.getByText('Google Maps').getAttribute('translate')).toBe(
+      'no',
+    );
+    // Asked with the rounded coordinates only.
+    const reverse = fetchSpy.mock.calls
+      .map(([input]) => urlOf(input))
+      .find((url) => url.pathname === '/api/v1/locations/reverse')!;
+    expect(reverse.searchParams.get('latitude')).toBe('18.52');
+    expect(reverse.searchParams.get('longitude')).toBe('73.86');
+    // The plan still gets the generic label: Google's name is never sent on.
+    const bodies = planPosts(fetchSpy).map((call) => askBody(call));
+    expect(bodies.length).toBeGreaterThan(0);
+    for (const body of bodies)
+      expect((body.place as { label: string }).label).toBe(
+        'Near you (approximate)',
+      );
   });
 });

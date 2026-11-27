@@ -150,6 +150,16 @@ describe('AskEntry', () => {
     expect(screen.getByText(/not current/i).closest('details')).toBeNull();
   });
 
+  // Ask UX audit (27 Nov): Ask has no Reload button, so its banner does not
+  // tell people to reload.
+  it('the stale banner on Ask gives no Reload instruction it cannot keep', () => {
+    show(ready(aiAskFixture), { now: minutesLater(61) });
+    expect(
+      screen.getByText('Not current: retrieved more than an hour ago.'),
+    ).toBeTruthy();
+    expect(screen.queryByText(/reload/i)).toBeNull();
+  });
+
   // I2: "Not current" sits next to the time, before the shut section.
   it('in a stale answer the banner comes before "Sources and limitations"', () => {
     show(ready(aiAskFixture), { now: minutesLater(61) });
@@ -465,5 +475,81 @@ describe('AskEntry', () => {
     show(ready(outOfScopeAskFixture), { busy: true });
 
     expect(button('Indoor air').disabled).toBe(true);
+  });
+});
+
+// Ask UX spec (owner, 27 Nov): who is answering, the answer first and
+// biggest, and a real Copy control.
+describe('AskEntry answer UX', () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('labels the reply "AirAware" and makes its first sentence the biggest text', () => {
+    show(ready(aiAskFixture));
+    const label = screen.getByText(ASK_COPY.assistant);
+    const lead = screen.getByText(aiAskFixture.summary!);
+    expect(lead.className).toContain('text-lg');
+    expect(heading().className).not.toContain('text-lg');
+    expect(
+      label.compareDocumentPosition(lead) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('Copy copies the answer with its cards, source and note, and says so', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+    show(ready(aiAskFixture));
+    fireEvent.click(button(ASK_COPY.copy));
+    await vi.waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    const text = writeText.mock.calls[0]![0] as string;
+    expect(text.startsWith(aiAskFixture.summary!)).toBe(true);
+    expect(text).toContain(aiAskFixture.cards[0]!.title);
+    expect(text).toContain('Model forecast');
+    expect(text).toContain(SAFETY);
+    expect(await screen.findByText(ASK_COPY.copied)).toBeTruthy();
+    expect(button(ASK_COPY.copy).className).toContain('min-h-11');
+  });
+
+  // Owner (27 Nov): an icon, not the words; its name stays for screen
+  // readers and as a tooltip, and a 44 px target.
+  it('Copy is an icon button with its name and a tooltip', () => {
+    show(ready(aiAskFixture));
+    const copy = button(ASK_COPY.copy);
+    expect(copy.textContent).toBe('');
+    expect(copy.getAttribute('title')).toBe(ASK_COPY.copy);
+    expect(copy.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(copy.className).toContain('min-w-11');
+  });
+
+  it('says when copying fails', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
+      configurable: true,
+    });
+    show(ready(aiAskFixture));
+    fireEvent.click(button(ASK_COPY.copy));
+    expect(await screen.findByText(ASK_COPY.copyFailed)).toBeTruthy();
+  });
+
+  it('a thinking or failed reply has no Copy', () => {
+    show(entry({ status: 'thinking', answer: undefined }));
+    expect(screen.queryByRole('button', { name: ASK_COPY.copy })).toBeNull();
+  });
+
+  it('the off-topic reply names every topic, Commuting too, with a full stop', () => {
+    show(ready(outOfScopeAskFixture, 'What is the capital of India?'));
+    expect(ASK_COPY.outOfScope).toContain('commuting');
+    expect(ASK_COPY.outOfScope.endsWith('.')).toBe(true);
+    expect(screen.getByText(ASK_COPY.outOfScope)).toBeTruthy();
+  });
+
+  it('has no axe violations with the new controls', async () => {
+    const { container } = show(ready(aiAskFixture));
+    await expectNoAxeViolations(container);
   });
 });

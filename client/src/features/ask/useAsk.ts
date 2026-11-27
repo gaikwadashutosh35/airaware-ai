@@ -39,7 +39,14 @@ export interface AskEntry {
     outcome: 'answered' | 'skipped';
     label?: string;
   };
+  // A reply to an answer to a question back: the cards already shown in the
+  // reply(s) it updates. It shows only new cards and names these as still
+  // applying, so nothing repeats (owner, 27 Nov).
+  shown?: string[];
 }
+
+// What a reply shows: at most 3 cards, leaving out those shown above it.
+export const SHOWN_CARDS = 3;
 
 const MAX_ENTRIES = 10;
 
@@ -122,6 +129,7 @@ export function useAsk(
     said: AskEntry['said'],
     answers: HouseholdContext,
     about?: string,
+    shown?: string[],
   ) {
     if (!place || !key) return;
     const request: AskRequest = {
@@ -140,6 +148,7 @@ export function useAsk(
       about,
       request,
       status: 'thinking',
+      ...(shown && { shown }),
     };
     append(entry);
     void run(key, entry.id, request);
@@ -176,12 +185,21 @@ export function useAsk(
     const next = toContext({ ...toAnswers(context), [field]: value });
     const about = FIELDS.find((f) => fieldId(f) === field)?.label;
     onContextChange(next);
-    update(key, entryId, { followUp: { field, outcome: 'answered', label } });
     const changes =
       // An older server (a rollback) sends none.
       (answer.followUps ?? []).find((f) => f.field === field)?.changes ?? [];
+    update(key, entryId, { followUp: { field, outcome: 'answered', label } });
     if (changes.includes(value)) {
-      sendWith({ topic: answer.topic }, label, 'answered', next, about);
+      // Every card on screen above for this topic: this reply's own, and
+      // those of the replies it updated in turn.
+      const shown = [
+        ...(entry.shown ?? []),
+        ...answer.cards
+          .filter((c) => !entry.shown?.includes(c.id))
+          .slice(0, SHOWN_CARDS)
+          .map((c) => c.id),
+      ];
+      sendWith({ topic: answer.topic }, label, 'answered', next, about, shown);
     } else {
       append({
         id: ++lastId.current,
