@@ -1,7 +1,7 @@
 // Phase 9: every page at phone, tablet and desktop widths. Nothing reaches
 // past the screen, one h1, taps of 44 px, and axe on a phone. Every request
 // is answered here, so the run spends none of the shared limits.
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { expectNoAxeViolations } from './axe.ts';
 import {
   clippedText,
@@ -62,9 +62,13 @@ test.describe('every size', () => {
 });
 
 for (const path of PATHS) {
-  for (const width of [320, 768]) {
+  for (const [width, height] of [
+    [320, 640],
+    [390, 844],
+    [768, 1024],
+  ] as const) {
     test(`touch targets are 44 px: ${path} ${width}`, async ({ page }) => {
-      await page.setViewportSize({ width, height: width === 320 ? 640 : 1024 });
+      await page.setViewportSize({ width, height });
       await open(page, path);
       expect(await smallTargets(page)).toEqual([]);
     });
@@ -76,6 +80,98 @@ for (const path of PATHS) {
     await expectNoAxeViolations(page);
   });
 }
+
+// R1 (L4/X2, A5): smallTargets exempts a link inside a sentence (WCAG
+// 2.5.8), so these were never caught at 15-17 px tall. Padding gives each a
+// 44 px box without moving the text; a tap at its top and bottom edge must
+// land on the link itself.
+async function tapsAt44(link: Locator) {
+  await link.scrollIntoViewIfNeeded();
+  const r = await link.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const own = (y: number) => {
+      const at = document.elementFromPoint(x, y);
+      return !!at && (at === el || el.contains(at));
+    };
+    return {
+      width: box.width,
+      height: box.height,
+      top: own(box.top + 1),
+      bottom: own(box.bottom - 1),
+    };
+  });
+  expect(r.width).toBeGreaterThanOrEqual(43.5);
+  expect(r.height).toBeGreaterThanOrEqual(43.5);
+  expect(r.top).toBe(true);
+  expect(r.bottom).toBe(true);
+}
+
+test.describe('links in a sentence still take 44 px', () => {
+  test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
+  for (const path of ['/', '/privacy', '/app'] as const) {
+    test(`the Open-Meteo credit: ${path} 390x844`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await open(page, path);
+      await tapsAt44(
+        page.locator('footer').getByRole('link', { name: 'Open-Meteo.com' }),
+      );
+    });
+  }
+
+  test('Ask: Edit 390x844', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, '/app/ask');
+    await tapsAt44(
+      page.getByRole('link', { name: 'Edit your answers in My Profile' }),
+    );
+  });
+
+  // The composer's credit: one line at 1280 has room for 44 px; on a phone
+  // it wraps to two lines in 57 px and gets what fits (no taller box, AK-13).
+  // Either way Send and the question box keep their own bottom edge.
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 800],
+  ] as const) {
+    test(`Ask: the composer credit ${width}x${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, '/app/ask');
+      const panel = page.locator('[data-part="ask-composer-panel"]');
+      await panel.scrollIntoViewIfNeeded();
+      // Each control's bottom edge, at its centre and above each link.
+      const lost = await panel.evaluate((el) => {
+        const links = [...el.querySelectorAll('[data-part="ask-credit"] a')];
+        const out: string[] = [];
+        for (const control of el.querySelectorAll(
+          'textarea, button[type="submit"]',
+        )) {
+          const r = control.getBoundingClientRect();
+          const xs = [
+            r.left + r.width / 2,
+            ...links.map((a) => {
+              const b = a.getBoundingClientRect();
+              return b.left + b.width / 2;
+            }),
+          ].filter((x) => x > r.left && x < r.right);
+          for (const x of xs) {
+            const at = document.elementFromPoint(x, r.bottom - 1);
+            if (!at || !(at === control || control.contains(at))) {
+              out.push(`${control.tagName} at x ${Math.round(x)}`);
+            }
+          }
+        }
+        return out;
+      });
+      expect(lost).toEqual([]);
+      if (width === 1280) {
+        const credit = page.locator('[data-part="ask-credit"]');
+        await tapsAt44(credit.getByRole('link', { name: 'Open-Meteo.com' }));
+        await tapsAt44(credit.getByRole('link', { name: 'Privacy' }));
+      }
+    });
+  }
+});
 
 // Goal 1 (spec §2): a 320x640 phone answers "How is my air today?" on the
 // first screen, even for a long real place name.

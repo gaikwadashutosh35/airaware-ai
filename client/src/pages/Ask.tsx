@@ -154,7 +154,8 @@ export function Ask({
                 }
               }}
               aria-label="Edit your answers in My Profile"
-              className="font-medium text-text-dark underline"
+              // A 44 px target from padding; the text does not move (R1 A5).
+              className="-mx-2.5 px-2.5 py-3.5 font-medium text-text-dark underline"
             >
               Edit
             </a>
@@ -283,16 +284,29 @@ export function Ask({
                   {ASK_COPY.send}
                 </button>
               </div>
+              {/* R1 A5: padding only into free space (3 px of the 4 px gap
+                  above, as boxes snap to whole pixels; the panel's padding
+                  below), so the box does not grow (AK-13) and Send and the
+                  question box keep their edge. 44 px where the credit is
+                  one line; where it wraps on a phone, Privacy's lower part
+                  sits under the nav bar. relative: the next line's text
+                  does not take a link's lower half. */}
               <p
                 data-part="ask-credit"
                 className="text-xs text-text-dark-muted"
               >
                 Forecasts:{' '}
-                <a href="https://open-meteo.com/" className="underline">
+                <a
+                  href="https://open-meteo.com/"
+                  className="relative pt-0.75 pb-6.5 underline"
+                >
                   Open-Meteo.com
                 </a>{' '}
                 (CC BY 4.0), based on CAMS ·{' '}
-                <a href="/privacy" className="underline">
+                <a
+                  href="/privacy"
+                  className="relative -mx-0.5 px-0.5 pt-0.75 pb-6.5 underline"
+                >
                   Privacy
                 </a>
               </p>
