@@ -342,7 +342,7 @@ export function createAsker(deps: {
       GUIDES.get(id)?.title;
     const result = await deps.askWriter(
       {
-        ...toWriterInput(air, eligible),
+        ...toWriterInput(air, [...notices, ...eligible]),
         forecast: series && {
           provider: series.provider,
           dataKind: series.dataKind,
@@ -354,7 +354,8 @@ export function createAsker(deps: {
           cards: h.cardIds.flatMap((id) => title(id) ?? []),
         })),
       },
-      new Set(eligible.map((c) => c.id)),
+      // A notice pick is accepted here and dropped below.
+      new Set([...notices, ...eligible].map((c) => c.id)),
       now,
     );
     if (!result) return rulesAnswer(topic, false);
@@ -363,7 +364,7 @@ export function createAsker(deps: {
       return rulesAnswer('out_of_scope', false);
 
     const byId = new Map(eligible.map((c) => [c.id, c]));
-    const cards = output.cardIds.map((id) => byId.get(id)!);
+    const cards = output.cardIds.flatMap((id) => byId.get(id) ?? []);
     return assemble(
       output.topic,
       cards,

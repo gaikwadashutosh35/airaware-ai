@@ -6,7 +6,7 @@ import type {
 } from '../../../../shared/contracts.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import type { ModelForecast } from '../air-data/openMeteo.ts';
-import type { AskOutput } from '../ai/askOutput.ts';
+import { checkAskOutput, type AskOutput } from '../ai/askOutput.ts';
 import type { AskWriter } from '../ai/askWriter.ts';
 import type { GeneratePlan } from '../ai/personalize.ts';
 import { toWriterInput } from '../ai/planOutput.ts';
@@ -535,9 +535,8 @@ describe('typed questions go to the Ask writer', () => {
     expect(JSON.stringify(input)).not.toMatch(
       /zq8place|18\.52|73\.86|windowStart|mohfw|T\d\d:/,
     );
-    expect(
-      [...ids].every((id) => !id.startsWith('data.') && !id.startsWith('air.')),
-    ).toBe(true);
+    // Eligible cards plus the notices (a notice pick is dropped afterwards).
+    expect([...ids].sort()).toEqual(input.candidates.map((c) => c.id).sort());
   });
 
   it("uses Claude's answer, topic and card order", async () => {
@@ -634,7 +633,7 @@ describe('typed questions go to the Ask writer', () => {
     ]);
   });
 
-  it("Claude's input holds the eligible cards and no notice", async () => {
+  it("Claude's input holds the notice text and the eligible cards", async () => {
     askWriter.mockResolvedValue(null);
     const res = await createAsker({ forecast, write: null, askWriter })(
       'outdoors',
@@ -644,8 +643,64 @@ describe('typed questions go to the Ask writer', () => {
     );
     const sent = askWriter.mock.calls.at(-1)![0].candidates;
     expect(res.notices.length).toBeGreaterThan(0);
-    expect(sent.filter((c) => c.section === 'notice')).toEqual([]);
-    expect(sent.length).toBeGreaterThan(0);
+    for (const n of res.notices) expect(sent.map((c) => c.id)).toContain(n.id);
+    expect(sent.some((c) => c.section !== 'notice')).toBe(true);
+  });
+
+  it('a notice pick is dropped; the answer stays AI with the other card', async () => {
+    const run = async (pick: (n: string, e: string) => string[]) => {
+      askWriter.mockImplementationOnce(async (input, ids) => {
+        const n = input.candidates.find((c) => c.section === 'notice')!.id;
+        const e = input.candidates.find((c) => c.section !== 'notice')!.id;
+        expect(ids.has(n)).toBe(true);
+        return {
+          output: {
+            scope: 'answered',
+            answer: 'Keep an eye on the forecast today.',
+            topic: 'outdoors',
+            cardIds: pick(n, e),
+          },
+          model: 'm',
+        };
+      });
+      return createAsker({ forecast, write: null, askWriter })(
+        'outdoors',
+        { place },
+        NOW,
+        { text: 'q', history: [] },
+      );
+    };
+    const mixed = await run((n, e) => [n, e]);
+    expect(mixed.generatedBy).toBe('ai');
+    expect(mixed.cards).toHaveLength(1);
+    expect(mixed.cards[0]!.section).not.toBe('notice');
+    const only = await run((n) => [n]);
+    expect(only.cards).toEqual([]);
+    expect(only.followUps).toEqual([]);
+  });
+
+  it('the real Ask input knows "24-hour" for the checks', async () => {
+    askWriter.mockResolvedValue(null);
+    await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place },
+      NOW,
+      { text: 'q', history: [] },
+    );
+    const input = askWriter.mock.calls.at(-1)![0];
+    const ids = new Set(input.candidates.map((c) => c.id));
+    expect(
+      checkAskOutput(
+        {
+          scope: 'answered',
+          answer: "India's 24-hour limits are the yardstick for this forecast.",
+          topic: 'outdoors',
+          cardIds: [],
+        },
+        input,
+        ids,
+      ),
+    ).toBeNull();
   });
 
   it('chooseCards is rankCards capped at three', () => {
