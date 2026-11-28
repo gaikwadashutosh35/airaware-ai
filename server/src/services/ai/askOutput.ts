@@ -54,9 +54,10 @@ export function checkAskOutput(
 
   if (output.answer.length < 20 || output.answer.length > 300) return 'length';
 
-  // The English-only wording checks cannot read other scripts.
+  // The English-only wording checks cannot read other scripts. Mu is allowed
+  // for the unit in "μg/m³".
   if (
-    /[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u.test(
+    /[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}μµ]/u.test(
       output.answer,
     )
   ) {

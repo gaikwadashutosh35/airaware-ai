@@ -72,6 +72,21 @@ describe('checkAskOutput', () => {
         eligible,
       ),
     ).not.toBe('wording'));
+  it.each([
+    ['μ', false],
+    ['µ', false],
+    ['αέρας', true],
+  ])('script check with %s: wording is %s', (word, wording) => {
+    const r = checkAskOutput(
+      {
+        ...ok,
+        answer: `Particles are forecast above the limit, ${word}g/m³ here.`,
+      },
+      askInput,
+      eligible,
+    );
+    expect(r === 'wording').toBe(wording);
+  });
   it('has a notice card for the notice case', () =>
     expect(noticeId).toBeTruthy());
   it('has at least 4 eligible cards for the ids case', () =>
