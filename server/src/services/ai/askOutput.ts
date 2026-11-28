@@ -74,3 +74,5 @@ export function checkAskOutput(
 
   return VERDICT.test(output.answer) ? 'verdict' : null;
 }
+
+export type GenerateAsk = (input: AskWriterInput) => Promise<string>;
