@@ -170,6 +170,53 @@ test.describe('links in a sentence still take 44 px', () => {
         await tapsAt44(credit.getByRole('link', { name: 'Privacy' }));
       }
     });
+
+    // Pinned (one answer in the thread): the padded links' focus ring stays
+    // whole, above the phone bar and the window's bottom edge.
+    test(`Ask: the pinned credit keeps its focus ring whole ${width}x${height}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, '/app/ask');
+      await page.route('**/api/v1/assistant/answer', (route) =>
+        route.fulfill({ json: { data: rulesAskFixture } }),
+      );
+      await page
+        .getByRole('button', { name: 'Can I go for a morning walk today?' })
+        .click();
+      await expect(
+        page.getByRole('button', { name: 'Copy answer' }),
+      ).toBeVisible();
+      for (const name of ['Open-Meteo.com', 'Privacy']) {
+        const link = page
+          .locator('[data-part="ask-credit"]')
+          .getByRole('link', { name });
+        await link.focus();
+        await page.keyboard.press('Shift+Tab');
+        await page.keyboard.press('Tab');
+        await expect(link).toBeFocused();
+        // How far the ring reaches past the screen top or under the bar
+        // (polled: the ring's style lands a frame after the key press).
+        await expect
+          .poll(
+            () =>
+              link.evaluate((a) => {
+                const s = getComputedStyle(a);
+                const out =
+                  parseFloat(s.outlineOffset) + parseFloat(s.outlineWidth);
+                const r = a.getBoundingClientRect();
+                const nav = document.querySelector('nav[aria-label="Main"]')!;
+                const floor =
+                  getComputedStyle(nav).position === 'fixed'
+                    ? nav.getBoundingClientRect().top
+                    : innerHeight;
+                return Math.max(0 - (r.top - out), r.bottom + out - floor);
+              }),
+            { message: name },
+          )
+          .toBeLessThanOrEqual(0);
+      }
+    });
   }
 });
 

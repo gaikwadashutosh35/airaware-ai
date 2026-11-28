@@ -291,7 +291,8 @@ export function Ask({
                   one line; where it wraps on a phone, the second line's
                   link takes the overlap, so each gets less (owner ruling
                   needed for more). relative: the next line's text does not
-                  take a link's lower half. */}
+                  take a link's lower half. The ring sits inside the box, so
+                  it stays whole on the phone bar or the window's edge. */}
               <p
                 data-part="ask-credit"
                 className="text-xs text-text-dark-muted"
@@ -299,14 +300,14 @@ export function Ask({
                 Forecasts:{' '}
                 <a
                   href="https://open-meteo.com/"
-                  className="relative pt-0.75 pb-6.5 underline"
+                  className="relative pt-0.75 pb-4.5 underline focus-visible:outline-offset-[-2px] sm:pb-6.5"
                 >
                   Open-Meteo.com
                 </a>{' '}
                 (CC BY 4.0), based on CAMS ·{' '}
                 <a
                   href="/privacy"
-                  className="relative -mx-0.5 px-0.5 pt-0.75 pb-6.5 underline"
+                  className="relative -mx-0.5 px-0.5 pt-0.75 pb-4.5 underline focus-visible:outline-offset-[-2px] sm:pb-6.5"
                 >
                   Privacy
                 </a>
