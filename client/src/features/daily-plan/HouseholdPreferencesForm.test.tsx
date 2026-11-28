@@ -336,6 +336,25 @@ describe('HouseholdPreferencesForm', () => {
     expect(saveButton()).toHaveProperty('disabled', true);
   });
 
+  // Once everything is deleted, nothing stored can be overwritten.
+  it('turns Save back on after a delete that follows a failed load', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch((method) =>
+      method === 'DELETE'
+        ? new Response(null, { status: 204 })
+        : Response.json(
+            { error: { code: 'SAVE_UNAVAILABLE', message: 'Not now.' } },
+            { status: 503 },
+          ),
+    );
+    render(<HouseholdPreferencesForm />);
+    await waitFor(() => expect(saveButton()).toHaveProperty('disabled', true));
+    fireEvent.click(await deleteButton());
+    fireEvent.click(screen.getByRole('button', { name: 'Delete everything' }));
+    await screen.findByText('Deleted. Nothing is saved now.');
+    expect(saveButton()).toHaveProperty('disabled', false);
+  });
+
   // Review Focus 1.
   it('a failed save keeps the answers and never says saved', async () => {
     routeFetch(() =>

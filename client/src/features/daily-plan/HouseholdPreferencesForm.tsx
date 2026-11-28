@@ -217,6 +217,7 @@ export function HouseholdPreferencesForm({
       setAnswers({});
       setConfirming(false);
       setCanDelete(false);
+      setLoadFailed(false);
       setStatus('');
       setDataStatus(DELETED);
       onDeleted?.();
