@@ -82,53 +82,76 @@ for (const path of PATHS) {
 }
 
 // R1 (L4/X2, A5): smallTargets exempts a link inside a sentence (WCAG
-// 2.5.8), so these were never caught at 15-17 px tall. Padding gives each a
-// 44 px box without moving the text; a tap at its top and bottom edge must
-// land on the link itself.
-async function tapsAt44(link: Locator) {
+// 2.5.8), so these were never caught at 15-17 px tall. J29 2b: an
+// invisible pseudo-element gives each its tap area, so the link's own box
+// (what the focus ring outlines) stays the size of its text. The tap area is
+// measured by elementFromPoint runs through the text's centre; its edges and
+// its text's own edges must land on the link itself, not a neighbour.
+async function tapsAt(link: Locator, min = 44) {
   await link.scrollIntoViewIfNeeded();
   const r = await link.evaluate((el) => {
     const box = el.getBoundingClientRect();
-    const x = box.left + box.width / 2;
-    const own = (y: number) => {
+    const own = (x: number, y: number) => {
       const at = document.elementFromPoint(x, y);
       return !!at && (at === el || el.contains(at));
     };
+    const cx = box.left + box.width / 2;
+    const cy = box.top + box.height / 2;
+    const run = (step: (d: number) => [number, number]) => {
+      let n = 0;
+      while (n < 120 && own(...step(n + 1))) n++;
+      return n;
+    };
+    const s = getComputedStyle(el);
     return {
-      width: box.width,
-      height: box.height,
-      top: own(box.top + 1),
-      bottom: own(box.bottom - 1),
+      ring: box.height,
+      lineHeight: parseFloat(s.lineHeight) || parseFloat(s.fontSize) * 1.2,
+      tapHeight: 1 + run((d) => [cx, cy - d]) + run((d) => [cx, cy + d]),
+      tapWidth: 1 + run((d) => [cx - d, cy]) + run((d) => [cx + d, cy]),
+      edges:
+        own(cx, cy) &&
+        own(box.left + 1, cy) &&
+        own(box.right - 1, cy) &&
+        own(cx, box.top + 1) &&
+        own(cx, box.bottom - 1),
     };
   });
-  expect(r.width).toBeGreaterThanOrEqual(43.5);
-  expect(r.height).toBeGreaterThanOrEqual(43.5);
-  expect(r.top).toBe(true);
-  expect(r.bottom).toBe(true);
+  expect(r.ring).toBeLessThanOrEqual(r.lineHeight * 1.5);
+  expect(r.tapHeight).toBeGreaterThanOrEqual(min);
+  expect(r.tapWidth).toBeGreaterThanOrEqual(44);
+  expect(r.edges).toBe(true);
 }
 
 test.describe('links in a sentence still take 44 px', () => {
   test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
-  for (const path of ['/', '/privacy', '/app'] as const) {
-    test(`the Open-Meteo credit: ${path} 390x844`, async ({ page }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
-      await open(page, path);
-      await tapsAt44(
-        page.locator('footer').getByRole('link', { name: 'Open-Meteo.com' }),
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 800],
+  ] as const) {
+    for (const path of ['/', '/privacy', '/app'] as const) {
+      test(`the Open-Meteo credit: ${path} ${width}x${height}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        await open(page, path);
+        await tapsAt(
+          page.locator('footer').getByRole('link', { name: 'Open-Meteo.com' }),
+        );
+      });
+    }
+
+    test(`Ask: Edit ${width}x${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, '/app/ask');
+      await tapsAt(
+        page.getByRole('link', { name: 'Edit your answers in My Profile' }),
       );
     });
   }
 
-  test('Ask: Edit 390x844', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await open(page, '/app/ask');
-    await tapsAt44(
-      page.getByRole('link', { name: 'Edit your answers in My Profile' }),
-    );
-  });
-
   // The composer's credit: one line at 1280 has room for 44 px; on a phone
-  // it wraps to two lines in 57 px and gets what fits (no taller box, AK-13).
+  // it wraps to two lines in 57 px and gets what fits (no taller box, AK-13;
+  // 35 px, J29 1a), the later link winning where the two overlap.
   // Either way Send and the question box keep their own bottom edge.
   for (const [width, height] of [
     [390, 844],
@@ -164,11 +187,10 @@ test.describe('links in a sentence still take 44 px', () => {
         return out;
       });
       expect(lost).toEqual([]);
-      if (width === 1280) {
-        const credit = page.locator('[data-part="ask-credit"]');
-        await tapsAt44(credit.getByRole('link', { name: 'Open-Meteo.com' }));
-        await tapsAt44(credit.getByRole('link', { name: 'Privacy' }));
-      }
+      const credit = page.locator('[data-part="ask-credit"]');
+      const min = width === 1280 ? 44 : 35;
+      await tapsAt(credit.getByRole('link', { name: 'Open-Meteo.com' }), min);
+      await tapsAt(credit.getByRole('link', { name: 'Privacy' }), min);
     });
 
     // Pinned (one answer in the thread): the padded links' focus ring stays
@@ -215,6 +237,7 @@ test.describe('links in a sentence still take 44 px', () => {
             { message: name },
           )
           .toBeLessThanOrEqual(0);
+        await tapsAt(link, width === 1280 ? 44 : 35);
       }
     });
   }

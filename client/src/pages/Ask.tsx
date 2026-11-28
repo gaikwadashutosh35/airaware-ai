@@ -154,8 +154,9 @@ export function Ask({
                 }
               }}
               aria-label="Edit your answers in My Profile"
-              // A 44 px target from padding; the text does not move (R1 A5).
-              className="-mx-2.5 px-2.5 py-3.5 font-medium text-text-dark underline"
+              // A 44 px target from an invisible ::before; the ring stays
+              // on the word (R1 A5, J29 2b).
+              className="relative font-medium text-text-dark underline before:absolute before:-inset-x-2.5 before:-inset-y-3.5"
             >
               Edit
             </a>
@@ -284,15 +285,16 @@ export function Ask({
                   {ASK_COPY.send}
                 </button>
               </div>
-              {/* R1 A5: padding only into free space (3 px of the 4 px gap
+              {/* R1 A5: an invisible ::before (J29 2b: the ring stays on the
+                  text) reaching only into free space (3 px of the 4 px gap
                   above, as boxes snap to whole pixels; the panel's padding
                   below), so the box does not grow (AK-13) and Send and the
                   question box keep their edge. 44 px where the credit is
                   one line; where it wraps on a phone, the second line's
                   link takes the overlap, so each gets less (owner ruling
                   needed for more). relative: the next line's text does not
-                  take a link's lower half. The ring sits inside the box, so
-                  it stays whole on the phone bar or the window's edge. */}
+                  take a link's lower half. The ring hugs the text, clear of
+                  the phone bar and the window's edge. */}
               <p
                 data-part="ask-credit"
                 className="text-xs text-text-dark-muted"
@@ -300,14 +302,14 @@ export function Ask({
                 Forecasts:{' '}
                 <a
                   href="https://open-meteo.com/"
-                  className="relative pt-0.75 pb-4.5 underline focus-visible:outline-offset-[-2px] sm:pb-6.5"
+                  className="relative underline before:absolute before:inset-x-0 before:-top-0.75 before:-bottom-4.5 sm:before:-bottom-6.5"
                 >
                   Open-Meteo.com
                 </a>{' '}
                 (CC BY 4.0), based on CAMS ·{' '}
                 <a
                   href="/privacy"
-                  className="relative -mx-0.5 px-0.5 pt-0.75 pb-4.5 underline focus-visible:outline-offset-[-2px] sm:pb-6.5"
+                  className="relative underline before:absolute before:-inset-x-0.5 before:-top-0.75 before:-bottom-4.5 sm:before:-bottom-6.5"
                 >
                   Privacy
                 </a>
