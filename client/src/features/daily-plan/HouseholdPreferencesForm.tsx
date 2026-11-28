@@ -42,7 +42,8 @@ const UNAVAILABLE =
   "Saving isn't available right now. Your answers are still on screen.";
 const RATE_LIMITED =
   'Too many requests. Try again in a minute. Your answers are still on screen.';
-const LOAD_FAILED = "Your saved answers couldn't be loaded right now.";
+const LOAD_FAILED =
+  "Your saved answers couldn't be loaded right now. Saving is off until you reload the page.";
 const DELETED = 'Deleted. Nothing is saved now.';
 const DELETE_FAILED = 'Nothing was deleted. Try again in a moment.';
 
@@ -112,6 +113,8 @@ export function HouseholdPreferencesForm({
   }, [initial]);
   const [status, setStatus] = useState(savingAvailable ? '' : NOT_SET_UP);
   const [busy, setBusy] = useState(false);
+  // Saving now would overwrite answers that never arrived.
+  const [loadFailed, setLoadFailed] = useState(false);
   const [confirming, setConfirming] = useState(false);
   // Delete shows only when there may be something to delete: a session, or a
   // session check that failed. The check never creates an account.
@@ -150,6 +153,7 @@ export function HouseholdPreferencesForm({
       .catch(() => {
         if (controller.signal.aborted) return;
         setStatus(LOAD_FAILED);
+        setLoadFailed(true);
         onLoadedRef.current?.(null);
       });
     return () => controller.abort();
@@ -223,7 +227,7 @@ export function HouseholdPreferencesForm({
     }
   }
 
-  const disabled = !savingAvailable || busy;
+  const disabled = !savingAvailable || busy || loadFailed;
   const buttonClass =
     'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
   const panel =

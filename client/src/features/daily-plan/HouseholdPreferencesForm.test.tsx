@@ -318,6 +318,24 @@ describe('HouseholdPreferencesForm', () => {
     await waitFor(() => expect(onLoaded).toHaveBeenCalledWith(null));
   });
 
+  // A save after a failed load would overwrite answers that never arrived.
+  it('turns Save off when the saved answers fail to load', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch(() =>
+      Response.json(
+        { error: { code: 'SAVE_UNAVAILABLE', message: 'Not now.' } },
+        { status: 503 },
+      ),
+    );
+    render(<HouseholdPreferencesForm />);
+    expect(
+      await screen.findByText(
+        "Your saved answers couldn't be loaded right now. Saving is off until you reload the page.",
+      ),
+    ).toBeDefined();
+    expect(saveButton()).toHaveProperty('disabled', true);
+  });
+
   // Review Focus 1.
   it('a failed save keeps the answers and never says saved', async () => {
     routeFetch(() =>
@@ -401,7 +419,7 @@ describe('HouseholdPreferencesForm', () => {
     // The page's own load fails the same way first.
     expect(
       await screen.findByText(
-        "Your saved answers couldn't be loaded right now.",
+        "Your saved answers couldn't be loaded right now. Saving is off until you reload the page.",
       ),
     ).toBeDefined();
     fireEvent.click(await deleteButton());
