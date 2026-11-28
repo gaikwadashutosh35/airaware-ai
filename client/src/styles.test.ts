@@ -71,6 +71,29 @@ describe('design system base', () => {
     expect(css).toContain('--color-elevated: #172638;');
   });
 
+  // J30 D4: inks for text and outlines on the light surface (the plain
+  // danger red is about 2.8:1 there).
+  it('the primary and danger inks read on surface-light', () => {
+    expect(css).toContain('--color-primary-ink: #0b6b62;');
+    expect(css).toContain('--color-danger-ink: #a3262e;');
+    const hex = (name: string) =>
+      css.match(new RegExp(`--color-${name}: (#[0-9a-f]{6});`))?.[1] ?? '';
+    const lum = (h: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const s = parseInt(h.slice(i, i + 2), 16) / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+    };
+    const ratio = (a: string, b: string) => {
+      const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+      return (hi! + 0.05) / (lo! + 0.05);
+    };
+    const light = hex('surface-light');
+    expect(ratio(hex('primary-ink'), light)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(hex('danger-ink'), light)).toBeGreaterThanOrEqual(4.5);
+  });
+
   it('presses scale only when motion is welcome', () => {
     const start = css.indexOf('@media (prefers-reduced-motion: no-preference)');
     expect(start).toBeGreaterThan(-1);

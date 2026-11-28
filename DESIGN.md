@@ -36,11 +36,13 @@ Suggested starting palette (validate in browser and contrast tooling):
 | `--color-elevated` | `#172638` | Raised dark surfaces (navigation bars, active nav item) |
 | `--color-surface-light` | `#F5F8FA` | Dashboard light surface option |
 | `--color-primary` | `#39D5C2` | Primary accent/actions |
+| `--color-primary-ink` | `#0B6B62` | Primary as text or outline on light surfaces (6.0:1 on surface-light; J30 D4) |
 | `--color-secondary` | `#64A9FF` | Informational accents |
 | `--color-text` | `#F4F7FA` | Dark-theme text |
 | `--color-text-dark` | `#182435` | Light-theme text |
 | `--color-warning` | `#F5B84B` | Warning |
 | `--color-danger` | `#F06B72` | Severe/error status |
+| `--color-danger-ink` | `#A3262E` | Destructive actions' text and outline on light surfaces (6.9:1 on surface-light; J30 D4) |
 | `--color-success` | `#3BAA82` | Success |
 
 Do not use these colors as the only indicators. Every AQI/status signal also needs text, icon/label, and accessible semantics.

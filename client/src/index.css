@@ -30,11 +30,13 @@
   --color-elevated: #172638;
   --color-surface-light: #f5f8fa;
   --color-primary: #39d5c2;
+  --color-primary-ink: #0b6b62;
   --color-secondary: #64a9ff;
   --color-text: #f4f7fa;
   --color-text-dark: #182435;
   --color-warning: #f5b84b;
   --color-danger: #f06b72;
+  --color-danger-ink: #a3262e;
   --color-success: #3baa82;
   --color-text-muted: #a9b7c8;
   --color-text-dark-muted: #4a5a6e;
