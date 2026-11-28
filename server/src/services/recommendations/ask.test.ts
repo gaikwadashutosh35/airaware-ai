@@ -634,6 +634,20 @@ describe('typed questions go to the Ask writer', () => {
     ]);
   });
 
+  it("Claude's input holds the eligible cards and no notice", async () => {
+    askWriter.mockResolvedValue(null);
+    const res = await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place },
+      NOW,
+      { text: 'q', history: [] },
+    );
+    const sent = askWriter.mock.calls.at(-1)![0].candidates;
+    expect(res.notices.length).toBeGreaterThan(0);
+    expect(sent.filter((c) => c.section === 'notice')).toEqual([]);
+    expect(sent.length).toBeGreaterThan(0);
+  });
+
   it('chooseCards is rankCards capped at three', () => {
     for (const topic of TOPICS) {
       const candidates = buildCandidates(FULL, air('elevated'));

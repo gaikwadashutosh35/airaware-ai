@@ -342,7 +342,7 @@ export function createAsker(deps: {
       GUIDES.get(id)?.title;
     const result = await deps.askWriter(
       {
-        ...toWriterInput(air, [...notices, ...eligible]),
+        ...toWriterInput(air, eligible),
         forecast: series && {
           provider: series.provider,
           dataKind: series.dataKind,
