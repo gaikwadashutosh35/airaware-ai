@@ -288,9 +288,10 @@ export function Ask({
                   above, as boxes snap to whole pixels; the panel's padding
                   below), so the box does not grow (AK-13) and Send and the
                   question box keep their edge. 44 px where the credit is
-                  one line; where it wraps on a phone, Privacy's lower part
-                  sits under the nav bar. relative: the next line's text
-                  does not take a link's lower half. */}
+                  one line; where it wraps on a phone, the second line's
+                  link takes the overlap, so each gets less (owner ruling
+                  needed for more). relative: the next line's text does not
+                  take a link's lower half. */}
               <p
                 data-part="ask-credit"
                 className="text-xs text-text-dark-muted"
