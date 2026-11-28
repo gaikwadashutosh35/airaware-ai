@@ -126,7 +126,7 @@ describe('SavedPlansList', () => {
   // different from Cancel beside it.
   it('"Delete plan" uses the danger ink; Cancel does not', async () => {
     routeFetch(() => ok([newer]));
-    renderList();
+    const { container } = renderList();
     await screen.findByRole('list', { name: 'Saved plans' });
     fireEvent.click(screen.getByRole('button', { name: /^Delete/ }));
     const danger = screen.getByRole('button', { name: 'Delete plan' });
@@ -135,6 +135,7 @@ describe('SavedPlansList', () => {
     expect(danger.className).toContain('border-danger-ink');
     expect(danger.className).not.toContain('border-text-dark');
     expect(cancel.className).not.toContain('danger');
+    await expectNoAxeViolations(container);
   });
 
   it('shows the empty line again once the session is gone', async () => {

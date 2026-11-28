@@ -192,6 +192,8 @@ function Answer({
         </p>
         {stale && <StaleBanner />}
         <p className={MUTED}>{answer.safetyNote}</p>
+        {/* J32 (owner, 28 Nov): a way on to an air topic. */}
+        <TopicChips busy={busy} onTopic={onTopic} />
       </>
     );
   }

@@ -12,7 +12,7 @@ import {
 import { expectNoAxeViolations } from '../../test/axe.ts';
 import { FIELDS, fieldId } from '../daily-plan/householdFields.ts';
 import { mergedLimitations } from '../today/today.ts';
-import { ASK_COPY } from './ask.ts';
+import { ASK_COPY, TOPICS } from './ask.ts';
 import { AskEntry, StarterButtons } from './AskEntry.tsx';
 import type { AskEntry as Entry } from './useAsk.ts';
 
@@ -250,6 +250,28 @@ describe('AskEntry', () => {
     expect(screen.queryByText('Made with AI')).toBeNull();
     expect(screen.getByText(SAFETY)).toBeTruthy();
     await expectNoAxeViolations(container);
+  });
+
+  // J32 (owner, 28 Nov): the medical reply also offers the topics.
+  it('a medical question: the topics under the refusal, still no cards', async () => {
+    const { container, onTopic } = show(
+      ready(medicalAskFixture, 'Should I change my inhaler dose?'),
+    );
+
+    for (const { label } of TOPICS) {
+      expect(button(label).disabled).toBe(false);
+    }
+    expect(container.querySelector('h3')).toBeNull();
+    expect(screen.queryByText(ASK_COPY.alsoAsk)).toBeNull();
+    fireEvent.click(button('Indoor air'));
+    expect(onTopic).toHaveBeenCalledWith('indoor', 'Indoor air');
+    await expectNoAxeViolations(container);
+  });
+
+  it("a medical reply's topic buttons rest while another answer is coming", () => {
+    show(ready(medicalAskFixture), { busy: true });
+
+    expect(button('Indoor air').disabled).toBe(true);
   });
 
   it('an out-of-scope question: what Ask can help with, and the topics', async () => {

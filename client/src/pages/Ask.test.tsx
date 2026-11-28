@@ -746,6 +746,24 @@ describe('Ask page', () => {
     expect(status()).toBe(ASK_COPY.medical);
   });
 
+  // J32 (owner, 28 Nov): a topic under the medical reply asks that topic.
+  it('a topic under the medical reply asks that topic', async () => {
+    const { container } = show();
+
+    typeAndSend('Should I change my inhaler dose?');
+    await answer(medicalAskFixture);
+    fireEvent.click(
+      within(
+        screen.getByRole('region', { name: ASK_COPY.conversation }),
+      ).getByRole('button', { name: 'Indoor air' }),
+    );
+    await answer(aiAskFixture);
+
+    expect(sentBody(1)).toMatchObject({ topic: 'indoor' });
+    expect(sentBody(1)).not.toHaveProperty('question');
+    await expectNoAxeViolations(container);
+  });
+
   it('Try again sends the same body and keeps focus on the answer', async () => {
     const { container } = show();
 
