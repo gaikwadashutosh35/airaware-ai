@@ -86,6 +86,20 @@ describe('Landing', () => {
     ).toBeNull();
   });
 
+  // Doc 09 C2: a transition utility would override the .press rule (120 ms).
+  it('leaves the actions to the shared press feel', () => {
+    render(<Landing />);
+
+    const links = [
+      ...screen.getAllByRole('link', { name: ACTION }),
+      ...screen.getAllByRole('link', { name: ASSISTANT }),
+    ];
+    for (const link of links) {
+      expect(link.classList.contains('press')).toBe(true);
+      expect(link.className).not.toMatch(/(^|\s)(transition|duration-)/);
+    }
+  });
+
   it('tells the story in the hero and six sections, in order', () => {
     render(<Landing />);
 

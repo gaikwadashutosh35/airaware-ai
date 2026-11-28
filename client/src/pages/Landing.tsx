@@ -50,7 +50,7 @@ function ActionLink() {
   return (
     <a
       href="/app"
-      className="press inline-flex min-h-12 items-center self-start rounded-full bg-primary px-6 font-semibold whitespace-nowrap text-bg transition duration-150 hover:bg-text"
+      className="press inline-flex min-h-12 items-center self-start rounded-full bg-primary px-6 font-semibold whitespace-nowrap text-bg hover:bg-text"
     >
       {ACTION}
     </a>
@@ -62,7 +62,7 @@ function AssistantLink() {
   return (
     <a
       href="/app/ask"
-      className="press inline-flex min-h-12 items-center self-start rounded-full border border-text px-6 font-semibold whitespace-nowrap transition duration-150 hover:bg-elevated"
+      className="press inline-flex min-h-12 items-center self-start rounded-full border border-text px-6 font-semibold whitespace-nowrap hover:bg-elevated"
     >
       {ASSISTANT}
     </a>
