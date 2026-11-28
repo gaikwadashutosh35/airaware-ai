@@ -9,7 +9,7 @@ import type {
   RecommendationCandidate,
 } from '../../../../shared/contracts.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
-import { VERDICT } from '../ai/askOutput.ts';
+import { ASK_TOPICS, VERDICT } from '../ai/askOutput.ts';
 import { toWriterInput } from '../ai/planOutput.ts';
 import { PROMPT_VERSION } from '../ai/prompts.ts';
 import { assessAir } from './airCheck.ts';
@@ -19,14 +19,7 @@ import { householdContextSchema } from './householdContext.ts';
 import { buildPlan } from './plan.ts';
 import { buildCandidates } from './rules.ts';
 
-export const ASK_TOPICS = [
-  'outdoors',
-  'windows',
-  'indoor',
-  'family',
-  'commuting',
-  'habits',
-] as const satisfies readonly AskTopic[];
+export { ASK_TOPICS };
 
 // Exactly one of a typed question or a topic (owner decision 1). Zod's
 // messages never repeat the input, so a 400 cannot echo the question.

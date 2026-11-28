@@ -4,6 +4,7 @@ import type {
   HouseholdContext,
 } from '../../../../shared/contracts.ts';
 import { buildCandidates } from '../recommendations/rules.ts';
+import type { AskWriterInput } from './askOutput.ts';
 import { toWriterInput, type PlanOutput } from './planOutput.ts';
 
 export const elevated: AirAssessment = {
@@ -36,6 +37,13 @@ export const full: HouseholdContext = {
 
 export const candidates = buildCandidates(full, elevated);
 export const input = toWriterInput(elevated, candidates);
+
+export const askInput: AskWriterInput = {
+  ...input,
+  forecast: null,
+  question: 'is 500 ok? zq7marker',
+  earlier: [],
+};
 
 export const HIGH_IDS = candidates
   .filter((c) => c.section !== 'notice' && c.priority === 'high')
