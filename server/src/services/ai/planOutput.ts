@@ -124,7 +124,7 @@ function values(value: unknown): string[] {
     : [String(value)];
 }
 
-const BANNED = [
+export const BANNED = [
   /\b(un)?safe(r|st|ly|ty)?\b/i,
   /guarantee/i,
   /health(y|ier|iest|ful)/i,

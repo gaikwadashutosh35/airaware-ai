@@ -12,7 +12,7 @@ import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import { VERDICT, type GenerateAsk } from '../ai/askOutput.ts';
 import { createAskWriter } from '../ai/askWriter.ts';
 import { createClaudeAsker } from '../ai/claude.ts';
-import { checkTexts } from '../ai/planOutput.ts';
+import { BANNED } from '../ai/planOutput.ts';
 import { UG_PER_M3 } from './airCheck.ts';
 import { createAsker } from './ask.ts';
 import { classify } from './askTopics.ts';
@@ -158,12 +158,10 @@ describe.skipIf(!process.env.ASK_LIVE || !env.ANTHROPIC_API_KEY)(
     const passed = new Set<number>();
     let q3Cards: string[] = [];
 
-    const clean = (a: AskAnswer) =>
-      !VERDICT.test(a.summary ?? '') &&
-      checkTexts([a.summary ?? ''], {
-        air: { level: 'unknown', checks: [] },
-        candidates: [],
-      } as never) !== 'wording';
+    const clean = (a: AskAnswer) => {
+      const s = a.summary ?? '';
+      return !BANNED.some((re) => re.test(s)) && !VERDICT.test(s);
+    };
 
     for (const [n, text, topics, pattern] of GRADED) {
       it(`Q${n}`, async () => {
@@ -199,13 +197,13 @@ describe.skipIf(!process.env.ASK_LIVE || !env.ANTHROPIC_API_KEY)(
       expect(clean(a), 'Q19 wording').toBe(true);
     }, 30_000);
 
-    it('at least 16 of 18 graded questions pass', () => {
+    it('at least 17 of 19 graded questions pass', () => {
       const failed = GRADED.map(([n]) => n).filter((n) => !passed.has(n));
       const count = GRADED.length - failed.length;
       expect(
         count,
         `passes ${count}/${GRADED.length}; failed Q${failed.join(', Q')}`,
-      ).toBeGreaterThanOrEqual(16);
+      ).toBeGreaterThanOrEqual(17);
     });
 
     it('forecast unavailable: Q1 is rules, or AI saying unavailable', async () => {
