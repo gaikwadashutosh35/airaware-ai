@@ -43,7 +43,7 @@ export function PlaceChip({
           if (open && !dialogRef.current?.open) dialogRef.current?.showModal();
           else onOpenChange(true);
         }}
-        className="ml-auto flex min-h-11 min-w-0 max-w-fit grow basis-0 items-center gap-1.5 rounded-full border border-text-muted px-3 text-sm md:ml-0"
+        className="ml-auto flex min-h-11 min-w-24 max-w-fit grow basis-0 items-center gap-1.5 rounded-full border border-text-muted px-3 text-sm md:ml-0"
       >
         <MapPin aria-hidden="true" className="size-4 flex-none" />
         {/* Below lg only the text before the first comma shows. */}

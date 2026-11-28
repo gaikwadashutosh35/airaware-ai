@@ -41,6 +41,10 @@ describe('PlaceChip', () => {
     // C6 border; the chip is the row's flexible item (it gives way, not the row).
     expect(chip.className).toContain('border-text-muted');
     expect(chip.className).toContain('basis-0');
+    // X3: a floor in rem, so at 200 % text the chip wraps to its own row
+    // instead of shrinking to its icons (the width is checked in e2e).
+    expect(chip.className).toContain('min-w-24');
+    expect(chip.className).not.toContain('min-w-0');
     expect(
       screen.queryByRole('combobox', {
         name: 'Search for a city or area in India',

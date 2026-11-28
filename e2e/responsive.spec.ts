@@ -173,6 +173,51 @@ test.describe('links in a sentence still take 44 px', () => {
   }
 });
 
+// R1 X3: at 200 % text the place chip keeps the place's name (its first
+// word whole), not only its icons.
+test.describe('the place chip at 200 % text', () => {
+  test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
+  for (const [width, height] of [
+    [390, 844],
+    [640, 400],
+    [1280, 800],
+  ] as const) {
+    test(`shows the place name: ${width}x${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, '/app');
+      await page.addStyleTag({
+        content: 'html { font-size: 200% !important }',
+      });
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => getComputedStyle(document.documentElement).fontSize,
+          ),
+        )
+        .toBe('32px');
+      const chip = page.getByRole('button', { name: /^Change place/ });
+      const shown = await chip.evaluate((button) => {
+        // The label span the breakpoint shows (one of two).
+        const el = [...button.querySelectorAll('span')].find(
+          (span) => getComputedStyle(span).display !== 'none',
+        )!;
+        const text = el.firstChild!;
+        const word = (text.textContent ?? '').split(/[ ,]/)[0]!;
+        const range = document.createRange();
+        range.setStart(text, 0);
+        range.setEnd(text, word.length);
+        return {
+          word,
+          needs: range.getBoundingClientRect().width,
+          has: el.getBoundingClientRect().width,
+        };
+      });
+      expect(shown.word).toBe('Pune');
+      expect(shown.has).toBeGreaterThanOrEqual(shown.needs - 0.5);
+    });
+  }
+});
+
 // Goal 1 (spec §2): a 320x640 phone answers "How is my air today?" on the
 // first screen, even for a long real place name.
 test('a long real place keeps the verdict above the bar', async ({ page }) => {
