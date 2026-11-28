@@ -17,6 +17,8 @@ describe('appOptionsFromEnv', () => {
 
     expect(options.generatePlan).toBeUndefined();
     expect(options.backupPlan).toBeUndefined();
+    expect(options.generateAsk).toBeUndefined();
+    expect(options.askModel).toBeUndefined();
     expect(options.saved).toBeUndefined();
     expect(options.trustProxy).toBe(false);
     expect(log).toHaveBeenCalledWith(
@@ -49,6 +51,8 @@ describe('appOptionsFromEnv', () => {
 
     expect(typeof options.backupPlan?.generate).toBe('function');
     expect(options.backupPlan?.model).toBe('claude-haiku-5-5');
+    expect(typeof options.generateAsk).toBe('function');
+    expect(options.askModel).toBe('claude-haiku-5-5');
     expect(log).toHaveBeenCalledWith(
       'Claude backup: configured (claude-haiku-5-5)',
     );

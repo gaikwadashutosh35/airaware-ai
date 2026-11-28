@@ -1,5 +1,8 @@
 import type { AppOptions } from '../app.ts';
-import { createClaudeGenerator } from '../services/ai/claude.ts';
+import {
+  createClaudeAsker,
+  createClaudeGenerator,
+} from '../services/ai/claude.ts';
 import { createGeminiGenerator } from '../services/ai/gemini.ts';
 import { createFirmsFires } from '../services/fires/firms.ts';
 import { createGoogleReverseGeocoder } from '../services/location/reverseGeocode.ts';
@@ -28,6 +31,15 @@ export function appOptionsFromEnv(env: Env): AppOptions {
           model: env.CLAUDE_MODEL,
         }),
         model: env.CLAUDE_MODEL,
+      }
+    : undefined;
+  const claudeAsk = env.ANTHROPIC_API_KEY
+    ? {
+        generateAsk: createClaudeAsker({
+          apiKey: env.ANTHROPIC_API_KEY,
+          model: env.CLAUDE_MODEL,
+        }),
+        askModel: env.CLAUDE_MODEL,
       }
     : undefined;
   console.log(
@@ -68,6 +80,7 @@ export function appOptionsFromEnv(env: Env): AppOptions {
     generatePlan,
     aiModel: env.GEMINI_MODEL,
     backupPlan,
+    ...claudeAsk,
     saved,
   };
 }

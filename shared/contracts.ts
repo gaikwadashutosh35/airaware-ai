@@ -272,15 +272,22 @@ export interface GuideSet {
   safetyNote: string;
 }
 
-// Ask AirAware (Phase 7). The typed question only picks a topic on the
-// server; no answer ever carries it.
+// Ask AirAware (Phase 7). A typed question may reach the Ask writer (Claude,
+// J26) and nothing else; no answer ever carries it.
 export type AskTopic =
   'outdoors' | 'windows' | 'indoor' | 'family' | 'commuting' | 'habits';
 
 export type AskRequest = {
   place: { label: string; latitude: number; longitude: number };
   householdContext?: HouseholdContext;
-} & ({ question: string } | { topic: AskTopic });
+} & ({ question: string; history?: AskHistoryItem[] } | { topic: AskTopic });
+
+// An earlier question in this chat and the ids of the cards it was answered
+// with, so a follow-up can be read in context.
+export interface AskHistoryItem {
+  question: string;
+  cardIds: string[];
+}
 
 // A household question AirAware may ask back (guided chat): a My Profile
 // field id, and the answers ('yes'/'no' or option values) that would change

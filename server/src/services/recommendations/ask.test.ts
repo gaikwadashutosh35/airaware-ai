@@ -6,6 +6,8 @@ import type {
 } from '../../../../shared/contracts.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import type { ModelForecast } from '../air-data/openMeteo.ts';
+import type { AskOutput } from '../ai/askOutput.ts';
+import type { AskWriter } from '../ai/askWriter.ts';
 import type { GeneratePlan } from '../ai/personalize.ts';
 import { toWriterInput } from '../ai/planOutput.ts';
 import { UG_PER_M3, assessAir } from './airCheck.ts';
@@ -15,7 +17,9 @@ import {
   TOPIC_CARDS,
   chooseCards,
   createAsker,
+  eligibleCards,
   followUpsFor,
+  rankCards,
   withAnswer,
 } from './ask.ts';
 import { classify } from './askTopics.ts';
@@ -498,5 +502,141 @@ describe('createAsker', () => {
     expect(JSON.stringify(answer)).not.toMatch(
       /"question"|"model"|"promptVersion"/,
     );
+  });
+});
+
+describe('typed questions go to the Ask writer', () => {
+  const askWriter = vi.fn<AskWriter>();
+  const answer = (o: Partial<AskOutput>) => ({
+    output: {
+      scope: 'answered' as const,
+      answer: 'Cards for you are below.',
+      topic: 'windows' as const,
+      cardIds: [],
+      ...o,
+    },
+    model: 'claude-test',
+  });
+  const today = assessAir(series(), NOW);
+  const eligible = eligibleCards(buildCandidates({}, today), {});
+  const q = { text: 'Why PM2.5?', history: [] };
+
+  it('a typed question goes to the Ask writer with only the minimal context', async () => {
+    askWriter.mockResolvedValue(null);
+    await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place: { ...place, label: 'zq8place' } },
+      NOW,
+      q,
+    );
+    const [input, ids] = askWriter.mock.calls[0]!;
+    expect(input.question).toBe('Why PM2.5?');
+    expect(JSON.stringify(input)).not.toMatch(
+      /zq8place|18\.52|73\.86|windowStart|mohfw|T\d\d:/,
+    );
+    expect(
+      [...ids].every((id) => !id.startsWith('data.') && !id.startsWith('air.')),
+    ).toBe(true);
+  });
+
+  it("uses Claude's answer, topic and card order", async () => {
+    const [a, b] = eligible;
+    askWriter.mockResolvedValue(
+      answer({ cardIds: [b!.id, a!.id], answer: 'Claude says this.' }),
+    );
+    const res = await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place },
+      NOW,
+      q,
+    );
+    expect(res.summary).toBe('Claude says this.');
+    expect(res.generatedBy).toBe('ai');
+    expect(res.topic).toBe('windows');
+    expect(res.cards.map((c) => c.id)).toEqual([b!.id, a!.id]);
+    expect(res.followUps).toEqual(followUpsFor('windows', {}, today));
+    const cited = new Set(
+      [...res.notices, ...res.cards].flatMap((c) => c.sourceIds),
+    );
+    expect(res.sources.every((s) => cited.has(s.id))).toBe(true);
+  });
+
+  it('an AI answer with no cards asks nothing back', async () => {
+    askWriter.mockResolvedValue(answer({ topic: 'outdoors' }));
+    const res = await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place },
+      NOW,
+      q,
+    );
+    expect(res).toMatchObject({ cards: [], followUps: [], generatedBy: 'ai' });
+  });
+
+  it('out_of_scope from Claude gives the out-of-scope answer', async () => {
+    askWriter.mockResolvedValue(answer({ scope: 'out_of_scope' }));
+    const res = await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place },
+      NOW,
+      q,
+    );
+    expect(res).toMatchObject({
+      cards: [],
+      summary: null,
+      generatedBy: 'rules',
+      topic: 'out_of_scope',
+      followUps: [],
+    });
+  });
+
+  it('a failed Ask writer falls back to rules with no plan-writer call', async () => {
+    const write = vi.fn<PlanWriter>();
+    askWriter.mockResolvedValue(null);
+    const a = await createAsker({ forecast, write, askWriter })(
+      'indoor',
+      { place },
+      NOW,
+      { text: 'q', history: [] },
+    );
+    expect(write).not.toHaveBeenCalled();
+    expect(a).toMatchObject({
+      topic: 'indoor',
+      generatedBy: 'rules',
+      summary: null,
+    });
+    const candidates = buildCandidates({}, today);
+    expect(a.cards.map((c) => c.id)).toEqual(
+      chooseCards('indoor', candidates, {}).map((c) => c.id),
+    );
+  });
+
+  it('history titles come only from known card ids', async () => {
+    askWriter.mockResolvedValue(null);
+    await createAsker({ forecast, write: null, askWriter })(
+      'outdoors',
+      { place },
+      NOW,
+      {
+        text: 'q',
+        history: [
+          {
+            question: 'earlier',
+            cardIds: ['guide.no-idling', 'forged.id'],
+          },
+        ],
+      },
+    );
+    expect(askWriter.mock.calls.at(-1)![0].earlier).toEqual([
+      { question: 'earlier', cards: ['Switch off the engine while you wait'] },
+    ]);
+  });
+
+  it('chooseCards is rankCards capped at three', () => {
+    for (const topic of TOPICS) {
+      const candidates = buildCandidates(FULL, air('elevated'));
+      expect(chooseCards(topic, candidates, FULL)).toEqual(
+        rankCards(topic, candidates, FULL).slice(0, 3),
+      );
+    }
   });
 });

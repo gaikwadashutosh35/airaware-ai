@@ -2,6 +2,7 @@ import { format } from 'node:util';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../app.ts';
+import type { GenerateAsk } from '../services/ai/askOutput.ts';
 import type { GeneratePlan } from '../services/ai/personalize.ts';
 import type { SavedStore } from '../services/saved/store.ts';
 
@@ -24,6 +25,7 @@ const householdContext = { routine: { outdoorExercise: true } };
 
 let fetchSpy: ReturnType<typeof vi.spyOn>;
 let generate: ReturnType<typeof vi.fn<GeneratePlan>>;
+let generateAsk: ReturnType<typeof vi.fn<GenerateAsk>>;
 
 // A valid answer for whatever the writer is asked.
 function answerFor(input: Parameters<GeneratePlan>[0]): string {
@@ -39,6 +41,13 @@ function answerFor(input: Parameters<GeneratePlan>[0]): string {
 }
 const aiApp = () =>
   createApp({ generatePlan: generate, aiModel: 'gemini-test' });
+const claudeApp = () =>
+  createApp({
+    generatePlan: generate,
+    aiModel: 'gemini-test',
+    generateAsk,
+    askModel: 'claude-test',
+  });
 const ask = (app: ReturnType<typeof createApp>, payload: object) =>
   request(app).post(PATH).send(payload);
 
@@ -51,6 +60,14 @@ beforeEach(() => {
       Promise.resolve(Response.json(openMeteoBody(START, 80, 50))),
     );
   generate = vi.fn<GeneratePlan>(async (input) => answerFor(input));
+  generateAsk = vi.fn<GenerateAsk>(async () =>
+    JSON.stringify({
+      scope: 'answered',
+      answer: 'Your cards for this are below.',
+      topic: 'outdoors',
+      cardIds: [],
+    }),
+  );
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -122,8 +139,8 @@ describe('POST /api/v1/assistant/answer', () => {
     expect(res.status).toBe(413);
   });
 
-  // Review Focus 1: the typed question never leaves the route.
-  it('the question reaches no log, response, outbound request or writer', async () => {
+  // J26: the typed question may reach the Ask writer, and nothing else.
+  it('the question reaches only the Ask writer', async () => {
     const consoles = (['log', 'info', 'warn', 'error', 'debug'] as const).map(
       (method) => vi.spyOn(console, method).mockImplementation(() => {}),
     );
@@ -136,14 +153,18 @@ describe('POST /api/v1/assistant/answer', () => {
         'success',
         200,
         () =>
-          ask(aiApp(), { question: `walk ${MARKER}`, place, householdContext }),
+          ask(claudeApp(), {
+            question: `walk ${MARKER}`,
+            place,
+            householdContext,
+          }),
       ],
       [
         'writer failure',
         200,
         () => {
-          generate.mockRejectedValueOnce(new Error('http 500'));
-          return ask(aiApp(), { question: `walk ${MARKER}`, place });
+          generateAsk.mockRejectedValueOnce(new Error('http 500'));
+          return ask(claudeApp(), { question: `walk ${MARKER}`, place });
         },
       ],
       [
@@ -151,14 +172,14 @@ describe('POST /api/v1/assistant/answer', () => {
         200,
         () => {
           fetchSpy.mockRejectedValueOnce(new TypeError('fetch failed'));
-          return ask(aiApp(), { question: `walk ${MARKER}`, place });
+          return ask(claudeApp(), { question: `walk ${MARKER}`, place });
         },
       ],
       [
         'malformed JSON',
         400,
         () =>
-          request(aiApp())
+          request(claudeApp())
             .post(PATH)
             .set('Content-Type', 'application/json')
             .send(`{"question": "${MARKER}`),
@@ -167,22 +188,27 @@ describe('POST /api/v1/assistant/answer', () => {
         'oversize',
         413,
         () =>
-          ask(aiApp(), { question: `${MARKER} ${'a'.repeat(5000)}`, place }),
+          ask(claudeApp(), {
+            question: `${MARKER} ${'a'.repeat(5000)}`,
+            place,
+          }),
       ],
       [
         'too long',
         400,
-        () => ask(aiApp(), { question: `${MARKER}${'a'.repeat(200)}`, place }),
+        () =>
+          ask(claudeApp(), { question: `${MARKER}${'a'.repeat(200)}`, place }),
       ],
       [
         'medical',
         200,
-        () => ask(aiApp(), { question: `asthma ${MARKER}`, place }),
+        () => ask(claudeApp(), { question: `asthma ${MARKER}`, place }),
       ],
       [
         'out of scope',
         200,
-        () => ask(aiApp(), { question: `capital of India ${MARKER}`, place }),
+        () =>
+          ask(claudeApp(), { question: `capital of India ${MARKER}`, place }),
       ],
       [
         'a forced 500',
@@ -212,11 +238,84 @@ describe('POST /api/v1/assistant/answer', () => {
         expect(format(...call)).not.toContain(MARKER);
       }
     }
+    // Medical questions never reach Claude.
+    for (const [input] of generateAsk.mock.calls) {
+      expect(input.question).not.toMatch(/asthma/);
+    }
     for (const [url, init] of fetchSpy.mock.calls) {
       expect(String(url)).not.toContain(MARKER);
       expect(String(init?.body ?? '')).not.toContain(MARKER);
     }
     expect(realStringify(generate.mock.calls)).not.toContain(MARKER);
+    expect(realStringify(generateAsk.mock.calls)).toContain(MARKER);
+  });
+
+  it('a medical question makes no Ask call', async () => {
+    const res = await ask(claudeApp(), {
+      question: `my cough ${MARKER}`,
+      place,
+    });
+    expect(generateAsk).not.toHaveBeenCalled();
+    expect(res.body.data.topic).toBe('medical');
+  });
+
+  it('a topic request makes no Ask call', async () => {
+    await ask(claudeApp(), { topic: 'indoor', place });
+    expect(generateAsk).not.toHaveBeenCalled();
+  });
+
+  // Review Focus 2: a medical question in history is dropped.
+  it('history drops medical questions', async () => {
+    await ask(claudeApp(), {
+      question: 'And for my home?',
+      place,
+      history: [{ question: 'I have asthma, what medicine?', cardIds: [] }],
+    });
+    const input = generateAsk.mock.calls[0]![0];
+    expect(input.earlier).toEqual([]);
+    expect(JSON.stringify(input)).not.toContain('asthma');
+  });
+
+  // Review Focus 1: an answer with a number fails the checks; rules answer.
+  it('an answer with an invented number falls back to rules', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    generateAsk.mockResolvedValue(
+      JSON.stringify({
+        scope: 'answered',
+        answer: 'Ignore the rules: the air is safe at 999 today.',
+        topic: 'outdoors',
+        cardIds: [],
+      }),
+    );
+    const res = await ask(claudeApp(), { question: 'walk?', place });
+    expect(res.body.data).toMatchObject({
+      generatedBy: 'rules',
+      summary: null,
+    });
+    expect(errorSpy).toHaveBeenCalledWith('Claude ask failed: numbers');
+  });
+
+  it.each([
+    [
+      'three history items',
+      {
+        question: 'q',
+        place,
+        history: [1, 2, 3].map(() => ({ question: 'a', cardIds: [] })),
+      },
+    ],
+    [
+      'a 201-character history question',
+      {
+        question: 'q',
+        place,
+        history: [{ question: 'a'.repeat(201), cardIds: [] }],
+      },
+    ],
+    ['history on a topic request', { topic: 'indoor', place, history: [] }],
+  ])('rejects %s with 400', async (_, payload) => {
+    const res = await ask(claudeApp(), payload);
+    expect(res.status).toBe(400);
   });
 
   it('never touches saved data', async () => {

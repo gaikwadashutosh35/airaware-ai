@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type {
   AirAssessment,
   AskAnswer,
+  AskHistoryItem,
   AskTopic,
   FollowUp,
   GuideCard,
@@ -10,8 +11,9 @@ import type {
 } from '../../../../shared/contracts.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
 import { ASK_TOPICS, VERDICT } from '../ai/askOutput.ts';
+import type { AskWriter } from '../ai/askWriter.ts';
 import { toWriterInput } from '../ai/planOutput.ts';
-import { PROMPT_VERSION } from '../ai/prompts.ts';
+import { ASK_PROMPT_VERSION, PROMPT_VERSION } from '../ai/prompts.ts';
 import { assessAir } from './airCheck.ts';
 import { placeSchema, type PlanRequest, type PlanWriter } from './dailyPlan.ts';
 import { ASK_GUIDES, guideSet } from './guides.ts';
@@ -28,12 +30,24 @@ const base = {
   householdContext: householdContextSchema.optional(),
 };
 export const askRequestSchema = z.union([
-  z.strictObject({ question: z.string().trim().min(1).max(200), ...base }),
+  z.strictObject({
+    question: z.string().trim().min(1).max(200),
+    history: z
+      .array(
+        z.strictObject({
+          question: z.string().trim().min(1).max(200),
+          cardIds: z.array(z.string().max(80)).max(3),
+        }),
+      )
+      .max(2)
+      .optional(),
+    ...base,
+  }),
   z.strictObject({ topic: z.enum(ASK_TOPICS), ...base }),
 ]);
 
-// Ask AirAware (Phase 7): which cards answer each topic. The question never
-// reaches this file; only its topic does.
+// Ask AirAware (Phase 7): which cards answer each topic. A typed question
+// reaches only the Ask writer (J26), never the plan writer.
 
 const HOME_GUIDES = guideSet('home').groups.flatMap((g) => g.cards);
 const HABIT_GUIDES = guideSet('habits').groups.flatMap((g) => g.cards);
@@ -100,9 +114,9 @@ export const TOPIC_CARDS: Record<
 
 const PRIORITY = { high: 0, medium: 1, low: 2 } as const;
 
-// Up to three cards: the topic's rules that fired for this household, most
-// important first, then its guides. Never a notice (the verdict says that).
-export function chooseCards(
+// The topic's rules that fired for this household, most important first,
+// then its guides. Never a notice (the verdict says that).
+export function rankCards(
   topic: AskTopic,
   candidates: RecommendationCandidate[],
   context: HouseholdContext,
@@ -127,7 +141,28 @@ export function chooseCards(
           context.home?.kitchenExhaust === false
         ),
     );
-  return [...personal, ...general].slice(0, 3);
+  return [...personal, ...general];
+}
+
+// Up to three cards for the topic.
+export function chooseCards(
+  topic: AskTopic,
+  candidates: RecommendationCandidate[],
+  context: HouseholdContext,
+): RecommendationCandidate[] {
+  return rankCards(topic, candidates, context).slice(0, 3);
+}
+
+// Every card any topic could show: what Claude may pick from.
+export function eligibleCards(
+  candidates: RecommendationCandidate[],
+  context: HouseholdContext,
+): RecommendationCandidate[] {
+  const byId = new Map<string, RecommendationCandidate>();
+  for (const topic of ASK_TOPICS) {
+    for (const c of rankCards(topic, candidates, context)) byId.set(c.id, c);
+  }
+  return [...byId.values()];
 }
 
 // Guided chat (spec 2026-11-21 §5.2): the household questions AirAware may
@@ -213,19 +248,28 @@ export function followUpsFor(
   });
 }
 
+// The typed question and the last few exchanges, for the Ask writer only.
+export interface AskQuestion {
+  text: string;
+  history: AskHistoryItem[];
+}
+
 export type Asker = (
   topic: AskTopic | 'medical' | 'out_of_scope',
   request: PlanRequest,
   now: Date,
+  question?: AskQuestion,
 ) => Promise<AskAnswer>;
 
-// Builds an answer from the forecast check, the topic's cards and the
-// shared plan writer. It never receives the question: only its topic.
+// Builds an answer from the forecast check and the topic's cards. A typed
+// question goes to the Ask writer (Claude) and nowhere else; the plan writer
+// only ever sees the topic.
 export function createAsker(deps: {
   forecast: CachedForecast;
   write: PlanWriter | null;
+  askWriter?: AskWriter | null;
 }): Asker {
-  return async (topic, { place, householdContext = {} }, now) => {
+  return async (topic, { place, householdContext = {} }, now, question) => {
     // A provider failure is not an error here: the answer says air is unknown.
     const series = await deps
       .forecast(place.latitude, place.longitude, now)
@@ -233,30 +277,90 @@ export function createAsker(deps: {
     const air = assessAir(series, now);
     const candidates = buildCandidates(householdContext, air);
     const notices = candidates.filter((c) => c.section === 'notice');
-    // Medical and out-of-scope answers show no cards and call no AI.
-    const answered = topic !== 'medical' && topic !== 'out_of_scope';
-    const cards = answered
-      ? chooseCards(topic, candidates, householdContext)
-      : [];
 
-    let ai =
-      answered && deps.write
-        ? await deps.write(toWriterInput(air, [...notices, ...cards]), now)
-        : null;
-    if (ai && VERDICT.test(ai.output.summary)) {
-      console.error('Ask summary failed: verdict');
-      ai = null;
-    }
-    // Our card order; the AI's featured order and "for you" lines are not used.
+    // The rules answer for a topic; also the fallback and the out-of-scope one.
+    const rulesAnswer = async (
+      t: AskTopic | 'medical' | 'out_of_scope',
+      usePlanWriter: boolean,
+    ): Promise<AskAnswer> => {
+      // Medical and out-of-scope answers show no cards and call no AI.
+      const answered = t !== 'medical' && t !== 'out_of_scope';
+      const cards = answered
+        ? chooseCards(t, candidates, householdContext)
+        : [];
+      let ai =
+        answered && usePlanWriter && deps.write
+          ? await deps.write(toWriterInput(air, [...notices, ...cards]), now)
+          : null;
+      if (ai && VERDICT.test(ai.output.summary)) {
+        console.error('Ask summary failed: verdict');
+        ai = null;
+      }
+      // Our card order; the AI's featured order and "for you" lines are not used.
+      const plan = buildPlan({
+        label: place.label,
+        air,
+        forecast: series,
+        candidates: [...notices, ...cards],
+        ai: ai && { ...ai, promptVersion: PROMPT_VERSION },
+      });
+      return {
+        topic: t,
+        cards,
+        summary: plan.summary,
+        generatedBy: plan.generatedBy,
+        air,
+        forecast: plan.forecast,
+        notices,
+        sources: plan.sources,
+        safetyNote: plan.safetyNote,
+        followUps: answered ? followUpsFor(t, householdContext, air) : [],
+      };
+    };
+
+    if (!question || !deps.askWriter) return rulesAnswer(topic, true);
+
+    const eligible = eligibleCards(candidates, householdContext);
+    const title = (id: string) =>
+      candidates.find((c) => c.section !== 'notice' && c.id === id)?.title ??
+      GUIDES.get(id)?.title;
+    const result = await deps.askWriter(
+      {
+        ...toWriterInput(air, [...notices, ...eligible]),
+        forecast: series && {
+          provider: series.provider,
+          dataKind: series.dataKind,
+          limitations: series.limitations,
+        },
+        question: question.text,
+        earlier: question.history.map((h) => ({
+          question: h.question,
+          cards: h.cardIds.flatMap((id) => title(id) ?? []),
+        })),
+      },
+      new Set(eligible.map((c) => c.id)),
+      now,
+    );
+    if (!result) return rulesAnswer(topic, false);
+    const { output, model } = result;
+    if (output.scope === 'out_of_scope')
+      return rulesAnswer('out_of_scope', false);
+
+    const byId = new Map(eligible.map((c) => [c.id, c]));
+    const cards = output.cardIds.map((id) => byId.get(id)!);
     const plan = buildPlan({
       label: place.label,
       air,
       forecast: series,
       candidates: [...notices, ...cards],
-      ai: ai && { ...ai, promptVersion: PROMPT_VERSION },
+      ai: {
+        output: { summary: output.answer, featured: [] },
+        model,
+        promptVersion: ASK_PROMPT_VERSION,
+      },
     });
     return {
-      topic,
+      topic: output.topic,
       cards,
       summary: plan.summary,
       generatedBy: plan.generatedBy,
@@ -265,7 +369,9 @@ export function createAsker(deps: {
       notices,
       sources: plan.sources,
       safetyNote: plan.safetyNote,
-      followUps: answered ? followUpsFor(topic, householdContext, air) : [],
+      followUps: cards.length
+        ? followUpsFor(output.topic, householdContext, air)
+        : [],
     };
   };
 }

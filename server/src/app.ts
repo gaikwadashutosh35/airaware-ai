@@ -16,6 +16,8 @@ import { guidesRouter } from './routes/guides.ts';
 import { recommendationsRouter } from './routes/recommendations.ts';
 import { createCachedForecast } from './services/air-data/cachedForecast.ts';
 import { createCachedWeather } from './services/air-data/cachedWeather.ts';
+import type { GenerateAsk } from './services/ai/askOutput.ts';
+import { createAskWriter } from './services/ai/askWriter.ts';
 import type { GeneratePlan } from './services/ai/personalize.ts';
 import { createAsker } from './services/recommendations/ask.ts';
 import {
@@ -35,6 +37,10 @@ export interface AppOptions {
   aiModel?: string;
   // Claude, asked only when Gemini gives no accepted answer.
   backupPlan?: { generate: GeneratePlan; model: string };
+  // Claude answers typed Ask AirAware questions; without both, Ask is
+  // rules-only.
+  generateAsk?: GenerateAsk;
+  askModel?: string;
   // Supabase-backed saved data; without it every saved-data route answers
   // 503 SAVE_UNAVAILABLE.
   saved?: SavedStore;
@@ -109,6 +115,13 @@ export function createApp(options: AppOptions = {}): express.Express {
     model: null,
     writer,
   });
+  const askWriter =
+    options.generateAsk && options.askModel
+      ? createAskWriter({
+          generate: options.generateAsk,
+          model: options.askModel,
+        })
+      : null;
   // One counter for every route that can call Gemini.
   const planLimit = rateLimit({
     ...clientKey,
@@ -142,7 +155,7 @@ export function createApp(options: AppOptions = {}): express.Express {
   app.use(
     '/api/v1/assistant',
     assistantRouter({
-      ask: createAsker({ forecast, write: writer }),
+      ask: createAsker({ forecast, write: writer, askWriter }),
       planLimit,
     }),
   );

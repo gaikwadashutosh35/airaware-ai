@@ -6,8 +6,8 @@ import {
 } from '../services/recommendations/ask.ts';
 import { classify } from '../services/recommendations/askTopics.ts';
 
-// Ask AirAware. The typed question goes no further than classify(): it is
-// never logged, stored, echoed or sent to the AI.
+// Ask AirAware. The typed question may reach the Ask writer (Claude, J26)
+// and nothing else: never logged, stored, echoed or sent to Gemini.
 export function assistantRouter(deps: {
   ask: Asker;
   // The daily plan's limiter: Ask can call Gemini too.
@@ -25,8 +25,23 @@ export function assistantRouter(deps: {
     );
     const topic = 'topic' in body ? body.topic : classify(body.question);
     const { place, householdContext } = body;
+    // A medical question, now or earlier, never reaches Claude.
+    const question =
+      'question' in body && topic !== 'medical'
+        ? {
+            text: body.question,
+            history: (body.history ?? []).filter(
+              (h) => classify(h.question) !== 'medical',
+            ),
+          }
+        : undefined;
     res.json({
-      data: await deps.ask(topic, { place, householdContext }, new Date()),
+      data: await deps.ask(
+        topic,
+        { place, householdContext },
+        new Date(),
+        question,
+      ),
     });
   });
 
