@@ -211,6 +211,16 @@ describe('POST /api/v1/assistant/answer', () => {
           ask(claudeApp(), { question: `capital of India ${MARKER}`, place }),
       ],
       [
+        'no Ask writer',
+        200,
+        () =>
+          ask(aiApp(), {
+            question: `walk ${MARKER}`,
+            place,
+            householdContext,
+          }),
+      ],
+      [
         'a forced 500',
         500,
         () => {
@@ -247,6 +257,8 @@ describe('POST /api/v1/assistant/answer', () => {
       expect(String(init?.body ?? '')).not.toContain(MARKER);
     }
     expect(realStringify(generate.mock.calls)).not.toContain(MARKER);
+    // Only the Ask-writer scenarios (success) put it there; 'no Ask writer'
+    // proves it reaches neither the plan writer nor any fetch.
     expect(realStringify(generateAsk.mock.calls)).toContain(MARKER);
   });
 

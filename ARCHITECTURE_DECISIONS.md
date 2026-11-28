@@ -163,7 +163,7 @@ How will the decision be tested or reviewed?
 **Consequences:**
 - The typed question reaches a third party. Anthropic's terms (checked 2026-11-28): inputs and outputs deleted within 30 days, kept longer only to enforce the Usage Policy or by law, and not used for training by default. `PRIVACY.md`, the Privacy page and `INTEGRATIONS.md` §4A say so.
 - Prompt injection through Ask becomes possible. The output contract and the checks bound it (`THREAT_MODEL.md`). A plain-words claim the cards don't support can still pass.
-- Claude Ask has its own cap of 200 calls per UTC day per server instance, in memory. It shares the 10-per-minute limiter. The worst case is about $0.0005 a call. Before deploying, the owner sets a monthly spend limit in the Anthropic Console.
+- Claude Ask has its own cap of 200 calls per UTC day per server instance, in memory. It shares the 10-per-minute limiter. Typically about $0.0005 a call; the worst case is about $0.0025 a call (4096 output tokens), so about $0.50 a day per instance. Before deploying, the owner sets a monthly spend limit in the Anthropic Console.
 - Without `ANTHROPIC_API_KEY`, typed questions use the old topic path, and the question is never sent to Gemini.
 - The worst case for one answer is about 15 s (Claude's 10 s timeout and the forecast), instead of about 48 s with a Gemini retry.
 - Gemini still writes the daily plan and the topic-chip summaries. The response shape does not change.

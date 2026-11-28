@@ -54,6 +54,15 @@ export function checkAskOutput(
 
   if (output.answer.length < 20 || output.answer.length > 300) return 'length';
 
+  // The English-only wording checks cannot read other scripts.
+  if (
+    /[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u.test(
+      output.answer,
+    )
+  ) {
+    return 'wording';
+  }
+
   const ids = output.cardIds;
   if (
     new Set(ids).size !== ids.length ||

@@ -57,9 +57,10 @@ Do not hardcode assumed quotas or prices in code. Record verified plan limits an
 |---|---|
 | Model | Claude Haiku 5.5, `claude-haiku-5-5` |
 | Price | $0.10 per million input tokens, $0.50 per million output tokens |
-| Worst case per call | about $0.0005 |
+| Typical cost per call | about $0.0005 |
+| Worst case per call | about $0.0025 (4096 output tokens at $0.50 per million, plus input) |
 | Cap | 200 calls per UTC day per server instance, in memory (each new instance starts its own count) |
-| Worst case per instance | about $0.10 a day |
+| Worst case per instance | about $0.50 a day at the 200-call cap |
 | Rate limit | shares the 10 per minute per IP of the other AI routes |
 | Workspace spend limit | **Owner, before deploy:** set a monthly limit for the workspace in the Anthropic Console, and record it here. Not set yet. |
 

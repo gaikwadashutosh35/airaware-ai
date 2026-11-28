@@ -129,6 +129,7 @@ describe('useAsk', () => {
     await ask('first', aiAskFixture);
     await ask('second', aiAskFixture);
     await ask('third', aiAskFixture);
+    await ask('fourth', aiAskFixture);
 
     expect('history' in (sentBody(0) as object)).toBe(false);
     expect(sentBody(1)).toMatchObject({
@@ -137,6 +138,10 @@ describe('useAsk', () => {
     expect((sentBody(2) as { history: unknown[] }).history).toEqual([
       { question: 'first', cardIds: ids(aiAskFixture) },
       { question: 'second', cardIds: ids(aiAskFixture) },
+    ]);
+    expect((sentBody(3) as { history: unknown[] }).history).toEqual([
+      { question: 'second', cardIds: ids(aiAskFixture) },
+      { question: 'third', cardIds: ids(aiAskFixture) },
     ]);
     expect(ids(aiAskFixture).length).toBeLessThanOrEqual(3);
   });
