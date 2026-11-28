@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { PlanOutput } from './planOutput.ts';
-import { PLAN_OUTPUT_JSON_SCHEMA, checkPlanOutput } from './planOutput.ts';
+import {
+  PLAN_OUTPUT_JSON_SCHEMA,
+  checkPlanOutput,
+  checkTexts,
+} from './planOutput.ts';
 import { candidates, input, valid } from './fixtures.ts';
 
 function withSummary(summary: string): PlanOutput {
@@ -27,6 +31,20 @@ describe('toWriterInput', () => {
       ]);
     }
     expect(input.candidates).toHaveLength(candidates.length);
+  });
+});
+
+describe('checkTexts', () => {
+  it('passes known numbers and plain words', () => {
+    expect(
+      checkTexts(['Fine particles are within the 24-hour limit.'], input),
+    ).toBeNull();
+  });
+  it('rejects a number not in the input', () => {
+    expect(checkTexts(['It will reach 500 today.'], input)).toBe('numbers');
+  });
+  it('rejects banned wording', () => {
+    expect(checkTexts(['The air is safe.'], input)).toBe('wording');
   });
 });
 

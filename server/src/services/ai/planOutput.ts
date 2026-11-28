@@ -153,6 +153,20 @@ const BANNED = [
   /%/,
 ];
 
+export function checkTexts(
+  texts: string[],
+  known: PlanWriterInput,
+): 'numbers' | 'wording' | null {
+  const knownNumbers = new Set(values(known).flatMap(numberTokens));
+  if (texts.some((t) => numberTokens(t).some((n) => !knownNumbers.has(n)))) {
+    return 'numbers';
+  }
+
+  if (texts.some((t) => BANNED.some((re) => re.test(t)))) return 'wording';
+
+  return null;
+}
+
 export function checkPlanOutput(
   output: PlanOutput,
   input: PlanWriterInput,
@@ -184,12 +198,5 @@ export function checkPlanOutput(
     return 'ids';
   }
 
-  const known = new Set(values(input).flatMap(numberTokens));
-  if (texts.some((t) => numberTokens(t).some((n) => !known.has(n)))) {
-    return 'numbers';
-  }
-
-  if (texts.some((t) => BANNED.some((re) => re.test(t)))) return 'wording';
-
-  return null;
+  return checkTexts(texts, input);
 }

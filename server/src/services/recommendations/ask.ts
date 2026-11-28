@@ -9,6 +9,7 @@ import type {
   RecommendationCandidate,
 } from '../../../../shared/contracts.ts';
 import type { CachedForecast } from '../air-data/cachedForecast.ts';
+import { VERDICT } from '../ai/askOutput.ts';
 import { toWriterInput } from '../ai/planOutput.ts';
 import { PROMPT_VERSION } from '../ai/prompts.ts';
 import { assessAir } from './airCheck.ts';
@@ -218,11 +219,6 @@ export function followUpsFor(
     return changes.length ? [{ field, changes }] : [];
   });
 }
-
-// An Ask summary must never read as a yes or no on safety (spec §7.4). The
-// plan's own checks already refuse "safe", "healthy" and numbers.
-const VERDICT =
-  /(?:^\s*(?:yes|no)\b)|\bgo ahead\b|\b(fine|ok|okay|alright) to\b|\b(good|bad) idea\b/i;
 
 export type Asker = (
   topic: AskTopic | 'medical' | 'out_of_scope',
