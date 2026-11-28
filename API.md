@@ -297,19 +297,21 @@ Response (illustrative, shortened):
 
 ### `POST /api/v1/assistant/answer`
 
-Public, rate-limited endpoint behind Ask AirAware (Phase 7). Answers one question or one topic for one place, from the same forecast check, rules and guide cards as the daily plan. It is one question and one answer: there is no conversation history.
+Public, rate-limited endpoint behind Ask AirAware (Phase 7). Answers one question or one topic for one place, from the same forecast check, rules and guide cards as the daily plan. It is one question and one answer. The server keeps no conversation: the client may send up to 2 earlier questions with a new one (`history`), and nothing is stored.
 
 Request (illustrative), with exactly one of `question` or `topic`:
 ```json
 {
   "question": "Can I go for a morning walk today?",
+  "history": [{ "question": "Is it okay to run the fan today?", "cardIds": ["guide.fans-and-ac"] }],
   "place": { "label": "Pune, Maharashtra", "latitude": 18.52, "longitude": 73.86 },
   "householdContext": { "routine": { "outdoorExercise": true } }
 }
 ```
 
 **Request handling:**
-- `question`: trimmed, 1–200 characters. The server matches it against fixed word lists to pick a topic, or `medical` (checked first) or `out_of_scope`. The question itself is never logged, stored, echoed back or sent to Gemini or Claude: only the topic is used.
+- `question`: trimmed, 1–200 characters. The server first matches it against fixed word lists: `medical` (checked first) gets the fixed reply and no AI call. Any other typed question goes to Claude (see Behaviour). It is never logged, stored, cached by its text or sent to Gemini.
+- `history` (optional, only with `question`): up to 2 earlier questions from this visit, each `{ question, cardIds }` (question 1–200 characters; at most 3 card ids of 1–60 characters). The server re-checks each earlier question for medical words and drops those. No answer text is accepted or sent: Claude gets only the earlier questions and the titles of the cards shown for them. The server stores nothing between requests.
 - `topic`: one of `outdoors`, `windows`, `indoor`, `family`, `commuting`, `habits` (the topic chips).
 - Both or neither of `question` and `topic` → `400 VALIDATION_ERROR`.
 - `place` and `householdContext`: the same rules as the daily plan (label 1–120 characters with no control characters, coordinates with at most 2 decimal places).
@@ -318,13 +320,15 @@ Request (illustrative), with exactly one of `question` or `topic`:
 
 **Behaviour:**
 - Returns 200 for every valid request, whatever happens to the AI or Open-Meteo. An Open-Meteo failure gives `air.level` `unknown`, `forecast` `null` and the "Air information unavailable" notice.
+- Typed question, not medical: Claude Haiku (`CLAUDE_MODEL`, default `claude-haiku-5-5`) gets the question, the earlier questions, the 24-hour check, the text of the cards the rules allow for this household, and the forecast's provider, data kind and limitations. It never gets the place name, coordinates, raw household answers, timestamps or source ids. It returns `scope`, `answer`, `topic` and 0–3 `cardIds`; it writes no card text and no sources. The answer becomes `summary` with `generatedBy` `"ai"`, `topic` is Claude's, and `cards` are the chosen ones. It must be 20–300 characters, use card ids from the cards sent, quote numbers only from the check, the cards and the forecast, avoid the banned wording and give no yes or no on safety. `out_of_scope` gives the fixed out-of-scope reply.
+- Claude fails (error, timeout, refusal, a failed check, or the cap of 200 Claude Ask calls per UTC day per server instance): the rules' answer for the keyword topic, `summary` `null`, `generatedBy` `"rules"`, with no retry and no Gemini call. Without `ANTHROPIC_API_KEY` a typed question takes the topic path below. The 10-per-minute limiter is shared.
 - `medical` and `out_of_scope`: no AI call and no cards; the air check, notices, sources and safety note are still returned. The client shows the fixed medical or out-of-scope reply.
-- Any other topic: up to three cards, the household's own rules for that topic first (most important first), then general guide cards. A guide is never shown beside its personal twin, and the busy-road and kitchen-exhaust guides follow the same hide rules as My Home.
-- The 1–2 sentence `summary` comes from the daily plan's writer (prompt `daily-plan-v3`), so Ask and the daily plan share one daily AI budget and one 10-minute answers cache. A summary that reads as a yes or no on safety, or fails the plan's own checks, is dropped: `generatedBy` is then `"rules"` and `summary` `null`.
+- A topic chip, a follow-up re-ask, or a typed question on the rules' topic path: up to three cards, the household's own rules for that topic first (most important first), then general guide cards. A guide is never shown beside its personal twin, and the busy-road and kitchen-exhaust guides follow the same hide rules as My Home.
+- On that path the 1–2 sentence `summary` comes from the daily plan's writer (prompt `daily-plan-v3`), so Ask and the daily plan share one daily AI budget and one 10-minute answers cache. A summary that reads as a yes or no on safety, or fails the plan's own checks, is dropped: `generatedBy` is then `"rules"` and `summary` `null`.
 - `followUps` (guided chat, 21 Nov): the topic's unanswered household questions whose answers would change this answer's cards today. Today's air and the three-card cap both count.
   - Each item is `{ field, changes }`. `field` is a My Profile field id. `changes` lists the answers that would change the cards: `"yes"`/`"no"` for a Yes/No question, else the option value.
   - Items come in a fixed order per topic, worked out from the rules only, with no AI call.
-  - `[]` for `medical` and `out_of_scope`.
+  - `[]` for `medical` and `out_of_scope`, and for a Claude answer that chose no cards.
   - "May be more sensitive" is never offered.
 
 Response (illustrative, shortened):
@@ -345,7 +349,7 @@ Response (illustrative, shortened):
 }
 ```
 
-A guide card also carries `personalRuleId`, as in the guides route. The response has no `question`, `model` or `promptVersion` field.
+A guide card also carries `personalRuleId`, as in the guides route. The response shape is the same on every path. It has no `question`, `model` or `promptVersion` field.
 
 ### Saved data (as built, Phase 6)
 

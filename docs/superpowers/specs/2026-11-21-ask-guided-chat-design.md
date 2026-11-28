@@ -2,7 +2,7 @@
 
 **Status:** approved by the owner, 21 Nov 2026.
 **Decided with the owner (21 Nov):**
-- A guided chat. The AI never reads what people type, so decision D1 (`2026-11-20-assistant-redesign-design.md` §4) and the Ask paragraph in `PRIVACY.md` stand unchanged.
+- A guided chat. The AI never reads what people type, so decision D1 (`2026-11-20-assistant-redesign-design.md` §4) and the Ask paragraph in `PRIVACY.md` stand unchanged. *Amended (28 Nov): J26 and ADR-008 replace this. A typed question now reaches Claude, and `PRIVACY.md` was rewritten. Follow-up questions are still never AI-written.*
 - An answer given in the chat counts everywhere: Today's plan, My Home and My Profile.
 **Marked "my call":** decisions the owner has not made. Each one is open to correction.
 
@@ -56,7 +56,7 @@ All of this keeps the safety and privacy rules the app already has.
 - A composer fixed to the bottom of the screen. *My call:* on phones it would sit between the keyboard and the fixed bottom bar, a known source of layout bugs. It can come later.
 
 **Anti-goals.** Each of these is a failure even if the screen works:
-- The AI sees typed text, or the conversation is stored or logged.
+- The AI sees typed text, or the conversation is stored or logged. *Amended (28 Nov): Claude now sees a typed question and up to 2 earlier ones (J26). Storing or logging the conversation stays out of scope.*
 - A yes or no on safety, or an invented number.
 - More than one question back per reply.
 - Asking a question again that the person skipped during this visit.
@@ -65,9 +65,9 @@ All of this keeps the safety and privacy rules the app already has.
 
 ## 3. Constraints
 
-- **Data and AI rules:** `AGENTS.md` §5–7 and `.claude/rules/air-data.md`. The AI input stays exactly as it is today: the air checks plus the rule cards' fixed text (`toWriterInput`).
+- **Data and AI rules:** `AGENTS.md` §5–7 and `.claude/rules/air-data.md`. The AI input stays exactly as it is today: the air checks plus the rule cards' fixed text (`toWriterInput`). *Amended (28 Nov): for a typed question Claude also gets the question, up to 2 earlier ones and the forecast's provenance (J26).*
 - **Privacy:**
-  - The typed question still only picks a topic on the server, and it is then dropped.
+  - The typed question still only picks a topic on the server, and it is then dropped. *Amended (28 Nov): a typed question that is not medical now goes to Claude too (J26).*
   - Answers given in the chat are the same household answers My Profile edits. They are sent as `householdContext`, as today.
   - The conversation lives in memory for the visit (at most 10 exchanges) and is gone after a reload, a new place or "Delete my saved data".
 - **Rate limit:**
@@ -87,7 +87,7 @@ All of this keeps the safety and privacy rules the app already has.
 
 | Question | Chosen | Rejected, and why |
 |---|---|---|
-| Does the AI read typed text? | No: a guided chat (owner, 21 Nov) | Open chat: it reverses D1 and `PRIVACY.md`, adds prompt-injection and medical risk, and is about 2 more days |
+| Does the AI read typed text? | No: a guided chat (owner, 21 Nov). *Amended (28 Nov, J26): yes, Claude reads typed questions; follow-ups stay non-AI.* | Open chat: it reverses D1 and `PRIVACY.md`, adds prompt-injection and medical risk, and is about 2 more days |
 | Thread order | Oldest first, newest at the bottom; focus moves to the new reply's heading | Newest first, as today: it reads as a results list, not a conversation |
 | How AirAware asks back | The existing My Profile questions. The server offers one only when one of its answers would change today's cards (§5.2). *My call*, after the builder check. | A fixed list on the client: many questions change nothing on a day within the limits, and each one would cost a request for the same reply. AI-written questions: free text that can't be checked against the rules. |
 | Where a chat answer goes | Everywhere (owner, 21 Nov). It goes into the answers on screen, and My Profile's form follows them (§5.6). It stays unsaved until My Profile's Save. | Answers kept only inside Ask: the assistant and the rest of the app would disagree about the person |

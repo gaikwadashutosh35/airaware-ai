@@ -138,9 +138,34 @@ How will the decision be tested or reviewed?
 
 **Decision:** Option 1, with Claude Haiku 5.5 (`claude-haiku-5-5`), the fastest and cheapest Claude model. The model can be changed with `CLAUDE_MODEL`.
 
+*Note (2026-11-28): ADR-008 also makes Claude the reader of typed Ask questions. The decision above, for the plan writer, is unchanged.*
+
 **Consequences:**
 - A new runtime dependency, `@anthropic-ai/sdk` (pinned to `1.8.0`).
 - Claude gets the same minimal context and passes the same checks as Gemini.
 - Each writer has its own daily cap. Claude spend has no Console limit yet: an Admin must create a limited "AirAware" workspace. Until then, the per-instance cap is the only bound (`THREAT_MODEL.md`).
 - In the worst case a plan takes about 20 s: Gemini times out after 10 s, then Claude gets 10 s.
 - The SDK sends the key as a bearer token, and the client pins `https://api.anthropic.com`.
+
+## ADR-008: Claude answers typed Ask questions
+
+**Status:** Accepted (2026-11-28, project owner, "as recommended"). Design: `docs/superpowers/specs/2026-11-28-ask-claude-grounded-design.md`; owner decisions D1 to D7, recorded as J26 in `docs/redesign/OWNER_DECISIONS.md`.
+
+**Context:** A typed Ask question only picked one of six topics through keyword lists, and the AI never saw it. Over the 147 distinct questions in the question bank, 37 got "I can help with…" (for example "What does PM2.5 mean?"), many others got the wrong topic's cards, and 9 of the 12 follow-up questions had no memory of the turn before. The old rule that the AI never reads typed text (J25, D1 of 20 Nov, the 21 Nov rulings) rested on the free-tier basis for Gemini: the question must not reach Google's free tier (`INTEGRATIONS.md` §4).
+
+**Options considered:**
+1. Keep keyword-only. Nothing changes, and neither do the 37 misses.
+2. Gemini reads the question. Rejected: it breaks the free-tier basis, since Google may use free-tier prompts to improve its products.
+3. Claude Haiku reads the question, with the rules' answer as the fallback.
+
+**Decision:** Option 3. A typed question that `classify()` does not call medical goes to Claude Haiku 5.5 with up to 2 earlier questions (medical ones dropped), the 24-hour check, the allowed cards' text and the forecast's provider and limitations. It never gets the place name, coordinates, raw household answers, timestamps or source ids. Claude returns `scope`, `answer`, `topic` and 0 to 3 `cardIds`; it writes no card text and no sources. The server checks the answer (20 to 300 characters, card ids from the cards sent, numbers only from the check, the cards and the forecast, banned wording, no yes or no on safety). Any failure gives the rules' answer with no retry and no Gemini call. Medical questions call no AI. Topic chips and follow-up re-asks are unchanged.
+
+**Consequences:**
+- The typed question reaches a third party. Anthropic's terms (checked 2026-11-28): inputs and outputs deleted within 30 days, kept longer only to enforce the Usage Policy or by law, and not used for training by default. `PRIVACY.md`, the Privacy page and `INTEGRATIONS.md` §4A say so.
+- Prompt injection through Ask becomes possible. The output contract and the checks bound it (`THREAT_MODEL.md`). A plain-words claim the cards don't support can still pass.
+- Claude Ask has its own cap of 200 calls per UTC day per server instance, in memory. It shares the 10-per-minute limiter. The worst case is about $0.0005 a call. Before deploying, the owner sets a monthly spend limit in the Anthropic Console.
+- Without `ANTHROPIC_API_KEY`, typed questions use the old topic path, and the question is never sent to Gemini.
+- The worst case for one answer is about 15 s (Claude's 10 s timeout and the forecast), instead of about 48 s with a Gemini retry.
+- Gemini still writes the daily plan and the topic-chip summaries. The response shape does not change.
+
+**Verification:** unit and route tests cover prompt injection, a medical question hidden in the earlier questions, forged card ids, a number the user typed, the place name never reaching Claude, and the question never reaching logs, the response, Gemini, Open-Meteo or FIRMS. An opt-in live evaluation (`server/src/services/recommendations/askEval.live.test.ts`, `ASK_LIVE=1`) runs the question-bank set against the real model and needs at least 17 of the 19 graded questions to be answered, with an expected topic and a matching pattern.

@@ -64,7 +64,7 @@ AirAware already holds honest data and good advice, but it shows them as a long 
 |---|---|---|
 | Paths between app pages | The existing `App.tsx` switch, with `history.pushState` and a `popstate` hook (about 20 lines) | A router library: a new dependency for 6 paths |
 | Desktop navigation | A navy top bar | A sidebar: it wastes width on a single-column assistant |
-| Ask AirAware (D1) | Guided: questions matched to rule cards on the server; AI writes 2–3 sentences only | Open chat: a new AI risk surface, chat-log privacy, about 2 more days |
+| Ask AirAware (D1) *(amended 28 Nov, J26)* | Guided: questions matched to rule cards on the server; AI writes 2–3 sentences only | Open chat: a new AI risk surface, chat-log privacy, about 2 more days |
 | Remembering (D2) | "Remember on this device" runs the existing Save; off by default | Browser storage (changes the privacy promise); no memory (onboarding repeats) |
 | Recommendation (D3) | Built automatically once per place per hour | The button: the action stays hidden |
 | Content gaps (D4) | New rule cards with cited sources for dust and cleaning, and for energy | Pages with gaps |
@@ -236,6 +236,7 @@ It never says yes or no to safety.
 - It goes only to our server, which uses it to choose a topic.
 - It is never passed to the AI writers, saved or logged.
 - This keeps the basis on which Gemini's free tier was accepted (INTEGRATIONS.md: the AI input "holds only the app's own fixed text and model-forecast numbers").
+- *Amended (28 Nov, J26, ADR-008): a typed question that is not medical now goes to Claude (never Gemini), with up to 2 earlier questions. It is still never saved or logged. See `2026-11-28-ask-claude-grounded-design.md`.*
 
 ### 7.5 My Home (`/app/home`)
 
@@ -330,7 +331,7 @@ Eight sections, on the dark theme:
    - **Request:** `{question (1–200 chars), place, householdContext?}` or `{topic, place, householdContext?}`, exactly one of `question` and `topic`. *Amended (Phase 7, decision 1).*
    - **Response:** `{topic, summary, generatedBy, air, forecast, cards[], sources[], notices[], safetyNote}`. *Amended (Phase 7): `forecast` (the model-forecast metadata, or null) carries "updated {time}" and the stale check; `summary` is null for a rules answer; `topic` can be `medical` or `out_of_scope`. Never the question, model or prompt version.*
    - **Topic choice:** deterministic keyword lists on the server, unit-tested, plus a medical-question guard.
-   - **AI:** writes only the summary, from the topic, the forecast check and the chosen cards (never the question text), under the plan's existing output checks.
+   - **AI:** writes only the summary, from the topic, the forecast check and the chosen cards (never the question text), under the plan's existing output checks. *Amended (28 Nov, J26): for a typed question Claude reads the question and answers, `history` joins the request, and the rules' answer is the fallback; topic chips are unchanged. See the 28 Nov design.*
    - **Caching:** summaries come from the plan's writer, cached for 10 minutes by exactly what the writer is asked (the air check and the cards), never by the question text. *Amended (Phase 7).*
    - **Logging:** the question is never logged or stored.
    - **Rate limit:** the plan's limiter.
@@ -397,7 +398,7 @@ Each phase gets its own plan (`superpowers:writing-plans`) and owner approval be
 A fresh reviewer read this spec against the code. Here is how each of its questions was settled.
 
 **Settled as my calls (cost if wrong in brackets):**
-1. **The Ask question never reaches the AI** (§7.4, §9.4). This is already settled by INTEGRATIONS.md's basis for Gemini's free tier and by PRIVACY.md. (Answers are less tailored to the exact wording.)
+1. **The Ask question never reaches the AI** (§7.4, §9.4). This is already settled by INTEGRATIONS.md's basis for Gemini's free tier and by PRIVACY.md. (Answers are less tailored to the exact wording.) *Amended (28 Nov): reversed by J26 and ADR-008. The question reaches Claude, not Gemini, so the free-tier basis stands.*
 2. **Unsaved answer changes rebuild the plan** once, when Today opens (§9.2). (One extra AI call per change.)
 3. **With "Remember" on, the last searched place is the saved one.** A device location never is (§9.1). (A user who wanted the old city must search it again.)
 4. **Guide cards stay out of the daily plan** (§9.3). (Plans don't show the new general advice.)

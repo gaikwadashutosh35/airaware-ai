@@ -28,7 +28,7 @@ Live site: **https://airaware-ai.netlify.app** (Netlify project `airaware-ai`, o
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | the function | Public values. |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | the client build | Public, and built into the bundle. |
 | `GEMINI_API_KEY` | the function | **Secret**, Functions only, production context. |
-| `ANTHROPIC_API_KEY` | the function | **Secret**, Functions only, production context. Optional: the Claude backup. |
+| `ANTHROPIC_API_KEY` | the function | **Secret**, Functions only, production context. Optional: the Claude backup and the reader of typed Ask questions (200 calls a day per instance). Before deploying, set a monthly workspace spend limit in the Anthropic Console (`COST_AND_LIMITS.md`). |
 | `GEMINI_MODEL`, `CLAUDE_MODEL` | the function | Optional model ids (defaults `gemini-3.8-flash`, `claude-haiku-5-5`). |
 | `FIRMS_MAP_KEY` | the function | **Secret**, Functions only, production context. Optional: NASA FIRMS fire hotspots on Today. Free from firms.modaps.eosdis.nasa.gov/api/map_key (5,000 requests per 10 minutes; each place lookup uses 2, then 30 minutes of cache). |
 | `GOOGLE_MAPS_API_KEY` | the function | **Secret**, Functions only, production context. Optional: the city name for "Use my location". The key ("Maps Platform API Key", Gemini Project) is restricted to the Geocoding API; it has no application restriction, as Netlify's function IPs change. |

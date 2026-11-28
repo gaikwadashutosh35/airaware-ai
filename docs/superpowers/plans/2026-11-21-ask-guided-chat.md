@@ -19,7 +19,7 @@
 ## Global Constraints
 
 **What the AI and the server see:**
-- The AI never reads typed text. `toWriterInput(air, candidates)` stays the only AI input, and a typed question still only picks a topic in `classify`.
+- The AI never reads typed text. `toWriterInput(air, candidates)` stays the only AI input, and a typed question still only picks a topic in `classify`. *Amended (28 Nov): a typed question now reaches the Ask writer, Claude (J26, ADR-008).*
 - No logging, storing or caching of questions, conversation or household answers.
 
 **Wording and labels:**

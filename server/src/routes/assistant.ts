@@ -7,7 +7,8 @@ import {
 import { classify } from '../services/recommendations/askTopics.ts';
 
 // Ask AirAware. The typed question may reach the Ask writer (Claude, J26)
-// and nothing else: never logged, stored, echoed or sent to Gemini.
+// and nothing else: never logged, stored, cached by its text or sent to
+// Gemini. Claude's answer may restate it; the response has no question field.
 export function assistantRouter(deps: {
   ask: Asker;
   // The daily plan's limiter: Ask can call Gemini (topics) or Claude (typed

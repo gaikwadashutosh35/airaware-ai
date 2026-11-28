@@ -51,4 +51,16 @@ Do not hardcode assumed quotas or prices in code. Record verified plan limits an
 - At a zero balance Netlify pauses the site.
 - Function limits: 60 s synchronous execution limit; 1024 MB default memory.
 - No Google Cloud billing is used.
+- **Claude Ask (typed Ask questions, J26; prices checked 2026-11-28).**
+
+| Item | Value |
+|---|---|
+| Model | Claude Haiku 5.5, `claude-haiku-5-5` |
+| Price | $0.10 per million input tokens, $0.50 per million output tokens |
+| Worst case per call | about $0.0005 |
+| Cap | 200 calls per UTC day per server instance, in memory (each new instance starts its own count) |
+| Worst case per instance | about $0.10 a day |
+| Rate limit | shares the 10 per minute per IP of the other AI routes |
+| Workspace spend limit | **Owner, before deploy:** set a monthly limit for the workspace in the Anthropic Console, and record it here. Not set yet. |
+
 - **Supabase free tier:** the project pauses after 7 days without API activity, which the keep-alive workflow prevents.

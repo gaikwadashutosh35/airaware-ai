@@ -7,6 +7,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 ## [Unreleased]
 
 ### Added
+- Ask AirAware: Claude Haiku reads typed questions (J26, ADR-008). A question that isn't medical goes to Claude with up to 2 earlier questions (`history` on `POST /api/v1/assistant/answer`), the forecast check, the allowed cards' text and the forecast's provenance. Claude picks up to 3 of those cards and writes 1 to 3 sentences, which must pass the number, wording, verdict and card-id checks; any failure shows the rules' answer. The Ask intro and the Privacy page say so. An opt-in live evaluation (`ASK_LIVE=1`) grades 19 question-bank questions.
 - Initial project documentation and implementation plan.
 - Phase 1 scaffold: npm workspaces (`server`, `client`), strict TypeScript, oxlint, Prettier, Vitest, GitHub Actions CI.
 - `GET /api/v1/health` with security headers and a JSON 404 envelope.
@@ -306,6 +307,7 @@ This project follows a simple Keep a Changelog-inspired structure. Versions and 
 - Redesign P0 (24 Nov): the 8.8 MB of audit screenshots are kept out of git, and `docs/redesign/evidence/capture-after.mjs` measures the "after" state without touching the Stage 0 evidence.
 
 ### Security
+- Ask AirAware (J26, ADR-008): typed questions reach Claude, never Gemini, with no place name, coordinates or raw household answers. A medical question calls no AI, and earlier medical questions are dropped. Claude returns JSON only; its card ids, numbers, wording and any yes or no on safety are checked, and a failure shows the rules' answer. Claude Ask has its own cap of 200 calls per UTC day per instance. The question is never logged, stored or cached by its text. Residual risks (`THREAT_MODEL.md`): ungrounded plain-words claims, and no Console spend limit yet.
 - Phase 8: npm ci runs with --ignore-scripts in CI and the Docker image; every push is scanned for secrets.
 - Coordinates with more than 2 decimals (~1.1 km) are rejected, so precise locations never reach request logs or Open-Meteo. The app never logs coordinates.
 - Outbound hosts are fixed constants.

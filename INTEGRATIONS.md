@@ -71,10 +71,31 @@ Rules:
 - **Free tier:** Google may use free-tier prompts and responses to improve its products, and people may review them. The input above holds only the app's own fixed text and model-forecast numbers.
 - **Checks:** schema, lengths, candidate ids (exact match, every high-priority action included), numbers only from the input (number words and number-plus-unit pairs included), banned wording (safety and health claims, named conditions, AQI, reassurance such as "the air is clean"). The full list is in the Phase 5 spec, check 5. Invalid JSON or schema → one retry. Any other failure → a labelled rules-only plan.
 - **Logging:** one line, `Gemini plan failed: <category>` (`timeout`, `http <status>`, `network`, `empty response`, `invalid json`, `schema`, `length`, `ids`, `numbers`, `wording`). Never the key, prompts, Gemini's text, household details, labels, coordinates or request bodies.
-- **Ask AirAware (redesign Phase 7):** `POST /api/v1/assistant/answer` uses the same writer, so one daily budget and one 10-minute answers cache cover plans and Ask. The typed question only picks a topic on the server and is then dropped; the writer gets the same input as for a plan (the air check and the topic's cards), so the free-tier basis above is unchanged. Medical and out-of-scope questions call no AI. An Ask summary that reads as a yes or no on safety falls back to rules, logged as the constant line `Ask summary failed: verdict`.
-- **Not built:** an open chat. Ask AirAware is guided: one question, one answer, no conversation history.
+- **Ask AirAware (redesign Phase 7):** `POST /api/v1/assistant/answer` uses the same writer, so one daily budget and one 10-minute answers cache cover plans and Ask. For a topic chip, a follow-up re-ask, or a typed question when no Anthropic key is set, the server picks a topic and the question is never sent to Gemini; the writer gets the same input as for a plan (the air check and the topic's cards), so the free-tier basis above is unchanged. A typed question that is not medical goes to Claude instead (section 4A). Medical questions call no AI. An Ask summary that reads as a yes or no on safety falls back to rules, logged as the constant line `Ask summary failed: verdict`.
+- **Not built:** an open chat. Ask AirAware answers one question at a time; the client may send up to 2 earlier questions with a new one, and the server stores no conversation.
 
 Official docs: https://ai.google.dev/gemini-api/docs
+
+## 4A. Runtime AI provider — Anthropic Claude
+
+Claude Haiku (`claude-haiku-5-5`) has two jobs: the backup writer for the daily plan and topic summaries (ADR-007), and the only reader of typed Ask AirAware questions (J26, ADR-008).
+
+**Typed Ask questions:**
+- **Purpose:** answer a typed question from AirAware's own rules and forecast. Claude returns `scope`, `answer`, `topic` and 0 to 3 `cardIds`. It writes no card text and no sources.
+- **Sent:** the question; up to 2 earlier questions from the visit (medical ones dropped), each with the titles of the cards shown for it; the 24-hour check; the text of the cards the rules allow for this household (id, section, priority, title, text, reason); and the forecast's provider, data kind and limitations.
+- **Not sent:** the place name, coordinates, raw household answers, timestamps, source ids, or any earlier answer text. A medical question calls no AI.
+- **Checks:** answer 20 to 300 characters; card ids only from the cards sent (0 to 3, no repeats); numbers only from the check, the cards and the forecast block (numbers in the question never count); banned wording; no yes or no on safety. Any failure gives the rules' answer (`summary` null, `generatedBy` `rules`). There is no retry, no caching by question text, and no Gemini call after a Claude failure.
+- **Limits:** 200 Claude Ask calls per UTC day per server instance (in memory), and the 10-per-minute limiter shared with the other AI routes. Worst case is about $0.0005 a call (Haiku 5.5: $0.10 per million input tokens, $0.50 per million output tokens), so about $0.10 a day per instance (`COST_AND_LIMITS.md`).
+- **Configuration:** `ANTHROPIC_API_KEY` (optional, server-only) and `CLAUDE_MODEL`. Without the key, typed questions fall back to the topic path: fixed word lists pick a topic, Gemini may word that topic's cards, and the question itself is never sent to Gemini. The Ask page copy "Claude reads your question" assumes the key is set. The client pins `https://api.anthropic.com`.
+- **Logging:** one line, `Claude ask failed: <category>` (`timeout`, `network`, `refusal`, `max_tokens`, `empty response`, `http <status>`, or the name of the check that failed). Never the key, the question, the prompt, Claude's text or any household detail.
+
+**Anthropic's terms** (checked 2026-11-28):
+- API inputs and outputs are deleted within 30 days, and kept longer only to enforce the Usage Policy or where the law requires (https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data, dated 1 Jul 2026).
+- They are not used to train models by default (https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training, dated 18 Aug 2026).
+- The covered-models policy (article 15425996) applies only to Mythos-class models, not to Haiku.
+
+Official docs: https://platform.claude.com/docs
+
 
 ## 5. Supabase
 
