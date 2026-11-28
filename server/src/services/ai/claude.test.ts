@@ -212,6 +212,13 @@ describe('createClaudeAsker', () => {
       format: { type: 'json_schema', schema: ASK_OUTPUT_JSON_SCHEMA },
     });
     expect(body.max_tokens).toBe(4096);
+    expect(Object.keys(body).sort()).toEqual([
+      'max_tokens',
+      'messages',
+      'model',
+      'output_config',
+      'system',
+    ]);
     for (const key of [
       'thinking',
       'temperature',
