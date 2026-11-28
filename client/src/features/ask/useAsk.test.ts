@@ -141,6 +141,31 @@ describe('useAsk', () => {
     expect(ids(aiAskFixture).length).toBeLessThanOrEqual(3);
   });
 
+  it('history keeps only the first 3 card ids of an earlier answer', async () => {
+    const { result } = setup();
+    const card = aiAskFixture.cards[0]!;
+    const four = {
+      ...aiAskFixture,
+      cards: [1, 2, 3, 4].map((n) => ({ ...card, id: `c${n}` })),
+    };
+    act(() => result.current.send({ question: 'one' }, 'one'));
+    await answer(four);
+    act(() => result.current.send({ question: 'two' }, 'two'));
+
+    expect(sentBody(1)).toMatchObject({
+      history: [{ question: 'one', cardIds: ['c1', 'c2', 'c3'] }],
+    });
+  });
+
+  it('a topic request after a typed question carries no history', async () => {
+    const { result } = setup();
+    act(() => result.current.send({ question: 'one' }, 'one'));
+    await answer(aiAskFixture);
+    act(() => result.current.send({ topic: 'family' }, 'My family'));
+
+    expect('history' in (sentBody(1) as object)).toBe(false);
+  });
+
   it('history leaves out medical, topic and failed entries, and topic requests carry none', async () => {
     const { result } = setup();
     act(() => result.current.send({ question: 'med' }, 'med'));
