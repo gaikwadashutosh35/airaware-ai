@@ -86,13 +86,13 @@ Claude Haiku (`claude-haiku-5-5`) has two jobs: the backup writer for the daily 
 - **Not sent:** the place name, coordinates, raw household answers, timestamps, source ids, or any earlier answer text. A medical question calls no AI.
 - **Checks:** answer 20 to 300 characters; card ids only from the cards sent (0 to 3, no repeats); numbers only from the check, the cards and the forecast block (numbers in the question never count); banned wording; no yes or no on safety. Any failure gives the rules' answer (`summary` null, `generatedBy` `rules`). There is no retry, no caching by question text, and no Gemini call after a Claude failure.
 - **Limits:** 200 Claude Ask calls per UTC day per server instance (in memory), and the 10-per-minute limiter shared with the other AI routes. Worst case is about $0.0005 a call (Haiku 5.5: $0.10 per million input tokens, $0.50 per million output tokens), so about $0.10 a day per instance (`COST_AND_LIMITS.md`).
-- **Configuration:** `ANTHROPIC_API_KEY` (optional, server-only) and `CLAUDE_MODEL`. Without the key, typed questions fall back to the topic path: fixed word lists pick a topic, Gemini may word that topic's cards, and the question itself is never sent to Gemini. The Ask page copy "Claude reads your question" assumes the key is set. The client pins `https://api.anthropic.com`.
-- **Logging:** one line, `Claude ask failed: <category>` (`timeout`, `network`, `refusal`, `max_tokens`, `empty response`, `http <status>`, or the name of the check that failed). Never the key, the question, the prompt, Claude's text or any household detail.
+- **Configuration:** `ANTHROPIC_API_KEY` (optional, server-only) and `CLAUDE_MODEL`. Without the key, typed questions fall back to the topic path: fixed word lists pick a topic, Gemini may word that topic's cards, and the question itself is never sent to Gemini. The Ask page intro, "Claude (Anthropic) reads your question and answers from AirAware's rules and today's forecast.", assumes the key is set. The client pins `https://api.anthropic.com`.
+- **Logging:** one line, `Claude ask failed: <category>` (`timeout`, `network`, `refusal`, `max_tokens`, `empty response`, `http <status>`, `daily limit`, `unexpected`, or the name of the check that failed). Never the key, the question, the prompt, Claude's text or any household detail.
 
 **Anthropic's terms** (checked 2026-11-28):
 - API inputs and outputs are deleted within 30 days, and kept longer only to enforce the Usage Policy or where the law requires (https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data, dated 1 Jul 2026).
 - They are not used to train models by default (https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training, dated 18 Aug 2026).
-- The covered-models policy (article 15425996) applies only to Mythos-class models, not to Haiku.
+- The covered-models policy (article 15425996, https://privacy.claude.com/en/articles/15425996) applies only to Mythos-class models, not to Haiku.
 
 Official docs: https://platform.claude.com/docs
 

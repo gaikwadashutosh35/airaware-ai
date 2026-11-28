@@ -180,7 +180,7 @@ export type CachedForecast = (
 export type GeneratePlan = (input: PlanWriterInput) => Promise<string>;
 ```
 
-The forecast comes from one provider, Open-Meteo, through a 10-minute cache. Each AI writer (Gemini, then the optional Claude backup) is a `GeneratePlan` function. `createPlanWriter` (`server/src/services/recommendations/dailyPlan.ts`) builds one plan writer that asks them in order, each within a daily call budget, and resolves to null when none gives an accepted answer; `createPlanWriter` itself returns null when no writer is set up. Which writers exist comes from validated server configuration (`server/src/config/appOptions.ts`): a writer is set up only when its key is set. There is no demo mode: when Open-Meteo fails, the app says the forecast is unavailable.
+The forecast comes from one provider, Open-Meteo, through a 10-minute cache. Each AI writer (Gemini, then the optional Claude backup) is a `GeneratePlan` function. Claude also answers typed Ask questions through its own Ask writer (`server/src/services/ai/askWriter.ts`), outside this chain. `createPlanWriter` (`server/src/services/recommendations/dailyPlan.ts`) builds one plan writer that asks them in order, each within a daily call budget, and resolves to null when none gives an accepted answer; `createPlanWriter` itself returns null when no writer is set up. Which writers exist comes from validated server configuration (`server/src/config/appOptions.ts`): a writer is set up only when its key is set. There is no demo mode: when Open-Meteo fails, the app says the forecast is unavailable.
 
 ## 7. Request flow
 
@@ -209,7 +209,7 @@ The daily plan:
 ## 9. Deployment topology
 
 - Netlify (ADR-006, `DEPLOYMENT.md`): the CDN serves the built client, and `/api/*` is rewritten to one Function that runs the Express app, all on one origin.
-- Netlify environment variables hold the server settings. `GEMINI_API_KEY` and the optional `ANTHROPIC_API_KEY` (the Claude backup) are marked secret and scoped to Functions.
+- Netlify environment variables hold the server settings. `GEMINI_API_KEY` and the optional `ANTHROPIC_API_KEY` (the Claude backup, and the reader of typed Ask questions) are marked secret and scoped to Functions.
 - Supabase: Auth/Postgres.
 - External data APIs called from server.
 - AI model called from server.
