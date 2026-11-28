@@ -136,6 +136,25 @@ Do not assume a public/free geocoder allows high-volume use.
 - Only the typed place name is sent, never user coordinates.
 - All `/api/v1` calls are rate-limited to 60/min per IP.
 
+### Google Maps Geocoding, reverse (owner, 27 Nov)
+
+- **Endpoint:** `https://maps.googleapis.com/maps/api/geocode/json` (`server/src/services/location/reverseGeocode.ts`), a fixed constant, called by the server only through `GET /api/v1/locations/reverse`.
+- **Request:** after "Use my location", the same 2-decimal coordinates (about 1 km) as `latlng`, with `result_type=locality` and `language=en`. Nothing else is sent.
+- **Key:** `GOOGLE_MAPS_API_KEY`. Without it no request is made and `name` is `null`.
+- **Caching:** none. The name is not cached or stored (Google Maps terms), and the response is `Cache-Control: no-store`. It is shown beside a "Google Maps" credit and never sent on with a plan or question.
+- **Failure:** any failure, or no locality, gives `name: null`; the place stays "Near you (approximate)". Logs name the host only, because the query holds the key.
+
+### NASA FIRMS active fires (owner, 27 Nov)
+
+Not geocoding: fire hotspots near the chosen place, shown on Today.
+
+- **Endpoint:** `https://firms.modaps.eosdis.nasa.gov/api/area/csv` (`server/src/services/fires/firms.ts`), a fixed constant, called by the server only through `GET /api/v1/fires/nearby`.
+- **Request:** a box about 100 km wide around the same 2-decimal coordinates, for the VIIRS NOAA-20 and NOAA-21 near-real-time sources. Nothing else is sent.
+- **Key:** `FIRMS_MAP_KEY`. Without it no request is made, the answer is `not_configured` and the card stays hidden.
+- **Caching:** 30 minutes per rounded place, in server memory only.
+- **Failure:** if either satellite's request fails, the answer is `unavailable`, never a smaller count, and it is not cached.
+- **Data kind:** `satellite_detection`, never an air-quality reading. Attribution: "Fire hotspots from NASA FIRMS (Fire Information for Resource Management System)."
+
 ## 7. GitHub CodeQL
 
 Reference: https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql

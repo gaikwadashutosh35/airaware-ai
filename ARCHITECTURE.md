@@ -21,7 +21,7 @@
 | Schemas | Zod |
 | Database/auth | Supabase PostgreSQL, Supabase Auth |
 | AI | Gemini (REST via `fetch`), with an optional Claude backup (`@anthropic-ai/sdk`); the fixed rules' plan when neither gives an accepted answer |
-| Air data | Open-Meteo Air Quality API (CAMS global model forecast), Open-Meteo geocoding, and the Open-Meteo weather forecast for Today's weather line and backdrop; CPCB observations not connected (no verified permitted feed); no demo adapter |
+| Air data | Open-Meteo Air Quality API (CAMS global model forecast), Open-Meteo geocoding, and the Open-Meteo weather forecast for Today's weather line and backdrop; CPCB observations not connected (no verified permitted feed); no demo adapter. Optional extras, not air data: NASA FIRMS fire hotspots (`satellite_detection`) and Google Maps reverse geocoding for a device place's city name |
 | Tests | Vitest, Testing Library, Supertest, Playwright, axe-core |
 | Quality | oxlint (type-aware), Prettier, TypeScript, CodeQL, SonarQube Cloud |
 | Hosting | Netlify — CDN for the built client, one Function running the Express API (ADR-006) |
@@ -54,6 +54,7 @@ airaware-ai/
 │   │   ├── services/
 │   │   │   ├── ai/
 │   │   │   ├── air-data/
+│   │   │   ├── fires/
 │   │   │   ├── location/
 │   │   │   ├── recommendations/
 │   │   │   └── saved/
@@ -122,7 +123,8 @@ Supabase tables store user preferences and saved plans with RLS. Avoid persistin
 Shared types live in `shared/contracts.ts` (types only), used by the server and the client. The server stays authoritative for validation. The air-data types, abridged:
 
 ```ts
-export type DataKind = 'official_observation' | 'model_forecast' | 'demo';
+export type DataKind =
+  'official_observation' | 'model_forecast' | 'demo' | 'satellite_detection';
 export type Pollutant = 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
 
 export interface ForecastSeries {

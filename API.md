@@ -2,7 +2,8 @@
 
 ## 1. Conventions
 
-- Base path: `/api/v1` (recommended).
+- Base path: `/api/v1`.
+- All `/api/v1` routes share a rate limit of 60 requests per minute per IP. Requests over the limit get `429 RATE_LIMITED`.
 - JSON over HTTPS.
 - ISO-8601 UTC timestamps.
 - Validate all inputs using Zod.
@@ -18,12 +19,11 @@ interface ApiError {
   error: {
     code: string;
     message: string;
-    requestId?: string;
     details?: unknown;
   };
 }
 
-type DataKind = 'official_observation' | 'model_forecast' | 'demo';
+type DataKind = 'official_observation' | 'model_forecast' | 'demo' | 'satellite_detection';
 
 interface PollutantReading {
   pollutant: 'PM2_5' | 'PM10' | 'NO2' | 'SO2' | 'O3' | 'CO';
@@ -209,7 +209,7 @@ Response: `{ "data": [{ "id", "name", "dataKind", "status": "available" | "unava
 
 ### `GET /api/v1/locations/search?q=...`
 
-Searches places in India (Open-Meteo Geocoding, `countryCode=IN`, up to 5 results). `q` is trimmed and must be 2–80 characters. No match returns `{ "data": [] }`.
+Searches places in India (Open-Meteo Geocoding, `countryCode=IN`, up to 5 results). `q` is trimmed and must be 2–80 characters. No match returns `{ "data": [] }`. A provider failure returns `502 PROVIDER_ERROR`.
 
 Response (illustrative):
 ```json
@@ -233,8 +233,6 @@ Response `data` is a `FireSummary`:
 
 `GET /api/v1/air-quality/sources` lists NASA FIRMS (`nasa-firms`, `satellite_detection`), `available` only when the key is set.
 
-All `/api/v1` routes share a rate limit of 60 requests per minute per IP. Requests over the limit get `429 RATE_LIMITED`.
-
 ### `GET /api/v1/recommendations/guides?topic=home|habits`
 
 Public. Returns the guide library for My Home (`home`) or Better Habits (`habits`): general cards with neutral reasons and cited sources, grouped as the page shows them. The wording is fixed by `docs/superpowers/specs/2026-11-20-guide-library.md`. It calls no AI, so it does not count against the daily plan's 10-per-minute limit (only the shared 60 per minute). It changes only on deploy, so it is sent with `Cache-Control: public, max-age=3600`. A missing, unknown or extra parameter returns `400 VALIDATION_ERROR`.
@@ -248,7 +246,7 @@ Response (shortened):
 
 ### `POST /api/v1/recommendations/daily-plan`
 
-Public, rate-limited endpoint (no sign-in until Phase 6). Returns a daily plan for one place and optional household details. Gemini picks, orders and times the rules' recommendation candidates and adds a summary and one "for you" line per featured action; every advice text, reason, caveat and source stays the rules' own wording. Without an AI writer, or when Gemini and then the Claude backup (when its key is set) both give no accepted answer, the same request returns a complete rules-only plan.
+Public, rate-limited; no sign-in. Returns a daily plan for one place and optional household details. Gemini picks, orders and times the rules' recommendation candidates and adds a summary and one "for you" line per featured action; every advice text, reason, caveat and source stays the rules' own wording. Without an AI writer, or when Gemini and then the Claude backup (when its key is set) both give no accepted answer, the same request returns a complete rules-only plan.
 
 Request (illustrative):
 ```json

@@ -51,6 +51,7 @@ Do not hardcode assumed quotas or prices in code. Record verified plan limits an
 - At a zero balance Netlify pauses the site.
 - Function limits: 60 s synchronous execution limit; 1024 MB default memory.
 - No Google Cloud billing is used.
+- **Google Maps reverse geocoding** (`GET /api/v1/locations/reverse`) is limited only per IP by the app's 60 per minute limiter, and has no daily cap until the owner sets a Geocoding API quota in the Google Cloud console. Not set yet.
 - **Claude Ask (typed Ask questions, J26; prices checked 2026-11-28).**
 
 | Item | Value |

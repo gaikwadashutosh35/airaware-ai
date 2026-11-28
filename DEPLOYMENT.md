@@ -6,7 +6,7 @@ Live site: **https://airaware-ai.netlify.app** (Netlify project `airaware-ai`, o
 
 - **Pages:** Netlify's CDN serves the built client (`client/dist`). `/app` and `/privacy` are rewritten to `index.html`.
 - **API:** `/api/*` is rewritten to one Netlify Function, `netlify/functions/api.ts`, which re-exports `server/src/netlify.ts`. It is the same Express app (`createApp`) as the local server, wrapped by `serverless-http`.
-- **Security headers:** the API gets them from helmet. The pages get the same headers from `client/public/_headers`, and `server/src/pageHeaders.test.ts` fails if the two ever differ. On pages, Netlify's own HSTS header (which adds `preload`) replaces ours.
+- **Security headers:** the API gets them from helmet. The pages get the same headers from `client/public/_headers`, and `server/src/pageHeaders.test.ts` fails if the two ever differ. On pages, Netlify's own HSTS header (which adds `preload`) replaces ours. Changing the Supabase project also means editing the `connect-src` origin in `client/public/_headers`.
 - **Rate limits** key on `x-nf-client-connection-ip`, which Netlify sets. A forged value is overwritten (checked live, 2026-11-19).
 - **Data:** Supabase (Mumbai) for anonymous sign-in and saved data; Open-Meteo for the forecast.
 - **AI plan writers:** Gemini first. Claude is the backup, asked only when Gemini gives no accepted answer, and only once its key is added. Each answer passes the same checks; otherwise the plan is rules-only.

@@ -70,25 +70,30 @@ In production the client calls the API on the same origin (`/api/v1`), so no API
 
 ## 6. Backend variables
 
-`server/.env.example` currently holds `NODE_ENV`, `PORT`, `GEMINI_API_KEY` and a commented `GEMINI_MODEL`. The full set expected by the end of the project is below; each variable is added in the phase that first needs it (`docs/IMPLEMENTATION_PLAN.md` §8):
+`server/.env.example` holds every variable the server reads (`server/src/config/env.ts`); the two model ids are commented out:
 ```env
 NODE_ENV=development
 PORT=8080
-SUPABASE_URL=
-SUPABASE_PUBLISHABLE_KEY=
 GEMINI_API_KEY=
 GEMINI_MODEL=
-DATA_GOV_IN_API_KEY=
+ANTHROPIC_API_KEY=
+CLAUDE_MODEL=
+GOOGLE_MAPS_API_KEY=
+FIRMS_MAP_KEY=
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
 ```
 
 - `GEMINI_API_KEY` (optional, server-only): a Gemini API key from Google AI Studio. Empty or missing → every daily plan is rules-only, and startup logs "Gemini not configured; plans are rules-only." Never put it in a `VITE_` variable or commit it.
 - `ANTHROPIC_API_KEY` (optional, server-only): an Anthropic API key. Claude (`CLAUDE_MODEL`, default `claude-haiku-5-5`) writes the plan only when Gemini gives no accepted answer, and it reads and answers typed Ask questions. Without this key, typed Ask questions fall back to the keyword topic path (Gemini may word the topic's cards; the question itself is never sent to Gemini), so the Ask page intro, "Claude (Anthropic) reads your question and answers from AirAware's rules and today's forecast.", assumes the key is set. Startup logs "Claude backup: configured (…)" or "Claude backup not configured." The key goes only to `https://api.anthropic.com`, whatever `ANTHROPIC_BASE_URL` says. A Windows user variable with the same name overrides `server/.env` locally, so remove any stale one.
 - `GEMINI_MODEL` (optional): defaults to `gemini-3.8-flash`. Lowercase letters, digits, `.` and `-` only.
 - `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (optional, Phase 6): the project URL (https) and its publishable key (`sb_publishable_…`). Without both, every saved-data route returns `503 SAVE_UNAVAILABLE`, and startup logs "Supabase not configured; saving is off." Startup fails if the key is not a publishable key. The secret (service-role) key is not used.
+- `FIRMS_MAP_KEY` (optional, server-only): NASA FIRMS fire hotspots on Today. Free from firms.modaps.eosdis.nasa.gov/api/map_key (5,000 requests per 10 minutes; each place lookup uses 2, then 30 minutes of cache). Without it the card stays hidden.
+- `GOOGLE_MAPS_API_KEY` (optional, server-only): the city name for "Use my location". Restrict the key to the Geocoding API. Without it the place stays "Near you (approximate)".
 
-Open-Meteo base URLs, the Gemini endpoint and 10-second timeout, the forecast and plan cache TTLs (10 min), the rate limits (60/min per IP; 10/min for daily plans) and the 4 KB daily-plan body limit are code constants in `server/src`, not environment variables. Fixed base URLs keep the outbound-host allowlist out of configuration.
+Open-Meteo base URLs, the Gemini endpoint and 10-second timeout, the forecast and plan cache TTLs (10 min), the rate limits (60/min per IP; 10/min for routes that can call an AI) and a 4 KB JSON body limit are code constants in `server/src`, not environment variables. Fixed base URLs keep the outbound-host allowlist out of configuration.
 
-`DATA_GOV_IN_API_KEY` is only needed for the CPCB follow-up (see `docs/IMPLEMENTATION_PLAN.md` §5.2). Do not enable a scraper or undocumented endpoint. Activate CPCB integration only after verifying supported access, terms and units.
+`DATA_GOV_IN_API_KEY` is not read yet; it is only needed for the CPCB follow-up (see `docs/IMPLEMENTATION_PLAN.md` §5.2). Do not enable a scraper or undocumented endpoint. Activate CPCB integration only after verifying supported access, terms and units.
 
 ## 7. Supabase setup
 
