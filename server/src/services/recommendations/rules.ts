@@ -172,7 +172,7 @@ const RULES: Rule[] = [
         .join(' and ')}.`,
       reason: LIMITS_REASON,
       inputsUsed: ['air.PM2_5', 'air.PM10'],
-      caveat: `Being within the national limit does not mean the air is clean or free of risk. ${FORECAST_CAVEAT}`,
+      caveat: `Being within the national limit does not mean the air is free of risk. ${FORECAST_CAVEAT}`,
     }),
   },
   {

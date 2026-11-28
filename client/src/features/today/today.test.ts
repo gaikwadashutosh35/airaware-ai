@@ -37,7 +37,7 @@ describe('today helpers', () => {
       explanation:
         'Fine and coarse particles are forecast below the national daily limits for the next 24 hours.',
       caveat:
-        'Being within the national limit does not mean the air is clean or free of risk.',
+        'Being within the national limit does not mean the air is free of risk.',
     });
     const both = verdictFrom({
       level: 'elevated',

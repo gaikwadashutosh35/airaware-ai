@@ -165,7 +165,7 @@ describe('buildCandidates', () => {
       'The 24-hour model forecast averages are PM2.5 41.2 μg/m³ (limit 60) and PM10 63.5 μg/m³ (limit 100).',
     );
     expect(notice?.caveat).toMatch(
-      /^Being within the national limit does not mean the air is clean or free of risk\./,
+      /^Being within the national limit does not mean the air is free of risk\./,
     );
   });
 
