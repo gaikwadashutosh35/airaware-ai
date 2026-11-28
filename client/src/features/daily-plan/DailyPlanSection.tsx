@@ -230,8 +230,13 @@ export function DailyPlanSection({
     topItem && Object.keys(context).length === 0
       ? { ...topItem, forYou: null }
       : topItem;
+  // Deleted since it was saved: forget the id, so a later unrelated delete
+  // cannot bring the claim back (same render-time pattern as useAsk).
+  if (built?.savedId != null && built.savedId === deletedPlanId) {
+    setBuilt({ ...built, savedId: null });
+  }
   // Saved, and not deleted since: only then may the page say so.
-  const isSaved = built?.savedId != null && built.savedId !== deletedPlanId;
+  const isSaved = built?.savedId != null;
   const shown = message === SAVED && !isSaved ? '' : message;
 
   return (

@@ -782,6 +782,11 @@ describe('DailyPlanSection', () => {
     update({ deletedPlanId: 'p1' });
     expect(screen.queryByText(SAVED)).toBeNull();
     expect(saveButton()).toBeDefined();
+
+    // A later, unrelated delete must not bring the claim back.
+    update({ deletedPlanId: 'other' });
+    expect(screen.queryByText(SAVED)).toBeNull();
+    expect(saveButton()).toBeDefined();
   });
 
   // Final review #4: one live region that stays, so building and the
