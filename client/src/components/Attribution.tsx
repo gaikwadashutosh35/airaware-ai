@@ -2,13 +2,14 @@
 // wherever their data appears; static, so it shows even if /sources fails.
 // An invisible ::before gives the link a 44 px target while its own box,
 // and so its focus ring, stays the size of the text (R1 L4, J29 2b).
+// nowrap: split after its hyphen, each part's ::before was only 18 px.
 export function Attribution() {
   return (
     <p className="max-w-[70ch]">
       Air-quality forecasts from{' '}
       <a
         href="https://open-meteo.com/"
-        className="relative underline before:absolute before:inset-x-0 before:-inset-y-3.5"
+        className="relative whitespace-nowrap underline before:absolute before:inset-x-0 before:-inset-y-3.5"
       >
         Open-Meteo.com
       </a>{' '}

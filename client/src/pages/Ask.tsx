@@ -294,7 +294,8 @@ export function Ask({
                   link takes the overlap, so each gets less (owner ruling
                   needed for more). relative: the next line's text does not
                   take a link's lower half. The ring hugs the text, clear of
-                  the phone bar and the window's edge. */}
+                  the phone bar and the window's edge. nowrap: the name
+                  never splits after its hyphen into two short targets. */}
               <p
                 data-part="ask-credit"
                 className="text-xs text-text-dark-muted"
@@ -302,7 +303,7 @@ export function Ask({
                 Forecasts:{' '}
                 <a
                   href="https://open-meteo.com/"
-                  className="relative underline before:absolute before:inset-x-0 before:-top-0.75 before:-bottom-4.5 sm:before:-bottom-6.5"
+                  className="relative whitespace-nowrap underline before:absolute before:inset-x-0 before:-top-0.75 before:-bottom-4.5 sm:before:-bottom-6.5"
                 >
                   Open-Meteo.com
                 </a>{' '}

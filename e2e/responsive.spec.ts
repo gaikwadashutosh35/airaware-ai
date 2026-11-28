@@ -85,46 +85,65 @@ for (const path of PATHS) {
 // 2.5.8), so these were never caught at 15-17 px tall. J29 2b: an
 // invisible pseudo-element gives each its tap area, so the link's own box
 // (what the focus ring outlines) stays the size of its text. The tap area is
-// measured by elementFromPoint runs through the text's centre; its edges and
-// its text's own edges must land on the link itself, not a neighbour.
-async function tapsAt(link: Locator, min = 44) {
+// measured by elementFromPoint runs through the centre of each line box the
+// link's text takes (a link split over two lines gets two); its edges and
+// its text's own edges must land on the link itself, not a neighbour. Each
+// part is checked, and recorded as a "tap" annotation.
+async function taps(link: Locator) {
   await link.scrollIntoViewIfNeeded();
-  const r = await link.evaluate((el) => {
-    const box = el.getBoundingClientRect();
+  const parts = await link.evaluate((el) => {
     const own = (x: number, y: number) => {
       const at = document.elementFromPoint(x, y);
       return !!at && (at === el || el.contains(at));
     };
-    const cx = box.left + box.width / 2;
-    const cy = box.top + box.height / 2;
     const run = (step: (d: number) => [number, number]) => {
       let n = 0;
       while (n < 120 && own(...step(n + 1))) n++;
       return n;
     };
     const s = getComputedStyle(el);
-    return {
-      ring: box.height,
-      lineHeight: parseFloat(s.lineHeight) || parseFloat(s.fontSize) * 1.2,
-      tapHeight: 1 + run((d) => [cx, cy - d]) + run((d) => [cx, cy + d]),
-      tapWidth: 1 + run((d) => [cx - d, cy]) + run((d) => [cx + d, cy]),
-      edges:
-        own(cx, cy) &&
-        own(box.left + 1, cy) &&
-        own(box.right - 1, cy) &&
-        own(cx, box.top + 1) &&
-        own(cx, box.bottom - 1),
-    };
+    const lineHeight = parseFloat(s.lineHeight) || parseFloat(s.fontSize) * 1.2;
+    return [...el.getClientRects()].map((box) => {
+      const cx = box.left + box.width / 2;
+      const cy = box.top + box.height / 2;
+      return {
+        ring: box.height,
+        lineHeight,
+        tapHeight: 1 + run((d) => [cx, cy - d]) + run((d) => [cx, cy + d]),
+        tapWidth: 1 + run((d) => [cx - d, cy]) + run((d) => [cx + d, cy]),
+        edges:
+          own(cx, cy) &&
+          own(box.left + 1, cy) &&
+          own(box.right - 1, cy) &&
+          own(cx, box.top + 1) &&
+          own(cx, box.bottom - 1),
+      };
+    });
   });
-  expect(r.ring).toBeLessThanOrEqual(r.lineHeight * 1.5);
-  expect(r.tapHeight).toBeGreaterThanOrEqual(min);
-  expect(r.tapWidth).toBeGreaterThanOrEqual(44);
-  expect(r.edges).toBe(true);
+  const name = await link.textContent();
+  test.info().annotations.push({
+    type: 'tap',
+    description: `${name}: ${parts.map((p) => `${p.tapHeight}x${p.tapWidth}`).join(' + ')}`,
+  });
+  return parts;
 }
 
-test.describe('links in a sentence still take 44 px', () => {
+async function tapsAt(link: Locator, min = 44) {
+  for (const r of await taps(link)) {
+    expect(r.ring).toBeLessThanOrEqual(r.lineHeight * 1.5);
+    expect(r.tapHeight).toBeGreaterThanOrEqual(min);
+    expect(r.tapWidth).toBeGreaterThanOrEqual(44);
+    expect(r.edges).toBe(true);
+  }
+}
+
+test.describe('links in a sentence: their tap areas', () => {
   test.skip(({ isMobile }) => isMobile, 'sizes are set by hand');
+  // The footer credit is also checked on the narrowest phones, where
+  // "Open-Meteo.com" could break after its hyphen.
   for (const [width, height] of [
+    [320, 640],
+    [360, 800],
     [390, 844],
     [1280, 800],
   ] as const) {
@@ -139,7 +158,12 @@ test.describe('links in a sentence still take 44 px', () => {
         );
       });
     }
+  }
 
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 800],
+  ] as const) {
     test(`Ask: Edit ${width}x${height}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await open(page, '/app/ask');
@@ -151,9 +175,17 @@ test.describe('links in a sentence still take 44 px', () => {
 
   // The composer's credit: one line at 1280 has room for 44 px; on a phone
   // it wraps to two lines in 57 px and gets what fits (no taller box, AK-13;
-  // 35 px, J29 1a), the later link winning where the two overlap.
+  // 37 px at 390, J29 1a), the later link winning where the two overlap.
+  // At 320 the question box above and Privacy below leave Open-Meteo.com
+  // less (16 px; Privacy's area takes its text's bottom pixel), so it is
+  // recorded, not held to a floor; each link stays one line box.
   // Either way Send and the question box keep their own bottom edge.
+  const creditTaps = async (link: Locator, width: number) => {
+    if (width === 320) expect(await taps(link)).toHaveLength(1);
+    else await tapsAt(link, width === 1280 ? 44 : 37);
+  };
   for (const [width, height] of [
+    [320, 640],
     [390, 844],
     [1280, 800],
   ] as const) {
@@ -188,12 +220,14 @@ test.describe('links in a sentence still take 44 px', () => {
       });
       expect(lost).toEqual([]);
       const credit = page.locator('[data-part="ask-credit"]');
-      const min = width === 1280 ? 44 : 35;
-      await tapsAt(credit.getByRole('link', { name: 'Open-Meteo.com' }), min);
-      await tapsAt(credit.getByRole('link', { name: 'Privacy' }), min);
+      await creditTaps(
+        credit.getByRole('link', { name: 'Open-Meteo.com' }),
+        width,
+      );
+      await creditTaps(credit.getByRole('link', { name: 'Privacy' }), width);
     });
 
-    // Pinned (one answer in the thread): the padded links' focus ring stays
+    // Pinned (one answer in the thread): the links' focus ring stays
     // whole, above the phone bar and the window's bottom edge.
     test(`Ask: the pinned credit keeps its focus ring whole ${width}x${height}`, async ({
       page,
@@ -237,7 +271,7 @@ test.describe('links in a sentence still take 44 px', () => {
             { message: name },
           )
           .toBeLessThanOrEqual(0);
-        await tapsAt(link, width === 1280 ? 44 : 35);
+        await creditTaps(link, width);
       }
     });
   }
