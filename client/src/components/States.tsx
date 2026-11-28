@@ -1,3 +1,4 @@
+import { Component, type ReactNode } from 'react';
 import type { ApiError } from '../services/api.ts';
 
 const PULSE =
@@ -77,4 +78,38 @@ export function ErrorState({
       </button>
     </div>
   );
+}
+
+// A render error anywhere would unmount the app and leave a blank page.
+// Nothing is logged here: props and state can hold household answers.
+export class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:pt-12">
+        <div
+          role="alert"
+          className="flex flex-col items-start gap-3 rounded-lg border border-rule card-surface p-5 sm:p-6"
+        >
+          <p>Something went wrong. Reload the page.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="min-h-11 rounded-md border border-text-dark px-4"
+          >
+            Reload page
+          </button>
+        </div>
+      </main>
+    );
+  }
 }

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../services/api.ts';
 import { expectNoAxeViolations } from '../test/axe.ts';
-import { ErrorState, Loading } from './States.tsx';
+import { ErrorBoundary, ErrorState, Loading } from './States.tsx';
 
 afterEach(cleanup);
 
@@ -74,5 +74,26 @@ describe('ErrorState', () => {
     expect(screen.queryByRole('heading')).toBeNull();
     expect(screen.getByText('Forecast provider unavailable.')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeDefined();
+  });
+});
+
+describe('ErrorBoundary', () => {
+  it('shows a way back instead of a blank page when a child throws', async () => {
+    // React reports the caught error itself; keep the test output quiet.
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    function Broken(): never {
+      throw new Error('render failed');
+    }
+    const { container } = render(
+      <ErrorBoundary>
+        <Broken />
+      </ErrorBoundary>,
+    );
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Something went wrong. Reload the page.',
+    );
+    expect(screen.getByRole('button', { name: 'Reload page' })).toBeDefined();
+    await expectNoAxeViolations(container);
+    quiet.mockRestore();
   });
 });
