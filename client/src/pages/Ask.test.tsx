@@ -310,7 +310,7 @@ describe('Ask page', () => {
       screen.getByText(ASK_COPY.intro),
       screen.getByText(/^Using:/),
       screen.getByText(ASK_COPY.welcome),
-      button('Can I go for a morning walk today?'),
+      button('What should I consider before a morning walk today?'),
       button('How can I reduce pollution while commuting?'),
       screen.getByText(ASK_COPY.moreTopics),
       input(),
@@ -346,8 +346,8 @@ describe('Ask page', () => {
       .getAllByRole('button')
       .filter((b) => b.textContent?.endsWith('?') && !details.contains(b));
     expect(outside.map((b) => b.textContent)).toEqual([
-      'Can I go for a morning walk today?',
-      'Is it a good idea to open my windows?',
+      'What should I consider before a morning walk today?',
+      'When does it make sense to open my windows?',
       'How can I improve my indoor air?',
       'How can I reduce pollution while commuting?',
     ]);
@@ -691,7 +691,7 @@ describe('Ask page', () => {
     ).toEqual([
       'How can I reduce pollution while commuting?',
       "What should I consider for my children's outdoor activities?",
-      'Is it a good idea to open my windows?',
+      'When does it make sense to open my windows?',
     ]);
 
     typeAndSend(QUESTION);

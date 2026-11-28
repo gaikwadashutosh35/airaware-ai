@@ -25,7 +25,7 @@ const UPDATED = RETRIEVED.toLocaleTimeString([], {
 });
 const SAFETY =
   'General information only, not medical advice. Follow local public-health advisories.';
-const ECHO = 'Can I go for a morning walk today?';
+const ECHO = 'What should I consider before a morning walk today?';
 const place = { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 };
 
 function entry(patch: Partial<Entry>): Entry {

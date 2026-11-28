@@ -24,8 +24,11 @@ export const TOPICS: Array<{ id: AskTopic; label: string }> = [
 ];
 
 export const STARTERS: Array<{ question: string; topic: AskTopic }> = [
-  { question: 'Can I go for a morning walk today?', topic: 'outdoors' },
-  { question: 'Is it a good idea to open my windows?', topic: 'windows' },
+  {
+    question: 'What should I consider before a morning walk today?',
+    topic: 'outdoors',
+  },
+  { question: 'When does it make sense to open my windows?', topic: 'windows' },
   { question: 'How can I improve my indoor air?', topic: 'indoor' },
   // Ask shows the first 4 (owner, 27 Nov: Ask UX spec §7); the 5th waits
   // under "More topics".

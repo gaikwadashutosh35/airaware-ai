@@ -37,8 +37,14 @@ describe('Ask wording', () => {
 
   it('the starters, each with its topic', () => {
     expect(STARTERS).toEqual([
-      { question: 'Can I go for a morning walk today?', topic: 'outdoors' },
-      { question: 'Is it a good idea to open my windows?', topic: 'windows' },
+      {
+        question: 'What should I consider before a morning walk today?',
+        topic: 'outdoors',
+      },
+      {
+        question: 'When does it make sense to open my windows?',
+        topic: 'windows',
+      },
       { question: 'How can I improve my indoor air?', topic: 'indoor' },
       // The first 4 show on Ask (owner, 27 Nov); the 5th waits under More
       // topics.
@@ -158,7 +164,7 @@ describe('suggestionsFor', () => {
     expect(suggestionsFor('outdoors').map((s) => s.question)).toEqual([
       'How can I reduce pollution while commuting?',
       "What should I consider for my children's outdoor activities?",
-      'Is it a good idea to open my windows?',
+      'When does it make sense to open my windows?',
     ]);
     expect(suggestionsFor('habits').map((s) => s.question)).toEqual([
       'How can I reduce pollution while commuting?',

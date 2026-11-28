@@ -151,7 +151,7 @@ describe('api client', () => {
   it('posts a question to Ask, in the body only', async () => {
     const fetchSpy = respondWith({ data: { topic: 'outdoors' } });
     const body = {
-      question: 'Can I go for a morning walk today?',
+      question: 'What should I consider before a morning walk today?',
       place: { label: 'Pune, Maharashtra', latitude: 18.52, longitude: 73.86 },
     };
 

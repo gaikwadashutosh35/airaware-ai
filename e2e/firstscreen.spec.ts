@@ -667,7 +667,9 @@ for (const [width, height] of [
   }) => {
     await ask(page, width, height);
     await page
-      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .getByRole('button', {
+        name: 'What should I consider before a morning walk today?',
+      })
       .click();
     const article = page.locator('article.ask-answer').last();
     await expect(article.getByText('Made by our rules')).toBeVisible();
@@ -718,7 +720,9 @@ const composer = (page: Page) => page.locator('[data-part="ask-composer"]');
 // question (owner ruling J17).
 async function askFirst(page: Page) {
   await page
-    .getByRole('button', { name: 'Can I go for a morning walk today?' })
+    .getByRole('button', {
+      name: 'What should I consider before a morning walk today?',
+    })
     .click();
   await expect(
     page.locator('article.ask-answer').last().getByText('Made by our rules'),
@@ -760,7 +764,9 @@ for (const [width, height] of AC_SIZES) {
   }) => {
     await ask(page, width, height);
     await page
-      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .getByRole('button', {
+        name: 'What should I consider before a morning walk today?',
+      })
       .click();
     const article = page.locator('article.ask-answer').last();
     await expect(article.getByText('Made by our rules')).toBeVisible();
@@ -1069,7 +1075,9 @@ for (const [width, height] of [
       route.fulfill({ json: { data: stale } }),
     );
     await page
-      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .getByRole('button', {
+        name: 'What should I consider before a morning walk today?',
+      })
       .click();
     const banner = page.locator(
       'article.ask-answer [data-part="stale-banner"]',
@@ -1918,7 +1926,9 @@ for (const [width, height] of [
     await ask(page, width, height);
     // The starters' panel (the topic chips sit under "More topics" now).
     const panel = page
-      .getByRole('button', { name: 'Can I go for a morning walk today?' })
+      .getByRole('button', {
+        name: 'What should I consider before a morning walk today?',
+      })
       .locator('xpath=ancestor::div[contains(@class,"rounded-lg")][1]');
     const panelBox = (await panel.boundingBox())!;
     const main = await page.locator('main').evaluate((el) => {

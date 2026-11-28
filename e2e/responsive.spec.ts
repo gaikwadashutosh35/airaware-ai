@@ -238,7 +238,9 @@ test.describe('links in a sentence: their tap areas', () => {
         route.fulfill({ json: { data: rulesAskFixture } }),
       );
       await page
-        .getByRole('button', { name: 'Can I go for a morning walk today?' })
+        .getByRole('button', {
+          name: 'What should I consider before a morning walk today?',
+        })
         .click();
       await expect(
         page.getByRole('button', { name: 'Copy answer' }),

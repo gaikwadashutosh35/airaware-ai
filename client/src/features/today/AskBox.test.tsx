@@ -4,8 +4,8 @@ import { expectNoAxeViolations } from '../../test/axe.ts';
 import { AskBox } from './AskBox.tsx';
 
 const STARTERS = [
-  'Can I go for a morning walk today?',
-  'Is it a good idea to open my windows?',
+  'What should I consider before a morning walk today?',
+  'When does it make sense to open my windows?',
   'How can I improve my indoor air?',
 ];
 
@@ -57,7 +57,7 @@ describe('AskBox', () => {
     try {
       const { container } = render(<AskBox onAsk={vi.fn()} active started />);
       expect(container.querySelector('[aria-hidden="true"]')?.textContent).toBe(
-        'Can I go for a morning walk today?',
+        'What should I consider before a morning walk today?',
       );
       expect(vi.getTimerCount()).toBe(0);
     } finally {

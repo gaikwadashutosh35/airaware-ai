@@ -15,7 +15,7 @@ const pune: Place = {
 };
 const mumbai: Place = { label: 'Mumbai', latitude: 19.08, longitude: 72.88 };
 const context: HouseholdContext = { routine: { outdoorExercise: true } };
-const QUESTION = 'Can I go for a morning walk today?';
+const QUESTION = 'What should I consider before a morning walk today?';
 
 // Each fetch waits until the test answers it.
 let replies: Array<(res: Response) => void>;

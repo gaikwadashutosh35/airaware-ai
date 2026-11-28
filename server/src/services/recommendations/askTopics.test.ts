@@ -7,8 +7,8 @@ describe('classify', () => {
   it('the five starters map to their own topics', () => {
     expect(
       [
-        'Can I go for a morning walk today?',
-        'Is it a good idea to open my windows?',
+        'What should I consider before a morning walk today?',
+        'When does it make sense to open my windows?',
         'How can I improve my indoor air?',
         "What should I consider for my children's outdoor activities?",
         'How can I reduce pollution while commuting?',

@@ -3,8 +3,8 @@ import { CyclingHint } from '../ask/CyclingHint.tsx';
 import { navigate } from '../../lib/navigation.ts';
 
 const STARTERS = [
-  'Can I go for a morning walk today?',
-  'Is it a good idea to open my windows?',
+  'What should I consider before a morning walk today?',
+  'When does it make sense to open my windows?',
   'How can I improve my indoor air?',
 ];
 

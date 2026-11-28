@@ -78,7 +78,7 @@ describe('POST /api/v1/assistant/answer', () => {
   it('answers a question, without the question', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const res = await ask(aiApp(), {
-      question: 'Can I go for a morning walk today?',
+      question: 'What should I consider before a morning walk today?',
       place,
       householdContext,
     });

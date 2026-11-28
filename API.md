@@ -300,7 +300,7 @@ Public, rate-limited endpoint behind Ask AirAware (Phase 7). Answers one questio
 Request (illustrative), with exactly one of `question` or `topic`:
 ```json
 {
-  "question": "Can I go for a morning walk today?",
+  "question": "What should I consider before a morning walk today?",
   "history": [{ "question": "Is it okay to run the fan today?", "cardIds": ["guide.fans-and-ac"] }],
   "place": { "label": "Pune, Maharashtra", "latitude": 18.52, "longitude": 73.86 },
   "householdContext": { "routine": { "outdoorExercise": true } }
