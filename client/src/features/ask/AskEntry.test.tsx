@@ -513,17 +513,33 @@ describe('AskEntry answer UX', () => {
     expect(text).toContain(SAFETY);
     expect(await screen.findByText(ASK_COPY.copied)).toBeTruthy();
     expect(button(ASK_COPY.copy).className).toContain('min-h-11');
+    // "Copied" takes the tooltip's place, so nothing covers it.
+    expect(document.querySelector('[data-part="copy-tip"]')).toBeNull();
   });
 
   // Owner (27 Nov): an icon, not the words; its name stays for screen
-  // readers and as a tooltip, and a 44 px target.
-  it('Copy is an icon button with its name and a tooltip', () => {
-    show(ready(aiAskFixture));
+  // readers and as a tooltip, and a 44 px target. R1 A4: the tooltip shows
+  // on hover and on keyboard focus (a title shows on hover only).
+  it('Copy is an icon button with its name and a tooltip', async () => {
+    const { container } = show(ready(aiAskFixture));
     const copy = button(ASK_COPY.copy);
     expect(copy.textContent).toBe('');
-    expect(copy.getAttribute('title')).toBe(ASK_COPY.copy);
+    expect(copy.getAttribute('title')).toBeNull();
     expect(copy.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
     expect(copy.className).toContain('min-w-11');
+    const tip = copy.parentElement!.querySelector('[data-part="copy-tip"]')!;
+    // The name already says it: the tooltip is not read a second time.
+    expect(tip.textContent).toBe(ASK_COPY.copy);
+    expect(tip.getAttribute('aria-hidden')).toBe('true');
+    expect(copy.classList.contains('peer')).toBe(true);
+    for (const shown of [
+      'hidden',
+      'group-hover:block',
+      'peer-focus-visible:block',
+    ]) {
+      expect(tip.classList.contains(shown)).toBe(true);
+    }
+    await expectNoAxeViolations(container);
   });
 
   it('says when copying fails', async () => {

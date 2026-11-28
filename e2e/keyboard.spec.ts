@@ -138,6 +138,48 @@ test('Ask by keyboard: a question back, then Skip', async ({ page }) => {
   ).toBeFocused();
 });
 
+// R1 A4: the Copy tooltip shows on keyboard focus, and on hover where the
+// pointer can hover, beside the button and clear of its focus ring.
+test('the Copy tooltip shows on keyboard focus and hover', async ({
+  page,
+  isMobile,
+}) => {
+  await load(page, '/app/ask');
+  await page.route('**/api/v1/assistant/answer', (route) =>
+    route.fulfill({ json: { data: rulesAskFixture } }),
+  );
+  await (await topicChip(page, 'Indoor air')).focus();
+  await page.keyboard.press('Enter');
+  const copy = page.getByRole('button', { name: 'Copy answer' });
+  const tip = page.locator('[data-part="copy-tip"]');
+  await expect(copy).toBeVisible();
+  await expect(tip).toBeHidden();
+
+  for (let i = 0; i < 60; i++) {
+    await page.keyboard.press('Tab');
+    if (await copy.evaluate((el) => el === document.activeElement)) break;
+  }
+  await expect(copy).toBeFocused();
+  await expect(tip).toBeVisible();
+  const ringRight = await copy.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return (
+      el.getBoundingClientRect().right +
+      parseFloat(s.outlineOffset) +
+      parseFloat(s.outlineWidth)
+    );
+  });
+  const bubble = (await tip.locator('span').boundingBox())!;
+  expect(bubble.x).toBeGreaterThanOrEqual(ringRight);
+
+  await page.keyboard.press('Shift+Tab');
+  await expect(tip).toBeHidden();
+  if (!isMobile) {
+    await copy.hover();
+    await expect(tip).toBeVisible();
+  }
+});
+
 test('the place dialog by keyboard: search, choose, Escape', async ({
   page,
 }) => {

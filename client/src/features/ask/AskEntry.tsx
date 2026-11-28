@@ -113,25 +113,40 @@ function answerText(answer: AskAnswer, shown: string[]): string {
 // A real Copy control, an icon (owner, 27 Nov) named "Copy answer" for
 // screen readers and as a tooltip; its result is said in a live region, and
 // the icon turns to a tick once copied.
+// The tooltip (R1 A4) is CSS only: shown on hover and on keyboard focus, in
+// the empty space right of the button, 8 px clear of the focus ring, so it
+// covers nothing; the result replaces it. aria-hidden: the name says it.
 function CopyAnswer({ text }: { text: string }) {
   const [result, setResult] = useState('');
   const Icon = result === ASK_COPY.copied ? Check : Copy;
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        aria-label={ASK_COPY.copy}
-        title={ASK_COPY.copy}
-        onClick={() => {
-          navigator.clipboard
-            .writeText(text)
-            .then(() => setResult(ASK_COPY.copied))
-            .catch(() => setResult(ASK_COPY.copyFailed));
-        }}
-        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-text-dark-muted hover:bg-text-dark/5 hover:text-text-dark"
-      >
-        <Icon aria-hidden="true" className="size-5" />
-      </button>
+      <div className="group relative">
+        <button
+          type="button"
+          aria-label={ASK_COPY.copy}
+          onClick={() => {
+            navigator.clipboard
+              .writeText(text)
+              .then(() => setResult(ASK_COPY.copied))
+              .catch(() => setResult(ASK_COPY.copyFailed));
+          }}
+          className="peer inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-text-dark-muted hover:bg-text-dark/5 hover:text-text-dark"
+        >
+          <Icon aria-hidden="true" className="size-5" />
+        </button>
+        {!result && (
+          <span
+            aria-hidden="true"
+            data-part="copy-tip"
+            className="absolute top-1/2 left-full hidden -translate-y-1/2 pl-2 group-hover:block peer-focus-visible:block"
+          >
+            <span className="block rounded-md bg-text-dark px-2 py-1 text-sm whitespace-nowrap text-surface-light">
+              {ASK_COPY.copy}
+            </span>
+          </span>
+        )}
+      </div>
       <output className={MUTED}>{result}</output>
     </div>
   );
