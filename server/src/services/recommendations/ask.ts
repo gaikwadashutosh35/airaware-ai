@@ -36,7 +36,7 @@ export const askRequestSchema = z.union([
       .array(
         z.strictObject({
           question: z.string().trim().min(1).max(200),
-          cardIds: z.array(z.string().max(80)).max(3),
+          cardIds: z.array(z.string().min(1).max(60)).max(3),
         }),
       )
       .max(2)
@@ -278,6 +278,35 @@ export function createAsker(deps: {
     const candidates = buildCandidates(householdContext, air);
     const notices = candidates.filter((c) => c.section === 'notice');
 
+    // One place builds the plan and the answer, for rules and Claude alike.
+    const assemble = (
+      t: AskTopic | 'medical' | 'out_of_scope',
+      cards: RecommendationCandidate[],
+      ai: Parameters<typeof buildPlan>[0]['ai'],
+      followUps: FollowUp[],
+    ): AskAnswer => {
+      // Our card order; the AI's featured order and "for you" lines are not used.
+      const plan = buildPlan({
+        label: place.label,
+        air,
+        forecast: series,
+        candidates: [...notices, ...cards],
+        ai,
+      });
+      return {
+        topic: t,
+        cards,
+        summary: plan.summary,
+        generatedBy: plan.generatedBy,
+        air,
+        forecast: plan.forecast,
+        notices,
+        sources: plan.sources,
+        safetyNote: plan.safetyNote,
+        followUps,
+      };
+    };
+
     // The rules answer for a topic; also the fallback and the out-of-scope one.
     const rulesAnswer = async (
       t: AskTopic | 'medical' | 'out_of_scope',
@@ -296,29 +325,16 @@ export function createAsker(deps: {
         console.error('Ask summary failed: verdict');
         ai = null;
       }
-      // Our card order; the AI's featured order and "for you" lines are not used.
-      const plan = buildPlan({
-        label: place.label,
-        air,
-        forecast: series,
-        candidates: [...notices, ...cards],
-        ai: ai && { ...ai, promptVersion: PROMPT_VERSION },
-      });
-      return {
-        topic: t,
+      return assemble(
+        t,
         cards,
-        summary: plan.summary,
-        generatedBy: plan.generatedBy,
-        air,
-        forecast: plan.forecast,
-        notices,
-        sources: plan.sources,
-        safetyNote: plan.safetyNote,
-        followUps: answered ? followUpsFor(t, householdContext, air) : [],
-      };
+        ai && { ...ai, promptVersion: PROMPT_VERSION },
+        answered ? followUpsFor(t, householdContext, air) : [],
+      );
     };
 
-    if (!question || !deps.askWriter) return rulesAnswer(topic, true);
+    if (!question || !deps.askWriter || topic === 'medical')
+      return rulesAnswer(topic, true);
 
     const eligible = eligibleCards(candidates, householdContext);
     const title = (id: string) =>
@@ -348,30 +364,15 @@ export function createAsker(deps: {
 
     const byId = new Map(eligible.map((c) => [c.id, c]));
     const cards = output.cardIds.map((id) => byId.get(id)!);
-    const plan = buildPlan({
-      label: place.label,
-      air,
-      forecast: series,
-      candidates: [...notices, ...cards],
-      ai: {
+    return assemble(
+      output.topic,
+      cards,
+      {
         output: { summary: output.answer, featured: [] },
         model,
         promptVersion: ASK_PROMPT_VERSION,
       },
-    });
-    return {
-      topic: output.topic,
-      cards,
-      summary: plan.summary,
-      generatedBy: plan.generatedBy,
-      air,
-      forecast: plan.forecast,
-      notices,
-      sources: plan.sources,
-      safetyNote: plan.safetyNote,
-      followUps: cards.length
-        ? followUpsFor(output.topic, householdContext, air)
-        : [],
-    };
+      cards.length ? followUpsFor(output.topic, householdContext, air) : [],
+    );
   };
 }

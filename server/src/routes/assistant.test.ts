@@ -292,7 +292,7 @@ describe('POST /api/v1/assistant/answer', () => {
       generatedBy: 'rules',
       summary: null,
     });
-    expect(errorSpy).toHaveBeenCalledWith('Claude ask failed: numbers');
+    expect(errorSpy.mock.calls).toEqual([['Claude ask failed: numbers']]);
   });
 
   it.each([
@@ -302,6 +302,26 @@ describe('POST /api/v1/assistant/answer', () => {
         question: 'q',
         place,
         history: [1, 2, 3].map(() => ({ question: 'a', cardIds: [] })),
+      },
+    ],
+    [
+      'a 61-character card id',
+      {
+        question: 'q',
+        place,
+        history: [{ question: 'a', cardIds: ['x'.repeat(61)] }],
+      },
+    ],
+    [
+      'an empty card id',
+      { question: 'q', place, history: [{ question: 'a', cardIds: [''] }] },
+    ],
+    [
+      'four card ids',
+      {
+        question: 'q',
+        place,
+        history: [{ question: 'a', cardIds: ['a', 'b', 'c', 'd'] }],
       },
     ],
     [

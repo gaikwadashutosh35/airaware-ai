@@ -10,7 +10,8 @@ import { classify } from '../services/recommendations/askTopics.ts';
 // and nothing else: never logged, stored, echoed or sent to Gemini.
 export function assistantRouter(deps: {
   ask: Asker;
-  // The daily plan's limiter: Ask can call Gemini too.
+  // The daily plan's limiter: Ask can call Gemini (topics) or Claude (typed
+  // questions).
   planLimit: RequestHandler;
 }): Router {
   const router = Router();

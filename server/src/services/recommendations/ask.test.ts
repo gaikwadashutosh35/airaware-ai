@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   AirAssessment,
   AskTopic,
@@ -507,6 +507,7 @@ describe('createAsker', () => {
 
 describe('typed questions go to the Ask writer', () => {
   const askWriter = vi.fn<AskWriter>();
+  beforeEach(() => askWriter.mockReset());
   const answer = (o: Partial<AskOutput>) => ({
     output: {
       scope: 'answered' as const,
@@ -558,7 +559,9 @@ describe('typed questions go to the Ask writer', () => {
     const cited = new Set(
       [...res.notices, ...res.cards].flatMap((c) => c.sourceIds),
     );
-    expect(res.sources.every((s) => cited.has(s.id))).toBe(true);
+    expect(res.sources.map((s) => s.id)).toEqual(
+      Object.keys(SOURCE_REFERENCES).filter((id) => cited.has(id as never)),
+    );
   });
 
   it('an AI answer with no cards asks nothing back', async () => {
@@ -638,5 +641,35 @@ describe('typed questions go to the Ask writer', () => {
         rankCards(topic, candidates, FULL).slice(0, 3),
       );
     }
+  });
+
+  it('a medical topic never reaches the Ask writer', async () => {
+    const res = await createAsker({ forecast, write: null, askWriter })(
+      'medical',
+      { place },
+      NOW,
+      q,
+    );
+    expect(askWriter).not.toHaveBeenCalled();
+    expect(res).toMatchObject({ topic: 'medical', cards: [], summary: null });
+  });
+
+  it('a failed Ask writer on an out-of-scope question stays out of scope', async () => {
+    const write = vi.fn<PlanWriter>();
+    askWriter.mockResolvedValue(null);
+    const res = await createAsker({ forecast, write, askWriter })(
+      'out_of_scope',
+      { place },
+      NOW,
+      q,
+    );
+    expect(write).not.toHaveBeenCalled();
+    expect(res).toMatchObject({
+      topic: 'out_of_scope',
+      cards: [],
+      summary: null,
+      generatedBy: 'rules',
+      followUps: [],
+    });
   });
 });
