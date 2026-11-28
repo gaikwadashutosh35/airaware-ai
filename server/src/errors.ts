@@ -60,6 +60,13 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     res.status(status).json({ error: { code, message } });
     return;
   }
+  // The router's bad %-escape in a path param; its message echoes the path.
+  if (err instanceof URIError) {
+    res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid request path.' },
+    });
+    return;
+  }
   console.error(err);
   res.status(500).json({
     error: { code: 'INTERNAL_ERROR', message: 'Unexpected server error.' },

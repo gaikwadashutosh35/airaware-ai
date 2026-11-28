@@ -48,6 +48,16 @@ describe('unknown routes', () => {
       error: { code: 'NOT_FOUND', message: 'Route not found.' },
     });
   });
+
+  it('return 400 for a malformed percent-encoded path, without echoing it', async () => {
+    const res = await request(createApp({ saved: createFakeStore() })).get(
+      '/api/v1/plans/%E0%A4',
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(JSON.stringify(res.body)).not.toContain('%E0%A4');
+  });
 });
 
 const clientDir = fileURLToPath(
