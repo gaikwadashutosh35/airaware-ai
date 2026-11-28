@@ -38,6 +38,9 @@ async function token(): Promise<string> {
 
 const buttonClass =
   'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
+// M2: the destructive choice in the danger ink, unlike Cancel beside it.
+const dangerClass =
+  'min-h-11 rounded-md border border-danger-ink px-4 text-danger-ink disabled:opacity-60';
 
 // This browser's saved plans. Listing needs an existing session and never
 // creates an account: with none, the section says there are none.
@@ -212,7 +215,7 @@ export function SavedPlansList({
                         type="button"
                         disabled={busy}
                         onClick={() => void remove(plan.id)}
-                        className={buttonClass}
+                        className={dangerClass}
                       >
                         Delete plan
                       </button>

@@ -231,6 +231,9 @@ export function HouseholdPreferencesForm({
   const disabled = !savingAvailable || busy || loadFailed;
   const buttonClass =
     'min-h-11 rounded-md border border-text-dark px-4 disabled:opacity-60';
+  // M2: the destructive choice in the danger ink, unlike Cancel beside it.
+  const dangerClass =
+    'min-h-11 rounded-md border border-danger-ink px-4 text-danger-ink disabled:opacity-60';
   const panel =
     'flex flex-col gap-4 rounded-lg border border-rule card-surface p-5 sm:p-6';
 
@@ -334,7 +337,7 @@ export function HouseholdPreferencesForm({
                     type="button"
                     disabled={busy}
                     onClick={() => void deleteEverything()}
-                    className={buttonClass}
+                    className={dangerClass}
                   >
                     Delete everything
                   </button>

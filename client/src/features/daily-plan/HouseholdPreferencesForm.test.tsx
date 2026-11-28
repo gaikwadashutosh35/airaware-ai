@@ -355,6 +355,22 @@ describe('HouseholdPreferencesForm', () => {
     expect(saveButton()).toHaveProperty('disabled', false);
   });
 
+  // M2 (J30 D4): the destructive choice is in the danger ink, so it looks
+  // different from Cancel beside it.
+  it('"Delete everything" uses the danger ink; Cancel does not', async () => {
+    session.currentToken.mockResolvedValue('tok');
+    routeFetch(() => ok(null));
+    const { container } = render(<HouseholdPreferencesForm />);
+    fireEvent.click(await deleteButton());
+    const danger = screen.getByRole('button', { name: 'Delete everything' });
+    const cancel = screen.getByRole('button', { name: 'Cancel' });
+    expect(danger.className).toContain('text-danger-ink');
+    expect(danger.className).toContain('border-danger-ink');
+    expect(danger.className).not.toContain('border-text-dark');
+    expect(cancel.className).not.toContain('danger');
+    await expectNoAxeViolations(container);
+  });
+
   // Review Focus 1.
   it('a failed save keeps the answers and never says saved', async () => {
     routeFetch(() =>
