@@ -49,7 +49,7 @@ export function AskBox({
           setQuestion('');
           navigate('/app/ask');
           // The box hides with Today: focus the page it opened.
-          document.getElementById('main')?.focus();
+          document.getElementById('main')?.focus({ preventScroll: true });
         }}
         className="flex flex-col gap-1"
       >
@@ -93,7 +93,7 @@ export function AskBox({
               type="button"
               onClick={() => {
                 setQuestion(starter);
-                inputRef.current?.focus();
+                inputRef.current?.focus({ preventScroll: true });
               }}
               className="min-h-11 rounded-full border border-text-dark-muted px-4 text-left text-sm"
             >

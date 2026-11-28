@@ -48,7 +48,8 @@ describe('HelpChoices', () => {
   });
 
   // The choice hides with Today: focus goes to the page, not to nowhere.
-  it('moves focus to the page it opens', () => {
+  it('moves focus to the page it opens, without scrolling', () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
     render(
       <main id="main" tabIndex={-1}>
         <HelpChoices onAsk={vi.fn()} />
@@ -58,6 +59,9 @@ describe('HelpChoices', () => {
     fireEvent.click(choice('My home'));
 
     expect(document.activeElement?.id).toBe('main');
+    // A plain focus() scrolls the page under the nav (SR-1).
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    focus.mockRestore();
   });
 
   it('lets a modified click open a new tab', () => {

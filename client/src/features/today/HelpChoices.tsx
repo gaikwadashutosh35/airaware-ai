@@ -23,7 +23,7 @@ export function HelpChoices({ onAsk }: { onAsk: (topic: Topic) => void }) {
                 if (!follow(event, to)) return;
                 if (topic) onAsk(topic);
                 // The choice hides with Today: focus the page it opened.
-                document.getElementById('main')?.focus();
+                document.getElementById('main')?.focus({ preventScroll: true });
               }}
               className="press flex h-full min-h-11 items-start gap-3 rounded-lg border border-text-dark-muted p-4 hover:border-text-dark"
             >

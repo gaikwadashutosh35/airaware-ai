@@ -109,7 +109,8 @@ describe('AskBox', () => {
     expect(input().value).toBe('');
   });
 
-  it('moves focus to the page it opens', () => {
+  it('moves focus to the page it opens, without scrolling', () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
     render(
       <main id="main" tabIndex={-1}>
         <AskBox onAsk={vi.fn()} active started={false} />
@@ -120,6 +121,9 @@ describe('AskBox', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
 
     expect(document.activeElement?.id).toBe('main');
+    // A plain focus() scrolls the page under the nav (SR-1).
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    focus.mockRestore();
   });
 
   // The browser asks for a question instead of doing nothing.
@@ -142,14 +146,17 @@ describe('AskBox', () => {
 
   it('starter questions fill the ask box', () => {
     const onAsk = vi.fn();
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
     render(<AskBox onAsk={onAsk} active started={false} />);
 
     for (const question of STARTERS) {
       fireEvent.click(screen.getByRole('button', { name: question }));
       expect(input().value).toBe(question);
       expect(document.activeElement).toBe(input());
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
     }
     expect(onAsk).not.toHaveBeenCalled();
+    focus.mockRestore();
   });
 
   it('starter buttons use the control border', () => {
