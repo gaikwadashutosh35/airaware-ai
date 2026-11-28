@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AirAware Direction B</title>
+<meta name="description" content="Design prototype, Direction B: Atmospheric environmental intelligence. Sample data only. Not the live app.">
+<style>
+/* ===== Tokens. OBSERVED: the 16 colours are client/src/index.css:28-43, unchanged.
+   RECOMMENDED (new, need owner OK): spacing, radius, type and band tokens below. ===== */
+:root{
+  --bg:#080f1c; --surface:#101c2b; --elevated:#172638; --surface-light:#f5f8fa;
+  --primary:#39d5c2; --secondary:#64a9ff; --text:#f4f7fa; --text-dark:#182435;
+  --warning:#f5b84b; --danger:#f06b72; --success:#3baa82; --text-muted:#a9b7c8;
+  --text-dark-muted:#4a5a6e; --rule:#d3dce6; --rule-dark:#22344a; --focus:#1f6fd6;
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --r-panel:8px; --r-control:6px;
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --gutter:16px;
+  --band-h: min(16rem, 32vh);       /* H5, phones */
+  --band-compact: 8.5rem;           /* RECOMMENDED: shorter band on pages other than Today */
+  --header-h: 64px;
+}
+@media (min-width:40rem){ :root{ --band-h:min(24rem,40vh); --band-compact:11rem; --gutter:24px; } }
+@media (min-width:64rem){ :root{ --gutter:32px; } }
+
+/* Registered so the sky and the city can fade between looks (700 ms, as shipped). */
+@property --sky-top { syntax:'<color>'; inherits:true; initial-value:#f5f8fa; }
+@property --sky-bottom { syntax:'<color>'; inherits:true; initial-value:#f5f8fa; }
+@property --city-hue { syntax:'<color>'; inherits:true; initial-value:#a9b7c8; }
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ overflow-x:clip; margin:0; }
+body{
+  background:var(--surface-light); color:var(--text-dark); font-family:var(--font);
+  font-synthesis:none; line-height:1.55; font-size:16px; overflow-wrap:break-word;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3,h4{ text-wrap:balance; margin:0; min-width:0; }
+p,li,dd{ text-wrap:pretty; }
+p{ margin:0; }
+a{ color:inherit; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+a,button,summary,input,select,textarea,label{ touch-action:manipulation; }
+button{ user-select:none; }
+button:not(:disabled){ cursor:pointer; }
+:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+.on-dark :focus-visible{ outline-color:var(--secondary); }
+.on-dark .on-light :focus-visible{ outline-color:var(--focus); }
+[tabindex="-1"]:focus{ outline:none; }
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+#skip:focus{ position:fixed; top:8px; left:8px; width:auto; height:auto; clip-path:none; z-index:10; padding:12px 16px; border-radius:6px; background:var(--surface-light); color:var(--text-dark); }
+.num{ font-variant-numeric:tabular-nums; }
+svg.i{ width:20px; height:20px; flex:none; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ===== Prototype switcher: not part of the design ===== */
+.proto{ background:#000; color:#fff; border-bottom:2px dashed var(--warning); position:relative; z-index:5; }
+.proto-inner{ display:flex; align-items:center; gap:var(--s3); padding:6px var(--gutter); max-width:90rem; margin:0 auto; flex-wrap:wrap; }
+.proto-label{ font-size:12px; line-height:16px; color:#d7dee7; }
+.proto-label b{ color:var(--warning); font-weight:600; }
+.proto nav{ flex:1 1 100%; min-width:0; }
+.proto ul{ list-style:none; margin:0; padding:0 0 2px; display:flex; gap:4px; overflow-x:auto; scrollbar-width:thin; }
+.proto a{ display:inline-flex; align-items:center; min-height:44px; padding:0 12px; border-radius:var(--r-control); font-size:13px; text-decoration:none; white-space:nowrap; color:#d7dee7; font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; }
+.proto a[aria-current="page"]{ background:var(--warning); color:#000; }
+.proto :focus-visible{ outline-color:var(--warning); }
+@media (min-width:64rem){ .proto nav{ flex:1 1 auto; } .proto-inner{ flex-wrap:nowrap; } }
+
+/* ===== Sample tag ===== */
+.sample{ display:inline-flex; align-items:center; gap:6px; font-size:12px; line-height:16px; font-weight:600; letter-spacing:.02em; padding:2px 8px; border-radius:999px; border:1px dashed currentColor; color:var(--text-dark-muted); white-space:nowrap; }
+.on-dark .sample{ color:var(--text-muted); }
+.on-dark .on-light .sample{ color:var(--text-dark-muted); }
+.proposal{ display:inline-block; font-size:12px; line-height:16px; font-weight:600; padding:1px 6px; border-radius:4px; background:color-mix(in oklab, var(--secondary) 18%, var(--surface-light)); color:var(--text-dark); }
+
+/* ===== Stage: sky + city. Formulas copied from CitySkyline.tsx:27-85 ===== */
+.stage{
+  position:relative; isolation:isolate; color:var(--text-dark);
+  padding:0 var(--gutter) calc(var(--band-h) + var(--s4));
+  --sky-top: color-mix(in oklab, color-mix(in oklab, var(--secondary) 55%, var(--primary)) 68%, var(--surface-light));
+  --sky-bottom: color-mix(in oklab, var(--primary) 24%, var(--surface-light));
+  --city-hue: color-mix(in oklab, var(--secondary) 70%, var(--primary));
+  --glow:.6; --veil-far:.05; --veil-mid:0;
+  transition: --sky-top .7s var(--ease-out), --sky-bottom .7s var(--ease-out), --city-hue .7s var(--ease-out);
+}
+body[data-air="above"] [data-screen-panel="today"] .stage{
+  --sky-top: color-mix(in oklab, color-mix(in oklab, var(--secondary) 24%, var(--rule)) 93%, var(--warning));
+  --sky-bottom: color-mix(in oklab, var(--warning) 16%, color-mix(in oklab, var(--rule) 55%, var(--surface-light)));
+  --city-hue: color-mix(in oklab, var(--secondary) 10%, color-mix(in oklab, var(--rule) 80%, var(--warning)));
+  --glow:.22; --veil-far:.42; --veil-mid:.2;
+}
+body[data-air="unknown"] [data-screen-panel="today"] .stage{
+  --sky-top: color-mix(in oklab, var(--secondary) 12%, var(--rule));
+  --sky-bottom: color-mix(in oklab, var(--rule) 60%, var(--surface-light));
+  --city-hue: color-mix(in oklab, var(--secondary) 30%, var(--rule));
+  --glow:0; --veil-far:0; --veil-mid:0;
+}
+.stage--compact{ --band-h: var(--band-compact); }
+.scene{ position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none; background:linear-gradient(var(--sky-top), var(--sky-bottom)); }
+.scene .upper{ position:absolute; left:0; top:0; width:100%; height:10rem; }
+@media (min-width:40rem){ .scene .upper{ height:14rem; } }
+.scene .glow{ opacity:var(--glow); transition:opacity .7s var(--ease-out); }
+.scene .clouds{ animation:cloud-drift 4.8s var(--ease-out) 1 both; }
+@keyframes cloud-drift{ from{ transform:translateX(-16px); } to{ transform:none; } }
+.city{ position:absolute; bottom:0; left:0; width:100%; height:var(--band-h); }
+@media (min-width:48rem){ .city{ width:174%; left:50%; transform:translateX(-50%); } }
+.city > svg, .city > .veil{ position:absolute; inset:0; width:100%; height:100%; }
+.veil{ -webkit-mask-image:linear-gradient(transparent, #000 60%); mask-image:linear-gradient(transparent, #000 60%); transition:opacity .7s var(--ease-out); }
+.veil-far{ background:var(--rule); opacity:var(--veil-far); }
+body[data-air="above"] [data-screen-panel="today"] .veil-far{ background:color-mix(in oklab, var(--rule) 88%, var(--secondary)); }
+.veil-mid{ background:color-mix(in oklab, var(--rule) 88%, var(--secondary)); opacity:var(--veil-mid); }
+.c-far{ fill:color-mix(in oklab, var(--text-dark-muted) 10%, var(--city-hue)); opacity:.36; }
+.c-mid{ fill:color-mix(in oklab, var(--text-dark-muted) 14%, var(--city-hue)); opacity:.4; }
+.c-middetail{ fill:var(--surface-light); opacity:.2; }
+.c-near{ fill:color-mix(in oklab, var(--text-dark-muted) 35%, var(--city-hue)); opacity:.9; }
+.c-windows{ fill:var(--surface-light); opacity:.3; }
+@media (max-width:39.99rem){ .c-windows{ display:none; } }
+.ground-line{ position:absolute; left:0; right:0; bottom:0; height:1px; background:color-mix(in oklab, var(--text-dark-muted) 35%, var(--city-hue)); }
+
+/* Night stage (Landing): same geometry, navy tokens, faint lit windows. */
+.stage--night{ color:var(--text); --sky-top:var(--bg); --sky-bottom: color-mix(in oklab, var(--primary) 10%, var(--elevated)); }
+.stage--night .glow, .stage--night .clouds{ display:none; }
+.stage--night .c-far{ fill:color-mix(in oklab, var(--rule-dark) 70%, var(--secondary)); opacity:.55; }
+.stage--night .c-mid{ fill:var(--rule-dark); opacity:.95; }
+.stage--night .c-middetail{ fill:var(--secondary); opacity:.12; }
+.stage--night .c-near{ fill:var(--surface); opacity:1; }
+.stage--night .c-windows{ fill:var(--primary); opacity:.22; }
+.stage--night .veil{ display:none; }
+.stage--night .ground-line{ background:var(--rule-dark); }
+
+/* ===== Selective translucency: only the nav and the reading lens (85 % floor, index.css:77-86) ===== */
+.frost{ background:color-mix(in oklab, var(--surface-light) 85%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+@media (prefers-reduced-transparency: reduce){ .frost{ background:var(--surface-light); -webkit-backdrop-filter:none; backdrop-filter:none; } }
+
+/* ===== App header (on the sky) ===== */
+.wrap{ max-width:72rem; margin:0 auto; }
+.app-header{ display:flex; align-items:center; gap:var(--s3); min-height:var(--header-h); padding:var(--s2) 0; }
+.wordmark{ font-weight:600; font-size:18px; letter-spacing:-.01em; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; min-height:44px; }
+.place{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 14px 0 10px; border-radius:999px; border:1px solid color-mix(in oklab, var(--text-dark) 22%, transparent); font-size:14px; font-weight:500; min-width:0; }
+.place span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-nav{ margin-left:auto; display:none; }
+.app-nav ul, .tabbar ul{ list-style:none; margin:0; padding:0; display:flex; }
+.app-nav ul{ gap:2px; padding:4px; border-radius:999px; border:1px solid color-mix(in oklab, var(--text-dark) 12%, transparent); }
+.app-nav a{ display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 14px; border-radius:999px; font-size:14px; font-weight:500; text-decoration:none; color:var(--text-dark); white-space:nowrap; }
+.app-nav a[aria-current="page"]{ background:var(--text-dark); color:var(--text); }
+.app-nav a[aria-current="page"]:focus-visible{ outline-color:var(--focus); }
+@media (min-width:64rem){ .app-nav{ display:block; } }
+.tabbar{ position:sticky; bottom:0; z-index:4; border-top:1px solid var(--rule); padding-bottom:env(safe-area-inset-bottom,0px); }
+.tabbar ul{ justify-content:space-around; }
+.tabbar a{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:56px; min-width:44px; padding:4px 6px; font-size:11px; line-height:14px; font-weight:500; text-decoration:none; color:var(--text-dark-muted); text-align:center; }
+.tabbar a[aria-current="page"]{ color:var(--text-dark); font-weight:600; }
+.tabbar a[aria-current="page"] svg{ stroke-width:2.25; }
+@media (min-width:64rem){ .tabbar{ display:none; } }
+body[data-screen="landing"] .tabbar{ display:none; }
+
+/* ===== Type scale (Tailwind steps only, H3) ===== */
+.eyebrow{ font-size:14px; line-height:20px; font-weight:500; color:var(--text-dark-muted); }
+.h-page{ font-size:24px; line-height:32px; font-weight:600; letter-spacing:-.015em; }
+.verdict{ font-size:30px; line-height:36px; font-weight:600; letter-spacing:-.02em; margin-top:var(--s3); max-width:18ch; }
+.h-sec{ font-size:20px; line-height:28px; font-weight:600; letter-spacing:-.01em; }
+.h-card{ font-size:18px; line-height:28px; font-weight:600; letter-spacing:-.005em; }
+.body-lg{ font-size:18px; line-height:28px; }
+.small{ font-size:14px; line-height:20px; }
+.muted{ color:var(--text-dark-muted); }
+@media (min-width:48rem){ .h-page{ font-size:30px; line-height:36px; } }
+@media (min-width:64rem){ .verdict{ font-size:48px; line-height:1.05; } .h-sec{ font-size:24px; line-height:32px; } }
+
+/* ===== Today stage content ===== */
+.stage-grid{ display:grid; gap:var(--s5); padding-top:var(--s4); }
+@media (min-width:64rem){ .stage-grid{ grid-template-columns: minmax(0,7fr) minmax(0,5fr); align-items:end; gap:var(--s7); padding-top:var(--s6); } }
+.tagline{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s3); margin-top:var(--s4); }
+.pill{ display:inline-flex; align-items:center; min-height:28px; padding:0 12px; border-radius:999px; border:1.5px solid var(--text-dark); font-size:14px; font-weight:600; white-space:nowrap; }
+.prov{ font-size:14px; line-height:20px; color:var(--text-dark-muted); }
+.explain{ margin-top:var(--s3); max-width:40rem; font-size:16px; line-height:24px; }
+.caveat{ margin-top:var(--s2); font-size:14px; line-height:20px; color:var(--text-dark-muted); max-width:40rem; }
+.stale{ display:none; margin-top:var(--s4); padding:var(--s3) var(--s4); border-radius:var(--r-panel); background:var(--warning); color:var(--text-dark); font-weight:500; font-size:15px; line-height:22px; max-width:40rem; }
+body[data-stale="true"] .stale{ display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; }
+.stale button{ min-height:44px; padding:0 14px; border-radius:var(--r-control); border:1.5px solid var(--text-dark); background:transparent; font-weight:600; }
+.stale :focus-visible{ outline-color:var(--text-dark); }
+/* On the sky, all text is text-dark: text-dark-muted measured 4.20:1 on the within sky top (below 4.5). The lens keeps muted. */
+.stage:not(.stage--night) > .wrap :is(.eyebrow,.prov,.caveat,.muted,.state-ctl span){ color:var(--text-dark); }
+.stage:not(.stage--night) > .wrap .lens :is(.prov,.muted,.lens-foot,.meta,.sample){ color:var(--text-dark-muted); }
+.stage:not(.stage--night) > .wrap .sample{ color:var(--text-dark); }
+.stage:not(.stage--night) :focus-visible{ outline-color:var(--text-dark); }
+.stage:not(.stage--night) .app-nav a[aria-current="page"]:focus-visible{ outline-color:var(--text-dark); }
+
+/* Reading lens: the one translucent panel; sits over the top of the city band. */
+.lens{ border-radius:var(--r-panel); border:1px solid color-mix(in oklab, var(--text-dark) 14%, transparent); padding:var(--s4) var(--s4) var(--s3); margin-bottom:calc(var(--band-h) * -0.55); }
+@media (min-width:40rem){ .lens{ padding:var(--s5); } }
+.lens-head{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--s3); flex-wrap:wrap; }
+.reading{ display:grid; grid-template-columns: 1fr auto; gap:2px var(--s3); padding:var(--s3) 0; border-top:1px solid var(--rule); }
+.reading:first-of-type{ margin-top:var(--s3); }
+.reading .name{ font-size:14px; line-height:20px; font-weight:600; }
+.reading .val{ font-size:24px; line-height:32px; font-weight:600; letter-spacing:-.01em; text-align:right; }
+.reading .val small{ font-size:14px; font-weight:500; color:var(--text-dark-muted); letter-spacing:0; }
+.reading .meta{ font-size:14px; line-height:20px; color:var(--text-dark-muted); }
+.meter{ grid-column:1 / -1; position:relative; height:6px; border-radius:3px; background:var(--rule); margin:6px 0 2px; }
+.meter i{ position:absolute; left:0; top:0; bottom:0; border-radius:3px; background:var(--text-dark-muted); transition:width .7s var(--ease-out); }
+.meter b{ position:absolute; top:-4px; bottom:-4px; left:66.667%; width:2px; background:var(--text-dark); }
+.lens-foot{ font-size:13px; line-height:18px; color:var(--text-dark-muted); margin-top:var(--s2); }
+.state-ctl{ margin-top:var(--s5); display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:6px; border:1px dashed var(--text-dark-muted); border-radius:var(--r-panel); max-width:max-content; font-size:13px; }
+.state-ctl span{ padding:0 6px; color:var(--text-dark-muted); font-weight:600; }
+.state-ctl button{ min-height:44px; padding:0 12px; border-radius:var(--r-control); border:1px solid transparent; background:transparent; font-size:13px; }
+.state-ctl button[aria-pressed="true"]{ background:var(--text-dark); color:var(--text); }
+
+/* ===== Ground sheet ===== */
+.ground{ background:var(--surface-light); padding:var(--s6) var(--gutter) var(--s7); }
+.ground > .wrap > * + *{ margin-top:var(--s7); }
+.cols{ display:grid; gap:var(--s7); }
+@media (min-width:64rem){ .cols{ grid-template-columns:minmax(0,8fr) minmax(0,4fr); gap:var(--s7); } }
+.sec-head{ display:flex; justify-content:space-between; align-items:baseline; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s4); }
+.feature{ border:1px solid var(--rule); border-radius:var(--r-panel); padding:var(--s5); background:var(--surface-light); }
+.feature p.text{ margin-top:var(--s2); font-size:18px; line-height:28px; }
+.basis{ margin-top:var(--s3); font-size:14px; line-height:20px; color:var(--text-dark-muted); }
+details.why{ margin-top:var(--s3); }
+details.why > summary{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 4px; margin-left:-4px; font-weight:600; font-size:15px; cursor:pointer; list-style:none; border-radius:var(--r-control); }
+details.why > summary::-webkit-details-marker{ display:none; }
+details.why > summary svg{ width:16px; height:16px; transition:transform .16s var(--ease-out); }
+details.why[open] > summary svg{ transform:rotate(90deg); }
+.why-body{ padding:var(--s2) 0 0 var(--s4); border-left:2px solid var(--rule); font-size:15px; line-height:22px; display:grid; gap:var(--s2); }
+.rows{ list-style:none; margin:0; padding:0; }
+.rows > li{ border-top:1px solid var(--rule); padding:var(--s4) 0; }
+.rows > li:last-child{ border-bottom:1px solid var(--rule); }
+.row-text{ margin-top:4px; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 18px; border-radius:var(--r-control); font-weight:600; font-size:15px; text-decoration:none; border:1.5px solid var(--text-dark); background:transparent; color:var(--text-dark); }
+.btn-primary{ background:var(--primary); border-color:var(--primary); color:var(--text-dark); }
+.btn-danger{ border-color:#b4232c; color:#9b1c24; }
+.link{ font-weight:600; text-underline-offset:3px; display:inline-flex; align-items:center; min-height:44px; gap:6px; }
+
+/* Your day strip (Today preview) and timeline (Daily Plan) */
+.day-strip{ list-style:none; margin:0; padding:0; display:grid; gap:0; }
+.day-strip li{ display:grid; grid-template-columns:7rem 1fr; gap:var(--s3); padding:var(--s3) 0; border-top:1px solid var(--rule); align-items:baseline; }
+.day-strip .when{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--text-dark-muted); }
+.arc{ width:28px; height:16px; flex:none; }
+.arc path{ fill:none; stroke:var(--rule); stroke-width:1.5; }
+.arc circle{ fill:var(--warning); stroke:var(--text-dark); stroke-width:1; }
+@media (min-width:48rem){ .day-strip{ grid-template-columns:repeat(5,minmax(0,1fr)); gap:var(--s4); } .day-strip li{ grid-template-columns:1fr; border-top:2px solid var(--rule); padding-top:var(--s3); align-items:start; align-content:start; } }
+.timeline{ list-style:none; margin:0; padding:0; }
+.timeline > li{ display:grid; align-items:start; gap:var(--s2) var(--s5); padding:var(--s5) 0; border-top:1px solid var(--rule); }
+@media (min-width:48rem){ .timeline > li{ grid-template-columns:10rem minmax(0,1fr); } }
+.timeline .when{ display:flex; align-items:center; gap:10px; font-weight:600; }
+.foryou{ margin-top:var(--s2); font-size:15px; line-height:22px; padding:var(--s2) var(--s3); border-radius:var(--r-control); background:color-mix(in oklab, var(--secondary) 10%, var(--surface-light)); }
+.try{ display:inline-flex; align-items:center; gap:10px; min-height:44px; margin-top:var(--s2); font-size:15px; font-weight:500; }
+.try input{ width:20px; height:20px; accent-color:var(--text-dark); margin:0; }
+
+/* Aside: compact facts */
+.facts{ display:grid; gap:var(--s5); align-content:start; }
+.fact h3{ font-size:16px; line-height:24px; font-weight:600; }
+dl.kv{ display:grid; grid-template-columns:auto 1fr; gap:6px var(--s4); margin:var(--s3) 0 0; font-size:15px; }
+dl.kv dt{ color:var(--text-dark-muted); }
+dl.kv dd{ margin:0; text-align:right; }
+
+/* Link rows (replaces four boxed tiles) */
+.linkrows{ list-style:none; margin:0; padding:0; display:grid; }
+@media (min-width:48rem){ .linkrows{ grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:var(--s6); } }
+.linkrows a{ display:flex; align-items:center; gap:var(--s3); min-height:64px; padding:var(--s3) 0; border-top:1px solid var(--rule); text-decoration:none; }
+.linkrows a .t{ font-weight:600; display:block; }
+.linkrows a .d{ font-size:14px; color:var(--text-dark-muted); display:block; }
+.linkrows a .go{ margin-left:auto; transition:transform .16s var(--ease-out); }
+@media (hover:hover){ .linkrows a:hover .go{ transform:translateX(3px); } .linkrows a:hover .t{ text-decoration:underline; text-underline-offset:3px; } }
+
+/* Ask */
+.chips{ display:flex; flex-wrap:wrap; gap:var(--s2); }
+.chip{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:6px 14px; border-radius:999px; border:1px solid var(--rule); background:var(--surface-light); font-size:14px; line-height:20px; text-align:left; }
+.ctx{ display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--s3); }
+.ctx span, .ctx a{ display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 10px; border-radius:999px; font-size:13px; line-height:18px; border:1px solid color-mix(in oklab, var(--text-dark) 18%, transparent); }
+.ctx a{ min-height:44px; font-weight:600; }
+.starters{ display:grid; gap:var(--s2); }
+@media (min-width:48rem){ .starters{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.starters button{ min-height:56px; padding:var(--s3) var(--s4); border-radius:var(--r-panel); border:1px solid var(--rule); background:var(--surface-light); text-align:left; font-size:15px; line-height:22px; display:flex; align-items:center; gap:var(--s3); }
+@media (hover:hover){ .starters button:hover{ border-color:var(--text-dark-muted); } }
+.thread{ display:grid; gap:var(--s5); max-width:56rem; margin:0 auto; }
+.q{ justify-self:end; max-width:85%; background:var(--text-dark); color:var(--text); padding:var(--s3) var(--s4); border-radius:16px 16px 4px 16px; }
+.a{ display:grid; gap:var(--s3); }
+.a-who{ display:flex; align-items:center; gap:8px; font-weight:600; font-size:14px; }
+.a-who i{ width:20px; height:20px; border-radius:50%; background:linear-gradient(var(--sky-top, #cfe9f1), var(--primary)); display:inline-block; }
+.a-actions{ display:flex; gap:var(--s2); flex-wrap:wrap; }
+.composer{ position:sticky; bottom:56px; z-index:3; padding:var(--s3) 0 var(--s3); background:linear-gradient(transparent, var(--surface-light) 30%); }
+@media (min-width:64rem){ .composer{ bottom:0; } }
+.composer-panel{ display:flex; gap:var(--s2); align-items:flex-end; border:1px solid var(--text-dark-muted); border-radius:var(--r-panel); padding:var(--s2); background:var(--surface-light); max-width:56rem; margin:0 auto; }
+.composer-panel textarea{ flex:1; min-width:0; border:0; resize:none; padding:10px; min-height:44px; background:transparent; font-size:16px; line-height:24px; }
+.composer textarea:focus-visible{ outline:none; }
+.composer-panel:focus-within{ outline:2px solid var(--focus); outline-offset:2px; }
+.credit{ max-width:56rem; margin:6px auto 0; font-size:12px; line-height:16px; color:var(--text-dark-muted); }
+
+/* Guides (Home, Habits) */
+.groups{ display:grid; gap:var(--s7); }
+@media (min-width:64rem){ .groups{ grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:var(--s7); row-gap:var(--s7); } }
+.group h3{ font-size:14px; line-height:20px; font-weight:600; color:var(--text-dark-muted); margin-bottom:var(--s2); }
+
+/* Profile */
+.form-grid{ display:grid; gap:var(--s7); }
+@media (min-width:64rem){ .form-grid{ grid-template-columns:minmax(0,7fr) minmax(0,5fr); } }
+fieldset{ border:0; padding:0; margin:0 0 var(--s6); min-width:0; }
+legend{ font-size:18px; line-height:28px; font-weight:600; padding:0; margin-bottom:var(--s2); }
+.field{ display:grid; gap:6px; padding:var(--s3) 0; border-top:1px solid var(--rule); }
+.field label{ font-size:15px; line-height:22px; font-weight:500; }
+.field select{ min-height:44px; padding:0 12px; border:1px solid var(--text-dark-muted); border-radius:var(--r-control); background:var(--surface-light); max-width:22rem; width:100%; }
+@media (min-width:48rem){ .field{ grid-template-columns:minmax(0,1fr) 16rem; align-items:center; } }
+
+/* Footer */
+.colophon{ border-top:1px solid var(--rule); padding-top:var(--s5); font-size:13px; line-height:20px; color:var(--text-dark-muted); display:grid; gap:var(--s2); }
+
+/* ===== Landing ===== */
+.landing{ background:var(--bg); color:var(--text); }
+.landing .stage{ --band-h: min(18rem, 34vh); }
+@media (min-width:40rem){ .landing .stage{ --band-h: min(26rem, 42vh); } }
+.l-head{ display:flex; align-items:center; justify-content:space-between; min-height:var(--header-h); }
+.l-head a.open{ font-size:14px; font-weight:600; color:var(--text); min-height:44px; display:inline-flex; align-items:center; padding:0 12px; text-underline-offset:3px; }
+.hero{ padding:var(--s6) 0 var(--s4); max-width:46rem; }
+.hero h1{ font-size:48px; line-height:1; font-weight:600; letter-spacing:-.03em; }
+@media (min-width:64rem){ .hero{ padding-top:var(--s8); } .hero h1{ font-size:72px; } }
+.hero .sub{ margin-top:var(--s4); font-size:18px; line-height:28px; color:var(--text-muted); max-width:34rem; }
+.hero .ctas{ display:flex; flex-wrap:wrap; gap:var(--s3); margin-top:var(--s5); }
+.btn-ghost-dark{ border-color:var(--text-muted); color:var(--text); }
+.search{ margin-top:var(--s5); display:grid; gap:6px; max-width:30rem; }
+.search label{ font-size:14px; color:var(--text-muted); }
+.search div{ display:flex; gap:var(--s2); }
+.search input{ flex:1; min-width:0; min-height:48px; padding:0 14px; border-radius:var(--r-control); border:1px solid var(--rule-dark); background:var(--surface); color:var(--text); font-size:16px; }
+.search .note{ font-size:13px; color:var(--text-muted); }
+.l-sec{ padding:var(--s8) var(--gutter); }
+.l-sec + .l-sec{ border-top:1px solid var(--rule-dark); }
+.l-kicker{ font-size:14px; color:var(--primary); font-weight:600; font-variant-numeric:tabular-nums; }
+.l-sec h2{ font-size:30px; line-height:36px; font-weight:600; letter-spacing:-.02em; margin-top:var(--s2); max-width:24ch; }
+@media (min-width:64rem){ .l-sec h2{ font-size:36px; line-height:40px; } }
+.journey{ list-style:none; margin:var(--s6) 0 0; padding:0; display:grid; gap:0; counter-reset:j; }
+.journey li{ padding:var(--s4) 0; border-top:1px solid var(--rule-dark); display:grid; grid-template-columns:2.5rem 1fr; gap:var(--s3); }
+.journey li::before{ counter-increment:j; content:"0" counter(j); color:var(--text-muted); font-variant-numeric:tabular-nums; font-size:14px; padding-top:3px; }
+.journey .verb{ font-weight:600; font-size:18px; }
+.journey .where{ font-size:14px; color:var(--secondary); }
+.journey .what{ font-size:15px; color:var(--text-muted); margin-top:2px; grid-column:2; }
+@media (min-width:64rem){ .journey{ grid-template-columns:repeat(5,minmax(0,1fr)); gap:var(--s5); } .journey li{ grid-template-columns:1fr; border-top:2px solid var(--rule-dark); } .journey .what{ grid-column:auto; } }
+.split{ display:grid; gap:var(--s6); margin-top:var(--s6); align-items:start; }
+@media (min-width:64rem){ .split{ grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:var(--s8); } }
+.example{ background:var(--surface-light); color:var(--text-dark); border-radius:var(--r-panel); padding:var(--s5); }
+.steps{ list-style:none; margin:0; padding:0; display:grid; gap:var(--s4); }
+.steps li{ display:grid; grid-template-columns:2.5rem 1fr; gap:var(--s3); }
+.steps b{ display:inline-grid; place-items:center; width:32px; height:32px; border-radius:50%; border:1px solid var(--rule-dark); font-size:14px; font-weight:600; color:var(--primary); }
+.statement{ font-size:24px; line-height:32px; font-weight:500; letter-spacing:-.01em; max-width:40rem; }
+@media (min-width:64rem){ .statement{ font-size:30px; line-height:38px; } }
+.l-foot{ padding:var(--s6) var(--gutter); border-top:1px solid var(--rule-dark); font-size:13px; color:var(--text-muted); }
+.l-foot a, .colophon a{ display:inline-flex; align-items:center; min-height:44px; min-width:44px; margin:-12px 0; }
+
+/* Screen switching */
+[data-screen-panel][hidden]{ display:none !important; }
+.screen-in{ animation:screen-in .2s var(--ease-out); }
+@keyframes screen-in{ from{ opacity:0; translate:0 8px; } }
+@media (prefers-reduced-motion: no-preference){
+  button:not(:disabled), .press{ transition:transform 120ms var(--ease-out); }
+  button:not(:disabled):active, .press:active{ transform:scale(.97); }
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  button:not(:disabled):active{ opacity:.8; }
+}
+@media (forced-colors: active){
+  .scene{ display:none; }
+  .lens, .feature, .q, .composer-panel, .chip, .starters button{ border:1px solid CanvasText; }
+  .pill{ border-color:CanvasText; }
+  .meter i, .meter b{ background:CanvasText; forced-color-adjust:none; }
+}
+</style>
+</head>
+<body data-screen="landing" data-air="within" data-stale="false">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="g-far" d="M-10 160V120H6V94H26V112H36V88H41V78H58V124H74V116H100V126H118V84H138V98H156V101H160V122H176V74H189V84H194V114H210V126H240V118H244V88H262V79H266V76H274V79H278V112H296V124H322V116H326V94H348V116H352V122H374V72H389V82H394V86H406V114H410V126H434V118H446V93H450V90H472V93H476V110H486V124H500V76H518V124H520V94H539V104H544V116H546V122H576V112H598V124H600V85H604V82H616V85H620V124H628V100H654V118H656V126H686V114H700V88H705V78H716V122H742V95H746V92H764V95H768V124H788V84H806V124H810V160z"/>
+    <path id="g-mid" d="M-10 116h40v44h-40zM10 108h20v8h-20zM10 111h21.5v1.6h-21.5zM-10 119h41.5v1.6h-41.5zM-10 129h41.5v1.6h-41.5zM-10 139h41.5v1.6h-41.5zM-10 149h41.5v1.6h-41.5zM32 102h52v58h-52zM40 94h12v8h-12zM30 108h56v2h-56zM30 116h56v2h-56zM30 124h56v2h-56zM30 132h56v2h-56zM30 140h56v2h-56zM30 148h56v2h-56zM87 90h30v70h-30zM92 86h20v4h-20zM119 120h28v40h-28zM117.5 123h31v1.6h-31zM117.5 133h31v1.6h-31zM117.5 143h31v1.6h-31zM150 98h46v62h-46zM167 90h12v8h-12zM148 104h50v2h-50zM148 112h50v2h-50zM148 120h50v2h-50zM148 128h50v2h-50zM148 136h50v2h-50zM148 144h50v2h-50zM199 98h32v62h-32zM203 88h24v10h-24zM234 114h42v46h-42zM234 106h21v8h-21zM232.5 109h22.5v1.6h-22.5zM232.5 117h45v1.6h-45zM232.5 127h45v1.6h-45zM232.5 137h45v1.6h-45zM232.5 147h45v1.6h-45zM281 106h58v54h-58zM289 98h10v8h-10zM321 98h10v8h-10zM279 112h62v2h-62zM279 120h62v2h-62zM279 128h62v2h-62zM279 136h62v2h-62zM279 144h62v2h-62zM345 96h24v64h-24zM369 118h30v42h-30zM367.5 121h33v1.6h-33zM367.5 131h33v1.6h-33zM367.5 141h33v1.6h-33zM367.5 151h33v1.6h-33zM405 86h38v74h-38zM410 82h28v4h-28zM444 100h50v60h-50zM478 92h12v8h-12zM442 106h54v2h-54zM442 114h54v2h-54zM442 122h54v2h-54zM442 130h54v2h-54zM442 138h54v2h-54zM442 146h54v2h-54zM494 112h38v48h-38zM513 104h19v8h-19zM513 107h20.5v1.6h-20.5zM492.5 115h41v1.6h-41zM492.5 125h41v1.6h-41zM492.5 135h41v1.6h-41zM492.5 145h41v1.6h-41zM540 94h28v66h-28zM570 104h50v56h-50zM574 96h12v8h-12zM568 110h54v2h-54zM568 118h54v2h-54zM568 126h54v2h-54zM568 134h54v2h-54zM568 142h54v2h-54zM568 150h54v2h-54zM620 122h32v38h-32zM618.5 125h35v1.6h-35zM618.5 135h35v1.6h-35zM618.5 145h35v1.6h-35zM658 100h34v60h-34zM662 90h26v10h-26zM694 102h54v58h-54zM715 94h12v8h-12zM692 108h58v2h-58zM692 116h58v2h-58zM692 124h58v2h-58zM692 132h58v2h-58zM692 140h58v2h-58zM692 148h58v2h-58zM748 116h30v44h-30zM748 108h15v8h-15zM746.5 111h16.5v1.6h-16.5zM746.5 119h33v1.6h-33zM746.5 129h33v1.6h-33zM746.5 139h33v1.6h-33zM746.5 149h33v1.6h-33zM783 98h27v62h-27zM788 94h17v4h-17z"/>
+    <path id="g-middetail" d="M-3 121.6h4v4h-4zM8 121.6h4v4h-4zM19 121.6h4v4h-4zM-3 131.6h4v4h-4zM8 131.6h4v4h-4zM19 131.6h4v4h-4zM-3 141.6h4v4h-4zM8 141.6h4v4h-4zM19 141.6h4v4h-4zM-3 151.6h4v4h-4zM8 151.6h4v4h-4zM19 151.6h4v4h-4zM34 110h48v2.2h-48zM34 118h48v2.2h-48zM34 126h48v2.2h-48zM34 134h48v2.2h-48zM34 142h48v2.2h-48zM34 150h48v2.2h-48zM91 93h1.8v63h-1.8zM99 93h1.8v63h-1.8zM107 93h1.8v63h-1.8zM152 106h42v2.2h-42zM152 114h42v2.2h-42zM152 122h42v2.2h-42zM152 130h42v2.2h-42zM152 138h42v2.2h-42zM152 146h42v2.2h-42zM203 91h1.8v65h-1.8zM211 91h1.8v65h-1.8zM219 91h1.8v65h-1.8zM227 101h1.8v55h-1.8zM241.5 119.6h4v4h-4zM253 119.6h4v4h-4zM264.5 119.6h4v4h-4zM241.5 129.6h4v4h-4zM253 129.6h4v4h-4zM264.5 129.6h4v4h-4zM241.5 139.6h4v4h-4zM253 139.6h4v4h-4zM264.5 139.6h4v4h-4zM241.5 149.6h4v4h-4zM253 149.6h4v4h-4zM264.5 149.6h4v4h-4zM283 114h54v2.2h-54zM283 122h54v2.2h-54zM283 130h54v2.2h-54zM283 138h54v2.2h-54zM283 146h54v2.2h-54zM376.3 123.6h4v4h-4zM387.7 123.6h4v4h-4zM376.3 133.6h4v4h-4zM387.7 133.6h4v4h-4zM376.3 143.6h4v4h-4zM387.7 143.6h4v4h-4zM376.3 153.6h4v4h-4zM387.7 153.6h4v4h-4zM409 89h1.8v67h-1.8zM417 89h1.8v67h-1.8zM425 89h1.8v67h-1.8zM433 89h1.8v67h-1.8zM446 108h46v2.2h-46zM446 116h46v2.2h-46zM446 124h46v2.2h-46zM446 132h46v2.2h-46zM446 140h46v2.2h-46zM446 148h46v2.2h-46zM500.5 117.6h4v4h-4zM511 117.6h4v4h-4zM521.5 117.6h4v4h-4zM500.5 127.6h4v4h-4zM511 127.6h4v4h-4zM521.5 127.6h4v4h-4zM500.5 137.6h4v4h-4zM511 137.6h4v4h-4zM521.5 137.6h4v4h-4zM500.5 147.6h4v4h-4zM511 147.6h4v4h-4zM521.5 147.6h4v4h-4zM544 97h1.8v59h-1.8zM552 97h1.8v59h-1.8zM560 97h1.8v59h-1.8zM572 112h46v2.2h-46zM572 120h46v2.2h-46zM572 128h46v2.2h-46zM572 136h46v2.2h-46zM572 144h46v2.2h-46zM572 152h46v2.2h-46zM662 93h1.8v63h-1.8zM670 93h1.8v63h-1.8zM678 93h1.8v63h-1.8zM686 93h1.8v63h-1.8zM696 110h50v2.2h-50zM696 118h50v2.2h-50zM696 126h50v2.2h-50zM696 134h50v2.2h-50zM696 142h50v2.2h-50zM696 150h50v2.2h-50zM755.3 121.6h4v4h-4zM766.7 121.6h4v4h-4zM755.3 131.6h4v4h-4zM766.7 131.6h4v4h-4zM755.3 141.6h4v4h-4zM766.7 141.6h4v4h-4zM755.3 151.6h4v4h-4zM766.7 151.6h4v4h-4zM787 101h1.8v55h-1.8zM795 101h1.8v55h-1.8zM803 101h1.8v55h-1.8z"/>
+    <path id="g-near" d="M-10 136h40v24h-40zM-10 136h41v1.6h-41zM-10 147h42.5v1.5h-42.5zM46 128h26v32h-26zM43.5 148h31v1.5h-31zM52.5 125h13v3h-13zM96 119.5h38v40.5h-38zM93.5 148h43v1.5h-43zM94.5 139.5h41v1.3h-41zM94.5 130h41v1.3h-41zM94.5 120.5h41v1.3h-41zM134 146h22v14h-22zM133 146h24v1.6h-24zM190 125h34v35h-34zM187.5 147h39v1.5h-39zM194 118h15v7h-15zM193 118h17v1.4h-17zM240 135h46v25h-46zM237.5 147h51v1.5h-51zM251.5 132h23v3h-23zM302 116.5h28v43.5h-28zM364 127h40v33h-40zM361.5 147h45v1.5h-45zM386 120h15v7h-15zM385 120h17v1.4h-17zM424 137h30v23h-30zM421.5 148h35v1.5h-35zM431.5 134h15v3h-15zM454 120.5h36v39.5h-36zM459 113.5h15v7h-15zM458 113.5h17v1.4h-17zM452.5 140.5h39v1.3h-39zM452.5 131h39v1.3h-39zM452.5 121.5h39v1.3h-39zM522 124h32v36h-32zM519.5 146h37v1.5h-37zM576 138h44v22h-44zM573.5 148h49v1.5h-49zM587 135h22v3h-22zM648 118h28v42h-28zM647 118h30v1.6h-30zM654 111h15v7h-15zM653 111h17v1.4h-17zM676 129h34v31h-34zM673.5 147h39v1.5h-39zM762 126h48v34h-48zM761 126h49v1.6h-49z"/>
+    <path id="g-tanks" d="M13 127.5h10v5.5h-10zM12 131.8h12v1.4h-12zM13 133h2v3h-2zM21 133h2v3h-2zM117 111h10v5.5h-10zM116 115.3h12v1.4h-12zM117 116.5h2v3h-2zM125 116.5h2v3h-2zM194 109.5h10v5.5h-10zM193 113.8h12v1.4h-12zM194 115h2v3h-2zM202 115h2v3h-2zM307 108h10v5.5h-10zM306 112.3h12v1.4h-12zM307 113.5h2v3h-2zM315 113.5h2v3h-2zM386 111.5h10v5.5h-10zM385 115.8h12v1.4h-12zM386 117h2v3h-2zM394 117h2v3h-2zM477 112h10v5.5h-10zM476 116.3h12v1.4h-12zM477 117.5h2v3h-2zM485 117.5h2v3h-2zM525 115.5h10v5.5h-10zM524 119.8h12v1.4h-12zM525 121h2v3h-2zM533 121h2v3h-2zM539 115.5h10v5.5h-10zM538 119.8h12v1.4h-12zM539 121h2v3h-2zM547 121h2v3h-2zM579 129.5h10v5.5h-10zM578 133.8h12v1.4h-12zM579 135h2v3h-2zM587 135h2v3h-2zM771 117.5h10v5.5h-10zM770 121.8h12v1.4h-12zM771 123h2v3h-2zM779 123h2v3h-2z"/>
+    <path id="g-neardetail" d="M-4 139.5h4v5h-4zM2.5 139.5h4v5h-4zM-7 152.5h34v1.3h-34zM-7 155.5h34v1.3h-34zM48 144.8h22v1.4h-22zM48 134.8h22v1.4h-22zM100 141.5h3.5v4.5h-3.5zM107 141.5h3.5v4.5h-3.5zM122 141.5h3.5v4.5h-3.5zM100 132h3.5v4.5h-3.5zM107 132h3.5v4.5h-3.5zM122 132h3.5v4.5h-3.5zM100 122.5h3.5v4.5h-3.5zM107 122.5h3.5v4.5h-3.5zM122 122.5h3.5v4.5h-3.5zM99 152.5h15v1.3h-15zM99 155.5h15v1.3h-15zM116 152.5h15v1.3h-15zM116 155.5h15v1.3h-15zM214 139.5h5v5h-5zM214 128.5h5v5h-5zM200 127h3v18h-3zM245 138.5h4v6h-4zM250.5 138.5h4v6h-4zM270.5 138.5h4v6h-4zM276 138.5h4v6h-4zM243 152.5h19v1.3h-19zM243 155.5h19v1.3h-19zM264 152.5h19v1.3h-19zM264 155.5h19v1.3h-19zM304 144.8h24v1.4h-24zM304 134.3h24v1.4h-24zM304 123.8h24v1.4h-24zM368 140h4v5h-4zM375 140h4v5h-4zM368 130h4v5h-4zM375 130h4v5h-4zM392 129h3v16h-3zM367 152.5h34v1.3h-34zM367 155.5h34v1.3h-34zM458 142.5h4.5v4.5h-4.5zM481.5 142.5h4.5v4.5h-4.5zM458 133h4.5v4.5h-4.5zM481.5 133h4.5v4.5h-4.5zM458 123.5h4.5v4.5h-4.5zM481.5 123.5h4.5v4.5h-4.5zM524 142.8h28v1.4h-28zM524 131.8h28v1.4h-28zM525 152.5h26v1.3h-26zM525 155.5h26v1.3h-26zM582 141h5v5h-5zM595.5 141h5v5h-5zM609 141h5v5h-5zM579 152.5h18v1.3h-18zM579 155.5h18v1.3h-18zM599 152.5h18v1.3h-18zM599 155.5h18v1.3h-18zM660 120h3v26h-3zM680 141h3.5v4h-3.5zM685.5 141h3.5v4h-3.5zM680 132h3.5v4h-3.5zM685.5 132h3.5v4h-3.5zM767 140.3h4v5.5h-4zM783 140.3h4v5.5h-4zM799 140.3h4v5.5h-4zM767 129.3h4v5.5h-4zM783 129.3h4v5.5h-4zM799 129.3h4v5.5h-4zM765 152.5h20v1.3h-20zM765 155.5h20v1.3h-20zM787 152.5h20v1.3h-20zM787 155.5h20v1.3h-20z"/>
+    <radialGradient id="glow">
+      <stop offset="0" style="stop-color:var(--warning)"/>
+      <stop offset=".3" style="stop-color:var(--warning)" stop-opacity=".6"/>
+      <stop offset="1" style="stop-color:var(--warning)" stop-opacity="0"/>
+    </radialGradient>
+    <g id="cloud">
+      <ellipse cx="0" cy="2" rx="38" ry="9" style="fill:var(--rule)" opacity=".7"/>
+      <g style="fill:var(--surface-light)">
+        <ellipse cx="0" cy="0" rx="36" ry="10"/><ellipse cx="-15" cy="-6" rx="17" ry="11"/><ellipse cx="12" cy="-9" rx="20" ry="13"/>
+      </g>
+    </g>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5h16v10H9l-5 4v-14z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15"/><path d="M5 19l7-7"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-3.5 3.7-5.5 7-5.5s6 2 7 5.5"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-7-6 16-3-7z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6-2.5-2.5L11 8l3 3 3 1M9.5 12.5 7 14"/></symbol>
+    <symbol id="i-family" viewBox="0 0 24 24"><circle cx="8" cy="7" r="2.5"/><circle cx="16.5" cy="9" r="2"/><path d="M3.5 19c.6-3.5 2.3-5.5 4.5-5.5s3.9 2 4.5 5.5M13 19c.4-2.6 1.6-4 3.5-4s3.1 1.4 3.5 4"/></symbol>
+    <symbol id="i-road" viewBox="0 0 24 24"><path d="M8 3 5 21M16 3l3 18M12 5v2M12 11v2M12 17v2"/></symbol>
+  </defs>
+</svg>
+
+<a class="sr-only" href="#main" id="skip">Skip to content</a>
+
+<header class="proto on-dark">
+  <div class="proto-inner">
+    <p class="proto-label"><b>PROTOTYPE</b> · Direction B: Atmospheric · Sample data, not the live app · Not checked against modern-web-guidance</p>
+    <nav aria-label="Prototype screens">
+      <ul>
+        <li><a href="#landing">Landing</a></li>
+        <li><a href="#today">Today</a></li>
+        <li><a href="#ask">Ask AirAware</a></li>
+        <li><a href="#plan">Daily Plan</a></li>
+        <li><a href="#home">My Home</a></li>
+        <li><a href="#habits">Better Habits</a></li>
+        <li><a href="#profile">My Profile</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ===================== LANDING ===================== -->
+<div data-screen-panel="landing" class="landing on-dark">
+  <section class="stage stage--night" aria-labelledby="l-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="l-head"><a class="wordmark" href="#landing" style="color:var(--text)">AirAware AI</a><a class="open" href="#today">Open the app</a></div>
+      <div class="hero">
+        <h1 id="l-h1" tabindex="-1">The air around you matters.</h1>
+        <p class="sub">AirAware turns the model forecast for your place into plain guidance for your day, your home and your habits, and shows why.</p>
+        <div class="ctas">
+          <a class="btn btn-primary press" href="#today">Check My Air</a>
+          <a class="btn btn-ghost-dark press" href="#ask">Meet Your Assistant</a>
+        </div>
+        <form class="search" onsubmit="event.preventDefault()">
+          <label for="l-city">Search for a city in India</label>
+          <div><input id="l-city" type="search" autocomplete="off" placeholder="For example, Pune"><button class="btn btn-ghost-dark" type="submit">Search</button></div>
+          <p class="note">We use your device location only if you ask us to.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="l-sec" aria-labelledby="l-journey">
+    <div class="wrap">
+      <p class="l-kicker">How it helps</p>
+      <h2 id="l-journey">From today's forecast to one thing you can do.</h2>
+      <ol class="journey">
+        <li><div><span class="verb">Understand</span> <span class="where">· Today</span></div><p class="what">One sentence on the 24-hour forecast against India's limits, with its source and time.</p></li>
+        <li><div><span class="verb">Ask</span> <span class="where">· Ask AirAware</span></div><p class="what">Ask about walks, windows, commutes or your home. Answers come from AirAware's rules.</p></li>
+        <li><div><span class="verb">Get guidance</span> <span class="where">· Daily plan</span></div><p class="what">Your day by morning, commute, daytime and evening.</p></li>
+        <li><div><span class="verb">Take action</span> <span class="where">· My Home, Better Habits</span></div><p class="what">Practical steps indoors and swaps that cut smoke and exhaust.</p></li>
+        <li><div><span class="verb">Learn</span> <span class="where">· Why? on every card</span></div><p class="what">Every suggestion shows its reason, what it used and its limits.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="l-sec" aria-labelledby="l-explain">
+    <div class="wrap">
+      <p class="l-kicker">Explainable by design</p>
+      <h2 id="l-explain">Code owns the numbers. AI explains the rule cards.</h2>
+      <div class="split">
+        <ol class="steps">
+          <li><b>1</b><p>Copernicus CAMS models the air across the world.</p></li>
+          <li><b>2</b><p>Open-Meteo serves that model forecast for your place.</p></li>
+          <li><b>3</b><p>AirAware's code compares the 24-hour averages with India's limits for PM2.5 (60 μg/m³) and PM10 (100 μg/m³).</p></li>
+          <li><b>4</b><p>Rule cards turn that into suggestions. Claude explains the cards in plain words; it never changes the numbers.</p></li>
+        </ol>
+        <div class="example on-light">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><p class="eyebrow">Example card</p><span class="sample">Sample data</span></div>
+          <p class="h-card" style="margin-top:8px">Forecast within India's 24-hour limits</p>
+          <div class="tagline" style="margin-top:8px"><span class="pill">Within the limit</span><span class="prov">Model forecast · Open-Meteo · retrieved 3:38 PM</span></div>
+          <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary>
+            <div class="why-body"><p>India's National Ambient Air Quality Standards (CPCB, 2009) set 24-hour limits of 60 μg/m³ for PM2.5 and 100 μg/m³ for PM10.</p><p class="muted small">This is a model forecast for an area about 45 km wide, not a station measurement.</p></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="l-sec" aria-labelledby="l-honest">
+    <div class="wrap">
+      <h2 id="l-honest" class="sr-only">What the forecast is</h2>
+      <p class="statement">Forecasts are model estimates, not station measurements. We don't calculate an AQI.</p>
+      <p style="margin-top:16px;color:var(--text-muted)">Official CPCB observations are not connected yet.</p>
+    </div>
+  </section>
+  <footer class="l-foot"><div class="wrap">Air-quality forecasts from <a href="#landing">Open-Meteo.com</a> (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service. · <a href="#landing">Privacy</a></div></footer>
+</div>
+
+<!-- ===================== APP HEADER (shared markup inside each app stage) ===================== -->
+
+<!-- ===================== TODAY ===================== -->
+<div data-screen-panel="today" hidden>
+  <section class="stage" aria-labelledby="t-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="app-header"><a class="wordmark" href="#today">AirAware AI</a><button class="place frost" type="button" aria-label="Place: Pune, Maharashtra. Change place"><svg class="i"><use href="#i-pin"/></svg><span>Pune, Maharashtra</span><svg class="i" style="width:16px;height:16px"><use href="#i-down"/></svg></button><nav class="app-nav" aria-label="Main"><ul class="frost"><li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li><li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask AirAware</a></li><li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li><li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Better Habits</a></li><li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>My Profile</a></li></ul></nav></div>
+      <div class="stage-grid">
+        <div>
+          <p class="eyebrow">Good afternoon · Sat 28 Nov</p>
+          <h1 id="t-h1" class="h-page" tabindex="-1">Today in Pune, Maharashtra</h1>
+          <p class="verdict" id="v-title">Forecast within India's 24-hour limits</p>
+          <div class="tagline"><span class="pill" id="v-tag">Within the limit</span><span class="prov" id="v-prov">Model forecast · Open-Meteo · retrieved 3:38 PM</span></div>
+          <div class="stale" role="status"><span>Not current: retrieved more than an hour ago. Reload for the latest forecast.</span><button type="button">Reload forecast</button></div>
+          <p class="explain" id="v-expl">Fine and coarse particles are forecast below the national daily limits for the next 24 hours.</p>
+          <p class="caveat" id="v-cav">Being within the national limit does not mean the air is free of risk.</p>
+          <div class="state-ctl" role="group" aria-label="Prototype only: sample state">
+            <span>Prototype state</span>
+            <button type="button" data-state="within" aria-pressed="true">Within</button>
+            <button type="button" data-state="above" aria-pressed="false">Above</button>
+            <button type="button" data-state="unknown" aria-pressed="false">Unavailable</button>
+            <button type="button" data-state="stale" aria-pressed="false">Not current</button>
+          </div>
+        </div>
+        <aside class="lens frost" aria-labelledby="lens-h">
+          <div class="lens-head"><h2 id="lens-h" class="small" style="font-weight:600">24-hour average, model forecast</h2><span class="sample">Sample data</span></div>
+          <div id="readings">
+            <div class="reading"><span class="name">Fine particles (PM2.5)</span><span class="val num"><span id="pm25">38</span> <small>μg/m³</small></span><span class="meter" aria-hidden="true"><i id="m25" style="width:42.2%"></i><b></b></span><span class="meta">Limit 60 · <span id="s25">Within the limit</span></span></div>
+            <div class="reading"><span class="name">Coarse particles (PM10)</span><span class="val num"><span id="pm10">71</span> <small>μg/m³</small></span><span class="meter" aria-hidden="true"><i id="m10" style="width:47.3%"></i><b></b></span><span class="meta">Limit 100 · <span id="s10">Within the limit</span></span></div>
+          </div>
+          <p class="lens-foot" id="lens-foot">Compared with India's 24-hour limits (NAAQS, CPCB 2009). The mark on each bar is the limit. We don't calculate an AQI.</p>
+        </aside>
+      </div>
+    </div>
+    <div class="ground-line" aria-hidden="true"></div>
+  </section>
+
+  <div class="ground">
+    <div class="wrap">
+      <div class="cols">
+        <div>
+          <section aria-labelledby="rec-h">
+            <div class="sec-head"><h2 id="rec-h" class="h-sec">Your recommendation for today</h2><span class="sample">Sample data</span></div>
+            <article class="feature">
+              <h3 class="h-card" id="rec-title">Cut indoor smoke at the source</h3>
+              <p class="text" id="rec-text">Incense, mosquito coils, candles and tobacco all add smoke indoors. Using them less, or not indoors, is the simplest indoor-air step.</p>
+              <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary>
+                <div class="why-body"><p id="rec-why">These are common indoor pollution sources in any home.</p></div>
+              </details>
+              <p class="basis">Made with AI. General information only, not medical advice. Follow local public-health advisories.</p>
+            </article>
+          </section>
+
+          <section aria-labelledby="day-h" style="margin-top:48px">
+            <div class="sec-head"><h2 id="day-h" class="h-sec">Your day</h2><a class="link" href="#plan">See your full day <svg class="i"><use href="#i-chev"/></svg></a></div>
+            <ol class="day-strip">
+              <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="5.6" cy="9.9" r="3"/></svg>Morning</span><span>Check conditions before outdoor exercise</span></li>
+              <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="9.2" cy="6.6" r="3"/></svg>Commute</span><span>Combine trips and avoid idling</span></li>
+              <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="14" cy="5" r="3"/></svg>Daytime</span><span>Don't burn waste or leaves</span></li>
+              <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="21.2" cy="8.6" r="3"/></svg>Evening</span><span>Use the kitchen exhaust while cooking</span></li>
+              <li><span class="when"><svg class="i" style="width:20px;height:16px" aria-hidden="true"><use href="#i-home"/></svg>At home</span><span>Cut indoor smoke at the source</span></li>
+            </ol>
+          </section>
+        </div>
+
+        <aside class="facts" aria-label="Context">
+          <section class="fact" aria-labelledby="wx-h">
+            <h3 id="wx-h">Weather · Open-Meteo model data</h3>
+            <dl class="kv num">
+              <dt>At 3:00 PM</dt><dd>33 °C, 23 % cloud</dd>
+              <dt>Feels like</dt><dd>33 °C</dd>
+              <dt>Wind</dt><dd>3 km/h SW</dd>
+              <dt>Chance of rain</dt><dd>2 %</dd>
+              <dt>Tomorrow</dt><dd>23–32 °C</dd>
+            </dl>
+            <p class="small muted" style="margin-top:8px">Sample data. Weather sets the sky's clouds and rain only.</p>
+          </section>
+          <section class="fact" aria-labelledby="fire-h">
+            <h3 id="fire-h">Fire hotspots nearby</h3>
+            <p style="margin-top:8px;font-size:15px;line-height:22px">NASA satellites detected 3 fire hotspots within 50 km in the last 24 hours. The nearest is 46 km away; the latest was seen at 2:25 AM.</p>
+            <p class="small muted" style="margin-top:6px">Satellite detections · NASA FIRMS · retrieved 3:38 PM</p>
+            <p class="small muted" style="margin-top:4px">A hotspot is a heat signal seen from space, not proof that smoke reaches you.</p>
+          </section>
+        </aside>
+      </div>
+
+      <section aria-labelledby="help-h">
+        <div class="sec-head"><h2 id="help-h" class="h-sec">What would you like help with?</h2></div>
+        <ul class="linkrows">
+          <li><a href="#ask"><svg class="i"><use href="#i-walk"/></svg><span><span class="t">Outdoor activities</span><span class="d">Walks, exercise, commutes</span></span><svg class="i go"><use href="#i-chev"/></svg></a></li>
+          <li><a href="#home"><svg class="i"><use href="#i-home"/></svg><span><span class="t">My home</span><span class="d">Cooking, windows, purifiers</span></span><svg class="i go"><use href="#i-chev"/></svg></a></li>
+          <li><a href="#ask"><svg class="i"><use href="#i-family"/></svg><span><span class="t">My family</span><span class="d">Children, older adults, school runs</span></span><svg class="i go"><use href="#i-chev"/></svg></a></li>
+          <li><a href="#habits"><svg class="i"><use href="#i-leaf"/></svg><span><span class="t">Better habits</span><span class="d">Small swaps that cut smoke and exhaust</span></span><svg class="i go"><use href="#i-chev"/></svg></a></li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="askin-h">
+        <h2 id="askin-h" class="h-sec">Ask AirAware anything</h2>
+        <form onsubmit="event.preventDefault();location.hash='ask'" style="margin-top:16px">
+          <label for="t-ask" class="small" style="font-weight:600">Ask about your air, home or day</label>
+          <div class="composer-panel" style="margin:6px 0 0;max-width:none"><textarea id="t-ask" rows="1" placeholder="Can I go for a morning walk today?"></textarea><button class="btn btn-ghost-dark" style="border-color:var(--text-dark);color:var(--text-dark)" type="submit">Send</button></div>
+        </form>
+        <div class="chips" style="margin-top:12px"><button class="chip" type="button">Can I go for a morning walk today?</button><button class="chip" type="button">Is it a good idea to open my windows?</button><button class="chip" type="button">How can I improve my indoor air?</button></div>
+      </section>
+
+      <details class="why" style="border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:4px 0">
+        <summary class="h-card" style="font-size:18px"><svg class="i"><use href="#i-chev"/></svg>Air quality details</summary>
+        <div style="padding:8px 0 16px">
+          <table class="num" style="border-collapse:collapse;font-size:15px;width:100%;max-width:28rem">
+            <caption style="text-align:left;font-size:14px;color:var(--text-dark-muted);padding-bottom:8px">Hourly model forecast, μg/m³. Sample data. Hourly values are not compared with the 24-hour limits.</caption>
+            <thead><tr><th scope="col" style="text-align:left;padding:6px 0">Hour</th><th scope="col" style="text-align:right">PM2.5</th><th scope="col" style="text-align:right">PM10</th></tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid var(--rule)"><td style="padding:6px 0">4 PM</td><td style="text-align:right">31</td><td style="text-align:right">60</td></tr>
+              <tr style="border-top:1px solid var(--rule)"><td style="padding:6px 0">7 PM</td><td style="text-align:right">44</td><td style="text-align:right">82</td></tr>
+              <tr style="border-top:1px solid var(--rule)"><td style="padding:6px 0">10 PM</td><td style="text-align:right">49</td><td style="text-align:right">88</td></tr>
+              <tr style="border-top:1px solid var(--rule)"><td style="padding:6px 0">1 AM</td><td style="text-align:right">41</td><td style="text-align:right">74</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <footer class="colophon"><p>Air-quality forecasts from <a href="#today">Open-Meteo.com</a> (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p><p><a href="#today">Privacy</a></p></footer>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ASK ===================== -->
+<div data-screen-panel="ask" hidden>
+  <section class="stage stage--compact" aria-labelledby="a-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="app-header"><a class="wordmark" href="#today">AirAware AI</a><button class="place frost" type="button" aria-label="Place: Pune, Maharashtra. Change place"><svg class="i"><use href="#i-pin"/></svg><span>Pune, Maharashtra</span><svg class="i" style="width:16px;height:16px"><use href="#i-down"/></svg></button><nav class="app-nav" aria-label="Main"><ul class="frost"><li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li><li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask AirAware</a></li><li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li><li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Better Habits</a></li><li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>My Profile</a></li></ul></nav></div>
+      <div style="max-width:56rem;margin:0 auto;padding-top:16px">
+        <h1 id="a-h1" class="h-page" tabindex="-1">Ask AirAware</h1>
+        <p style="margin-top:6px;max-width:40rem">Claude (Anthropic) reads your question and answers from AirAware's rules and today's forecast.</p>
+        <div class="ctx" aria-label="What answers use"><span><svg class="i" style="width:14px;height:14px"><use href="#i-pin"/></svg>Pune, Maharashtra</span><span>Model forecast · retrieved 3:38 PM</span><a href="#profile">3 of 10 household questions answered · Edit</a></div>
+      </div>
+    </div>
+    <div class="ground-line" aria-hidden="true"></div>
+  </section>
+  <div class="ground" style="padding-bottom:0">
+    <div class="wrap">
+      <div style="max-width:56rem;margin:0 auto">
+        <h2 class="h-sec">How can I help you today?</h2>
+        <div class="starters" style="margin-top:16px">
+          <button type="button"><svg class="i"><use href="#i-walk"/></svg>Can I go for a morning walk today?</button>
+          <button type="button"><svg class="i"><use href="#i-home"/></svg>Is it a good idea to open my windows?</button>
+          <button type="button"><svg class="i"><use href="#i-sun"/></svg>How can I improve my indoor air?</button>
+          <button type="button"><svg class="i"><use href="#i-road"/></svg>How can I reduce pollution while commuting?</button>
+        </div>
+        <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>More topics</summary>
+          <div class="chips" style="padding-top:8px"><button class="chip" type="button">Outdoor activities</button><button class="chip" type="button">Windows and ventilation</button><button class="chip" type="button">Indoor air</button><button class="chip" type="button">My family</button><button class="chip" type="button">Commuting</button><button class="chip" type="button">Better habits</button></div>
+        </details>
+      </div>
+
+      <section class="thread" aria-label="Conversation" style="margin-top:40px">
+        <p class="q"><span class="sr-only">You asked: </span>Can I go for a morning walk today?</p>
+        <article class="a" aria-label="Your answer to &quot;Can I go for a morning walk today?&quot;">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><span class="a-who"><i aria-hidden="true"></i>AirAware</span><span class="sample">Sample answer, written for this prototype</span></div>
+          <p class="body-lg">Today's model forecast for Pune is within India's 24-hour limits for fine and coarse particles. Before a long or hard outdoor session, check local air-quality updates and advisories, since air quality can change during the day.</p>
+          <div class="feature" style="padding:16px 20px">
+            <h3 class="h-card" style="font-size:16px;line-height:24px">Check conditions before outdoor exercise</h3>
+            <p class="row-text">Before a long or hard outdoor session, check local air-quality updates and advisories.</p>
+            <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>You said you exercise outdoors.</p><p class="small muted">Air quality can change during the day.</p></div></details>
+          </div>
+          <p class="prov">Today: Forecast within India's 24-hour limits · Model forecast · Open-Meteo · retrieved 3:38 PM</p>
+          <details class="why" style="margin-top:0"><summary><svg class="i"><use href="#i-chev"/></svg>Sources and limitations</summary><div class="why-body"><p>This is a model forecast for an area about 45 km wide, not a station measurement.</p><p>General information only, not medical advice.</p></div></details>
+          <div class="a-actions"><button class="btn" type="button" style="font-weight:500"><svg class="i"><use href="#i-copy"/></svg>Copy answer</button></div>
+        </article>
+      </section>
+
+      <form class="composer" data-part="ask-composer" onsubmit="event.preventDefault()">
+        <label for="a-q" class="sr-only">Ask about your air, home or day</label>
+        <div class="composer-panel"><textarea id="a-q" rows="2" maxlength="200" placeholder="Ask about your air, home or daily routine…"></textarea><button class="btn btn-primary" type="submit"><svg class="i"><use href="#i-send"/></svg>Send</button></div>
+        <p class="credit">Answers use AirAware's rules and an Open-Meteo model forecast (CC BY 4.0). General information only, not medical advice.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DAILY PLAN (Today sub-view) ===================== -->
+<div data-screen-panel="plan" hidden>
+  <section class="stage stage--compact" aria-labelledby="p-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="app-header"><a class="wordmark" href="#today">AirAware AI</a><button class="place frost" type="button" aria-label="Place: Pune, Maharashtra. Change place"><svg class="i"><use href="#i-pin"/></svg><span>Pune, Maharashtra</span><svg class="i" style="width:16px;height:16px"><use href="#i-down"/></svg></button><nav class="app-nav" aria-label="Main"><ul class="frost"><li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li><li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask AirAware</a></li><li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li><li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Better Habits</a></li><li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>My Profile</a></li></ul></nav></div>
+      <div style="padding-top:16px">
+        <p class="eyebrow"><a href="#today" class="link">Back to Today</a> · Your full day</p>
+        <h1 id="p-h1" class="h-page" tabindex="-1">Plan for Pune, Maharashtra</h1>
+        <p class="prov" style="margin-top:6px">Today: Forecast within India's 24-hour limits · Model forecast · Open-Meteo · retrieved 3:38 PM</p>
+      </div>
+    </div>
+    <div class="ground-line" aria-hidden="true"></div>
+  </section>
+  <div class="ground">
+    <div class="wrap">
+      <div class="cols">
+        <section aria-labelledby="yd-h">
+          <div class="sec-head"><h2 id="yd-h" class="h-sec">Your day</h2><span class="sample">Sample data</span></div>
+          <p class="small muted">Made with AI. General information only, not medical advice. Follow local public-health advisories.</p>
+          <ol class="timeline" style="margin-top:16px">
+            <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="5.6" cy="9.9" r="3"/></svg>Morning</span>
+              <div><h3 class="h-card">Check conditions before outdoor exercise</h3><p class="row-text">Before a long or hard outdoor session, check local air-quality updates and advisories.</p>
+                <p class="foryou"><b>For you:</b> you said you exercise outdoors.</p>
+                <label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label>
+                <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>You said you exercise outdoors.</p><p class="small muted">Based on: your answer to "Do you exercise outdoors?" and the 24-hour forecast level.</p><p class="small muted">Air quality can change during the day.</p></div></details></div></li>
+            <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="9.2" cy="6.6" r="3"/></svg>Commute</span>
+              <div><h3 class="h-card">Combine trips and avoid idling</h3><p class="row-text">Combining errands into one trip and switching off the engine while waiting cut your vehicle's exhaust.</p>
+                <label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label>
+                <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>You said you get around by car.</p><p class="small muted">We do not estimate emission savings, because we have no documented method for your vehicle and trips.</p></div></details></div></li>
+            <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="14" cy="5" r="3"/></svg>Daytime</span>
+              <div><h3 class="h-card">Don't burn waste or leaves</h3><p class="row-text">Hand waste and garden leaves to municipal collection or composting instead of burning them.</p>
+                <label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label></div></li>
+            <li><span class="when"><svg class="arc" viewBox="0 0 28 16" aria-hidden="true"><path d="M2 15Q14-5 26 15"/><circle cx="21.2" cy="8.6" r="3"/></svg>Evening</span>
+              <div><h3 class="h-card">Use the kitchen exhaust while cooking</h3><p class="row-text">Switch the exhaust on before you start cooking and leave it running for a few minutes after.</p>
+                <label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label></div></li>
+            <li><span class="when"><svg class="i" style="width:20px;height:16px" aria-hidden="true"><use href="#i-home"/></svg>At home</span>
+              <div><h3 class="h-card">Cut indoor smoke at the source</h3><p class="row-text">Incense, mosquito coils, candles and tobacco all add smoke indoors.</p>
+                <label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label></div></li>
+          </ol>
+        </section>
+        <aside class="facts">
+          <section class="fact">
+            <h3>Save this plan</h3>
+            <p class="small" style="margin-top:6px">Saving creates an anonymous account (no email or name). Delete it any time in My Profile.</p>
+            <button class="btn btn-primary" type="button" style="margin-top:12px">Save plan</button>
+          </section>
+          <section class="fact">
+            <h3>By topic</h3>
+            <ul class="rows small" style="margin-top:8px">
+              <li><b>Outdoors and travel</b><br>Check conditions before outdoor exercise · Combine trips and avoid idling</li>
+              <li><b>Indoor air</b><br>Use the kitchen exhaust while cooking · Cut indoor smoke at the source</li>
+              <li><b>Sustainable swaps</b><br>Don't burn waste or leaves</li>
+            </ul>
+            <p class="small muted" style="margin-top:8px">When AI personalisation is unavailable, the plan says "Made by our rules. AI personalisation is unavailable right now." and shows these topics only.</p>
+          </section>
+        </aside>
+      </div>
+      <footer class="colophon"><p>Air-quality forecasts from <a href="#today">Open-Meteo.com</a> (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p><p><a href="#today">Privacy</a></p></footer>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MY HOME ===================== -->
+<div data-screen-panel="home" hidden>
+  <section class="stage stage--compact" aria-labelledby="h-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="app-header"><a class="wordmark" href="#today">AirAware AI</a><button class="place frost" type="button" aria-label="Place: Pune, Maharashtra. Change place"><svg class="i"><use href="#i-pin"/></svg><span>Pune, Maharashtra</span><svg class="i" style="width:16px;height:16px"><use href="#i-down"/></svg></button><nav class="app-nav" aria-label="Main"><ul class="frost"><li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li><li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask AirAware</a></li><li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li><li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Better Habits</a></li><li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>My Profile</a></li></ul></nav></div>
+      <div style="padding-top:16px">
+        <h1 id="h-h1" class="h-page" tabindex="-1">My Home</h1>
+        <p style="margin-top:6px;max-width:40rem">Practical steps for the air inside your home.</p>
+      </div>
+    </div>
+    <div class="ground-line" aria-hidden="true"></div>
+  </section>
+  <div class="ground">
+    <div class="wrap">
+      <section aria-labelledby="hf-h">
+        <div class="sec-head"><h2 id="hf-h" class="h-sec">Today, for your home</h2><span class="sample">Sample data</span></div>
+        <p class="prov">Outdoor model forecast for Pune: within India's 24-hour limits · Open-Meteo · retrieved 3:38 PM. AirAware does not measure the air inside your home.</p>
+        <article class="feature" style="margin-top:16px">
+          <h3 class="h-card">Cut indoor smoke at the source</h3>
+          <p class="text">Incense, mosquito coils, candles and tobacco all add smoke indoors. Using them less, or not indoors, is the simplest indoor-air step.</p>
+          <details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>These are common indoor pollution sources in any home.</p></div></details>
+          <p class="basis">Made with AI. General information only, not medical advice. Follow local public-health advisories.</p>
+        </article>
+      </section>
+      <section aria-labelledby="hw-h">
+        <h2 id="hw-h" class="h-sec" style="margin-bottom:24px">Ways to improve indoor air</h2>
+        <div class="groups">
+          <div class="group"><h3>Cooking and smoke</h3><ul class="rows">
+            <li><p class="h-card">Use the kitchen exhaust while cooking</p><p class="row-text">Switch the exhaust or chimney on before you start cooking and leave it running for a few minutes after.</p><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>Cooking gives off smoke and fine particles, and removing them where they start comes first.</p><p class="small muted">Some kitchen hoods recirculate air instead of venting it outside.</p></div></details></li>
+            <li><p class="h-card">Consider a cleaner cooking fuel where possible</p><p class="row-text">Where it is practical, cooking with LPG or electricity cuts smoke at the source.</p><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>Cooking with wood, dung, crop waste, coal or kerosene is a major cause of household air pollution.</p></div></details></li>
+          </ul></div>
+          <div class="group"><h3>Ventilation</h3><ul class="rows">
+            <li><p class="h-card">Air out while you cook or burn incense</p><p class="row-text">Open windows or switch on an exhaust fan while you cook or burn incense or candles.</p><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>Fresh air carries indoor smoke away, but on polluted days it also brings outdoor particles in.</p><p class="small muted">There is no single rule for windows: it depends on what is happening indoors and outside.</p></div></details></li>
+          </ul></div>
+          <div class="group"><h3>Dust and cleaning</h3><ul class="rows">
+            <li><p class="h-card">Clean with a damp cloth or mop</p><p class="row-text">Dust surfaces with a damp cloth and mop floors instead of sweeping them dry.</p><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>Dry sweeping and dusting lift settled dust back into the air.</p></div></details></li>
+          </ul></div>
+          <div class="group"><h3>Filtration</h3><ul class="rows">
+            <li><p class="h-card">If you use an air purifier, match it to the room</p><p class="row-text">A portable purifier works on one room. Choose one rated for that room's size, and keep its doors and windows closed while it runs.</p><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>A purifier works best in a closed room that matches its rating.</p><p class="small muted">A purifier does not remove every pollutant.</p></div></details></li>
+          </ul></div>
+        </div>
+      </section>
+      <footer class="colophon"><p>Air-quality forecasts from <a href="#today">Open-Meteo.com</a> (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p><p><a href="#today">Privacy</a></p></footer>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== BETTER HABITS ===================== -->
+<div data-screen-panel="habits" hidden>
+  <section class="stage stage--compact" aria-labelledby="b-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="app-header"><a class="wordmark" href="#today">AirAware AI</a><button class="place frost" type="button" aria-label="Place: Pune, Maharashtra. Change place"><svg class="i"><use href="#i-pin"/></svg><span>Pune, Maharashtra</span><svg class="i" style="width:16px;height:16px"><use href="#i-down"/></svg></button><nav class="app-nav" aria-label="Main"><ul class="frost"><li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li><li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask AirAware</a></li><li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li><li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Better Habits</a></li><li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>My Profile</a></li></ul></nav></div>
+      <div style="padding-top:16px">
+        <h1 id="b-h1" class="h-page" tabindex="-1">Better habits</h1>
+        <p style="margin-top:6px;max-width:44rem">Small swaps that cut smoke and exhaust around you. We never show an emissions saving we can't calculate.</p>
+      </div>
+    </div>
+    <div class="ground-line" aria-hidden="true"></div>
+  </section>
+  <div class="ground">
+    <div class="wrap">
+      <div class="groups">
+        <div class="group"><h3>Daily commuting and vehicle idling</h3><ul class="rows">
+          <li><p class="h-card">Switch off the engine while you wait</p><p class="row-text">Turn the engine off at red lights and while waiting, instead of idling. For some trips, public transport or sharing a ride may be practical.</p><label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>An idling engine adds exhaust to the air around you and the people nearby.</p><p class="small muted">We do not estimate emission savings, because we have no documented method for your vehicle and trips.</p></div></details></li>
+        </ul></div>
+        <div class="group"><h3>Waste</h3><ul class="rows">
+          <li><p class="h-card">Don't burn waste or leaves</p><p class="row-text">Hand waste and garden leaves to municipal collection or composting instead of burning them; open burning adds smoke for the whole neighbourhood.</p><label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label><details class="why"><summary><svg class="i"><use href="#i-chev"/></svg>Why?</summary><div class="why-body"><p>India's Solid Waste Management Rules, 2026 say households must not burn their waste on streets or in open public spaces.</p></div></details></li>
+        </ul></div>
+        <div class="group"><h3>Cooking</h3><ul class="rows">
+          <li><p class="h-card">Consider a cleaner cooking fuel where possible</p><p class="row-text">Wood, dung or crop waste fires make a lot of indoor smoke. Where it is practical, cooking with LPG or electricity cuts this smoke at the source.</p><label class="try"><input type="checkbox"> I'll try this <span class="proposal">Proposal</span></label></li>
+        </ul></div>
+        <div class="group"><h3>Energy use</h3><ul class="rows">
+          <li><p class="h-card">Choose star-labelled appliances</p><p class="row-text">When you buy an appliance, compare its Bureau of Energy Efficiency star label: more stars means it uses less electricity for the same job.</p></li>
+          <li><p class="h-card">Use fans first, and keep the AC at 24 °C</p><p class="row-text">A ceiling or table fan is the first line against the heat. When you use an AC, keep it at its 24 °C default rather than colder.</p></li>
+          <li><p class="h-card">Switch off lights you are not using</p><p class="row-text">Turn lights off when you leave a room or no longer need them.</p></li>
+        </ul></div>
+      </div>
+      <p class="small muted">"I'll try this" is a proposal: it would stay in this browser unless you save. Nothing is counted or scored.</p>
+      <footer class="colophon"><p>Air-quality forecasts from <a href="#today">Open-Meteo.com</a> (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p><p><a href="#today">Privacy</a></p></footer>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MY PROFILE ===================== -->
+<div data-screen-panel="profile" hidden>
+  <section class="stage stage--compact" aria-labelledby="pr-h1">
+    <div class="scene" aria-hidden="true">
+      <svg class="upper" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice"><circle class="glow" cx="560" cy="58" r="62" fill="url(#glow)"/><g class="clouds"><use href="#cloud" x="300" y="30"/><use href="#cloud" x="480" y="22"/></g></svg>
+      <div class="city">
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-far"><use href="#g-far"/></g></svg>
+        <div class="veil veil-far"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-mid"><use href="#g-mid"/></g><g class="c-middetail"><use href="#g-middetail"/></g></svg>
+        <div class="veil veil-mid"></div>
+        <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice"><g class="c-near"><use href="#g-near"/><use href="#g-tanks"/></g><g class="c-windows"><use href="#g-neardetail"/></g></svg>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="app-header"><a class="wordmark" href="#today">AirAware AI</a><button class="place frost" type="button" aria-label="Place: Pune, Maharashtra. Change place"><svg class="i"><use href="#i-pin"/></svg><span>Pune, Maharashtra</span><svg class="i" style="width:16px;height:16px"><use href="#i-down"/></svg></button><nav class="app-nav" aria-label="Main"><ul class="frost"><li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li><li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask AirAware</a></li><li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li><li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Better Habits</a></li><li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>My Profile</a></li></ul></nav></div>
+      <div style="padding-top:16px">
+        <h1 id="pr-h1" class="h-page" tabindex="-1">My Profile</h1>
+        <p style="margin-top:6px;max-width:44rem">Your household (optional). Answers make suggestions more specific. Skip any you like.</p>
+      </div>
+    </div>
+    <div class="ground-line" aria-hidden="true"></div>
+  </section>
+  <div class="ground">
+    <div class="wrap">
+      <div class="form-grid">
+        <form onsubmit="event.preventDefault()">
+          <fieldset><legend>Your routine</legend>
+            <div class="field"><label for="f1">How do you usually travel to work or college?</label><select id="f1"><option>Not answered</option><option>Walk</option><option>Cycle</option><option>Two-wheeler</option><option selected>Car</option><option>Bus or train</option></select></div>
+            <div class="field"><label for="f2">Do you exercise outdoors?</label><select id="f2"><option>Not answered</option><option selected>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="f3">Does a child in your home travel to school?</label><select id="f3"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+          </fieldset>
+          <fieldset><legend>Your home</legend>
+            <div class="field"><label for="f4">Is your home near a busy road?</label><select id="f4"><option>Not answered</option><option>Yes</option><option>No</option><option>Not sure</option></select></div>
+            <div class="field"><label for="f5">What do you mostly cook with?</label><select id="f5"><option>Not answered</option><option>LPG</option><option>Electricity</option><option>Wood, dung or crop waste</option><option>Other</option></select></div>
+            <div class="field"><label for="f6">Does your kitchen have an exhaust fan or chimney?</label><select id="f6"><option>Not answered</option><option selected>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="f7">Do you have an air purifier?</label><select id="f7"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+          </fieldset>
+          <fieldset><legend>Who lives with you</legend>
+            <div class="field"><label for="f8">Are there children in your home?</label><select id="f8"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="f9">Are there older adults in your home?</label><select id="f9"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="f10">Might someone at home be more sensitive to air pollution?</label><select id="f10"><option>Not answered</option><option>Yes</option><option>No</option><option>Not sure</option></select></div>
+          </fieldset>
+          <button class="btn btn-primary" type="submit" aria-describedby="save-note">Save my answers</button>
+          <p id="save-note" class="small muted" style="margin-top:8px">Saving creates an anonymous account (no email or name).</p>
+        </form>
+        <div class="facts">
+          <section class="fact" aria-labelledby="sp-h"><h2 id="sp-h" class="h-sec" style="font-size:20px">Saved plans</h2><p class="small muted" style="margin-top:6px">No saved plans yet. Save one from Today's full day.</p></section>
+          <section class="fact" aria-labelledby="yd2-h"><h2 id="yd2-h" class="h-sec" style="font-size:20px">Your data</h2>
+            <p class="small" style="margin-top:6px">Saving creates an anonymous account (no email or name). Your answers are stored on AirAware's database host, and this browser keeps the sign-in. Delete them any time here. Clearing this browser's data loses access but does not delete them.</p>
+            <p class="small" style="margin-top:8px">Your place is used to fetch its forecast. Device location is used only when you ask, at the precision you choose.</p>
+            <button class="btn btn-danger" type="button" style="margin-top:12px">Delete my saved data</button>
+          </section>
+        </div>
+      </div>
+      <footer class="colophon"><p>Air-quality forecasts from <a href="#today">Open-Meteo.com</a> (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p><p><a href="#today">Privacy</a></p></footer>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<nav class="tabbar frost" aria-label="Main">
+  <ul>
+    <li><a href="#today" data-nav="today"><svg class="i"><use href="#i-sun"/></svg>Today</a></li>
+    <li><a href="#ask" data-nav="ask"><svg class="i"><use href="#i-chat"/></svg>Ask</a></li>
+    <li><a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg>My Home</a></li>
+    <li><a href="#habits" data-nav="habits"><svg class="i"><use href="#i-leaf"/></svg>Habits</a></li>
+    <li><a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg>Profile</a></li>
+  </ul>
+</nav>
+
+<script>
+(function(){
+  var SCREENS=['landing','today','ask','plan','home','habits','profile'];
+  var NAV_OF={plan:'today'};
+  var first=true;
+  function show(){
+    var s=location.hash.slice(1); if(SCREENS.indexOf(s)<0){ if(!first) return; s='landing'; }
+    document.body.dataset.screen=s;
+    document.querySelectorAll('[data-screen-panel]').forEach(function(p){
+      var on=p.dataset.screenPanel===s; p.hidden=!on;
+      if(on && !first){ p.classList.remove('screen-in'); void p.offsetWidth; p.classList.add('screen-in'); }
+    });
+    document.querySelectorAll('.proto a').forEach(function(a){ if(a.getAttribute('href')==='#'+s) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+    var nav=NAV_OF[s]||s;
+    document.querySelectorAll('[data-nav]').forEach(function(a){ if(a.dataset.nav===nav) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+    if(!first){ window.scrollTo(0,0); var h=document.querySelector('[data-screen-panel="'+s+'"] h1'); if(h) h.focus({preventScroll:true}); }
+    first=false;
+  }
+  window.addEventListener('hashchange',show); show();
+
+  // Prototype-only sample states. Numbers agree with the verdict (limits 60 and 100).
+  var STATES={
+    within:{air:'within',stale:false,title:"Forecast within India's 24-hour limits",tag:'Within the limit',prov:'Model forecast · Open-Meteo · retrieved 3:38 PM',expl:'Fine and coarse particles are forecast below the national daily limits for the next 24 hours.',cav:'Being within the national limit does not mean the air is free of risk.',pm25:38,pm10:71,
+      rec:['Cut indoor smoke at the source','Incense, mosquito coils, candles and tobacco all add smoke indoors. Using them less, or not indoors, is the simplest indoor-air step.','These are common indoor pollution sources in any home.']},
+    above:{air:'above',stale:false,title:"Forecast above India's 24-hour limit",tag:'Above the limit',prov:'Model forecast · Open-Meteo · retrieved 3:38 PM',expl:'Fine particles (PM2.5) are forecast above the national daily limit for the next 24 hours.',cav:'',pm25:74,pm10:92,
+      rec:['Ventilate for indoor sources, not by habit','Outdoor particles are forecast to be high, so windows left open all day let more of them in. Cooking, incense or smoke indoors still needs fresh air, so ventilate while those are going on and for a short while after.','The forecast is above the national 24-hour limit, and indoor sources add their own pollution.']},
+    unknown:{air:'unknown',stale:false,title:'Air information unavailable',tag:'No data',prov:'Model forecast · Open-Meteo · retrieved 3:38 PM',expl:"We could not get a complete 24-hour forecast for this place, so there's no advice about today's air. The suggestions below apply on any day.",cav:'',pm25:null,pm10:null,
+      rec:['Cut indoor smoke at the source','Incense, mosquito coils, candles and tobacco all add smoke indoors. Using them less, or not indoors, is the simplest indoor-air step.','These are common indoor pollution sources in any home.']},
+    stale:{air:'within',stale:true,title:"Forecast within India's 24-hour limits",tag:'Within the limit',prov:'Model forecast · Open-Meteo · retrieved 1:12 PM',expl:'Fine and coarse particles are forecast below the national daily limits for the next 24 hours.',cav:'Being within the national limit does not mean the air is free of risk.',pm25:38,pm10:71,
+      rec:['Cut indoor smoke at the source','Incense, mosquito coils, candles and tobacco all add smoke indoors. Using them less, or not indoors, is the simplest indoor-air step.','These are common indoor pollution sources in any home.']}
+  };
+  function $(id){return document.getElementById(id);}
+  function bar(v,limit){ return Math.min(v/(limit*1.5),1)*100+'%'; }
+  function setState(k){
+    var st=STATES[k];
+    document.body.dataset.air=st.air; document.body.dataset.stale=String(st.stale);
+    $('v-title').textContent=st.title; $('v-tag').textContent=st.tag; $('v-prov').textContent=st.prov;
+    $('v-expl').textContent=st.expl; $('v-cav').textContent=st.cav; $('v-cav').hidden=!st.cav;
+    $('rec-title').textContent=st.rec[0]; $('rec-text').textContent=st.rec[1]; $('rec-why').textContent=st.rec[2];
+    if(st.pm25===null){
+      $('readings').hidden=true; $('lens-foot').textContent="No 24-hour comparison without a complete forecast. We don't calculate an AQI.";
+    } else {
+      $('readings').hidden=false;
+      $('pm25').textContent=st.pm25; $('pm10').textContent=st.pm10;
+      $('m25').style.width=bar(st.pm25,60); $('m10').style.width=bar(st.pm10,100);
+      $('s25').textContent=st.pm25>60?'Above the limit':'Within the limit';
+      $('s10').textContent=st.pm10>100?'Above the limit':'Within the limit';
+      $('lens-foot').textContent="Compared with India's 24-hour limits (NAAQS, CPCB 2009). The mark on each bar is the limit. We don't calculate an AQI.";
+    }
+    document.querySelectorAll('[data-state]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.state===k)); });
+  }
+  document.querySelectorAll('[data-state]').forEach(function(b){ b.addEventListener('click',function(){ setState(b.dataset.state); }); });
+  window.__setState=setState;
+})();
+</script>
+</body>
+</html>

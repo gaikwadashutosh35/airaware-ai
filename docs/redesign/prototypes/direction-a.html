@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AirAware Direction A</title>
+<meta name="description" content="Design prototype, Direction A: calm editorial environmental intelligence. Sample data only. Not the live app.">
+<style>
+/* ===== Tokens. The first block is copied from client/src/index.css:28-43 (shipped).
+   The second block is PROPOSED for Direction A and needs the owner's OK. ===== */
+:root{
+  --bg:#080f1c; --surface:#101c2b; --elevated:#172638; --surface-light:#f5f8fa;
+  --primary:#39d5c2; --secondary:#64a9ff; --text:#f4f7fa; --text-dark:#182435;
+  --warning:#f5b84b; --text-muted:#a9b7c8; --text-dark-muted:#4a5a6e;
+  --rule:#d3dce6; --rule-dark:#22344a; --focus:#1f6fd6;
+  /* PROPOSED: a deep teal for small accent text and marks on light surfaces
+     (primary #39d5c2 is 1.6:1 on surface-light, so it can only be a fill there). */
+  --primary-ink:#0b6b62;
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --gutter:16px; --measure:40rem;
+}
+@media (min-width:640px){:root{--gutter:24px}}
+@media (min-width:1024px){:root{--gutter:32px}}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:clip}
+body{margin:0;background:var(--surface-light);color:var(--text-dark);font-family:var(--font);
+  font-synthesis:none;line-height:1.55;font-size:16px;overflow-wrap:break-word;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{text-wrap:balance;margin:0;font-weight:600;min-width:0}
+p,li,dd{text-wrap:pretty}
+p{margin:0}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.on-dark :focus-visible{outline-color:var(--secondary)}
+.on-dark .on-light :focus-visible{outline-color:var(--focus)}
+[data-part=title-block] :focus-visible,.stale :focus-visible{outline-color:var(--text-dark)}
+[tabindex="-1"]:focus{outline:none}
+.num{font-variant-numeric:tabular-nums}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+[hidden]{display:none!important}
+
+/* ===== Prototype chrome (not part of the design) ===== */
+.proto{background:#000;color:#fff;font-size:12px;position:relative;z-index:5}
+.proto-in{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:8px var(--gutter);max-width:90rem;margin:0 auto}
+.proto-label{font-weight:600;letter-spacing:.02em}
+.proto-label span{font-weight:400;color:#c9d3df}
+.proto-tabs{display:flex;gap:4px;overflow-x:auto;max-width:100%;scrollbar-width:none;flex:1 1 auto;padding:2px}
+.proto-tabs a{flex:none;display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:6px;text-decoration:none;color:#c9d3df;font-size:13px}
+.proto-tabs a[aria-current=page]{background:#fff;color:#000;font-weight:600}
+.proto-tabs a:focus-visible,.proto select:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.proto label{display:inline-flex;gap:6px;align-items:center}
+.proto select{min-height:44px;background:#111;border:1px solid #444;border-radius:6px;padding:0 8px;color:#fff}
+
+/* ===== App shell ===== */
+.apphead{background:var(--bg);color:var(--text);position:relative;z-index:2}
+.apphead-in{max-width:72rem;margin:0 auto;display:flex;align-items:center;gap:12px;min-height:64px;padding:0 var(--gutter)}
+.wordmark{display:inline-flex;align-items:center;min-height:44px;font-weight:600;font-size:18px;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--rule-dark);border-radius:999px;background:none;color:var(--text);font-size:14px;white-space:nowrap}
+.chip svg{width:16px;height:16px}
+.nav-top{margin-left:auto;display:none;gap:2px}
+.nav-top a{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:999px;color:var(--text-muted);text-decoration:none;font-size:14px}
+.nav-top a[aria-current=page]{color:var(--text);background:var(--surface);box-shadow:inset 0 0 0 1px var(--rule-dark)}
+.nav-top a[aria-current=page] svg{color:var(--primary)}
+.nav-top svg,.nav-bottom svg{width:18px;height:18px;flex:none}
+.nav-bottom{position:sticky;bottom:0;z-index:3;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-top:1px solid var(--rule-dark);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-bottom a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;color:var(--text-muted);text-decoration:none;font-size:11px;text-align:center;line-height:1.2;padding:4px 2px}
+.nav-bottom a[aria-current=page]{color:var(--text)}
+.nav-bottom a[aria-current=page] svg{color:var(--primary)}
+@media (min-width:768px){.nav-top{display:flex}.nav-bottom{display:none}}
+
+/* ===== Atmospheric backdrop: the shipped CitySkyline recipe (CitySkyline.tsx),
+   same geometry (skylineGeometry.ts), Direction A tuning marked PROPOSED. ===== */
+.backdrop{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+body[data-screen=landing] .backdrop{display:none}
+body{--sky-top:color-mix(in oklab,color-mix(in oklab,var(--secondary) 55%,var(--primary)) 68%,var(--surface-light));
+  --sky-bottom:color-mix(in oklab,var(--primary) 24%,var(--surface-light));
+  --city-hue:color-mix(in oklab,var(--secondary) 70%,var(--primary));--veil:0;--glow:.6}
+body[data-air=above]{--sky-top:color-mix(in oklab,color-mix(in oklab,var(--secondary) 24%,var(--rule)) 93%,var(--warning));
+  --sky-bottom:color-mix(in oklab,var(--warning) 16%,color-mix(in oklab,var(--rule) 55%,var(--surface-light)));
+  --city-hue:color-mix(in oklab,var(--secondary) 10%,color-mix(in oklab,var(--rule) 80%,var(--warning)));--veil:.42;--glow:.22}
+body[data-air=unknown]{--sky-top:color-mix(in oklab,var(--secondary) 12%,var(--rule));
+  --sky-bottom:color-mix(in oklab,var(--rule) 60%,var(--surface-light));
+  --city-hue:color-mix(in oklab,var(--secondary) 30%,var(--rule));--veil:0;--glow:0}
+/* PROPOSED: the sky fades into paper by 75% of the screen, so long pages read on a quiet ground. */
+.sky{position:absolute;inset:0;background:linear-gradient(var(--sky-top),var(--sky-bottom) 55%,var(--surface-light) 100%);transition:background 700ms ease-out}
+.glow{position:absolute;top:64px;left:62%;width:220px;height:220px;margin-left:-110px;border-radius:50%;
+  background:radial-gradient(circle,var(--warning) 0,color-mix(in oklab,var(--warning) 60%,transparent) 30%,transparent 70%);opacity:var(--glow);transition:opacity 700ms ease-out}
+.clouds{position:absolute;inset-inline:0;top:64px;height:160px;width:100%}
+@media (min-width:640px){.clouds{height:224px}}
+@media (prefers-reduced-motion:no-preference){.clouds g{animation:drift 4.8s cubic-bezier(.23,1,.32,1) 1 both}}
+@keyframes drift{from{transform:translateX(-16px)}to{transform:none}}
+/* Band: shipped H5 is min(16rem,32vh) / min(24rem,40vh). PROPOSED: slightly lower and quieter. */
+.city{position:absolute;inset-inline:0;bottom:calc(3.5rem + env(safe-area-inset-bottom,0px));height:min(14rem,28vh);width:100%}
+@media (min-width:640px){.city{height:min(20rem,34vh)}}
+@media (min-width:768px){.city{bottom:0;left:50%;right:auto;width:174%;transform:translateX(-50%)}}
+@media (max-height:33.3rem){.city{display:none}}
+.city svg{position:absolute;inset:0;width:100%;height:100%}
+.f-far{fill:color-mix(in oklab,var(--text-dark-muted) 10%,var(--city-hue));opacity:.30}
+.f-mid{fill:color-mix(in oklab,var(--text-dark-muted) 14%,var(--city-hue));opacity:.32}
+.f-near{fill:color-mix(in oklab,var(--text-dark-muted) 35%,var(--city-hue));opacity:.72}
+.f-light{fill:var(--surface-light)}
+.veil{fill:var(--rule);opacity:var(--veil);transition:opacity 700ms ease-out}
+@media (max-width:639px){.near-detail{display:none}}
+@media (forced-colors:active){.backdrop,.hero-city{display:none}}
+
+/* ===== Layout ===== */
+.page{max-width:72rem;margin:0 auto;padding:40px var(--gutter) 96px}
+.grid{display:grid;gap:24px}
+@media (min-width:1024px){
+  .grid-today{grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:start}
+  .grid-ed{grid-template-columns:12rem minmax(0,1fr);gap:32px}
+}
+.col{display:flex;flex-direction:column;gap:24px;min-width:0}
+.narrow{max-width:45rem;margin-inline:auto}
+
+/* ===== Type (Tailwind steps only, Inter 400/500/600) ===== */
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dark-muted)}
+.eyebrow b{color:var(--primary-ink);font-weight:600}
+.display{font-size:48px;line-height:1.05;letter-spacing:-.025em}
+@media (min-width:640px){.display{font-size:60px}}
+@media (min-width:1024px){.display{font-size:72px}}
+.h1{font-size:30px;line-height:1.15;letter-spacing:-.02em}
+@media (min-width:640px){.h1{font-size:36px}}
+.h2{font-size:24px;line-height:1.2;letter-spacing:-.015em}
+@media (min-width:640px){.h2{font-size:30px}}
+.h3{font-size:18px;line-height:1.35}
+/* On the open sky, muted and teal text fall under 4.5:1 (text-dark-muted 4.20:1, primary-ink 3.79:1 on the within sky top), so the title block uses text-dark only. */
+[data-part=title-block] .eyebrow,[data-part=title-block] .eyebrow b,[data-part=title-block] .muted{color:var(--text-dark)}
+.lead{font-size:18px;color:var(--text-dark-muted);max-width:var(--measure)}
+.small{font-size:14px}
+.muted{color:var(--text-dark-muted)}
+.xs{font-size:12px}
+
+/* ===== Surfaces ===== */
+.panel{background:color-mix(in oklab,var(--surface-light) 85%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid var(--rule);border-radius:8px;padding:24px}
+@media (min-width:640px){.panel{padding:32px}}
+@media (prefers-reduced-transparency:reduce){.panel{background:var(--surface-light);backdrop-filter:none}}
+.sheet{background:color-mix(in oklab,var(--surface-light) 85%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:8px;padding:24px var(--gutter)}
+@media (min-width:640px){.sheet{padding:32px}}
+@media (prefers-reduced-transparency:reduce){.sheet{background:var(--surface-light);backdrop-filter:none}}
+.sheet .panel{background:var(--surface-light);backdrop-filter:none}
+.paper{background:var(--surface-light);border:1px solid var(--rule);border-radius:8px;padding:24px}
+.hair{border-top:1px solid var(--rule)}
+.stack>*+*{margin-top:12px}
+.stack-lg>*+*{margin-top:24px}
+
+/* ===== Data-kind marks ===== */
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 10px;border-radius:999px;border:1.5px solid var(--text-dark);font-size:14px;font-weight:500;white-space:nowrap}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--primary-ink)}
+body[data-air=above] .pill::before{background:#9a5b00}
+body[data-air=unknown] .pill::before{background:var(--text-dark-muted)}
+.source{font-size:14px;color:var(--text-dark-muted)}
+.sample{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:999px;background:var(--text-dark);color:var(--surface-light);font-size:12px;font-weight:500;letter-spacing:.02em;white-space:nowrap}
+.on-dark .sample{background:var(--text);color:var(--bg)}
+.tagrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.stale{display:none;background:var(--warning);color:var(--text-dark);border-radius:8px;padding:12px 16px;font-size:14px;font-weight:500;gap:8px;align-items:flex-start}
+.stale svg{width:18px;height:18px;flex:none;margin-top:2px}
+body[data-stale=true] .stale{display:flex}
+[data-when]{display:none}
+body[data-air=within] [data-when~=within],body[data-air=above] [data-when~=above],body[data-air=unknown] [data-when~=unknown]{display:revert}
+body:not([data-stale=true]) [data-when~=stale]{display:none}
+body[data-stale=true] [data-when~=stale]{display:inline}
+
+/* The 24-hour ledger: words and numbers carry the meaning; the line is decoration. */
+.ledger{display:grid;gap:0;margin-top:8px}
+.ledger-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:16px 0;border-top:1px solid var(--rule);align-items:baseline}
+.ledger-row:last-child{border-bottom:1px solid var(--rule)}
+.ledger-name{font-weight:600}
+.ledger-name span{font-weight:400;color:var(--text-dark-muted)}
+.ledger-val{font-size:30px;font-weight:600;letter-spacing:-.02em;text-align:right;line-height:1}
+.ledger-val small{font-size:14px;font-weight:400;color:var(--text-dark-muted);letter-spacing:0;margin-left:4px}
+.ledger-meta{grid-column:1/-1;display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--text-dark-muted);flex-wrap:wrap}
+.scale{grid-column:1/-1;position:relative;height:16px;margin-top:4px}
+.scale::before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;background:var(--rule);border-radius:2px}
+.scale i{position:absolute;top:7px;height:2px;left:0;background:var(--text-dark);border-radius:2px}
+.scale b{position:absolute;top:0;width:2px;height:16px;background:var(--text-dark-muted)}
+
+/* ===== Rule cards and disclosures ===== */
+.card{border-top:1px solid var(--rule);padding:20px 0}
+.card:first-child{border-top:0;padding-top:0}
+.card h3,.card h4{font-size:18px;line-height:1.35;font-weight:600}
+.card p{margin-top:6px;max-width:var(--measure)}
+.foryou{font-size:14px;color:var(--primary-ink);font-weight:500;margin-top:8px}
+details.why{margin-top:8px}
+details.why>summary{display:inline-flex;align-items:center;gap:6px;min-height:44px;cursor:pointer;font-weight:500;list-style:none;color:var(--text-dark)}
+details.why>summary::-webkit-details-marker{display:none}
+details.why>summary::before{content:"";width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform 160ms cubic-bezier(.23,1,.32,1)}
+details.why[open]>summary::before{transform:rotate(45deg)}
+details.why .why-body{padding:4px 0 8px 14px;border-left:2px solid var(--rule);font-size:14px;color:var(--text-dark-muted);display:grid;gap:6px}
+details.fold{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+details.fold>summary{display:flex;align-items:center;justify-content:space-between;min-height:56px;cursor:pointer;font-weight:600;font-size:18px;list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"+";font-weight:400;font-size:24px;color:var(--text-dark-muted)}
+details.fold[open]>summary::after{content:"\2212"}
+details.fold .fold-body{padding:0 0 20px;display:grid;gap:12px;font-size:14px}
+
+/* ===== Controls ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font-weight:600;font-size:16px;text-decoration:none;border:1.5px solid var(--text-dark);background:none;color:var(--text-dark);cursor:pointer}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:var(--text-dark)}
+.btn-quiet{border-color:var(--rule);font-weight:500}
+.on-dark .btn{border-color:var(--text-muted);color:var(--text)}
+.on-dark .btn-primary{border-color:var(--primary);color:var(--text-dark)}
+.btn svg{width:18px;height:18px}
+.linkish{display:inline-flex;align-items:center;min-height:44px;font-weight:500;text-decoration:underline;text-decoration-color:var(--primary-ink);text-underline-offset:4px;text-decoration-thickness:1.5px}
+@media (prefers-reduced-motion:no-preference){.btn,.chip,.choice,.starter{transition:transform 120ms cubic-bezier(.23,1,.32,1),background-color 160ms ease}.btn:active,.chip:active,.choice:active,.starter:active{transform:scale(.97)}}
+@media (prefers-reduced-motion:reduce){.btn:active{opacity:.8}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media (hover:hover){.btn-quiet:hover,.starter:hover,.choice:hover{background:color-mix(in oklab,var(--rule) 45%,transparent)}}
+fieldset{min-width:0}
+fieldset+fieldset{margin-top:16px!important}
+.field{display:grid;gap:6px}
+.field label{font-weight:500;font-size:14px}
+select.input,textarea.input,input.input{min-height:44px;border:1px solid var(--text-dark-muted);border-radius:6px;background:var(--surface-light);padding:8px 12px;width:100%}
+textarea.input{resize:none;min-height:56px}
+
+/* ===== Choices list (replaces four boxed tiles) ===== */
+.choices{display:grid;gap:0;margin:0;padding:0;list-style:none}
+@media (min-width:768px){.choices{grid-template-columns:1fr 1fr;column-gap:32px}}
+.choice{display:flex;gap:14px;align-items:flex-start;padding:16px 4px;border-top:1px solid var(--rule);text-decoration:none;min-height:64px;border-radius:2px}
+.choice svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--primary-ink)}
+.choice strong{display:block;font-weight:600}
+.choice span{font-size:14px;color:var(--text-dark-muted)}
+.choice .arrow{margin-left:auto;color:var(--text-dark-muted);align-self:center}
+
+/* ===== Ask ===== */
+.ctx{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctx span{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--rule);background:var(--surface-light);font-size:14px}
+.ctx a{font-size:14px}
+.starters{display:flex;flex-wrap:wrap;gap:8px}
+.starter{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--rule);background:var(--surface-light);font-size:14px;text-align:left;cursor:pointer}
+.q{margin-left:auto;max-width:85%;background:var(--text-dark);color:var(--surface-light);border-radius:8px 8px 2px 8px;padding:12px 16px;width:fit-content}
+.a{display:grid;gap:12px}
+.a-who{display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px}
+.a-who i{width:20px;height:20px;border-radius:50%;background:var(--primary-ink);display:inline-block}
+.composer{position:sticky;bottom:0;z-index:2;padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--surface-light) 24px)}
+@media (max-width:767px){.composer{bottom:56px}}
+.composer .paper{padding:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.composer .xs{grid-column:1/-1}
+
+/* ===== Plan timeline ===== */
+.timeline{list-style:none;margin:0;padding:0}
+.timeline>li{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--rule)}
+@media (min-width:640px){.timeline>li{grid-template-columns:8rem minmax(0,1fr)}}
+.timeline .when{font-size:14px;font-weight:600;color:var(--primary-ink);padding-top:2px}
+.try{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:14px;font-weight:500;cursor:pointer}
+.try input{width:20px;height:20px;accent-color:var(--primary-ink);margin:0}
+.proposal{font-size:12px;font-weight:500;color:var(--text-dark-muted);border:1px dashed var(--text-dark-muted);border-radius:999px;padding:1px 8px;white-space:nowrap}
+
+/* ===== Landing (dark) ===== */
+.landing{background:var(--bg);color:var(--text)}
+.landing .muted,.landing .source{color:var(--text-muted)}
+.landing .eyebrow{color:var(--text-muted)}
+.landing .eyebrow b{color:var(--primary)}
+.hero{position:relative;overflow:hidden;padding:24px 0 0}
+.hero-in{position:relative;z-index:1;max-width:72rem;margin:0 auto;padding:16px var(--gutter) min(22rem,44vh);display:grid;gap:24px}
+@media (min-width:1024px){.hero-in{grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:64px;padding-bottom:min(18rem,34vh)}}
+.hero-city{position:absolute;inset-inline:0;bottom:0;height:min(20rem,40vh)}
+@media (min-width:768px){.hero-city{left:50%;right:auto;width:150%;transform:translateX(-50%)}}
+.hero-city svg{position:absolute;inset:0;width:100%;height:100%}
+.d-far{fill:color-mix(in oklab,var(--secondary) 22%,var(--elevated));opacity:.55}
+.d-mid{fill:color-mix(in oklab,var(--secondary) 10%,var(--surface));opacity:.9}
+.d-near{fill:color-mix(in oklab,var(--bg) 55%,var(--surface))}
+.d-win{fill:var(--warning);opacity:.10}
+.hero-sky{position:absolute;inset:0;background:radial-gradient(60% 50% at 70% 30%,color-mix(in oklab,var(--secondary) 18%,transparent),transparent 70%),linear-gradient(var(--bg),color-mix(in oklab,var(--secondary) 12%,var(--bg)) 80%)}
+.searchrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;max-width:28rem}
+.searchrow input{min-height:44px;border-radius:6px;border:1px solid var(--rule-dark);background:var(--surface);color:var(--text);padding:0 12px}
+.searchrow input::placeholder{color:var(--text-muted)}
+.preview{border:1px solid var(--rule-dark);border-radius:8px;background:color-mix(in oklab,var(--surface) 88%,transparent);padding:24px;display:grid;gap:14px;align-self:start}
+.preview .pill{border-color:var(--text);}
+.preview .pill::before{background:var(--primary)}
+.band{max-width:72rem;margin:0 auto;padding:64px var(--gutter);display:grid;gap:32px}
+.journey{list-style:none;margin:0;padding:0;display:grid;gap:0;counter-reset:j}
+@media (min-width:1024px){.journey{grid-template-columns:repeat(5,1fr);gap:24px}}
+.journey li{align-content:start;border-top:1px solid var(--rule-dark);padding:20px 0;display:grid;gap:8px}
+.journey .n{font-size:14px;font-weight:600;color:var(--primary)}
+.journey h3{font-size:20px}
+.journey p{color:var(--text-muted);font-size:14px}
+.statement{font-size:30px;line-height:1.2;letter-spacing:-.02em;font-weight:500;max-width:30ch}
+@media (min-width:1024px){.statement{font-size:36px}}
+.lfoot{border-top:1px solid var(--rule-dark);max-width:72rem;margin:0 auto;padding:32px var(--gutter) 48px;font-size:14px;color:var(--text-muted);display:grid;gap:8px}
+.lfoot a{display:inline-flex;align-items:center;min-height:44px}
+
+.foot{font-size:14px;color:var(--text-dark-muted);display:grid;gap:4px;padding-top:24px;border-top:1px solid var(--rule)}
+.foot a{display:inline-flex;align-items:center;min-height:44px}
+</style>
+</head>
+<body data-screen="landing" data-air="within" data-stale="false">
+
+<!-- Shared icon and skyline geometry. The skyline paths are generated from
+     client/src/features/air-quality/skylineGeometry.ts (unchanged), not redrawn. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="sk-far" d="M-10 160V120H6V94H26V112H36V88H41V78H58V124H74V116H100V126H118V84H138V98H156V101H160V122H176V74H189V84H194V114H210V126H240V118H244V88H262V79H266V76H274V79H278V112H296V124H322V116H326V94H348V116H352V122H374V72H389V82H394V86H406V114H410V126H434V118H446V93H450V90H472V93H476V110H486V124H500V76H518V124H520V94H539V104H544V116H546V122H576V112H598V124H600V85H604V82H616V85H620V124H628V100H654V118H656V126H686V114H700V88H705V78H716V122H742V95H746V92H764V95H768V124H788V84H806V124H810V160z"/>
+    <path id="sk-mid" d="M-10 116h40v44h-40zM10 108h20v8h-20zM10 111h21.5v1.6h-21.5zM-10 119h41.5v1.6h-41.5zM-10 129h41.5v1.6h-41.5zM-10 139h41.5v1.6h-41.5zM-10 149h41.5v1.6h-41.5zM32 102h52v58h-52zM40 94h12v8h-12zM30 108h56v2h-56zM30 116h56v2h-56zM30 124h56v2h-56zM30 132h56v2h-56zM30 140h56v2h-56zM30 148h56v2h-56zM87 90h30v70h-30zM92 86h20v4h-20zM119 120h28v40h-28zM117.5 123h31v1.6h-31zM117.5 133h31v1.6h-31zM117.5 143h31v1.6h-31zM150 98h46v62h-46zM167 90h12v8h-12zM148 104h50v2h-50zM148 112h50v2h-50zM148 120h50v2h-50zM148 128h50v2h-50zM148 136h50v2h-50zM148 144h50v2h-50zM199 98h32v62h-32zM203 88h24v10h-24zM234 114h42v46h-42zM234 106h21v8h-21zM232.5 109h22.5v1.6h-22.5zM232.5 117h45v1.6h-45zM232.5 127h45v1.6h-45zM232.5 137h45v1.6h-45zM232.5 147h45v1.6h-45zM281 106h58v54h-58zM289 98h10v8h-10zM321 98h10v8h-10zM279 112h62v2h-62zM279 120h62v2h-62zM279 128h62v2h-62zM279 136h62v2h-62zM279 144h62v2h-62zM345 96h24v64h-24zM369 118h30v42h-30zM367.5 121h33v1.6h-33zM367.5 131h33v1.6h-33zM367.5 141h33v1.6h-33zM367.5 151h33v1.6h-33zM405 86h38v74h-38zM410 82h28v4h-28zM444 100h50v60h-50zM478 92h12v8h-12zM442 106h54v2h-54zM442 114h54v2h-54zM442 122h54v2h-54zM442 130h54v2h-54zM442 138h54v2h-54zM442 146h54v2h-54zM494 112h38v48h-38zM513 104h19v8h-19zM513 107h20.5v1.6h-20.5zM492.5 115h41v1.6h-41zM492.5 125h41v1.6h-41zM492.5 135h41v1.6h-41zM492.5 145h41v1.6h-41zM540 94h28v66h-28zM570 104h50v56h-50zM574 96h12v8h-12zM568 110h54v2h-54zM568 118h54v2h-54zM568 126h54v2h-54zM568 134h54v2h-54zM568 142h54v2h-54zM568 150h54v2h-54zM620 122h32v38h-32zM618.5 125h35v1.6h-35zM618.5 135h35v1.6h-35zM618.5 145h35v1.6h-35zM658 100h34v60h-34zM662 90h26v10h-26zM694 102h54v58h-54zM715 94h12v8h-12zM692 108h58v2h-58zM692 116h58v2h-58zM692 124h58v2h-58zM692 132h58v2h-58zM692 140h58v2h-58zM692 148h58v2h-58zM748 116h30v44h-30zM748 108h15v8h-15zM746.5 111h16.5v1.6h-16.5zM746.5 119h33v1.6h-33zM746.5 129h33v1.6h-33zM746.5 139h33v1.6h-33zM746.5 149h33v1.6h-33zM783 98h27v62h-27zM788 94h17v4h-17z"/>
+    <path id="sk-midd" d="M-3 121.6h4v4h-4zM8 121.6h4v4h-4zM19 121.6h4v4h-4zM-3 131.6h4v4h-4zM8 131.6h4v4h-4zM19 131.6h4v4h-4zM-3 141.6h4v4h-4zM8 141.6h4v4h-4zM19 141.6h4v4h-4zM-3 151.6h4v4h-4zM8 151.6h4v4h-4zM19 151.6h4v4h-4zM34 110h48v2.2h-48zM34 118h48v2.2h-48zM34 126h48v2.2h-48zM34 134h48v2.2h-48zM34 142h48v2.2h-48zM34 150h48v2.2h-48zM91 93h1.8v63h-1.8zM99 93h1.8v63h-1.8zM107 93h1.8v63h-1.8zM152 106h42v2.2h-42zM152 114h42v2.2h-42zM152 122h42v2.2h-42zM152 130h42v2.2h-42zM152 138h42v2.2h-42zM152 146h42v2.2h-42zM203 91h1.8v65h-1.8zM211 91h1.8v65h-1.8zM219 91h1.8v65h-1.8zM227 101h1.8v55h-1.8zM241.5 119.6h4v4h-4zM253 119.6h4v4h-4zM264.5 119.6h4v4h-4zM241.5 129.6h4v4h-4zM253 129.6h4v4h-4zM264.5 129.6h4v4h-4zM241.5 139.6h4v4h-4zM253 139.6h4v4h-4zM264.5 139.6h4v4h-4zM241.5 149.6h4v4h-4zM253 149.6h4v4h-4zM264.5 149.6h4v4h-4zM283 114h54v2.2h-54zM283 122h54v2.2h-54zM283 130h54v2.2h-54zM283 138h54v2.2h-54zM283 146h54v2.2h-54zM376.3 123.6h4v4h-4zM387.7 123.6h4v4h-4zM376.3 133.6h4v4h-4zM387.7 133.6h4v4h-4zM376.3 143.6h4v4h-4zM387.7 143.6h4v4h-4zM376.3 153.6h4v4h-4zM387.7 153.6h4v4h-4zM409 89h1.8v67h-1.8zM417 89h1.8v67h-1.8zM425 89h1.8v67h-1.8zM433 89h1.8v67h-1.8zM446 108h46v2.2h-46zM446 116h46v2.2h-46zM446 124h46v2.2h-46zM446 132h46v2.2h-46zM446 140h46v2.2h-46zM446 148h46v2.2h-46zM500.5 117.6h4v4h-4zM511 117.6h4v4h-4zM521.5 117.6h4v4h-4zM500.5 127.6h4v4h-4zM511 127.6h4v4h-4zM521.5 127.6h4v4h-4zM500.5 137.6h4v4h-4zM511 137.6h4v4h-4zM521.5 137.6h4v4h-4zM500.5 147.6h4v4h-4zM511 147.6h4v4h-4zM521.5 147.6h4v4h-4zM544 97h1.8v59h-1.8zM552 97h1.8v59h-1.8zM560 97h1.8v59h-1.8zM572 112h46v2.2h-46zM572 120h46v2.2h-46zM572 128h46v2.2h-46zM572 136h46v2.2h-46zM572 144h46v2.2h-46zM572 152h46v2.2h-46zM662 93h1.8v63h-1.8zM670 93h1.8v63h-1.8zM678 93h1.8v63h-1.8zM686 93h1.8v63h-1.8zM696 110h50v2.2h-50zM696 118h50v2.2h-50zM696 126h50v2.2h-50zM696 134h50v2.2h-50zM696 142h50v2.2h-50zM696 150h50v2.2h-50zM755.3 121.6h4v4h-4zM766.7 121.6h4v4h-4zM755.3 131.6h4v4h-4zM766.7 131.6h4v4h-4zM755.3 141.6h4v4h-4zM766.7 141.6h4v4h-4zM755.3 151.6h4v4h-4zM766.7 151.6h4v4h-4zM787 101h1.8v55h-1.8zM795 101h1.8v55h-1.8zM803 101h1.8v55h-1.8z"/>
+    <path id="sk-near" d="M-10 136h40v24h-40zM-10 136h41v1.6h-41zM-10 147h42.5v1.5h-42.5zM46 128h26v32h-26zM43.5 148h31v1.5h-31zM52.5 125h13v3h-13zM96 119.5h38v40.5h-38zM93.5 148h43v1.5h-43zM94.5 139.5h41v1.3h-41zM94.5 130h41v1.3h-41zM94.5 120.5h41v1.3h-41zM134 146h22v14h-22zM133 146h24v1.6h-24zM190 125h34v35h-34zM187.5 147h39v1.5h-39zM194 118h15v7h-15zM193 118h17v1.4h-17zM240 135h46v25h-46zM237.5 147h51v1.5h-51zM251.5 132h23v3h-23zM302 116.5h28v43.5h-28zM364 127h40v33h-40zM361.5 147h45v1.5h-45zM386 120h15v7h-15zM385 120h17v1.4h-17zM424 137h30v23h-30zM421.5 148h35v1.5h-35zM431.5 134h15v3h-15zM454 120.5h36v39.5h-36zM459 113.5h15v7h-15zM458 113.5h17v1.4h-17zM452.5 140.5h39v1.3h-39zM452.5 131h39v1.3h-39zM452.5 121.5h39v1.3h-39zM522 124h32v36h-32zM519.5 146h37v1.5h-37zM576 138h44v22h-44zM573.5 148h49v1.5h-49zM587 135h22v3h-22zM648 118h28v42h-28zM647 118h30v1.6h-30zM654 111h15v7h-15zM653 111h17v1.4h-17zM676 129h34v31h-34zM673.5 147h39v1.5h-39zM762 126h48v34h-48zM761 126h49v1.6h-49z"/>
+    <path id="sk-tanks" d="M13 127.5h10v5.5h-10zM12 131.8h12v1.4h-12zM13 133h2v3h-2zM21 133h2v3h-2zM117 111h10v5.5h-10zM116 115.3h12v1.4h-12zM117 116.5h2v3h-2zM125 116.5h2v3h-2zM194 109.5h10v5.5h-10zM193 113.8h12v1.4h-12zM194 115h2v3h-2zM202 115h2v3h-2zM307 108h10v5.5h-10zM306 112.3h12v1.4h-12zM307 113.5h2v3h-2zM315 113.5h2v3h-2zM386 111.5h10v5.5h-10zM385 115.8h12v1.4h-12zM386 117h2v3h-2zM394 117h2v3h-2zM477 112h10v5.5h-10zM476 116.3h12v1.4h-12zM477 117.5h2v3h-2zM485 117.5h2v3h-2zM525 115.5h10v5.5h-10zM524 119.8h12v1.4h-12zM525 121h2v3h-2zM533 121h2v3h-2zM539 115.5h10v5.5h-10zM538 119.8h12v1.4h-12zM539 121h2v3h-2zM547 121h2v3h-2zM579 129.5h10v5.5h-10zM578 133.8h12v1.4h-12zM579 135h2v3h-2zM587 135h2v3h-2zM771 117.5h10v5.5h-10zM770 121.8h12v1.4h-12zM771 123h2v3h-2zM779 123h2v3h-2z"/>
+    <path id="sk-neard" d="M-4 139.5h4v5h-4zM2.5 139.5h4v5h-4zM-7 152.5h34v1.3h-34zM-7 155.5h34v1.3h-34zM48 144.8h22v1.4h-22zM48 134.8h22v1.4h-22zM100 141.5h3.5v4.5h-3.5zM107 141.5h3.5v4.5h-3.5zM122 141.5h3.5v4.5h-3.5zM100 132h3.5v4.5h-3.5zM107 132h3.5v4.5h-3.5zM122 132h3.5v4.5h-3.5zM100 122.5h3.5v4.5h-3.5zM107 122.5h3.5v4.5h-3.5zM122 122.5h3.5v4.5h-3.5zM99 152.5h15v1.3h-15zM99 155.5h15v1.3h-15zM116 152.5h15v1.3h-15zM116 155.5h15v1.3h-15zM214 139.5h5v5h-5zM214 128.5h5v5h-5zM200 127h3v18h-3zM245 138.5h4v6h-4zM250.5 138.5h4v6h-4zM270.5 138.5h4v6h-4zM276 138.5h4v6h-4zM243 152.5h19v1.3h-19zM243 155.5h19v1.3h-19zM264 152.5h19v1.3h-19zM264 155.5h19v1.3h-19zM304 144.8h24v1.4h-24zM304 134.3h24v1.4h-24zM304 123.8h24v1.4h-24zM368 140h4v5h-4zM375 140h4v5h-4zM368 130h4v5h-4zM375 130h4v5h-4zM392 129h3v16h-3zM367 152.5h34v1.3h-34zM367 155.5h34v1.3h-34zM458 142.5h4.5v4.5h-4.5zM481.5 142.5h4.5v4.5h-4.5zM458 133h4.5v4.5h-4.5zM481.5 133h4.5v4.5h-4.5zM458 123.5h4.5v4.5h-4.5zM481.5 123.5h4.5v4.5h-4.5zM524 142.8h28v1.4h-28zM524 131.8h28v1.4h-28zM525 152.5h26v1.3h-26zM525 155.5h26v1.3h-26zM582 141h5v5h-5zM595.5 141h5v5h-5zM609 141h5v5h-5zM579 152.5h18v1.3h-18zM579 155.5h18v1.3h-18zM599 152.5h18v1.3h-18zM599 155.5h18v1.3h-18zM660 120h3v26h-3zM680 141h3.5v4h-3.5zM685.5 141h3.5v4h-3.5zM680 132h3.5v4h-3.5zM685.5 132h3.5v4h-3.5zM767 140.3h4v5.5h-4zM783 140.3h4v5.5h-4zM799 140.3h4v5.5h-4zM767 129.3h4v5.5h-4zM783 129.3h4v5.5h-4zM799 129.3h4v5.5h-4zM765 152.5h20v1.3h-20zM765 155.5h20v1.3h-20zM787 152.5h20v1.3h-20zM787 155.5h20v1.3h-20z"/>
+    <symbol id="i-today" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
+    <symbol id="i-ask" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 5h16v11H9l-5 4z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15M5 19l8-8"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.5-2 3.4-3 5.5-3s4 1 5.5 3"/></g></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></g></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6-2-3 1-4 4 3 3 1M8 12l2-4M12 15l3 6"/></g></symbol>
+    <symbol id="i-family" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="7" r="3"/><circle cx="17" cy="9" r="2.3"/><path d="M3 20c0-3.3 2.2-6 5-6s5 2.7 5 6M13.5 20c.3-2.6 1.6-4.5 3.5-4.5s3.2 1.9 3.5 4.5"/></g></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></g></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  </defs>
+</svg>
+
+<header class="proto" aria-label="Prototype controls">
+  <div class="proto-in">
+    <p class="proto-label">Prototype · Direction A · Sample data <span>· Not the live app · Not checked against modern-web-guidance</span></p>
+    <nav class="proto-tabs" aria-label="Prototype screens">
+      <a href="#landing">Landing</a><a href="#today">Today</a><a href="#ask">Ask AirAware</a><a href="#plan">Daily Plan</a><a href="#home">My Home</a><a href="#habits">Better Habits</a><a href="#profile">My Profile</a>
+    </nav>
+    <label>Sample state
+      <select id="state">
+        <option value="within">Within the limit</option>
+        <option value="above">Above the limit</option>
+        <option value="unknown">No data</option>
+        <option value="stale">Not current</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<!-- The app's fixed atmospheric backdrop (decorative, hidden from assistive tech). -->
+<div class="backdrop" aria-hidden="true">
+  <div class="sky"></div>
+  <div class="glow"></div>
+  <svg class="clouds" viewBox="0 0 800 160" preserveAspectRatio="xMidYMin slice">
+    <g>
+      <g><ellipse cx="300" cy="32" rx="38" ry="9" fill="var(--rule)" opacity=".7"/><g fill="var(--surface-light)"><ellipse cx="300" cy="30" rx="36" ry="10"/><ellipse cx="285" cy="24" rx="17" ry="11"/><ellipse cx="312" cy="21" rx="20" ry="13"/></g></g>
+      <g><ellipse cx="480" cy="24" rx="38" ry="9" fill="var(--rule)" opacity=".7"/><g fill="var(--surface-light)"><ellipse cx="480" cy="22" rx="36" ry="10"/><ellipse cx="465" cy="16" rx="17" ry="11"/><ellipse cx="492" cy="13" rx="20" ry="13"/></g></g>
+    </g>
+  </svg>
+  <div class="city">
+    <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice">
+      <defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#fff"/></linearGradient><mask id="vm"><rect width="800" height="160" fill="url(#vg)"/></mask></defs>
+      <use href="#sk-far" class="f-far"/>
+      <rect x="-10" width="820" height="160" class="veil" mask="url(#vm)"/>
+      <use href="#sk-mid" class="f-mid"/>
+      <use href="#sk-midd" class="f-light" opacity=".2"/>
+      <g class="f-near"><use href="#sk-near"/><use href="#sk-tanks"/></g>
+      <use href="#sk-neard" class="f-light near-detail" opacity=".3"/>
+    </svg>
+  </div>
+</div>
+
+<main>
+<!-- =================================================================== LANDING -->
+<section id="s-landing" class="screen landing on-dark" aria-labelledby="h-landing">
+  <div class="hero">
+    <div class="hero-sky" aria-hidden="true"></div>
+    <div class="hero-city" aria-hidden="true">
+      <svg viewBox="0 0 800 160" preserveAspectRatio="xMidYMax slice">
+        <use href="#sk-far" class="d-far"/><use href="#sk-mid" class="d-mid"/><use href="#sk-midd" class="d-win"/>
+        <g class="d-near"><use href="#sk-near"/><use href="#sk-tanks"/></g><use href="#sk-neard" class="d-win near-detail"/>
+      </svg>
+    </div>
+    <div class="apphead-in" style="position:relative;z-index:1"><a class="wordmark" href="#landing">AirAware AI</a></div>
+    <div class="hero-in">
+      <div class="stack-lg">
+        <p class="eyebrow"><b>Atmospheric environmental intelligence</b> · Indian cities</p>
+        <h1 id="h-landing" class="display" tabindex="-1">The air around you matters.</h1>
+        <p class="lead" style="color:var(--text-muted);font-size:20px">Understand your city's air quality. Discover smarter daily routines. Make better choices for your home and community.</p>
+        <div class="tagrow"><a class="btn btn-primary" href="#today">Check My Air</a><a class="btn" href="#ask">Meet Your Assistant</a></div>
+        <form class="searchrow" onsubmit="location.hash='today';return false" aria-label="Search a city">
+          <label class="vh" for="city">Or search a city</label>
+          <input id="city" placeholder="Or search a city" autocomplete="off">
+          <button class="btn" type="submit">Search</button>
+        </form>
+      </div>
+      <figure class="preview on-light" style="margin:0" aria-labelledby="pv-cap">
+        <figcaption id="pv-cap" class="tagrow"><span class="sample">Sample data</span><span class="xs" style="color:var(--text-muted)">An example of Today, not a live reading</span></figcaption>
+        <p class="eyebrow">Today in Pune, Maharashtra</p>
+        <p class="h2" style="color:var(--text)">Forecast within India's 24-hour limits</p>
+        <div class="tagrow"><span class="pill">Within the limit</span></div>
+        <p class="source">Model forecast · Open-Meteo · retrieved 3:38 PM</p>
+        <p class="xs" style="color:var(--text-muted)">Being within the national limit does not mean the air is clean or free of risk.</p>
+      </figure>
+    </div>
+  </div>
+
+  <div class="band">
+    <p class="eyebrow">How AirAware helps, step by step</p>
+    <ol class="journey">
+      <li><span class="n">01</span><h3>Understand</h3><p>Today's model forecast, compared with India's 24-hour limits for fine and coarse particles.</p></li>
+      <li><span class="n">02</span><h3>Ask</h3><p>Type a question. Answers come from AirAware's rules and today's forecast.</p></li>
+      <li><span class="n">03</span><h3>Get guidance</h3><p>One recommendation for today, and a plan for the rest of your day.</p></li>
+      <li><span class="n">04</span><h3>Take action</h3><p>Small steps for outdoors, your home and your commute, each with a reason.</p></li>
+      <li><span class="n">05</span><h3>Learn</h3><p>Ways to improve indoor air and better habits, with the sources behind them.</p></li>
+    </ol>
+  </div>
+
+  <div class="band" style="padding-top:0">
+    <p class="statement">Every suggestion says why. Every number says where it came from, and when.</p>
+    <p class="muted" style="max-width:var(--measure)">Forecasts are model estimates for an area about 45 km wide, not station measurements. We don't calculate an AQI. Official CPCB observations are not connected yet.</p>
+  </div>
+
+  <footer class="lfoot">
+    <p>Air-quality forecasts from Open-Meteo.com (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p>
+    <a href="#profile">Privacy</a>
+  </footer>
+</section>
+
+<!-- =================================================================== TODAY -->
+<section id="s-today" class="screen" aria-labelledby="h-today" hidden>
+  <header class="apphead on-dark"><div class="apphead-in"><a class="wordmark" href="#landing">AirAware AI</a><button class="chip" type="button"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pune, Maharashtra</button><nav class="nav-top" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav></div></header>
+  <div class="page">
+    <div data-part="title-block" class="stack" style="margin-bottom:32px">
+      <p class="eyebrow num">Saturday 28 November · <span class="sample" style="vertical-align:1px">Sample data</span></p>
+      <h1 id="h-today" class="h1" tabindex="-1">Good afternoon</h1>
+      <p class="lead" style="color:var(--text-dark)">Today in Pune, Maharashtra</p>
+    </div>
+
+    <div class="grid grid-today">
+      <div class="col">
+        <div class="stale" role="status"><svg><use href="#i-alert"/></svg><p>Not current: retrieved more than an hour ago. Reload for the latest forecast.</p></div>
+        <article class="panel" aria-labelledby="v-title">
+          <p class="eyebrow"><b>Understand</b> · the next 24 hours</p>
+          <h2 id="v-title" class="h2" style="margin-top:12px">
+            <span data-when="within">Forecast within India's 24-hour limits</span><span data-when="above">Forecast above India's 24-hour limit</span><span data-when="unknown">Air information unavailable</span>
+          </h2>
+          <div class="tagrow" style="margin-top:12px">
+            <span class="pill"><span data-when="within">Within the limit</span><span data-when="above">Above the limit</span><span data-when="unknown">No data</span></span>
+            <span class="source num">Model forecast · Open-Meteo · retrieved 3:38 PM<span data-when="stale"> · Not current</span></span>
+          </div>
+          <p style="margin-top:16px;max-width:var(--measure)">
+            <span data-when="within">Fine and coarse particles are forecast below the national daily limits for the next 24 hours.</span>
+            <span data-when="above">Fine particles (PM2.5) are forecast above the national daily limit for the next 24 hours.</span>
+            <span data-when="unknown">We could not get a complete 24-hour forecast for this place, so there's no advice about today's air. The suggestions below apply on any day.</span>
+          </p>
+          <div class="ledger num" data-when="within above">
+            <div class="ledger-row">
+              <p class="ledger-name">PM2.5 <span>fine particles</span></p>
+              <p class="ledger-val"><span data-when="within">31</span><span data-when="above">74</span><small>µg/m³</small></p>
+              <div class="scale" aria-hidden="true"><i style="width:var(--w25)"></i><b style="left:60%"></b></div>
+              <p class="ledger-meta"><span>24-hour model forecast average</span><span>India's 24-hour limit 60 µg/m³ · <span data-when="within">Within the limit</span><span data-when="above">Above the limit</span></span></p>
+            </div>
+            <div class="ledger-row">
+              <p class="ledger-name">PM10 <span>coarse particles</span></p>
+              <p class="ledger-val"><span data-when="within">58</span><span data-when="above">92</span><small>µg/m³</small></p>
+              <div class="scale" aria-hidden="true"><i style="width:var(--w10)"></i><b style="left:60%"></b></div>
+              <p class="ledger-meta"><span>24-hour model forecast average</span><span>India's 24-hour limit 100 µg/m³ · Within the limit</span></p>
+            </div>
+          </div>
+          <p class="small muted" style="margin-top:16px" data-when="within">Being within the national limit does not mean the air is clean or free of risk.</p>
+        </article>
+
+
+      </div>
+
+      <div class="col">
+        <section class="panel" aria-labelledby="rec-h">
+          <p class="eyebrow"><b>Guidance</b> · from your plan</p>
+          <h2 id="rec-h" class="h3" style="margin-top:12px;color:var(--text-dark-muted);font-weight:500">Your recommendation for today</h2>
+          <div class="card" style="padding-top:12px;border-top:0">
+            <h3 data-when="within unknown">Check conditions before outdoor exercise</h3>
+            <p data-when="within unknown">Before a long or hard outdoor session, check local air-quality updates and advisories.</p>
+            <h3 data-when="above">Consider an indoor alternative for exercise</h3>
+            <p data-when="above">Consider exercising indoors today, or keeping outdoor sessions shorter and less intense. Check local conditions before you go.</p>
+            <details class="why"><summary>Why?</summary><div class="why-body"><p data-when="within unknown">You said you exercise outdoors.</p><p data-when="within unknown">Air quality can change during the day.</p><p data-when="above">You said you exercise outdoors, and the forecast is above the national 24-hour limit.</p><p data-when="above">Conditions change through the day and across the city; this forecast cannot show a specific park or route.</p></div></details>
+          </div>
+          <p class="xs muted">Made with AI. General information only, not medical advice. Follow local public-health advisories.</p>
+          <div class="tagrow" style="margin-top:20px">
+            <a class="btn btn-primary" href="#plan">See your full day <svg><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-quiet" href="#ask" data-fill="What does today's recommendation mean for me?">Ask about this</a>
+          </div>
+          <p class="xs muted" style="margin-top:8px">“Ask about this” fills the question box and does not send. <span class="proposal">Proposal, not built</span></p>
+        </section>
+
+        <section class="paper" aria-labelledby="ask-h" style="background:color-mix(in oklab,var(--surface-light) 92%,transparent)">
+          <p class="eyebrow"><b>Ask</b></p>
+          <h2 id="ask-h" class="h3" style="margin-top:8px">Ask AirAware anything</h2>
+          <form class="stack" onsubmit="location.hash='ask';return false" style="margin-top:12px">
+            <label class="vh" for="mini-q">Ask about your air, home or day</label>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px"><input id="mini-q" class="input" placeholder="Can I go for a morning walk today?"><button class="btn" type="submit">Send</button></div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <div class="sheet" style="margin-top:40px">
+        <section aria-labelledby="ctx-h" class="stack" style="max-width:48rem">
+          <h2 id="ctx-h" class="eyebrow">Also today</h2>
+          <dl class="small" style="margin:0;display:grid;gap:0">
+            <div class="ledger-row" style="grid-template-columns:7rem minmax(0,1fr);padding:12px 0"><dt class="muted">Weather</dt><dd style="margin:0" class="num">33 °C, 23 % cloud, wind 3 km/h SW. <span class="muted">Open-Meteo weather forecast.</span></dd></div>
+            <div class="ledger-row" style="grid-template-columns:7rem minmax(0,1fr);padding:12px 0"><dt class="muted">Fire hotspots</dt><dd style="margin:0" class="num">NASA satellites detected 3 fire hotspots within 50 km in the last 24 hours. The nearest is 46 km away. <span class="muted">Satellite detections · NASA FIRMS · retrieved 3:38 PM. A hotspot is a heat signal seen from space, not proof that smoke reaches you.</span></dd></div>
+          </dl>
+          <a class="linkish small" href="#today" onclick="return false">Yesterday, today and tomorrow's weather</a>
+        </section>
+
+    <section aria-labelledby="help-h" style="margin-top:48px" class="stack">
+      <p class="eyebrow"><b>Learn</b></p>
+      <h2 id="help-h" class="h2">What would you like help with?</h2>
+      <ul class="choices" style="margin-top:16px">
+        <li><a class="choice" href="#ask"><svg><use href="#i-walk"/></svg><div><strong>Outdoor activities</strong><span>Walks, exercise, commutes</span></div><svg class="arrow"><use href="#i-arrow"/></svg></a></li>
+        <li><a class="choice" href="#home"><svg><use href="#i-home"/></svg><div><strong>My home</strong><span>Cooking, windows, purifiers</span></div><svg class="arrow"><use href="#i-arrow"/></svg></a></li>
+        <li><a class="choice" href="#ask"><svg><use href="#i-family"/></svg><div><strong>My family</strong><span>Children, older adults, school runs</span></div><svg class="arrow"><use href="#i-arrow"/></svg></a></li>
+        <li><a class="choice" href="#habits"><svg><use href="#i-leaf"/></svg><div><strong>Better habits</strong><span>Small swaps that cut smoke and exhaust</span></div><svg class="arrow"><use href="#i-arrow"/></svg></a></li>
+      </ul>
+    </section>
+
+    <div class="tagrow paper" style="margin-top:32px;justify-content:space-between">
+      <p><strong>Make it personal.</strong> <span class="muted">Two quick questions, both optional.</span></p>
+      <div class="tagrow"><a class="btn btn-quiet" href="#profile">Answer 2 questions</a><button class="btn btn-quiet" type="button">Not now</button></div>
+    </div>
+
+    <details class="fold" style="margin-top:32px">
+      <summary>Air quality details</summary>
+      <div class="fold-body"><p class="muted">The hourly model forecast for the next two days, every value with its unit and hour, and the sources and limitations. Official CPCB observations are not connected yet.</p></div>
+    </details>
+
+    <footer class="foot" style="margin-top:32px">
+      <p>Air-quality forecasts from Open-Meteo.com (CC BY 4.0), based on CAMS global forecasts from the Copernicus Atmosphere Monitoring Service.</p>
+      <a href="#profile">Privacy</a>
+    </footer>
+    </div>
+  </div>
+  <nav class="nav-bottom on-dark" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav>
+</section>
+
+<!-- =================================================================== ASK -->
+<section id="s-ask" class="screen" aria-labelledby="h-ask" hidden>
+  <header class="apphead on-dark"><div class="apphead-in"><a class="wordmark" href="#landing">AirAware AI</a><button class="chip" type="button"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pune, Maharashtra</button><nav class="nav-top" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav></div></header>
+  <div class="page narrow" style="padding-bottom:0">
+    <div data-part="title-block" class="stack">
+      <h1 id="h-ask" class="h1" tabindex="-1">Ask AirAware</h1>
+      <p class="muted">Claude (Anthropic) reads your question and answers from AirAware's rules and today's forecast.</p>
+    </div>
+    <div class="ctx" style="margin-top:16px" aria-label="What answers use">
+      <span class="xs" style="border:0;background:none;padding:0">Using</span>
+      <span>Pune, Maharashtra</span>
+      <span class="num">Model forecast · retrieved 3:38 PM<span data-when="stale">&nbsp;· Not current</span></span>
+      <span class="num">3 of 10 household questions answered</span>
+      <a class="linkish" href="#profile">Edit</a>
+    </div>
+
+    <div class="panel" style="margin-top:24px">
+      <h2 class="h3">How can I help you today?</h2>
+      <div class="starters" style="margin-top:12px">
+        <button class="starter" type="button">Can I go for a morning walk today?</button>
+        <button class="starter" type="button">Is it a good idea to open my windows?</button>
+        <button class="starter" type="button">How can I improve my indoor air?</button>
+        <button class="starter" type="button">How can I reduce pollution while commuting?</button>
+      </div>
+      <details class="why" style="margin-top:4px"><summary>More topics</summary><div class="starters" style="padding-top:4px"><button class="starter" type="button">What should I consider for my children's outdoor activities?</button></div></details>
+    </div>
+
+    <section aria-label="Conversation" class="stack-lg" style="margin-top:32px">
+      <p class="tagrow"><span class="sample">Sample conversation</span></p>
+      <p class="q">Can I go for a morning walk today?</p>
+      <article class="a panel" aria-label="Your answer to “Can I go for a morning walk today?”">
+        <p class="a-who"><i aria-hidden="true"></i>AirAware</p>
+        <p>Today's model forecast for Pune is within India's 24-hour limits. You said you exercise outdoors, so before a long or hard session, check local air-quality updates and advisories. Where you can, quieter streets and times outside rush hours are worth considering.</p>
+        <div>
+          <div class="card"><h4>Check conditions before outdoor exercise</h4><p class="small">Before a long or hard outdoor session, check local air-quality updates and advisories.</p></div>
+          <div class="card"><h4>Choose routes and times away from heavy traffic</h4><p class="small">Where you can, walk, exercise or commute along quieter streets, and outside morning and evening rush hours.</p></div>
+        </div>
+        <details class="why"><summary>Sources and limitations</summary><div class="why-body">
+          <p>Model forecast · Open-Meteo · retrieved 3:38 PM. Forecasts are model estimates for an area about 45 km wide, not station measurements.</p>
+          <p>We don't calculate an AQI. General information only, not medical advice. Follow local public-health advisories.</p>
+        </div></details>
+        <div class="tagrow"><button class="btn btn-quiet" type="button">Copy answer</button></div>
+        <div class="stack"><p class="small muted">You could also ask:</p><div class="starters"><button class="starter" type="button">How can I reduce pollution while commuting?</button><button class="starter" type="button">How can I improve my indoor air?</button></div></div>
+      </article>
+    </section>
+
+    <form class="composer" data-part="ask-composer" onsubmit="return false">
+      <div class="paper">
+        <label class="vh" for="ask-input">Ask about your air, home or day</label>
+        <textarea id="ask-input" class="input" rows="1" maxlength="200" placeholder="Ask about your air, home or daily routine…"></textarea>
+        <button class="btn btn-primary" type="submit">Send</button>
+        <p class="xs muted">Air-quality forecasts from Open-Meteo.com (CC BY 4.0), based on CAMS. Enter sends, Shift+Enter adds a line.</p>
+      </div>
+    </form>
+  </div>
+  <nav class="nav-bottom on-dark" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav>
+</section>
+
+<!-- =================================================================== DAILY PLAN -->
+<section id="s-plan" class="screen" aria-labelledby="h-plan" hidden>
+  <header class="apphead on-dark"><div class="apphead-in"><a class="wordmark" href="#landing">AirAware AI</a><button class="chip" type="button"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pune, Maharashtra</button><nav class="nav-top" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav></div></header>
+  <div class="page">
+    <div class="grid grid-ed">
+      <div data-part="title-block" class="stack">
+        <a class="linkish small" href="#today">Back to Today</a>
+        <p class="eyebrow"><b>Take action</b></p>
+      </div>
+      <div class="stack-lg sheet" style="max-width:48rem">
+        <div class="stack">
+          <h1 id="h-plan" class="h1" tabindex="-1">Plan for Pune, Maharashtra</h1>
+          <div class="tagrow"><span class="sample">Sample AI plan</span><span class="source num">Model forecast · Open-Meteo · retrieved 3:38 PM<span data-when="stale"> · Not current</span></span></div>
+          <p class="small muted">Made with AI. General information only, not medical advice. Follow local public-health advisories.</p>
+          <p class="xs muted">Times of day appear only when AI personalisation is available. Without it the plan says “Made by our rules. AI personalisation is unavailable right now.” and groups suggestions by area.</p>
+        </div>
+        <div class="stale" role="status"><svg><use href="#i-alert"/></svg><p>Not current: retrieved more than an hour ago. Reload for the latest forecast.</p></div>
+
+        <section class="panel" aria-labelledby="yd-h">
+          <h2 id="yd-h" class="h2">Your day</h2>
+          <ol class="timeline" style="margin-top:16px">
+            <li><p class="when">Morning</p><div><h3 class="h3">Check conditions before outdoor exercise</h3><p class="small" style="margin-top:4px">Before a long or hard outdoor session, check local air-quality updates and advisories.</p><p class="foryou">For you: you said you exercise outdoors.</p>
+              <label class="try"><input type="checkbox"> I'll try this</label> <span class="proposal">Proposal, not built</span></div></li>
+            <li><p class="when">Daytime</p><div><h3 class="h3">Don't burn waste or leaves</h3><p class="small" style="margin-top:4px">Hand waste and garden leaves to municipal collection or composting instead of burning them; open burning adds smoke for the whole neighbourhood.</p>
+              <label class="try"><input type="checkbox"> I'll try this</label></div></li>
+            <li><p class="when">Evening</p><div><h3 class="h3">Use the kitchen exhaust while cooking</h3><p class="small" style="margin-top:4px">Switch the exhaust on before you start cooking and leave it running for a few minutes after.</p>
+              <details class="why"><summary>Why?</summary><div class="why-body"><p>Cooking gives off smoke and fine particles, and removing them where they start comes first.</p><p>Some kitchen hoods recirculate air instead of venting it outside.</p></div></details>
+              <label class="try"><input type="checkbox"> I'll try this</label></div></li>
+            <li><p class="when">At home</p><div><h3 class="h3">Cut indoor smoke at the source</h3><p class="small" style="margin-top:4px">Incense, mosquito coils, candles and tobacco all add smoke indoors. Using them less, or not indoors, is the simplest indoor-air step.</p>
+              <label class="try"><input type="checkbox"> I'll try this</label></div></li>
+          </ol>
+          <p class="xs muted">Ticks stay in this browser only, unless you save the plan. <span class="proposal">Proposal, not built</span></p>
+        </section>
+
+        <section aria-labelledby="ba-h" class="stack">
+          <h2 id="ba-h" class="h2">By area</h2>
+          <details class="fold"><summary>Outdoors and travel</summary><div class="fold-body"><p>Check conditions before outdoor exercise.</p></div></details>
+          <details class="fold" style="border-top:0"><summary>Indoor air</summary><div class="fold-body"><p>Use the kitchen exhaust while cooking. Cut indoor smoke at the source.</p></div></details>
+          <details class="fold" style="border-top:0"><summary>Sustainable swaps</summary><div class="fold-body"><p>Don't burn waste or leaves. We never show an emissions saving we can't calculate.</p></div></details>
+        </section>
+
+        <div class="tagrow"><button class="btn btn-primary" type="button">Save plan</button><p class="xs muted" style="max-width:28rem">Saving creates an anonymous account (no email or name).</p></div>
+      </div>
+    </div>
+  </div>
+  <nav class="nav-bottom on-dark" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav>
+</section>
+
+<!-- =================================================================== MY HOME -->
+<section id="s-home" class="screen" aria-labelledby="h-home" hidden>
+  <header class="apphead on-dark"><div class="apphead-in"><a class="wordmark" href="#landing">AirAware AI</a><button class="chip" type="button"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pune, Maharashtra</button><nav class="nav-top" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav></div></header>
+  <div class="page">
+    <div class="grid grid-ed">
+      <div data-part="title-block" class="stack"><p class="eyebrow"><b>My Home</b></p></div>
+      <div class="stack-lg sheet" style="max-width:48rem">
+        <h1 id="h-home" class="h1" tabindex="-1">Today, for your home</h1>
+        <section class="panel" aria-label="Today, for your home">
+          <div class="tagrow"><span class="sample">Sample data</span><span class="source num">Outdoor model forecast for Pune · Open-Meteo · retrieved 3:38 PM<span data-when="stale"> · Not current</span></span></div>
+          <p class="small muted" style="margin-top:8px">This is the forecast for outside. AirAware has no reading from inside your home.</p>
+          <div class="card" style="margin-top:16px;padding-bottom:0;border-top:1px solid var(--rule);padding-top:16px">
+            <h3>Use the kitchen exhaust while cooking</h3>
+            <p>Switch the exhaust or chimney on before you start cooking and leave it running for a few minutes after.</p>
+            <p class="foryou">For you: you said your kitchen has an exhaust fan.</p>
+          </div>
+          <p class="xs muted" style="margin-top:12px">Made with AI. General information only, not medical advice. Follow local public-health advisories.</p>
+        </section>
+
+        <section aria-labelledby="ways-h" class="stack-lg">
+          <div class="stack"><p class="eyebrow"><b>Learn</b></p><h2 id="ways-h" class="h2">Ways to improve indoor air</h2><p class="muted">General advice for any day, each with its reason and sources.</p></div>
+          <div class="group stack"><h3 class="eyebrow">Cooking and smoke</h3>
+            <div class="card"><h4>Use the kitchen exhaust while cooking</h4><p>Switch the exhaust or chimney on before you start cooking and leave it running for a few minutes after.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>Cooking gives off smoke and fine particles, and removing them where they start comes first.</p><p>Some kitchen hoods recirculate air instead of venting it outside.</p></div></details></div>
+            <div class="card"><h4>Consider a cleaner cooking fuel where possible</h4><p>Wood, dung or crop waste fires make a lot of indoor smoke. Where it is practical, cooking with LPG or electricity cuts this smoke at the source.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>Cooking with wood, dung, crop waste, coal or kerosene is a major cause of household air pollution.</p></div></details></div>
+          </div>
+          <div class="group stack"><h3 class="eyebrow">Ventilation</h3>
+            <div class="card"><h4>Air out while you cook or burn incense</h4><p>Open windows or switch on an exhaust fan while you cook or burn incense or candles. When the air outside is poor, keep windows open for shorter spells.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>Fresh air carries indoor smoke away, but on polluted days it also brings outdoor particles in.</p><p>There is no single rule for windows: it depends on what is happening indoors and outside.</p></div></details></div>
+          </div>
+          <div class="group stack"><h3 class="eyebrow">Dust and cleaning</h3>
+            <div class="card"><h4>Clean with a damp cloth or mop</h4><p>Dust surfaces with a damp cloth and mop floors instead of sweeping them dry.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>Dry sweeping and dusting lift settled dust back into the air.</p></div></details></div>
+          </div>
+          <div class="group stack"><h3 class="eyebrow">Filtration</h3>
+            <div class="card"><h4>If you use an air purifier, match it to the room</h4><p>A portable purifier cleans the air of one room. Choose one rated for that room's size, and keep its doors and windows closed while it runs.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>A purifier works best in a closed room that matches its rating.</p><p>A purifier does not remove every pollutant.</p></div></details></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <nav class="nav-bottom on-dark" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav>
+</section>
+
+<!-- =================================================================== BETTER HABITS -->
+<section id="s-habits" class="screen" aria-labelledby="h-habits" hidden>
+  <header class="apphead on-dark"><div class="apphead-in"><a class="wordmark" href="#landing">AirAware AI</a><button class="chip" type="button"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pune, Maharashtra</button><nav class="nav-top" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav></div></header>
+  <div class="page">
+    <div class="grid grid-ed">
+      <div data-part="title-block" class="stack"><p class="eyebrow"><b>Better Habits</b></p></div>
+      <div class="stack-lg sheet" style="max-width:48rem">
+        <div class="stack">
+          <h1 id="h-habits" class="h1" tabindex="-1">Better habits</h1>
+          <p class="lead">Small swaps that cut smoke and exhaust, for you and your neighbourhood.</p>
+          <p class="panel small" style="padding:16px 20px">We never show an emissions saving we can't calculate.</p>
+        </div>
+        <div class="group stack"><h2 class="eyebrow">Daily commuting and vehicle idling</h2>
+          <div class="card"><h3>Switch off the engine while you wait</h3><p>Turn the engine off at red lights and while waiting, instead of idling. For some trips, public transport or sharing a ride may be practical.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>An idling engine adds exhaust to the air around you and the people nearby.</p><p>We do not estimate emission savings, because we have no documented method for your vehicle and trips.</p></div></details></div>
+        </div>
+        <div class="group stack"><h2 class="eyebrow">Waste</h2>
+          <div class="card"><h3>Don't burn waste or leaves</h3><p>Hand waste and garden leaves to municipal collection or composting instead of burning them; open burning adds smoke for the whole neighbourhood.</p><details class="why"><summary>Why?</summary><div class="why-body"><p>India's Solid Waste Management Rules, 2026 say households must not burn their waste on streets or in open public spaces.</p></div></details></div>
+        </div>
+        <div class="group stack"><h2 class="eyebrow">Cooking</h2>
+          <div class="card"><h3>Consider a cleaner cooking fuel where possible</h3><p>Wood, dung or crop waste fires make a lot of indoor smoke. Where it is practical, cooking with LPG or electricity cuts this smoke at the source.</p></div>
+        </div>
+        <div class="group stack"><h2 class="eyebrow">Energy use</h2>
+          <div class="card"><h3>Choose star-labelled appliances</h3><p>When you buy an appliance, compare its Bureau of Energy Efficiency star label: more stars means it uses less electricity for the same job.</p></div>
+          <div class="card"><h3>Use fans first, and keep the AC at 24 °C</h3><p>A ceiling or table fan is the first line against the heat. When you use an AC, keep it at its 24 °C default rather than colder.</p></div>
+          <div class="card"><h3>Switch off lights you are not using</h3><p>Turn lights off when you leave a room or no longer need them.</p></div>
+        </div>
+        <a class="linkish" href="#ask" data-fill="How can I reduce pollution while commuting?">Ask about commuting</a>
+      </div>
+    </div>
+  </div>
+  <nav class="nav-bottom on-dark" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav>
+</section>
+
+<!-- =================================================================== MY PROFILE -->
+<section id="s-profile" class="screen" aria-labelledby="h-profile" hidden>
+  <header class="apphead on-dark"><div class="apphead-in"><a class="wordmark" href="#landing">AirAware AI</a><button class="chip" type="button"><svg aria-hidden="true"><use href="#i-pin"/></svg>Pune, Maharashtra</button><nav class="nav-top" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav></div></header>
+  <div class="page">
+    <div class="grid grid-ed">
+      <div data-part="title-block" class="stack"><p class="eyebrow"><b>My Profile</b></p></div>
+      <div class="stack-lg sheet" style="max-width:48rem">
+        <div class="stack">
+          <h1 id="h-profile" class="h1" tabindex="-1">Your household <span class="muted" style="font-weight:400">(optional)</span></h1>
+          <p class="muted">Every question is optional. Answers make suggestions more specific; skip any you like.</p>
+        </div>
+        <form class="panel stack-lg" onsubmit="return false">
+          <fieldset style="border:0;padding:0;margin:0" class="stack"><legend class="eyebrow" style="margin-bottom:12px">Your routine</legend>
+            <div class="field"><label for="p1">How do you usually travel to work or college?</label><select id="p1" class="input"><option>Not answered</option></select></div>
+            <div class="field"><label for="p2">Do you exercise outdoors?</label><select id="p2" class="input"><option>Not answered</option><option selected>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="p3">Does a child in your home travel to school?</label><select id="p3" class="input"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+          </fieldset>
+          <fieldset style="border:0;padding:0;margin:0" class="stack"><legend class="eyebrow" style="margin-bottom:12px">Your home</legend>
+            <div class="field"><label for="p4">Is your home near a busy road?</label><select id="p4" class="input"><option>Not answered</option><option>Yes</option><option selected>No</option></select></div>
+            <div class="field"><label for="p5">What do you mostly cook with?</label><select id="p5" class="input"><option>Not answered</option></select></div>
+            <div class="field"><label for="p6">Does your kitchen have an exhaust fan or chimney?</label><select id="p6" class="input"><option>Not answered</option><option selected>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="p7">Do you have an air purifier?</label><select id="p7" class="input"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+          </fieldset>
+          <fieldset style="border:0;padding:0;margin:0" class="stack"><legend class="eyebrow" style="margin-bottom:12px">Who lives with you</legend>
+            <div class="field"><label for="p8">Are there children in your home?</label><select id="p8" class="input"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="p9">Are there older adults in your home?</label><select id="p9" class="input"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+            <div class="field"><label for="p10">Might someone at home be more sensitive to air pollution?</label><select id="p10" class="input"><option>Not answered</option><option>Yes</option><option>No</option></select></div>
+          </fieldset>
+          <div class="stack hair" style="padding-top:24px">
+            <button class="btn btn-primary" type="submit">Save my answers</button>
+            <p class="xs muted">Saving creates an anonymous account (no email or name). Your answers are stored on AirAware's database host, and this browser keeps the sign-in. Delete them any time in My Profile. Clearing this browser's data loses access but does not delete them.</p>
+          </div>
+        </form>
+
+        <section aria-labelledby="sp-h" class="stack">
+          <h2 id="sp-h" class="h2">Saved plans</h2>
+          <p class="muted">No saved plans yet. Save a plan from Today's “See your full day”.</p>
+        </section>
+        <section aria-labelledby="yd2-h" class="stack hair" style="padding-top:24px">
+          <h2 id="yd2-h" class="h2">Your data</h2>
+          <p class="muted">Nothing is saved until you choose to save. Location is used only when you ask, at the precision you choose.</p>
+          <div><button class="btn btn-quiet" type="button" style="border-color:#a3262e;color:#a3262e">Delete my saved data</button></div>
+          <p class="xs muted">A separate danger style answers the open finding that delete buttons look like Cancel. <span class="proposal">Proposal, not built</span></p>
+        </section>
+      </div>
+    </div>
+  </div>
+  <nav class="nav-bottom on-dark" aria-label="Main"><a href="#today"><svg aria-hidden="true"><use href="#i-today"/></svg>Today</a><a href="#ask"><svg aria-hidden="true"><use href="#i-ask"/></svg>Ask AirAware</a><a href="#home"><svg aria-hidden="true"><use href="#i-home"/></svg>My Home</a><a href="#habits"><svg aria-hidden="true"><use href="#i-leaf"/></svg>Better Habits</a><a href="#profile"><svg aria-hidden="true"><use href="#i-user"/></svg>My Profile</a></nav>
+</section>
+</main>
+
+<script>
+(() => {
+  const body = document.body;
+  const ids = ['landing','today','ask','plan','home','habits','profile'];
+  const tabs = document.querySelectorAll('.proto-tabs a');
+  let first = true;
+  function show() {
+    let id = location.hash.slice(1);
+    if (!ids.includes(id)) id = 'landing';
+    for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== 's-' + id;
+    for (const t of tabs) {
+      if (t.hash === '#' + id) { t.setAttribute('aria-current', 'page'); t.parentNode.scrollLeft = t.offsetLeft - 16; }
+      else t.removeAttribute('aria-current');
+    }
+    const nav = id === 'plan' ? 'today' : id;
+    for (const a of document.querySelectorAll('.nav-top a, .nav-bottom a')) {
+      if (a.hash === '#' + nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    }
+    body.dataset.screen = id;
+    if (!first) { document.getElementById('h-' + id)?.focus({ preventScroll: true }); scrollTo(0, 0); }
+    first = false;
+  }
+  addEventListener('hashchange', show);
+  show();
+  const state = document.getElementById('state');
+  function setState() {
+    const v = state.value;
+    body.dataset.air = v === 'stale' ? 'within' : v;
+    body.dataset.stale = String(v === 'stale');
+    const pm25 = body.dataset.air === 'above' ? 74 : 31, pm10 = body.dataset.air === 'above' ? 92 : 58;
+    // Decoration only: each line spans limit / 0.6, so the limit tick sits at 60 %.
+    body.style.setProperty('--w25', Math.min(100, pm25 / (60 / 0.6) * 100) + '%');
+    body.style.setProperty('--w10', Math.min(100, pm10 / (100 / 0.6) * 100) + '%');
+  }
+  state.addEventListener('change', setState);
+  const q = new URLSearchParams(location.search).get('state');
+  if (q) state.value = q;
+  setState();
+  // "Ask about this" fills the question box without sending.
+  for (const a of document.querySelectorAll('[data-fill]')) a.addEventListener('click', () => {
+    document.getElementById('ask-input').value = a.dataset.fill;
+  });
+  for (const b of document.querySelectorAll('.starter')) b.addEventListener('click', () => {
+    document.getElementById('ask-input').value = b.textContent; location.hash = 'ask';
+  });
+})();
+</script>
+</body>
+</html>
