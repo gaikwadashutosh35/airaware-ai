@@ -18,11 +18,11 @@ const UNCHANGED = [
   'What the AI writers receive',
   "When AI personalisation is on, our server sends the 24-hour forecast check and the text of the suggestions our rules picked for you to Google's Gemini, and to Anthropic's Claude, only when Gemini gives no usable answer.",
   'Those suggestions’ reasons can mention your answers, for example "You said you exercise outdoors".',
-  'For Ask answers, they get the forecast check and the suggestion text, never your question.',
+  "For a typed Ask question, only Anthropic's Claude is used: it gets your question, up to two earlier questions from this visit, the forecast check and the suggestion text.",
   'Neither receives the place name, coordinates or your account.',
   'What happens to your questions',
-  'Questions you type in Ask AirAware go only to our server, which uses them to pick a topic.',
-  'They are not saved, not logged and not sent to Gemini or Claude.',
+  "Questions you type in Ask AirAware go to our server and on to Anthropic's Claude, which writes the answer.",
+  "We don't save or log them, and never send them to Gemini. Anthropic's published policy is to delete API data within 30 days (longer only to enforce its usage policy or by law) and not to train on it by default.",
   'Your Ask answers stay on this page for this visit only.',
   'Only after you press "Save my answers" or "Save plan", or tick "Remember on this device", in Supabase’s South Asia (Mumbai) region.',
   'An anonymous account, with no email, name or password.',
@@ -186,10 +186,10 @@ describe('Privacy', () => {
       }),
     ).toBeTruthy();
     for (const sentence of [
-      'Questions you type in Ask AirAware go only to our server, which uses them to pick a topic.',
-      'They are not saved, not logged and not sent to Gemini or Claude.',
+      "Questions you type in Ask AirAware go to our server and on to Anthropic's Claude, which writes the answer.",
+      "We don't save or log them, and never send them to Gemini. Anthropic's published policy is to delete API data within 30 days (longer only to enforce its usage policy or by law) and not to train on it by default.",
       'Your Ask answers stay on this page for this visit only.',
-      'For Ask answers, they get the forecast check and the suggestion text, never your question.',
+      "For a typed Ask question, only Anthropic's Claude is used: it gets your question, up to two earlier questions from this visit, the forecast check and the suggestion text.",
     ]) {
       expect(text).toContain(sentence);
     }

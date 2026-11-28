@@ -118,6 +118,43 @@ describe('useAsk', () => {
     });
   });
 
+  it('a question carries the last 2 earlier asked questions as history', async () => {
+    const { result } = setup();
+    const ids = (a: AskAnswer) => a.cards.slice(0, 3).map((c) => c.id);
+    const ask = async (q: string, a: AskAnswer) => {
+      act(() => result.current.send({ question: q }, q));
+      await answer(a);
+    };
+
+    await ask('first', aiAskFixture);
+    await ask('second', aiAskFixture);
+    await ask('third', aiAskFixture);
+
+    expect('history' in (sentBody(0) as object)).toBe(false);
+    expect(sentBody(1)).toMatchObject({
+      history: [{ question: 'first', cardIds: ids(aiAskFixture) }],
+    });
+    expect((sentBody(2) as { history: unknown[] }).history).toEqual([
+      { question: 'first', cardIds: ids(aiAskFixture) },
+      { question: 'second', cardIds: ids(aiAskFixture) },
+    ]);
+    expect(ids(aiAskFixture).length).toBeLessThanOrEqual(3);
+  });
+
+  it('history leaves out medical, topic and failed entries, and topic requests carry none', async () => {
+    const { result } = setup();
+    act(() => result.current.send({ question: 'med' }, 'med'));
+    await answer({ ...aiAskFixture, topic: 'medical' });
+    act(() => result.current.send({ topic: 'family' }, 'My family'));
+    await answer(aiAskFixture);
+    act(() => result.current.send({ question: 'bad' }, 'bad'));
+    await fail();
+    act(() => result.current.send({ question: 'next' }, 'next'));
+
+    expect('history' in (sentBody(3) as object)).toBe(false);
+    expect('history' in (sentBody(1) as object)).toBe(false);
+  });
+
   it('a failure becomes an error entry; Try again resends the same body', async () => {
     const { result } = setup();
 

@@ -161,3 +161,37 @@ test('an answer that changes nothing sends no request', async ({ page }) => {
   ).toBeVisible();
   expect(asked).toHaveLength(1);
 });
+
+test('a second question carries the first as history', async ({ page }) => {
+  const now = new Date();
+  const answer = planAt(aiAskFixture, now);
+  await routeApi(page, {
+    forecast: { data: forecastAt(now) },
+    plan: { data: planAt(rulesPlanFixture, now) },
+    answer: { data: answer },
+  });
+  const asked: Request[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/assistant/answer') {
+      asked.push(request);
+    }
+  });
+  await page.goto(PUNE.replace('/app?', '/app/ask?'));
+  const box = page.getByRole('textbox', {
+    name: 'Ask about your air, home or day',
+  });
+
+  await box.fill(QUESTION);
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText(answer.summary!, { exact: true })).toBeVisible();
+  const SECOND = 'What about tomorrow morning?';
+  await box.fill(SECOND);
+  await page.getByRole('button', { name: 'Send' }).click();
+
+  await expect.poll(() => asked.length).toBe(2);
+  expect(asked[1]!.postDataJSON().history).toEqual([
+    { question: QUESTION, cardIds: answer.cards.slice(0, 3).map((c) => c.id) },
+  ]);
+  expect(page.url()).not.toContain('purifier');
+  expect(page.url()).not.toContain('tomorrow');
+});

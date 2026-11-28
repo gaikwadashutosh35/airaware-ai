@@ -132,8 +132,29 @@ export function useAsk(
     shown?: string[],
   ) {
     if (!place || !key) return;
+    // A typed question carries up to 2 earlier ones (not medical, not failed)
+    // so a follow-up makes sense. Topic requests and re-asks carry none.
+    const history =
+      'question' in query
+        ? entries
+            .filter(
+              (e) =>
+                e.said === 'asked' &&
+                e.status === 'ready' &&
+                e.request &&
+                'question' in e.request &&
+                e.answer &&
+                e.answer.topic !== 'medical',
+            )
+            .slice(-2)
+            .map((e) => ({
+              question: (e.request as { question: string }).question,
+              cardIds: e.answer!.cards.slice(0, 3).map((c) => c.id),
+            }))
+        : [];
     const request: AskRequest = {
       ...query,
+      ...(history.length && { history }),
       place: {
         label: place.label,
         latitude: Number(place.latitude.toFixed(2)),

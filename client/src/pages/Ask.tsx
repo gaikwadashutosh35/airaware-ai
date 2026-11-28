@@ -27,8 +27,8 @@ import { follow } from '../lib/navigation.ts';
 // the conversation oldest first in one surface, then the question box, pinned
 // to the bottom on screens tall enough: on phones from the start, from md up
 // after the first question.
-// Answers come from the server's rules and guide cards. A typed question goes
-// only into the POST body: no form name, address or storage.
+// Answers come from the server's rules and guide cards, worded by Claude. A
+// typed question goes only into the POST body: no form name, address or storage.
 export function Ask({
   place,
   updatedAt,

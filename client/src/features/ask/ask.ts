@@ -53,7 +53,8 @@ export const ASK_COPY = {
   errorFallback: 'Something went wrong answering your question.',
   tryAgain: 'Try again',
   // Guided chat (spec 2026-11-21).
-  intro: "Answers come from AirAware's rules and today's forecast.",
+  intro:
+    "Claude (Anthropic) reads your question and answers from AirAware's rules and today's forecast.",
   // Ask UX spec (owner, 27 Nov).
   welcome: 'How can I help you today?',
   moreTopics: 'More topics',

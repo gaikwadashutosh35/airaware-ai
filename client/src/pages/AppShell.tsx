@@ -124,7 +124,8 @@ function AppShell() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
   // Ask's answers for the visit, here so they survive moving pages. A typed
-  // question lives only in memory and the POST body, never in the address.
+  // question lives only in memory and the POST body (with up to 2 earlier
+  // ones), never in the address.
   const ask = useAsk(place, context, resets, setContext);
   // True only while a device-location request is still wanted.
   const awaitingLocation = useRef(false);

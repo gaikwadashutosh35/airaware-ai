@@ -9,7 +9,8 @@ const STARTERS = [
 ];
 
 // "Ask AirAware anything": the question goes to Ask in memory, never into
-// the address, so it cannot reach browser history or server logs (§7.4).
+// the address, so it cannot reach browser history or server logs (§7.4). It
+// goes on to Claude only after the server's checks.
 export function AskBox({
   onAsk,
   active,

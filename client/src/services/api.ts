@@ -206,7 +206,8 @@ export function buildDailyPlan(
   });
 }
 
-// Ask AirAware: a typed question travels only in this POST body.
+// Ask AirAware: a typed question, and up to 2 earlier ones, travel only in
+// this POST body.
 export function askAirAware(
   body: AskRequest,
   signal?: AbortSignal,

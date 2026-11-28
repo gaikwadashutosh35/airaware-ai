@@ -67,7 +67,8 @@ describe('Ask wording', () => {
       errorTitle: "We couldn't answer that",
       errorFallback: 'Something went wrong answering your question.',
       tryAgain: 'Try again',
-      intro: "Answers come from AirAware's rules and today's forecast.",
+      intro:
+        "Claude (Anthropic) reads your question and answers from AirAware's rules and today's forecast.",
       // Ask UX spec (owner, 27 Nov).
       welcome: 'How can I help you today?',
       moreTopics: 'More topics',
